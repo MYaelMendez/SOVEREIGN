@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": ">_æ| æ command palette",
+  "short_name": "æ",
+  "version": "0.1.0",
+  "description": "The sovereign agent protocol in your browser. >_æ| — the URL is the command.",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/ae16.png",
+      "48": "icons/ae48.png",
+      "128": "icons/ae128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/ae16.png",
+    "48": "icons/ae48.png",
+    "128": "icons/ae128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Open >_æ| command palette"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}

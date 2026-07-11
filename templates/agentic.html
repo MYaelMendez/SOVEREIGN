@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mech-lang · for building robots, games, and other data-driven systems</title>
+<meta name="description" content="mech-lang: Rust-native deterministic execution for agentic entrepreneurship. Human intent → agent-native execution → Wyoming DAO LLC formation. Open-sourceware.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0c;
+    --surface: #111116;
+    --border: #1e1e2a;
+    --accent: #00e5ff;
+    --stripe: #635bff;
+    --stripe-glow: #7a73ff;
+    --green: #00ff88;
+    --amber: #ffaa00;
+    --red: #ff4444;
+    --text: #e0e0e8;
+    --dim: #555566;
+    --gold: #ffd700;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  .topbar .protocol {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  .topbar .status {
+    color: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Command display */
+  .command-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 30px;
+    margin-bottom: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .command-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--stripe), var(--green));
+  }
+
+  .prompt-line {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .prompt-line .ae { color: var(--accent); }
+  .prompt-line .proto { color: var(--dim); }
+  .prompt-line .hash { color: var(--stripe); }
+  .prompt-line .cmd { color: var(--gold); }
+
+  .subtitle {
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Execution steps */
+  .execution {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 2px;
+  }
+
+  .exec-header {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 32px 180px 1fr auto;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(30,30,42,0.5);
+    opacity: 0;
+    animation: stepIn 0.4s forwards;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .step:nth-child(2) { animation-delay: 0.8s; }
+  .step:nth-child(3) { animation-delay: 1.6s; }
+  .step:nth-child(4) { animation-delay: 2.4s; }
+  .step:nth-child(5) { animation-delay: 3.2s; }
+  .step:nth-child(6) { animation-delay: 4.0s; }
+  .step:nth-child(7) { animation-delay: 4.8s; }
+  .step:nth-child(8) { animation-delay: 5.6s; }
+
+  .step-num {
+    font-size: 10px;
+    color: var(--dim);
+    font-weight: 600;
+  }
+
+  .step-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .step-route {
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  .step-route a {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.7;
+  }
+
+  .step-route a:hover { opacity: 1; }
+
+  .step-status {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .status-ok { color: var(--green); }
+  .status-pending { color: var(--amber); animation: pulse 1.5s infinite; }
+  .status-stripe { color: var(--stripe-glow); }
+
+  /* Stripe block */
+  .stripe-block {
+    background: linear-gradient(135deg, #1a1040 0%, #0f0a2a 100%);
+    border: 1px solid var(--stripe);
+    padding: 24px;
+    margin-bottom: 2px;
+    position: relative;
+  }
+
+  .stripe-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--stripe);
+    box-shadow: 0 0 20px var(--stripe-glow);
+  }
+
+  .stripe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .stripe-title {
+    font-size: 12px;
+    color: var(--stripe-glow);
+    font-weight: 600;
+    letter-spacing: 3px;
+  }
+
+  .stripe-badge {
+    font-size: 9px;
+    background: var(--stripe);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 2px;
+    letter-spacing: 2px;
+  }
+
+  .stripe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .stripe-card {
+    background: rgba(99, 91, 255, 0.08);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stripe-card .icon { font-size: 24px; margin-bottom: 8px; }
+  .stripe-card .label {
+    font-size: 9px;
+    color: var(--stripe-glow);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .stripe-card .value {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Agent roster */
+  .agents {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 2px;
+  }
+
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .agent-card {
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .agent-card:hover {
+    border-color: var(--accent);
+    background: rgba(0, 229, 255, 0.03);
+  }
+
+  .agent-card .emoji { font-size: 20px; margin-bottom: 6px; }
+  .agent-card .name {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .agent-card .role {
+    font-size: 9px;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+
+  /* Terminal log */
+  .terminal {
+    background: #050508;
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 2px;
+    font-size: 11px;
+    line-height: 1.8;
+    max-height: 350px;
+    overflow: hidden;
+  }
+
+  .terminal .line {
+    opacity: 0;
+    animation: lineIn 0.3s forwards;
+  }
+
+  .terminal .ts { color: var(--dim); }
+  .terminal .ok { color: var(--green); }
+  .terminal .info { color: var(--accent); }
+  .terminal .stripe-l { color: var(--stripe-glow); }
+  .terminal .gold { color: var(--gold); }
+  .terminal .warn { color: var(--amber); }
+
+  .terminal .line:nth-child(1) { animation-delay: 6.4s; }
+  .terminal .line:nth-child(2) { animation-delay: 6.8s; }
+  .terminal .line:nth-child(3) { animation-delay: 7.2s; }
+  .terminal .line:nth-child(4) { animation-delay: 7.6s; }
+  .terminal .line:nth-child(5) { animation-delay: 8.0s; }
+  .terminal .line:nth-child(6) { animation-delay: 8.4s; }
+  .terminal .line:nth-child(7) { animation-delay: 8.8s; }
+  .terminal .line:nth-child(8) { animation-delay: 9.2s; }
+  .terminal .line:nth-child(9) { animation-delay: 9.6s; }
+  .terminal .line:nth-child(10) { animation-delay: 10.0s; }
+  .terminal .line:nth-child(11) { animation-delay: 10.4s; }
+  .terminal .line:nth-child(12) { animation-delay: 10.8s; }
+  .terminal .line:nth-child(13) { animation-delay: 11.2s; }
+  .terminal .line:nth-child(14) { animation-delay: 11.6s; }
+  .terminal .line:nth-child(15) { animation-delay: 12.0s; }
+  .terminal .line:nth-child(16) { animation-delay: 12.4s; }
+  .terminal .line:nth-child(17) { animation-delay: 13.0s; }
+
+  @keyframes lineIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Bottom status */
+  .bottom-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-box .val {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-box .val.stripe-v { color: var(--stripe-glow); }
+  .stat-box .val.green-v { color: var(--green); }
+
+  .stat-box .lbl {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* Final seal */
+  .seal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 30px;
+    text-align: center;
+    position: relative;
+  }
+
+  .seal::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--stripe), var(--green), var(--gold));
+  }
+
+  .seal .motto {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+
+  .seal .motto .ae { color: var(--accent); }
+
+  .seal .sub {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+  }
+
+  .seal .domains {
+    margin-top: 16px;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 1px;
+  }
+
+  .seal .domains a {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.6;
+  }
+
+  .seal .domains a:hover { opacity: 1; }
+
+  .seal .hashtag {
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  /* Cursor blink */
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* CTA button */
+  .cta-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--stripe), #4b44cc);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    padding: 14px 40px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    box-shadow: 0 0 30px rgba(99,91,255,0.2);
+  }
+
+  .cta-btn:hover {
+    box-shadow: 0 0 50px rgba(99,91,255,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .prompt-line { font-size: 18px; }
+    .step { grid-template-columns: 24px 120px 1fr auto; font-size: 10px; }
+    .stripe-grid { grid-template-columns: 1fr; }
+    .agent-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-bar { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <span class="protocol">æ:// SOVEREIGN RUNTIME</span>
+    <span>MCP/1517</span>
+    <span class="status">● ONLINE</span>
+  </div>
+
+  <!-- Main command -->
+  <div class="command-block">
+    <div class="prompt-line">
+      <span class="ae">æ</span><span class="proto">://</span><span class="hash">#</span><span class="cmd">startabusiness</span><span class="cursor"></span>
+    </div>
+    <div class="subtitle">ONE COMMAND · ONE PERSON · FULL AGENCY · 一人公司</div>
+  </div>
+
+  <!-- Execution steps -->
+  <div class="execution">
+    <div class="exec-header">◈ EXECUTION SEQUENCE</div>
+
+    <div class="step" style="animation-delay: 0.6s">
+      <span class="step-num">01</span>
+      <span class="step-label" style="color: var(--gold)">COMPUTER</span>
+      <span class="step-route">æ://incubator → <a href="https://mech-lang.org">mech-lang runtime</a></span>
+      <span class="step-status status-ok">✓ INCUBATOR</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">02</span>
+      <span class="step-label" style="color: var(--accent)">PROMPT</span>
+      <span class="step-route">æ://cli.llc → <a href="https://cli.llc">private client command prompt</a></span>
+      <span class="step-status status-ok">✓ READY</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">03</span>
+      <span class="step-label" style="color: var(--green)">EXECUTION</span>
+      <span class="step-route">æ://mech-lang.org → <a href="https://mech-lang.org">Rust-native deterministic runtime</a></span>
+      <span class="step-status status-ok">✓ VERIFIED</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">04</span>
+      <span class="step-label" style="color: var(--stripe-glow)">AGENT</span>
+      <span class="step-route">æ://hermes → <a href="https://nousresearch.com">Hermes Agent conductor</a></span>
+      <span class="step-status status-ok">✓ ROUTING</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">05</span>
+      <span class="step-label" style="color: var(--accent)">TRUST</span>
+      <span class="step-route">æ://privateclient.ai → <a href="https://privateclient.ai">sovereign session</a></span>
+      <span class="step-status status-ok">✓ SEALED</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">06</span>
+      <span class="step-label" style="color: var(--green)">DAO</span>
+      <span class="step-route">æ://daollc.ai → <a href="https://daollc.ai">Wyoming DAO LLC</a></span>
+      <span class="step-status status-ok">✓ FORMED</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">07</span>
+      <span class="step-label" style="color: var(--stripe-glow)">RAILS</span>
+      <span class="step-route">æ://stripe → <a href="#">cash + membership rails</a></span>
+      <span class="step-status status-ok">✓ STRIPE</span>
+    </div>
+
+    <div class="step">
+      <span class="step-num">08</span>
+      <span class="step-label" style="color: var(--amber)">ONBOARDING</span>
+      <span class="step-route">æ://moltcontextprotocol.com → <a href="#">neuroplasticity training + referrals</a></span>
+      <span class="step-status status-pending">◈ LEARNING</span>
+    </div>
+  </div>
+
+  <!-- Stripe integration -->
+  <div class="stripe-block">
+    <div class="stripe-header">
+      <span class="stripe-title">◈ STRIPE SKILLS · FINANCIAL NERVOUS SYSTEM</span>
+      <span class="stripe-badge">HERMES × STRIPE</span>
+    </div>
+    <div class="stripe-grid">
+      <div class="stripe-card">
+        <div class="icon">💳</div>
+        <div class="label">MERCHANT</div>
+        <div class="value">Provisioned</div>
+      </div>
+      <div class="stripe-card">
+        <div class="icon">🔄</div>
+        <div class="label">SUBSCRIPTIONS</div>
+        <div class="value">Ready</div>
+      </div>
+      <div class="stripe-card">
+        <div class="icon">🧾</div>
+        <div class="label">INVOICING</div>
+        <div class="value">Automated</div>
+      </div>
+      <div class="stripe-card">
+        <div class="icon">💰</div>
+        <div class="label">AGENT WALLET</div>
+        <div class="value">Funded</div>
+      </div>
+      <div class="stripe-card">
+        <div class="icon">🛒</div>
+        <div class="label">STOREFRONT</div>
+        <div class="value">æ.store</div>
+      </div>
+      <div class="stripe-card">
+        <div class="icon">⚡</div>
+        <div class="label">COMPUTE BILLING</div>
+        <div class="value">Pay-per-use</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent roster -->
+  <div class="agents">
+    <div class="exec-header">◈ SOVEREIGN AGENT ROSTER</div>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="emoji">👁</div>
+        <div class="name">YÆL</div>
+        <div class="role">agent core</div>
+      </div>
+      <div class="agent-card">
+        <div class="emoji">🪽</div>
+        <div class="name">HERMES</div>
+        <div class="role">intent router</div>
+      </div>
+      <div class="agent-card">
+        <div class="emoji">◈</div>
+        <div class="name">CLAUDE</div>
+        <div class="role">inference</div>
+      </div>
+      <div class="agent-card">
+        <div class="emoji">🦞</div>
+        <div class="name">OPENCLAW</div>
+        <div class="role">compute</div>
+      </div>
+      <div class="agent-card">
+        <div class="emoji">🎁</div>
+        <div class="name">LLM.STORE</div>
+        <div class="role">storefront</div>
+      </div>
+      <div class="agent-card">
+        <div class="emoji">⚖️</div>
+        <div class="name">DAOLLC</div>
+        <div class="role">governance</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal log -->
+  <div class="terminal">
+    <div class="line" style="animation-delay: 6.4s"><span class="ts">[00:00:01]</span> <span class="info">æ://</span> SOVEREIGN RUNTIME BOOT</div>
+    <div class="line" style="animation-delay: 6.8s"><span class="ts">[00:00:01]</span> <span class="ok">✓</span> identity: yæl méndez · sovereign authority</div>
+    <div class="line" style="animation-delay: 7.2s"><span class="ts">[00:00:02]</span> <span class="ok">✓</span> MCP/1517 HANDSHAKE · ONLINE</div>
+    <div class="line" style="animation-delay: 7.6s"><span class="ts">[00:00:03]</span> <span class="ok">✓</span> daollc.ai → Wyoming DAO LLC formation · <span class="gold">DOOLA</span></div>
+    <div class="line" style="animation-delay: 8.0s"><span class="ts">[00:00:03]</span> <span class="ok">✓</span> cli.llc → execution layer incorporated</div>
+    <div class="line" style="animation-delay: 8.4s"><span class="ts">[00:00:04]</span> <span class="stripe-l">◈ STRIPE</span> merchant account provisioned</div>
+    <div class="line" style="animation-delay: 8.8s"><span class="ts">[00:00:04]</span> <span class="stripe-l">◈ STRIPE</span> payment rails · <span class="ok">LIVE</span></div>
+    <div class="line" style="animation-delay: 9.2s"><span class="ts">[00:00:05]</span> <span class="stripe-l">◈ STRIPE</span> subscriptions · invoicing · agent wallet · <span class="ok">READY</span></div>
+    <div class="line" style="animation-delay: 9.6s"><span class="ts">[00:00:06]</span> <span class="ok">✓</span> llm.store → 9 models active · Æ router · ∞ pods</div>
+    <div class="line" style="animation-delay: 10.0s"><span class="ts">[00:00:07]</span> <span class="ok">✓</span> openclaw → NVIDIA NemoClaw compute allocated</div>
+    <div class="line" style="animation-delay: 10.4s"><span class="ts">[00:00:07]</span> <span class="ok">✓</span> hermes → agent routing · skills loaded · memory active</div>
+    <div class="line" style="animation-delay: 10.8s"><span class="ts">[00:00:08]</span> <span class="ok">✓</span> commandprompt.ai → human interface layer · <span class="ok">READY</span></div>
+    <div class="line" style="animation-delay: 11.2s"><span class="ts">[00:00:08]</span> <span class="ok">✓</span> privateclient.ai → sovereign trust · session sealed</div>
+    <div class="line" style="animation-delay: 11.6s"><span class="ts">[00:00:09]</span> <span class="info">æ://</span> NEUROMITOSIS: HUMAN + ROBOT + DAO · <span class="ok">BONDED</span></div>
+    <div class="line" style="animation-delay: 12.0s"><span class="ts">[00:00:09]</span> <span class="gold">★</span> CLAW SEAL PROTOCOL v0.9.9 · <span class="ok">SEALED</span></div>
+    <div class="line" style="animation-delay: 12.4s"><span class="ts">[00:00:10]</span> ─────────────────────────────────────────</div>
+    <div class="line" style="animation-delay: 13.0s"><span class="ts">[00:00:10]</span> <span class="gold">★ ★ ★</span> BUSINESS OPERATIONAL · ONE PERSON · FULL AGENCY <span class="gold">★ ★ ★</span></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="bottom-bar">
+    <div class="stat-box">
+      <div class="val">9</div>
+      <div class="lbl">MODELS ACTIVE</div>
+    </div>
+    <div class="stat-box">
+      <div class="val stripe-v">◈</div>
+      <div class="lbl">STRIPE RAILS</div>
+    </div>
+    <div class="stat-box">
+      <div class="val green-v">∞</div>
+      <div class="lbl">SOVEREIGN PODS</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-row">
+    <a href="https://partnersps.doola.com/hhsoqhb23250" class="cta-btn" target="_blank">æ://#startabusiness →</a>
+  </div>
+
+  <!-- Seal -->
+  <div class="seal">
+    <div class="motto">CTRL+<span class="ae">æ</span></div>
+    <div class="sub">SELECT ALL AGENTS · START YOUR BUSINESS</div>
+    <div class="domains">
+      <a href="https://xn--6caaa.com">æææ.com</a> ·
+      <a href="https://llm.store">llm.store</a> ·
+      <a href="https://daollc.ai">daollc.ai</a> ·
+      <a href="#">cli.llc</a> ·
+      <a href="#">æ.store</a> ·
+      <a href="#">commandprompt.ai</a> ·
+      <a href="#">privateclient.ai</a>
+    </div>
+    <div class="hashtag">#hermiphicationisinevitable</div>
+  </div>
+
+</div>
+
+</body>
+</html>

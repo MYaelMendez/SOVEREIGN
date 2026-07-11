@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ:// SYSTEM</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script defer src="shared-mesh.js"></script>
+<style>
+:root{
+  --void:#050505;--gold:#D4AF37;--gold-dim:rgba(212,175,55,.1);
+  --gold-glow:rgba(212,175,55,.32);--neon:#00ff9d;
+  --ink:#f0ece4;--muted:rgba(240,236,228,.38);
+  --border:rgba(212,175,55,.16);--border-hot:rgba(212,175,55,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  width:100%;height:100dvh;overflow:auto;
+  background:var(--void);color:var(--ink);
+  font-family:'JetBrains Mono',monospace;
+  padding:45px clamp(24px,3vw,60px);
+}
+canvas#mesh{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px);}
+.vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(5,5,5,.92) 100%);}
+
+main{position:relative;z-index:10;max-width:960px;margin:0 auto;}
+h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(28px,5.5vw,54px);
+  letter-spacing:clamp(1.5px,.5vw,4px);
+  color:var(--gold);text-shadow:0 0 22px var(--gold-glow),0 0 60px rgba(212,175,55,.08);
+}
+.sub{margin-top:10px;color:var(--muted);font-size:clamp(11px,1.5vw,14px);letter-spacing:1px;}
+
+.section{
+  margin-top:28px;border:1px solid var(--border);
+  background:rgba(5,5,5,.55);backdrop-filter:blur(12px);padding:16px;
+  display:flex;flex-direction:column;gap:12px);
+}
+.section>*{position:relative;z-index:1;}
+.section h2{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(14px,1.8vw,18px);
+  letter-spacing:1.5px;color:var(--gold);
+  text-shadow:0 0 12px var(--gold-glow);
+}
+
+.kv{display:flex;gap:8px;flex-wrap:wrap;}
+.kv p{padding:3px 8px;border:1px solid var(--border);color:var(--muted);font-size:clamp(9px,1vw,12px);}
+.kv strong{color:var(--gold);}
+
+.grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,1fr);}
+.grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,1fr);}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+button{
+  background:transparent;border:1px solid var(--border);color:var(--gold);
+  font-family:'JetBrains Mono',monospace;font-size:clamp(10px,1vw,12px);
+  padding:9px 12px;cursor:pointer;letter-spacing:.8px;
+}
+button.primary{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+button.ghost{color:var(--muted);border-color:rgba(212,175,55,.22);}
+button:hover{filter:brightness(1.08);}
+button:disabled{opacity:.45;cursor:not-allowed;}
+
+.card{
+  border:1px solid var(--border);padding:14px;
+  background:rgba(212,175,55,.03);transition:all .2s;
+}
+.card:hover{border-color:var(--border-hot);background:rgba(212,175,55,.06);}
+.card .name{color:var(--gold);font-weight:700;letter-spacing:1px;}
+.card .meta{color:var(--muted);font-size:11px;margin-top:6px;}
+.card a{color:var(--gold);text-decoration:none;}
+.card a:hover{text-decoration:underline;}
+
+.pipe{color:var(--muted);font-size:11px;margin-top:10px;}
+.pipe span{opacity:.7;}
+
+.hero{
+  border:1px solid var(--border);padding:22px;
+  background:linear-gradient(180deg,rgba(212,175,55,.04),transparent);
+  margin-top:28px;
+}
+.hero .title{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  letter-spacing:2px;color:var(--gold);
+  text-shadow:0 0 18px var(--gold-glow);
+}
+.hero .cmd{color:var(--gold);font-weight:700;letter-spacing:1px;}
+
+.footer{
+  margin-top:28px;border:1px solid var(--border);padding:18px;
+  color:var(--muted);font-size:11px;letter-spacing:1px;
+}
+.footer b{color:var(--gold);}
+
+@media (max-width: 700px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<canvas id="mesh"></canvas>
+<div class="scan"></div>
+<div class="vig"></div>
+
+<main>
+  <h1>æ:// SYSTEM</h1>
+  <p class="sub">LOCAL SOVEREIGN SURFACES · ONE PERSON · FULL AGENCY</p>
+
+  <div class="kv">
+    <p><strong>runtime</strong>local browser</p>
+    <p><strong>mesh</strong>127.0.0.1</p>
+    <p><strong>state</strong>sovereign</p>
+    <p><strong>access</strong>owner-only</p>
+  </div>
+
+  <div class="hero">
+    <div class="title">BOOT SEQUENCE</div>
+    <div class="pipe">
+      <span>>_æ:</span> startabusiness<br/>
+      <span>>_h:</span> secret source bridge<br/>
+      <span>>_n:</span> native desktop primitive<br/>
+      <span>>_$:</span> financial rails<br/>
+      <span>>_:</span> operator
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>◈ SURFACES</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="name">STARTABUSINESS</div>
+        <div class="meta">Sovereign bootstrap page</div>
+        <div class="meta"><a href="file:///C:/Users/yaelm/OneDrive/BEFORE%202023/Desktop/Y-L.com/startabusiness.html" >startabusiness.html</a></div>
+      </div>
+      <div class="card">
+        <div class="name">SECRET SOURCE BRIDGE</div>
+        <div class="meta">Local secret manager</div>
+        <div class="meta"><a href="file:///C:/æ/site/secret-source-bridge.html" >secret-source-bridge.html</a></div>
+        <div class="meta">backend: 127.0.0.1:7890</div>
+      </div>
+      <div class="card">
+        <div class="name">HERMES DESKTOP</div>
+        <div class="meta">Native on-device runtime</div>
+        <div class="meta">viewport: 5173</div>
+        <div class="meta">bridge: 7860</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>◈ RUNTIME</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="name">COMPUTER USE</div>
+        <div class="meta">Native Win32 primitive</div>
+        <div class="meta">tests: 8/8 passed</div>
+      </div>
+      <div class="card">
+        <div class="name">VSCODE REMOTE</div>
+        <div class="meta">Local editor surface</div>
+        <div class="meta">VSIX: vscode-remote-use</div>
+      </div>
+      <div class="card">
+        <div class="name">SECRET SOURCE</div>
+        <div class="meta">Local bridge plugin</div>
+        <div class="meta">tests: 20/20 passed</div>
+      </div>
+      <div class="card">
+        <div class="name">PRIVATECLIENT.AI</div>
+        <div class="meta">Origin point for bridge</div>
+        <div class="meta">local-first sovereign</div>
+        <div class="meta">privateclient.ai</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <b>CTRL+æ</b> SELECT ALL AGENTS · START YOUR BUSINESS<br/>
+    <b>#hermiphicationisinevitable</b>
+  </div>
+</main>
+
+<script>
+HermesMesh.mount('#mesh', '#D4AF37');
+</script>
+</body>
+</html>

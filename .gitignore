@@ -1,0 +1,32 @@
+# === C:\ae sovereign root .gitignore ===
+# Nested first-party git repos are tracked independently — do NOT embed as gitlinks.
+hermes-fork/
+github-pages/
+htmlvideo/
+mech_tmp/
+openinterpreter-repo/
+qc64_tmp/
+hermes-pr-cuda/
+store/
+
+# Secrets — local-only, never commit.
+secrets/
+
+# Installer / binary artifacts
+*.exe
+rustup-init.exe
+vs_buildtools.exe
+
+# Scratch / generated / logs
+logs/
+out/
+video/
+voice-memos/
+qc64*.txt
+*.tmp
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
