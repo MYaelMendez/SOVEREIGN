@@ -32,7 +32,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 # --- config ---
-DEFAULT_HOST, DEFAULT_PORT = "127.0.0.1", 3000
+DEFAULT_HOST = os.environ.get("VPS_HOST", "127.0.0.1")
+DEFAULT_PORT = int(os.environ.get("VPS_PORT", "3000"))
 GPU_MCP = "gpu-mcp"  # resolved on PATH / workspace; the RTX hands
 # MCP² broker: when this node has no local GPU (e.g. the droplet), proxy rtx
 # dispatch to a leaf gpu-mcp node (Victus over the reverse tunnel). The droplet
