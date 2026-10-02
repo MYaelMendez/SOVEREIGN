@@ -30,3 +30,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+
+# Local-custody secret files — never commit
+secrets.json
+*.secrets.json
