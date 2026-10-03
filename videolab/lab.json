@@ -1,0 +1,44 @@
+{
+  "name": "æ Video Lab",
+  "version": "1.0.0",
+  "description": "Manifest-driven, data-injected, mesh-addressable video workbench",
+  "scenes": [
+    {
+      "id": "cuda-mcp2",
+      "file": "scenes/cuda-mcp2.html",
+      "title": "CUDA_MCP² — Sovereign Compute Mesh",
+      "duration": 12,
+      "data_bindings": {
+        "brain_tok_s": "ollama.7b_tok_s",
+        "matmul_host_ms": "broker.matmul.host_ms",
+        "gpu_name": "broker.probe.name",
+        "gpu_mem": "broker.probe.memory"
+      },
+      "render": {
+        "fps": 30,
+        "quality": "draft",
+        "gpu": true,
+        "output": "cuda-mcp2.mp4"
+      }
+    }
+  ],
+  "data_sources": {
+    "broker": {
+      "url": "http://129.212.180.252:3000",
+      "fallback": "data/telemetry.json"
+    },
+    "mesh": {
+      "url": "local",
+      "dispatch": "æ://mesh"
+    },
+    "local": {
+      "ollama": "http://127.0.0.1:11434",
+      "nvidia_smi": "nvidia-smi"
+    }
+  },
+  "routes": {
+    "videolab://render <scene>": "Render a scene with live data injection",
+    "videolab://status": "Show lab status (live/cached telemetry)",
+    "videolab://watch <scene>": "Watch a scene for changes and auto-re-render"
+  }
+}
