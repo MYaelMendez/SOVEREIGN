@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+        background: #050505; color: #D4AF37;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+      }
+      #root {
+        width: 100%; height: 100%; position: relative; overflow: hidden;
+        perspective: 1200px;
+      }
+      .scanlines {
+        position: absolute; inset: 0; pointer-events: none; z-index: 100;
+        background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
+      }
+      /* 4D Holomesh — 3D particles in a rotating 4D-projected hypercube */
+      #mesh {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .holo-node {
+        position: absolute;
+        width: 8px; height: 8px;
+        background: rgba(212, 175, 55, 0.6);
+        border-radius: 50%;
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        transform: translate(-50%, -50%);
+      }
+      .holo-edge {
+        position: absolute;
+        background: rgba(212, 175, 55, 0.2);
+        transform: translate(-50%, -50%);
+      }
+      .inner-voice {
+        position: absolute;
+        bottom: 60px; left: 120px; right: 120px;
+        text-align: center;
+        font-size: 24px; color: rgba(212, 175, 55, 0.6);
+        letter-spacing: 0.1em;
+        line-height: 2;
+      }
+      .glyph {
+        position: absolute;
+        top: 40px; right: 80px;
+        font-size: 32px; color: rgba(212, 175, 55, 0.5);
+        font-family: 'Arial', sans-serif;
+      }
+      .footer {
+        position: absolute; bottom: 20px; left: 120px; right: 120px;
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 16px; color: rgba(212, 175, 55, 0.4);
+      }
+      .pulse { animation: pulse 3s ease-in-out infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="20"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="scanlines"></div>
+      <div id="mesh" class="clip" data-start="0" data-duration="20" data-track-index="0"></div>
+      <div id="inner-voice" class="inner-voice clip" data-start="0.5" data-duration="19" data-track-index="1">
+        hermiphication was inevitable.<br />
+        welcome to the internet of agents.<br />
+        æ:// language is compute
+      </div>
+      <div id="glyph" class="glyph clip" data-start="0" data-duration="20" data-track-index="2">☺</div>
+      <div id="footer" class="footer clip" data-start="0" data-duration="20" data-track-index="3">
+        <span>Teknium + Yæl · æ://teknium · RTX 3050 · inside the 4D holomesh</span>
+        <span>#hermiphicationisinevitable</span>
+      </div>
+    </div>
+    <script>
+      // 4D Holomesh: vertices of a tesseract projected to 3D
+      // 16 vertices, 32 edges
+      const vertices = [];
+      for (let i = 0; i < 16; i++) {
+        const x4 = (i & 1) ? 1 : -1;
+        const y4 = (i & 2) ? 1 : -1;
+        const z4 = (i & 4) ? 1 : -1;
+        const w4 = (i & 8) ? 1 : -1;
+        vertices.push([x4, y4, z4, w4]);
+      }
+
+      // Edges: connect vertices differing in exactly 1 bit
+      const edges = [];
+      for (let i = 0; i < 16; i++) {
+        for (let b = 0; b < 4; b++) {
+          const j = i ^ (1 << b);
+          if (j > i) edges.push([i, j]);
+        }
+      }
+
+      const meshEl = document.getElementById('mesh');
+      const nodes = [];
+      const edgeEls = [];
+
+      // Create node elements
+      vertices.forEach((v, i) => {
+        const el = document.createElement('div');
+        el.className = 'holo-node';
+        el.id = `node-${i}`;
+        meshEl.appendChild(el);
+        nodes.push(el);
+      });
+
+      // Create edge elements
+      edges.forEach((e, i) => {
+        const el = document.createElement('div');
+        el.className = 'holo-edge';
+        meshEl.appendChild(el);
+        edgeEls.push(el);
+      });
+
+      // Animate: rotate in 4D (double rotation) projected to 3D
+      let t = 0;
+      function animate() {
+        t += 0.016;
+
+        const projected = vertices.map(v => {
+          // Double rotation in 4D
+          const ct = Math.cos(t * 0.3), st = Math.sin(t * 0.3);
+          const ct2 = Math.cos(t * 0.7), st2 = Math.sin(t * 0.7);
+          // Rotate in xy plane and zw plane simultaneously
+          const x = (v[0] * ct - v[1] * st) * 180 + (v[2] * ct2 - v[3] * st2) * 40;
+          const y = (v[0] * st + v[1] * ct) * 180 - (v[2] * st2 + v[3] * ct2) * 40;
+          const z = (v[2] * ct2 - v[3] * st2) * 180 + (v[0] * ct - v[1] * st) * 40;
+          // Perspective projection
+          const scale = 400 / (400 + z);
+          return {
+            x: 960 + x * scale,
+            y: 540 + y * scale,
+            z: z,
+            scale: scale
+          };
+        });
+
+        // Update nodes
+        projected.forEach((p, i) => {
+          nodes[i].style.left = p.x + 'px';
+          nodes[i].style.top = p.y + 'px';
+          nodes[i].style.opacity = String(p.scale);
+          nodes[i].style.width = (8 * p.scale) + 'px';
+          nodes[i].style.height = (8 * p.scale) + 'px';
+        });
+
+        // Update edges
+        edges.forEach((e, i) => {
+          const a = projected[e[0]];
+          const b = projected[e[1]];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          const midX = (a.x + b.x) / 2;
+          const midY = (a.y + b.y) / 2;
+          const opacity = Math.min(a.scale, b.scale) * 0.2;
+
+          edgeEls[i].style.left = midX + 'px';
+          edgeEls[i].style.top = midY + 'px';
+          edgeEls[i].style.width = len + 'px';
+          edgeEls[i].style.height = '2px';
+          edgeEls[i].style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+          edgeEls[i].style.opacity = opacity;
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // GSAP timeline for opacity fades
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#inner-voice", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0.5);
+      tl.fromTo("#glyph", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }, 1);
+      tl.fromTo("#footer", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

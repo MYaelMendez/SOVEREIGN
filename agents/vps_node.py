@@ -27,6 +27,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -160,7 +161,53 @@ def route(cmd: str) -> dict:
     if path == "record":
         nsid = q.get("nsid", ["ae.core#fleetNode"])[0]
         return {"nsid": nsid, "records": list_records(nsid)}
+    if path == "markets":
+        syms = q.get("s", [""])[0]
+        return dispatch_markets(syms)
     return {"error": f"unknown vps path: {path}"}
+
+
+# --- markets: keyless quote proxy (browser CORS fix) ---
+# The upstream chart API sends no Access-Control-Allow-Origin, so a page on
+# https:// cannot fetch it directly. The droplet CAN reach it, and this broker
+# already returns ACAO:* -- so the public node does the fetch. Glocal: the
+# brain proxies the data plane; the browser keeps no key.
+_QUOTE_SYMS = ("^GSPC", "^IXIC", "^DJI", "AAPL", "NVDA", "MSFT", "BTC-USD", "^VIX",
+               "^TNX", "^FVX", "^TYX", "^IRX",
+               "GC=F", "SI=F", "CL=F", "BZ=F", "NG=F", "HG=F", "ZC=F", "ZW=F")
+
+
+def _one_quote(sym: str) -> dict:
+    """Fetch one quote server-side. Returns real values or a real error."""
+    url = ("https://query1.finance.yahoo.com/v8/finance/chart/"
+           + urllib.parse.quote(sym) + "?range=1d&interval=1d")
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read())
+        m = d["chart"]["result"][0]["meta"]
+        price = m.get("regularMarketPrice")
+        prev = m.get("chartPreviousClose", m.get("previousClose"))
+        chg = (price - prev) if (price is not None and prev) else None
+        pct = (chg / prev * 100) if (chg is not None and prev) else None
+        return {"sym": sym, "ok": True, "price": price, "prev": prev,
+                "chg": chg, "pct": pct, "currency": m.get("currency"),
+                "marketTime": m.get("regularMarketTime"),
+                "exchange": m.get("fullExchangeName") or m.get("exchangeName")}
+    except Exception as e:
+        return {"sym": sym, "ok": False, "error": f"{type(e).__name__}: {e}"[:160]}
+
+
+def dispatch_markets(syms: str) -> dict:
+    """Quote N symbols. No symbol arg -> the canonical 20-symbol board."""
+    want = [s.strip() for s in syms.split(",") if s.strip()] if syms else list(_QUOTE_SYMS)
+    want = want[:40]  # bounded
+    out = []
+    for s in want:
+        out.append(_one_quote(s))
+    return {"ok": True, "node": "broker", "count": len(out),
+            "live": sum(1 for q in out if q.get("ok")),
+            "quotes": out, "ts": int(time.time())}
 
 
 # --- HTTP handler ---
@@ -193,6 +240,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, dispatch_rtx(op, n))
             except Exception as e:
                 return self._send(200, {"ok": False, "error": f"rtx GET error: {e}"})
+        if self.path.startswith("/xrpc/ae.vps.markets"):
+            try:
+                q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                syms = q.get("s", [""])[0]
+                return self._send(200, dispatch_markets(syms))
+            except Exception as e:
+                return self._send(200, {"ok": False, "error": f"markets GET error: {e}"})
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
