@@ -14,23 +14,21 @@
 #   is nothing to loop.
 #
 # Usage:
-#   rtx-bridge.sh up        run both loops in the foreground (systemd/Startup entry)
-#   rtx-bridge.sh start     detached start
-#   rtx-bridge.sh stop      kill both
-#   rtx-bridge.sh status    probe leaf + tunnel + the public broker path
-#   rtx-bridge.sh logs      tail the logs
-#   rtx-bridge.sh install   write the systemd --user unit (Linux/WSL)
-#   rtx-bridge.sh startup   write the Windows Startup .vbs (Victus)
+#   rtx-bridge.sh up [--force]  run both loops in the foreground (Startup entry)
+#   rtx-bridge.sh start         detached start
+#   rtx-bridge.sh stop          kill loops + children
+#   rtx-bridge.sh status        probe leaf + tunnel + the public broker path
+#   rtx-bridge.sh logs          tail the logs
+#   rtx-bridge.sh install       write the systemd --user unit (Linux/WSL)
+#   rtx-bridge.sh startup       write the Windows Startup .vbs (Victus)
 
 set -u
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# MSYS path trap (documented in glocal-mesh + github-pages-deploy): this shell
-# hands `python` an MSYS path (/c/æ/...), and the native Windows python.exe
-# resolves it to C:\c\æ\... — a directory that does not exist. Convert to a
-# native path for anything a native binary has to open. Python and ssh both
-# need the converted form.
+# MSYS path trap: this shell hands native binaries MSYS paths (/c/æ/...), and
+# python.exe resolves those to C:\c\æ\... which does not exist. Convert for
+# anything a native binary must open. Bash builtins (cd) take the MSYS form.
 _native() {
   if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi
 }
@@ -40,6 +38,7 @@ LEAF_DIR="$(_native "$DIR")"
 LOG_DIR="${RTX_BRIDGE_LOG_DIR:-$HOME/.hermes/logs}"
 LEAF_LOG="$LOG_DIR/rtx_leaf.log"
 TUN_LOG="$LOG_DIR/rtx_tunnel.log"
+PIDFILE="$LOG_DIR/rtx-bridge.pid"
 
 DROPLET_HOST="${DROPLET_HOST:-129.212.180.252}"
 LEAF_PORT="${RTX_LEAF_PORT:-3050}"
@@ -47,9 +46,11 @@ REMOTE_PORT="${RTX_REMOTE_PORT:-$LEAF_PORT}"
 
 mkdir -p "$LOG_DIR"
 
-# --- process discovery (Windows: python.exe / ssh.exe ; POSIX: python3 / ssh) ---
-# NOTE: `tasklist` does NOT expose command lines, so grepping it for "rtx_leaf"
-# never matches. Use PowerShell CIM (wmic is removed on Win11 26200+).
+# --- process discovery -------------------------------------------------------
+# `tasklist` does NOT expose command lines, so grepping it for a script name
+# never matches and a stop built on it silently kills nothing. Use PowerShell
+# CIM (wmic is removed on Win11 26200+).
+
 _leaf_pids() {
   if command -v powershell >/dev/null 2>&1; then
     powershell -NoProfile -Command \
@@ -63,30 +64,32 @@ _leaf_pids() {
 _tunnel_pids() {
   if command -v powershell >/dev/null 2>&1; then
     powershell -NoProfile -Command \
-      "Get-CimInstance Win32_Process -Filter \"name='ssh.exe'\" | Where-Object { \$_.CommandLine -like '*-R*$REMOTE_PORT:127.0.0.1:$LEAF_PORT*' } | Select-Object -ExpandProperty ProcessId" \
+      "Get-CimInstance Win32_Process -Filter \"name='ssh.exe'\" | Where-Object { \$_.CommandLine -like '*-R*${REMOTE_PORT}:127.0.0.1:${LEAF_PORT}*' } | Select-Object -ExpandProperty ProcessId" \
       2>/dev/null | tr -d '\r' | grep -E '^[0-9]+$'
   else
-    pgrep -f "ssh .*-R $REMOTE_PORT:127.0.0.1:$LEAF_PORT" 2>/dev/null
+    pgrep -f "ssh .*-R ${REMOTE_PORT}:127.0.0.1:${LEAF_PORT}" 2>/dev/null
   fi
 }
 
-# The supervisor loops themselves. Killing only the python child leaves the
-# `while true` alive, and it respawns the child 2s later — so `stop` must take
-# the loops down too, not just their children.
+# Supervisor loops. Excludes this process and its parent, because the script's
+# OWN command line contains "rtx-bridge.sh up" and would otherwise match itself.
 _loop_pids() {
+  _self="$$"
+  _parent="${PPID:-0}"
   if command -v powershell >/dev/null 2>&1; then
-    powershell -NoProfile -Command       "Get-CimInstance Win32_Process -Filter \"name='bash.exe'\" | Where-Object { \$_.CommandLine -like '*rtx-bridge*' -and \$_.CommandLine -like '* up*' } | Select-Object -ExpandProperty ProcessId"       2>/dev/null | tr -d '
-' | grep -E '^[0-9]+$'
+    powershell -NoProfile -Command \
+      "Get-CimInstance Win32_Process -Filter \"name='bash.exe'\" | Where-Object { \$_.CommandLine -like '*rtx-bridge*' -and \$_.CommandLine -like '* up*' } | Select-Object -ExpandProperty ProcessId" \
+      2>/dev/null | tr -d '\r' | grep -E '^[0-9]+$' | grep -vx "$_self" | grep -vx "$_parent"
   else
-    pgrep -f "rtx-bridge.sh up" 2>/dev/null
+    pgrep -f "rtx-bridge.sh up" 2>/dev/null | grep -vx "$_self" | grep -vx "$_parent"
   fi
 }
 
 _port_busy() {
   if command -v netstat >/dev/null 2>&1; then
-    netstat -ano 2>/dev/null | grep -E "LISTENING" | grep -q ":$LEAF_PORT "
+    netstat -ano 2>/dev/null | grep -E "LISTENING" | grep -q ":${LEAF_PORT} "
   else
-    ss -tln 2>/dev/null | grep -q ":$LEAF_PORT "
+    ss -tln 2>/dev/null | grep -q ":${LEAF_PORT} "
   fi
 }
 
@@ -108,7 +111,7 @@ run_tunnel() {
       -o ExitOnForwardFailure=yes \
       -o ServerAliveInterval=30 \
       -o ServerAliveCountMax=3 \
-      -R "$REMOTE_PORT:127.0.0.1:$LEAF_PORT" \
+      -R "${REMOTE_PORT}:127.0.0.1:${LEAF_PORT}" \
       "root@$DROPLET_HOST" >> "$TUN_LOG" 2>&1
     echo "[$(date -u +%FT%TZ)] tunnel dropped (rc=$?); reconnect in 5s" >> "$TUN_LOG"
     sleep 5
@@ -117,11 +120,35 @@ run_tunnel() {
 
 # --- verbs -------------------------------------------------------------------
 cmd_up() {
+  # Guard against stacked launches: N supervisors racing for the same local port
+  # AND the same remote forward port makes the losers die on ExitOnForwardFailure
+  # and thrash the log.
+  #
+  # State comes from a PIDFILE, not from pattern-matching process command lines.
+  # Matching command lines is a trap here: ANY bash whose line happens to contain
+  # "rtx-bridge" and " up" matches -- including the operator's own shell running
+  # a command that merely mentions the script. That produced a permanent false
+  # "already running" and blocked every real launch.
+  if [ "${1:-}" != "--force" ]; then
+    _live=""
+    if [ -f "$PIDFILE" ]; then
+      while read -r _p; do
+        [ -n "$_p" ] && kill -0 "$_p" 2>/dev/null && _live="$_live $_p"
+      done < "$PIDFILE"
+    fi
+    if [ -n "$_live" ]; then
+      echo "æ://rtx-bridge already running (loops:$_live)"
+      echo "  probe with 'rtx-bridge.sh status', or restart with 'up --force'"
+      exit 0
+    fi
+  fi
+
   echo "æ://rtx-bridge up · leaf :$LEAF_PORT · tunnel -> $DROPLET_HOST:$REMOTE_PORT"
   echo "  logs: $LOG_DIR"
   run_leaf &   LEAF_JOB=$!
   run_tunnel & TUN_JOB=$!
-  trap 'kill $LEAF_JOB $TUN_JOB 2>/dev/null; exit 0' INT TERM
+  printf '%s\n%s\n' "$LEAF_JOB" "$TUN_JOB" > "$PIDFILE"
+  trap 'kill $LEAF_JOB $TUN_JOB 2>/dev/null; rm -f "$PIDFILE"; exit 0' INT TERM
   wait
 }
 
@@ -138,20 +165,27 @@ cmd_start() {
 }
 
 cmd_stop() {
-  # loops first, else they respawn the children we are about to kill
-  loops="$(_loop_pids)"
-  if [ -n "$loops" ]; then
-    echo "$loops" | while read -r p; do [ -n "$p" ] && powershell -NoProfile -Command "Stop-Process -Id $p -Force" 2>/dev/null; done
-    echo "loops stopped (pids: $(echo $loops | tr '
-' ' '))"
+  # loops first, else they respawn the children we are about to kill.
+  # The pidfile is authoritative; the process sweep below is a safety net for
+  # supervisors started outside this script.
+  if [ -f "$PIDFILE" ]; then
+    _killed=""
+    while read -r _p; do
+      if [ -n "$_p" ] && kill -0 "$_p" 2>/dev/null; then
+        kill "$_p" 2>/dev/null || powershell -NoProfile -Command "Stop-Process -Id $_p -Force" 2>/dev/null
+        _killed="$_killed $_p"
+      fi
+    done < "$PIDFILE"
+    rm -f "$PIDFILE"
+    [ -n "$_killed" ] && echo "loops stopped (pids:$_killed)" || echo "pidfile stale, no live loops"
   else
-    echo "no loops running"
+    echo "no pidfile"
   fi
 
   lp="$(_leaf_pids)"
   if [ -n "$lp" ]; then
     echo "$lp" | while read -r p; do [ -n "$p" ] && powershell -NoProfile -Command "Stop-Process -Id $p -Force" 2>/dev/null; done
-    echo "leaf stopped (pids: $(echo $lp | tr '\n' ' '))"
+    echo "leaf stopped (pids: $(echo "$lp" | tr '\n' ' '))"
   else
     echo "leaf not running"
   fi
@@ -159,7 +193,7 @@ cmd_stop() {
   tp="$(_tunnel_pids)"
   if [ -n "$tp" ]; then
     echo "$tp" | while read -r p; do [ -n "$p" ] && powershell -NoProfile -Command "Stop-Process -Id $p -Force" 2>/dev/null; done
-    echo "tunnel stopped (pids: $(echo $tp | tr '\n' ' '))"
+    echo "tunnel stopped (pids: $(echo "$tp" | tr '\n' ' '))"
   else
     echo "tunnel not running"
   fi
@@ -245,12 +279,12 @@ cmd_startup() {
 }
 
 case "${1:-status}" in
-  up)      cmd_up ;;
+  up)      cmd_up "${2:-}" ;;
   start)   cmd_start ;;
   stop)    cmd_stop ;;
   status)  cmd_status ;;
   logs)    cmd_logs ;;
   install) cmd_install ;;
   startup) cmd_startup ;;
-  *) echo "usage: rtx-bridge.sh {up|start|stop|status|logs|install|startup}"; exit 2 ;;
+  *) echo "usage: rtx-bridge.sh {up [--force]|start|stop|status|logs|install|startup}"; exit 2 ;;
 esac
