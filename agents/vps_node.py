@@ -43,10 +43,53 @@ GPU_MCP = "gpu-mcp"  # resolved on PATH / workspace; the RTX hands
 LEAF_MCP_HOST = os.environ.get("LEAF_MCP_HOST", "127.0.0.1")
 LEAF_MCP_PORT = os.environ.get("LEAF_MCP_PORT", "3050")
 
-# in-memory record store: nsid -> [records]
+# record store: nsid -> [records]
+#
+# This WAS in-memory only, so every record was lost on service restart — the
+# "durable mirror" was not durable. Records now land on disk the moment they
+# are signed, and reload at import. A brain that forgets on restart is not a
+# brain; it is a cache wearing a brain's name.
+_STORE_PATH = os.environ.get("AEVPS_STORE", "/opt/aevps/store.json")
 _STORE: dict[str, list[dict]] = {"ae.core#fleetNode": [], "ae.core#meshPeer": [],
                                  "ae.core#ledgerEvent": [], "ae.core#sovereignState": []}
 _LOCK = threading.Lock()
+
+
+def _load_store() -> None:
+    """Load records from disk. A corrupt file is reported, never silently
+    replaced with an empty store (that would look like 'no records' and hide
+    real data loss)."""
+    global _STORE
+    try:
+        with open(_STORE_PATH, "r", encoding="utf-8") as fh:
+            disk = json.load(fh)
+        if isinstance(disk, dict):
+            for k, v in disk.items():
+                if isinstance(v, list):
+                    _STORE[k] = v
+    except FileNotFoundError:
+        pass                      # first run: an empty store is correct
+    except Exception as e:
+        print(f"[store] CORRUPT {_STORE_PATH}: {type(e).__name__}: {e}", flush=True)
+        print("[store] refusing to start empty — leaving the file in place", flush=True)
+
+
+def _save_store() -> None:
+    """Write atomically: temp file + replace. A partial write must never be
+    able to destroy a good store."""
+    try:
+        os.makedirs(os.path.dirname(_STORE_PATH), exist_ok=True)
+        tmp = _STORE_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(_STORE, fh, separators=(",", ":"))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, _STORE_PATH)
+    except Exception as e:
+        print(f"[store] save failed: {type(e).__name__}: {e}", flush=True)
+
+
+_load_store()
 
 
 # --- signing (local-first stand-in; replace with ed25519 for real PDS) ---
@@ -87,6 +130,7 @@ def make_record(nsid: str, value: dict) -> dict:
         if nsid not in _STORE:
             _STORE[nsid] = []
         _STORE[nsid].append(env)
+        _save_store()          # durable before we return the envelope
     return env
 
 
