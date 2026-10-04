@@ -6,126 +6,49 @@
 <meta name="theme-color" content="#050505"/>
 <title>æ:// DEMO · Sovereign Private Client Mesh</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<script defer src="shared-mesh.js"></script>
+<link rel="stylesheet" href="./assets/aether.css">
 <style>
-:root{
-  --void:#050505;--gold:#D4AF37;--gold-dim:rgba(212,175,55,.08);
-  --gold-glow:rgba(212,175,55,.36);--neon:#00ff9d;--ink:#f0ece4;
-  --muted:rgba(240,236,228,.38);--border:rgba(212,175,55,.18);
-  --border-hot:rgba(212,175,55,.55);
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{
-  width:100%;min-height:100dvh;background:var(--void);color:var(--ink);
-  font-family:'JetBrains Mono',monospace;padding:48px clamp(20px,2.4vw,56px);
-  overflow-x: hidden;
-}
-canvas#mesh{position:fixed;inset:0;z-index:0;pointer-events:none;}
-.scan{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px);}
-.vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 38%,rgba(5,5,5,.92) 100%);}
-
-main{position:relative;z-index:10;max-width:1180px;margin:0 auto;}
-h1{
-  font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:clamp(26px,5.2vw,52px);letter-spacing:clamp(1.2px,.5vw,4px);
-  color:var(--gold);text-shadow:0 0 24px var(--gold-glow),0 0 64px rgba(212,175,55,.09);
-}
-.sub{margin-top:10px;color:var(--muted);font-size:clamp(11px,1.5vw,14px);letter-spacing:1px;}
-
-.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
-.chip{
-  border:1px solid var(--border);padding:8px 10px;color:var(--muted);
-  font-size:11px;background:rgba(212,175,55,.04);min-width:140px;
-}
-.chip b{color:var(--gold);}
-
-.grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,1fr);}
-.grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,1fr);}
-@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
-
-.section{
-  margin-top:24px;border:1px solid var(--border);padding:16px;
-  background:rgba(5,5,5,.55);backdrop-filter:blur(14px);
-  display:flex;flex-direction:column;gap:12px);
-}
-.section>*{position:relative;z-index:1;}
-.section h2{
-  font-family:'Orbitron',sans-serif;font-weight:700;
-  font-size:clamp(13px,1.7vw,17px);letter-spacing:1.5px;color:var(--gold);
-  text-shadow:0 0 12px var(--gold-glow);
-}
-
-.hero{
-  margin-top:24px;border:1px solid var(--border);padding:18px;
-  background:linear-gradient(180deg,rgba(212,175,55,.04),transparent);
-}
-.hero .title{
-  font-family:'Orbitron',sans-serif;font-weight:900;
-  letter-spacing:2px;color:var(--gold);text-shadow:0 0 18px var(--gold-glow);
-}
-.hero .seq{
-  margin-top:12px;display:flex;flex-direction:column;gap:8px;color:var(--muted);
-}
-.hero .seq .step{display:flex;gap:10px;align-items:flex-start;}
-.hero .seq .step .tag{
-  min-width:110px;color:var(--gold);font-weight:700;letter-spacing:1px;font-size:12px;
-}
-.hero .seq .step .msg{color:var(--ink);font-size:12px;}
-.hero .seq .step .msg.ok{color:var(--neon);}
-.hero .bar{
-  margin-top:12px;height:2px;background:linear-gradient(90deg,var(--gold),var(--neon));
-  transform-origin:left;transform:scaleX(0);animation:expand 1.7s ease-out forwards;
-}
-@keyframes expand{to{transform:scaleX(1);}}
-
-button{
-  background:transparent;border:1px solid var(--border);color:var(--gold);
-  font-family:'JetBrains Mono',monospace;font-size:clamp(10px,1vw,12px);
-  padding:9px 12px;cursor:pointer;letter-spacing:.8px;
-}
-button.primary{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
-button.ghost{color:var(--muted);border-color:rgba(212,175,55,.22);}
-button:hover{filter:brightness(1.08);}
-button:disabled{opacity:.45;cursor:not-allowed;}
-
-.card{
-  border:1px solid var(--border);padding:14px;
-  background:rgba(212,175,55,.03);transition:all .2s;
-}
-.card:hover{border-color:var(--border-hot);background:rgba(212,175,55,.06);}
-.card .name{color:var(--gold);font-weight:700;letter-spacing:1px;font-size:13px;}
-.card .meta{color:var(--muted);font-size:11px;margin-top:6px;}
-.card a{color:var(--gold);text-decoration:none;}
-.card a:hover{text-decoration:underline;}
-.card .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-
-.pipe{color:var(--muted);font-size:11px;margin-top:10px;}
-.pipe span{opacity:.7;}
-
-.logshell{
-  margin-top:24px;border:1px solid var(--border);padding:14px;
-  background:rgba(5,5,5,.6);backdrop-filter:blur(10px);
-  color:var(--muted);font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word;
-}
-.logshell .ok{color:var(--neon);}
-.logshell .err{color:#ff7b72;}
-
-.footer{
-  margin-top:24px;border:1px solid var(--border);padding:18px;
-  color:var(--muted);font-size:11px;letter-spacing:1px;
-}
-.footer b{color:var(--gold);}
-
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.chip{border:1px solid var(--border);padding:8px 10px;color:var(--muted);font-size:11px;background:rgba(212,175,55,.04);min-width:140px}
+.chip b{color:var(--gold)}
+.pipe{color:var(--muted);font-size:11px;margin-top:10px}
+.pipe span{opacity:.7}
+.logshell{margin-top:24px;border:1px solid var(--border);padding:14px;background:rgba(5,5,5,.6);color:var(--muted);font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.logshell .ok{color:var(--neon)}
+.card .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.card a{color:var(--gold);text-decoration:none}
+.card a:hover{text-decoration:underline}
 </style>
+
+<meta property="og:title" content="æ:// DEMO · Sovereign Private Client Mesh">
+<meta property="og:description" content="æ:// DEMO · Sovereign Private Client Mesh — sovereign agentic surface">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://myaelmendez.github.io/demo.html">
+<meta property="og:image" content="https://myaelmendez.github.io/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="æ:// DEMO · Sovereign Private Client Mesh">
+<meta name="twitter:description" content="æ:// DEMO · Sovereign Private Client Mesh — sovereign agentic surface">
+<meta name="twitter:image" content="https://myaelmendez.github.io/og-image.png">
+
+<script>
+  console.log('analytics: ready — configure Cloudflare Web Analytics token');
+</script>
 </head>
 <body>
-<canvas id="mesh"></canvas>
-<div class="scan"></div>
-<div class="vig"></div>
+<canvas id="mesh"></canvas><div class="scan"></div><div class="vig"></div>
+<div class="wrap">
 
-<main>
-  <h1>æ:// DEMO</h1>
-  <p class="sub">INTEGRATED LOCAL HTML + VSCODE SOVEREIGN SYSTEM · PROTOTYPE</p>
+  <div class="statusbar">
+    <span>æ:// DEMO</span>
+    <span>LOCAL + WEB MIRROR</span>
+    <span class="live"><span class="dot"></span>SOVEREIGN</span>
+  </div>
+
+  <div class="hero">
+    <div class="glyph">æ</div>
+    <div class="cmd">&gt;_æ<span class="cur">&nbsp;</span></div>
+    <div class="sub">INTEGRATED LOCAL HTML + VSCODE SOVEREIGN SYSTEM · PROTOTYPE</div>
+  </div>
 
   <div class="chips">
     <div class="chip"><b>runtime</b> local browser</div>
@@ -135,100 +58,60 @@ button:disabled{opacity:.45;cursor:not-allowed;}
     <div class="chip"><b>vscode</b> <span id="vscode-chip">detecting…</span></div>
   </div>
 
-  <div class="hero">
-    <div class="title">BOOT SEQUENCE</div>
-    <div class="seq">
-      <div class="step"><div class="tag">>_æ| SYSTEM</div><div class="msg" id="seq-system">index boot</div></div>
-      <div class="step"><div class="tag">>_h: BRIDGE</div><div class="msg ok" id="seq-bridge">127.0.0.1:7890 local_bridge ready</div></div>
-      <div class="step"><div class="tag">>_n: RUNTIME</div><div class="msg" id="seq-native">native Win32 primitive onboarded</div></div>
-      <div class="step"><div class="tag">>_$: RAILS</div><div class="msg" id="seq-stripe">Stripe/Doola rails configured</div></div>
-      <div class="step"><div class="tag">>_: OPERATOR</div><div class="msg" id="seq-operator">Yæl Méndez · owner</div></div>
-    </div>
-    <div class="bar"></div>
-  </div>
-
-  <div class="section">
-    <h2>◈ SURFACES</h2>
+  <div class="panel">
+    <div class="panel-head"><span>◈ SURFACES</span><span class="tag">WEB MIRROR</span></div>
     <div class="grid-3">
       <div class="card">
-        <div class="name">STARTABUSINESS</div>
-        <div class="meta">Sovereign bootstrap page</div>
-        <div class="meta"><a href="file:///C:/Users/yaelm/OneDrive/BEFORE%202023/Desktop/Y-L.com/startabusiness.html" target="_blank">open startabusiness.html</a></div>
-        <div class="row">
-          <button onclick="openFile('file:///C:/Users/yaelm/OneDrive/BEFORE%202023/Desktop/Y-L.com/startabusiness.html')">Open</button>
-          <button class="primary" onclick="openInVscode('C:/Users/yaelm/OneDrive/BEFORE 2023/Desktop/Y-L.com/startabusiness.html')">vscode://</button>
-        </div>
+        <div class="name">MESH AGENTI</div>
+        <div class="meta">Pair two sovereign nodes via QR</div>
+        <div class="row"><a href="./mesh-agenti.html">open →</a></div>
       </div>
       <div class="card">
-        <div class="name">SECRET SOURCE BRIDGE</div>
+        <div class="name">FLEET</div>
+        <div class="meta">MoD×MoA×MoM device mixture</div>
+        <div class="row"><a href="./fleet.html">open →</a></div>
+      </div>
+      <div class="card">
+        <div class="name">CUDA · VLC</div>
+        <div class="meta">CUDA→NVENC→VLC live stream</div>
+        <div class="row"><a href="./cuda-vlc.html">open →</a></div>
+      </div>
+      <div class="card">
+        <div class="name">SECRET BRIDGE</div>
         <div class="meta">Local secret manager</div>
-        <div class="meta">backend: 127.0.0.1:7890</div>
-        <div class="meta"><a href="file:///C:/æ/site/secret-source-bridge.html" target="_blank">open secret-source-bridge.html</a></div>
-        <div class="row">
-          <button onclick="openFile('file:///C:/æ/site/secret-source-bridge.html')">Open</button>
-          <button class="primary" onclick="openInVscode('C:/æ/site/secret-source-bridge.html')">vscode://</button>
-        </div>
+        <div class="row"><a href="./secret-source-bridge.html">open →</a></div>
       </div>
       <div class="card">
-        <div class="name">SYSTEM INDEX</div>
-        <div class="meta">Local sovereign system map</div>
-        <div class="meta"><a href="file:///C:/æ/site/index.html" target="_blank">open index.html</a></div>
-        <div class="row">
-          <button onclick="openFile('file:///C:/æ/site/index.html')">Open</button>
-          <button class="primary" onclick="openInVscode('C:/æ/site/index.html')">vscode://</button>
-        </div>
+        <div class="name">SOVEREIGN STATE</div>
+        <div class="meta">Memory + ledger + #250 spine</div>
+        <div class="row"><a href="./sovereign-state.html">open →</a></div>
       </div>
       <div class="card">
-        <div class="name">VSCODE SHELL</div>
-        <div class="meta">Agentic OS hub panel</div>
-        <div class="meta">home:// / remoteUse.*</div>
-        <div class="row">
-          <button class="primary" onclick="openVscodeCommand('remoteUse.homeOS')">homeOS</button>
-          <button onclick="openVscodeCommand('remoteUse.agenticHtmlViewport')">agentic</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="name">HERMES VIEWPORT</div>
-        <div class="meta">Native on-device runtime</div>
-        <div class="meta">bridge: 7860</div>
-        <div class="row">
-          <button onclick="openHttp('http://127.0.0.1:7860/health')">health</button>
-          <button onclick="openHttp('http://127.0.0.1:7860/')">bridge</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="name">PRIVATECLIENT.AI</div>
-        <div class="meta">Origin point for bridge</div>
-        <div class="meta">local-first sovereign</div>
-        <div class="row">
-          <button class="primary" onclick="openInVscode('C:/æ/hermes-fork')">origin</button>
-        </div>
+        <div class="name">HUB</div>
+        <div class="meta">Unified homebase</div>
+        <div class="row"><a href="./index.html">open →</a></div>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <h2>◈ RUNTIME</h2>
+  <div class="panel">
+    <div class="panel-head"><span>◈ RUNTIME</span><span class="tag">LOCAL</span></div>
     <div class="grid-2">
       <div class="card">
         <div class="name">COMPUTER USE</div>
-        <div class="meta">Native Win32 primitive</div>
-        <div class="meta">tests: 8/8 passed</div>
+        <div class="meta">Native Win32 primitive · local-only</div>
       </div>
       <div class="card">
         <div class="name">VSCODE REMOTE</div>
-        <div class="meta">Local editor surface</div>
-        <div class="meta">VSIX: vscode-remote-use</div>
+        <div class="meta">Local editor surface · vscode-remote-use</div>
       </div>
       <div class="card">
         <div class="name">SECRET SOURCE</div>
-        <div class="meta">Local bridge plugin</div>
-        <div class="meta">tests: 20/20 passed</div>
+        <div class="meta">Local bridge · opt-in broker</div>
       </div>
       <div class="card">
-        <div class="name">DEMO_STATUS</div>
-        <div class="meta" id="demo-status">running</div>
-        <div class="meta">bounded sovereign private client mesh</div>
+        <div class="name">CUDA HANDS</div>
+        <div class="meta">gpu-mcp · RTX 3050 on Victus</div>
       </div>
     </div>
   </div>
@@ -236,16 +119,27 @@ button:disabled{opacity:.45;cursor:not-allowed;}
   <div class="logshell" id="log">
 [BOOT] æ:// demo surface initialized
 [DEMO] HTML surfaces + VS Code primitive linked
-[DEMO] ready for operator instruction
+[DEMO] web mirror of C:\æ\site\demo.html · run locally for full bridge
   </div>
 
-  <div class="footer">
-    <b>CTRL+æ</b> SELECT ALL AGENTS · START YOUR BUSINESS<br/>
-    <b>#hermiphicationisinevitable</b>
+  <div class="foot">
+    <a href="./index.html">hub</a>
+    <a href="./mesh-agenti.html">mesh</a>
+    <a href="./fleet.html">fleet</a>
+    <a href="./cuda-vlc.html">cuda-vlc</a>
+      <a href="./porter.html">porter</a>
+    <a href="./secret-source-bridge.html">secret-bridge</a>
+    <a href="./sovereign-state.html">sovereign-state</a>
+    <a href="./agentic.html">#startabusiness</a>
   </div>
-</main>
+  <div class="hash">#HERMIPHICATIONISINEVITABLE</div>
+</div>
 
+<div class="toast" id="toast"></div>
+
+<script src="./assets/aether.js?v=2"></script>
 <script>
+const {Aether} = window;
 window.addEventListener('DOMContentLoaded', () => {
   const vsChip = document.getElementById('vscode-chip');
   if (vsChip) {
@@ -254,54 +148,9 @@ window.addEventListener('DOMContentLoaded', () => {
     vsChip.style.color = ready ? 'var(--neon)' : 'var(--muted)';
   }
 });
-
-function log(line, ok) {
-  const el = document.getElementById('log');
-  if (!el) return;
-  const txt = new Date().toISOString().slice(11,19) + ' ' + line;
-  const span = document.createElement('div');
-  span.className = ok ? 'ok' : 'err';
-  span.textContent = txt;
-  el.prepend ? el.prepend(span) : (el.childNodes.length ? el.insertBefore(span, el.firstChild) : el.appendChild(span));
-}
-
-function openFile(url) {
-  log('open local file=' + url, true);
-  window.open(url, '_blank', 'noopener');
-}
-
-function openHttp(url) {
-  log('open http=' + url, true);
-  window.open(url, '_blank', 'noopener');
-}
-
-function openInVscode(path) {
-  log('vscode path=' + path, true);
-  try {
-    window.open('vscode://file/' + encodeURIComponent(path), '_blank', 'noopener');
-  } catch {
-    log('vscode fallback error=true', true);
-  }
-}
-
-function openVscodeCommand(id) {
-  log('command=' + id, true);
-  try {
-    const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
-    if (vscode && typeof vscode.postMessage === 'function') {
-      vscode.postMessage({ command: id });
-      log('posted command to host', true);
-    } else {
-      log('no host context; command requires VS Code webview', true);
-    }
-  } catch (error) {
-    log('command failed=' + String(error), false);
-  }
-}
-
+function log(line, ok){const el=document.getElementById('log');if(!el)return;const span=document.createElement('div');span.className=ok?'ok':'';span.textContent=new Date().toISOString().slice(11,19)+' '+line;el.prepend(span);}
 log('DEMO_STATUS=running');
-HermesMesh && typeof HermesMesh.mount === 'function' && HermesMesh.mount('#mesh', '#D4AF37');
-log('HermesMesh.mount ok', true);
+Aether.mesh();
 </script>
 </body>
 </html>
