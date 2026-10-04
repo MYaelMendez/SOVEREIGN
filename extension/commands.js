@@ -43,12 +43,12 @@ const COMMANDS = [
   },
   {
     id: 'stripe',
-    pattern: /^(>_\$|stripe|\$\^æ)$/,
+    pattern: /^(>_\$|rails|affiliate|\$^æ)$/,
     icon: '$',
-    title: '>_$ · Stripe',
-    desc: 'payments / financial nervous system',
-    url: 'https://dashboard.stripe.com',
-    keywords: ['pay', 'money', 'checkout', 'dollar']
+    title: '>_$ · Doola affiliate',
+    desc: 'financial rail — Doola affiliate (paid, zero custody). Stripe = future plugin.',
+    url: 'https://partnersps.doola.com/hhsoqhb23250',
+    keywords: ['pay', 'money', 'affiliate', 'doola', 'formation', 'rail']
   },
 
   // ── namespace ──
