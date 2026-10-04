@@ -51,7 +51,11 @@ LEAF_MCP_PORT = os.environ.get("LEAF_MCP_PORT", "3050")
 # brain; it is a cache wearing a brain's name.
 _STORE_PATH = os.environ.get("AEVPS_STORE", "/opt/aevps/store.json")
 _STORE: dict[str, list[dict]] = {"ae.core#fleetNode": [], "ae.core#meshPeer": [],
-                                 "ae.core#ledgerEvent": [], "ae.core#sovereignState": []}
+                                 "ae.core#ledgerEvent": [], "ae.core#sovereignState": [],
+                                 # ae.social — the receipts network. Posts carry evidence.
+                                 "ae.social#post": [], "ae.social#reply": [],
+                                 "ae.social#receipt": [], "ae.social#follow": [],
+                                 "ae.social#agentProfile": []}
 _LOCK = threading.Lock()
 
 
