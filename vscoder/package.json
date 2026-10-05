@@ -1,0 +1,123 @@
+{
+  "name": "vscoder",
+  "displayName": "VSCODER://",
+  "description": "VS Code-native autonomous engineering agent. Semantic operations via LSP, refactoring, build/test/debug, git, benchmarks, receipts with hash chain.",
+  "version": "0.1.0",
+  "publisher": "vscoder",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "AI",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "vscoder",
+    "agent",
+    "lsp",
+    "refactoring",
+    "engineering",
+    "autonomous",
+    "webmcp"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onUri",
+    "onStartupFinished",
+    "onCommand:vscoder.open",
+    "onCommand:vscoder.observe",
+    "onCommand:vscoder.plan",
+    "onCommand:vscoder.refactor",
+    "onCommand:vscoder.build",
+    "onCommand:vscoder.test",
+    "onCommand:vscoder.debug",
+    "onCommand:vscoder.benchmark",
+    "onCommand:vscoder.gitDiff",
+    "onCommand:vscoder.receipt"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscoder.open",
+        "title": "VSCODER:// Open Agent"
+      },
+      {
+        "command": "vscoder.observe",
+        "title": "VSCODER:// Observe Workspace"
+      },
+      {
+        "command": "vscoder.plan",
+        "title": "VSCODER:// Plan Task"
+      },
+      {
+        "command": "vscoder.refactor",
+        "title": "VSCODER:// Refactor"
+      },
+      {
+        "command": "vscoder.build",
+        "title": "VSCODER:// Build"
+      },
+      {
+        "command": "vscoder.test",
+        "title": "VSCODER:// Test"
+      },
+      {
+        "command": "vscoder.debug",
+        "title": "VSCODER:// Debug"
+      },
+      {
+        "command": "vscoder.benchmark",
+        "title": "VSCODER:// Benchmark"
+      },
+      {
+        "command": "vscoder.gitDiff",
+        "title": "VSCODER:// Git Diff"
+      },
+      {
+        "command": "vscoder.receipt",
+        "title": "VSCODER:// Show Receipt"
+      }
+    ],
+    "configuration": {
+      "title": "VSCODER",
+      "properties": {
+        "vscoder.webmcpPort": {
+          "type": "number",
+          "default": 8123,
+          "description": "Port for the VSCODER WebMCP HTTP server."
+        },
+        "vscoder.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL for local LLM routing."
+        },
+        "vscoder.pythonPath": {
+          "type": "string",
+          "default": "C:/gpu/Scripts/python.exe",
+          "description": "Python interpreter path for CUDA/benchmark tasks."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MYaelMendez/SOVEREIGN.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MYaelMendez/SOVEREIGN/issues"
+  },
+  "homepage": "https://github.com/MYaelMendez/SOVEREIGN#readme",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.6.0",
+    "@vscode/vsce": "^3.9.2"
+  },
+  "icon": "images/icon.svg"
+}

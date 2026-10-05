@@ -1,0 +1,136 @@
+{
+  "name": "vscoder-bridge",
+  "displayName": "VSCODER://BRIDGE",
+  "description": "Hermes Desktop IDE driver \u2014 typed VSCODER tools over authenticated IPC/RPC with full IDE control, state observation, and authority separation.",
+  "version": "1.0.0",
+  "publisher": "vscoder",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "AI",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "vscoder",
+    "bridge",
+    "hermes",
+    "ide",
+    "driver",
+    "webmcp",
+    "lsp",
+    "refactoring",
+    "authority",
+    "receipts"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onUri",
+    "onStartupFinished",
+    "onCommand:vscoderBridge.open",
+    "onCommand:vscoderBridge.observe",
+    "onCommand:vscoderBridge.plan",
+    "onCommand:vscoderBridge.refactor",
+    "onCommand:vscoderBridge.build",
+    "onCommand:vscoderBridge.test",
+    "onCommand:vscoderBridge.debug",
+    "onCommand:vscoderBridge.benchmark",
+    "onCommand:vscoderBridge.gitDiff",
+    "onCommand:vscoderBridge.receipt"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscoderBridge.open",
+        "title": "VSCODER://BRIDGE Open"
+      },
+      {
+        "command": "vscoderBridge.observe",
+        "title": "VSCODER://BRIDGE Observe IDE State"
+      },
+      {
+        "command": "vscoderBridge.plan",
+        "title": "VSCODER://BRIDGE Plan"
+      },
+      {
+        "command": "vscoderBridge.refactor",
+        "title": "VSCODER://BRIDGE Refactor"
+      },
+      {
+        "command": "vscoderBridge.build",
+        "title": "VSCODER://BRIDGE Build"
+      },
+      {
+        "command": "vscoderBridge.test",
+        "title": "VSCODER://BRIDGE Test"
+      },
+      {
+        "command": "vscoderBridge.debug",
+        "title": "VSCODER://BRIDGE Debug"
+      },
+      {
+        "command": "vscoderBridge.benchmark",
+        "title": "VSCODER://BRIDGE Benchmark"
+      },
+      {
+        "command": "vscoderBridge.gitDiff",
+        "title": "VSCODER://BRIDGE Git Diff"
+      },
+      {
+        "command": "vscoderBridge.receipt",
+        "title": "VSCODER://BRIDGE Receipt"
+      }
+    ],
+    "configuration": {
+      "title": "VSCODER://BRIDGE",
+      "properties": {
+        "vscoderBridge.webmcpPort": {
+          "type": "number",
+          "default": 8123,
+          "description": "Port for the VSCODER WebMCP HTTP server."
+        },
+        "vscoderBridge.authToken": {
+          "type": "string",
+          "default": "",
+          "description": "Authentication token for IPC/RPC channel. Empty for localhost-only."
+        },
+        "vscoderBridge.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL for local LLM routing."
+        },
+        "vscoderBridge.pythonPath": {
+          "type": "string",
+          "default": "C:/gpu/Scripts/python.exe",
+          "description": "Python interpreter path for CUDA/benchmark tasks."
+        },
+        "vscoderBridge.autoObserve": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically observe IDE state changes and broadcast events."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MYaelMendez/SOVEREIGN.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MYaelMendez/SOVEREIGN/issues"
+  },
+  "homepage": "https://github.com/MYaelMendez/SOVEREIGN#readme",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.6.0",
+    "@vscode/vsce": "^3.9.2"
+  },
+  "icon": "images/icon.svg"
+}
