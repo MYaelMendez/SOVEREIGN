@@ -108,17 +108,21 @@ def _verify(sig: str, payload: bytes, key: str) -> bool:
 
 def _secret_key() -> str:
     """Signing key from secret-bridge convention; NEVER hardcoded.
-    Order: VPS_SIGN_KEY env -> bridge secrets.json (HERMES_SECRETS / C:\\ae\\secrets\\secrets.json)."""
+    Order: VPS_SIGN_KEY env -> bridge secrets.json -> væult -> refuse."""
     import os
     k = os.environ.get("VPS_SIGN_KEY") or os.environ.get("BSKY_AGENT_VPS")
     if not k:
         try:
+            # Make agents/ importable from any cwd (secret_source lives beside us).
+            _here = os.path.dirname(os.path.abspath(__file__))
+            if _here not in sys.path:
+                sys.path.insert(0, _here)
             from secret_source import get_secret
             k = get_secret("VPS_SIGN_KEY")
         except Exception:
             k = None
     if not k:
-        raise RuntimeError("VPS_SIGN_KEY not set (put it in the secret-bridge + Push to local). Refusing unsigned store.")
+        raise RuntimeError("VPS_SIGN_KEY not set (put it in the secret-bridge + Push to local, or the væult). Refusing unsigned store.")
     return k
 
 

@@ -21,7 +21,7 @@ async function main() {
 
   // Test 1: Binding call
   const r1 = await executor.execute(`
-    const bots = æ.mesh.bots();
+    const bots = await æ.mesh.bots();
     console.log('bots:', bots.length);
     for (const b of bots) console.log(' ', b.id, '· tier', b.tier);
   `);

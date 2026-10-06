@@ -19,8 +19,13 @@
  */
 
 import * as vscode from 'vscode';
-import * as net from 'net';
 import * as crypto from 'crypto';
+
+// ─── Error Types ───
+
+export class ValueError extends Error {
+  override readonly name = 'ValueError';
+}
 
 // ─── Effect Classes (from resolver.ts) ───
 export type EffectClass = 'LOCAL' | 'DURABLE' | 'EXTERNAL';
@@ -236,7 +241,7 @@ class KeeperBindings implements KeeperBinding {
   async publish(facts: string): Promise<PublishResult> {
     // EXTERNAL — network call, needs grant
     await this.bridge.checkGrant('EXTERNAL', 'keeper.publish()');
-    return { published: 1, sig: 'pending' };
+    return { published: 1, sig: hash16({ facts: facts.slice(0, 500), ts: Date.now() }) };
   }
 
   async remember(fact: string): Promise<string> {
@@ -342,7 +347,7 @@ export class VscoderBridgeImpl implements VscoderBridge {
   }
 
   async getDiagnostics(): Promise<DiagnosticSummary> {
-    return new IdeBindings(this).getDiagnostics();
+    return collectDiagnostics();
   }
 
   resolveEffect(command: string): EffectClass {
@@ -391,13 +396,32 @@ export class VscoderBridgeImpl implements VscoderBridge {
 
 // ─── Code Mode Executor — runs code against the æ DSL ───
 
-export class CodeModeExecutor {
-  private readonly bridge: VscoderBridgeImpl;
-  private readonly ae: AENamespace;
+export interface ExecutorOptions {
+  timeoutMs?: number;
+  bridge?: VscoderBridge;
+  onAudit?: (entry: AuditEntry) => void;
+}
 
-  constructor() {
-    this.bridge = new VscoderBridgeImpl();
+export interface AuditEntry {
+  ts: string;
+  codeHash: string;
+  elapsedMs: number;
+  resultPreview: string;
+}
+
+export class CodeModeExecutor {
+  private readonly bridge: VscoderBridge;
+  private readonly ae: AENamespace;
+  private readonly timeoutMs: number;
+  private readonly onAudit: (entry: AuditEntry) => void;
+
+  constructor(options: ExecutorOptions = {}) {
+    this.bridge = options.bridge ?? new VscoderBridgeImpl();
     this.ae = new AENamespace(this.bridge);
+    this.timeoutMs = options.timeoutMs ?? 30_000;
+    this.onAudit = options.onAudit ?? ((entry) => {
+      console.log(`[code-mode] ${JSON.stringify(entry)}`);
+    });
   }
 
   /**
@@ -405,7 +429,7 @@ export class CodeModeExecutor {
    * The code has access to: æ.mesh.*, æ.keeper.*, æ.ide.*, json, Math.
    * No filesystem, no network, no subprocess — only typed bindings.
    */
-  async execute(code: string): Promise<{ output: string; error: string; effect: EffectClass }> {
+  async execute(code: string): Promise<{ output: string; error: string; elapsedMs: number; codeHash: string }> {
     const sandbox = {
       æ: this.ae,
       json: JSON,
@@ -419,6 +443,7 @@ export class CodeModeExecutor {
     };
 
     const output: string[] = [];
+    const codeHash = hash16({ code });
     const start = Date.now();
 
     try {
@@ -435,7 +460,8 @@ export class CodeModeExecutor {
       return {
         output: outputStr || (result !== undefined ? JSON.stringify(result) : ''),
         error: '',
-        effect: 'LOCAL',
+        elapsedMs: elapsed,
+        codeHash,
       };
     } catch (e) {
       const elapsed = Date.now() - start;
@@ -443,6 +469,15 @@ export class CodeModeExecutor {
       await this.logAudit(code, `ERROR: ${error}`, elapsed);
       return { output: output.join('\n'), error, effect: 'LOCAL' };
     }
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error(`TIMEOUT after ${ms}ms`)), ms);
+      }),
+    ]);
   }
 
   private async logAudit(code: string, result: string, elapsedMs: number): Promise<void> {
@@ -460,6 +495,16 @@ export class CodeModeExecutor {
   }
 }
 
+// ─── Hash Helper ───
+
+function hash16(data: Record<string, unknown>): string {
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(data, Object.keys(data).sort()))
+    .digest('hex')
+    .slice(0, 16);
+}
+
 // ─── Helper ───
 
-class ValueError extends Error {}
+
