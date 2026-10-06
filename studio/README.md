@@ -1,4 +1,4 @@
-# 🛸 opensourceware media studio
+# 🛸 opensourceware media lab
 
 Sovereign video production. Local. Deterministic. With receipt.
 
