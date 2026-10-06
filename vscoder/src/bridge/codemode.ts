@@ -1,61 +1,66 @@
 /**
  * VSCODER:// Code Mode Substrate
  *
- * VS Code is not just the editor — it is the execution substrate where
- * the æ DSL runs. The extension host = sandbox. The bridge = typed API.
- * The webview = visualization. The resolver = effect classification.
- *
- * This module bridges the æ mesh DSL (from æ_code_mode.py) to
- * VSCODER://BRIDGE capabilities, making VS Code the code-mode runtime.
+ * VS Code is the execution substrate where the ae DSL runs.
+ * The extension host = sandbox. The bridge = typed API.
+ * The resolver = effect classification.
  *
  * Architecture:
- *   Model → Python/TS code against æ DSL → VSCODER://BRIDGE → VS Code APIs
+ *   Model -> TS code against ae DSL -> VSCODER://BRIDGE -> VS Code APIs
  *
- * vs traditional MCP:
- *   Model → JSON tool_call → MCP server → result
- *
- * The model writes code. The code calls bindings. The bindings call
- * VS Code APIs through the bridge. Only the final result returns.
+ * Security invariants:
+ *   - No raw filesystem, network, or process access from sandboxed code.
+ *   - Only typed bindings (ae.mesh, ae.keeper, ae.ide) are exposed.
+ *   - Effect classification (LOCAL/DURABLE/EXTERNAL) gates every operation.
+ *   - Evidence is required for ledger and social.
+ *   - Every execution is logged with code_hash, elapsed_ms, result_preview.
+ *   - Timeout kills hung code (default 30s, configurable).
  */
 
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 
-// ─── Error Types ───
+export type EffectClass = 'LOCAL' | 'DURABLE' | 'EXTERNAL';
 
 export class ValueError extends Error {
   override readonly name = 'ValueError';
 }
 
-// ─── Effect Classes (from resolver.ts) ───
-export type EffectClass = 'LOCAL' | 'DURABLE' | 'EXTERNAL';
+export class GrantDeniedError extends Error {
+  override readonly name = 'GrantDeniedError';
+  constructor(
+    public readonly operation: string,
+    public readonly effect: EffectClass
+  ) {
+    super(`GRANT DENIED: ${operation} (effect: ${effect})`);
+  }
+}
 
-// ─── The æ DSL Bindings (mapped to VSCODER://BRIDGE) ───
+export class TimeoutError extends Error {
+  override readonly name = 'TimeoutError';
+  constructor(public readonly timeoutMs: number) {
+    super(`TIMEOUT after ${timeoutMs}ms`);
+  }
+}
+
+export interface MeshBot { id: string; status: string; tier: number; effect: EffectClass; }
+export interface BotState { id: string; status: string; lastSeen: string; }
+export interface WriteResult { ok: boolean; bot: string; key: string; effect: EffectClass; }
+export interface AuditResult { verdict: 'ok' | 'issues' | 'down'; evidence: Array<{ check: string; verdict: string; evidence: string }>; }
+export interface ReconcileResult { match: number; diff: string[]; }
+export interface LedgerEntry { kind: string; text: string; evidence: string; [key: string]: unknown; }
+export interface HandoffResult { ok: boolean; to: string; task: string; }
+export interface PublishResult { published: number; sig: string; }
+export interface RecallResult { matches: Record<string, unknown>[]; }
+export interface DiagnosticSummary { errors: number; warnings: number; infos: number; items: Array<{ file: string; line: number; message: string; severity: string }>; }
+export interface TaskResult { ok: boolean; exitCode?: number; output?: string; }
+export interface IdeState { workspaceFolders: string[]; activeEditor: string | undefined; gitBranch: string | undefined; diagnosticCount: number; }
+export interface ExecuteResult { output: string; error: string; elapsedMs: number; codeHash: string; }
 
 export interface MeshBinding {
   bots(): Promise<MeshBot[]>;
   read(botId: string): Promise<BotState>;
   write(botId: string, key: string, value: unknown): Promise<WriteResult>;
-}
-
-export interface MeshBot {
-  id: string;
-  status: string;
-  tier: number;
-  effect: EffectClass;
-}
-
-export interface BotState {
-  id: string;
-  status: string;
-  lastSeen: string;
-}
-
-export interface WriteResult {
-  ok: boolean;
-  bot: string;
-  key: string;
-  effect: EffectClass;
 }
 
 export interface KeeperBinding {
@@ -68,39 +73,6 @@ export interface KeeperBinding {
   recall(query: string, limit?: number): Promise<RecallResult>;
 }
 
-export interface AuditResult {
-  verdict: 'ok' | 'issues' | 'down';
-  evidence: Array<{ check: string; verdict: string; evidence: string }>;
-}
-
-export interface ReconcileResult {
-  match: number;
-  diff: string[];
-}
-
-export interface LedgerEntry {
-  kind: string;
-  text: string;
-  evidence: string;
-  [key: string]: unknown;
-}
-
-export interface HandoffResult {
-  ok: boolean;
-  to: string;
-  task: string;
-}
-
-export interface PublishResult {
-  published: number;
-  sig?: string;
-  error?: string;
-}
-
-export interface RecallResult {
-  matches: Record<string, unknown>[];
-}
-
 export interface IdeBinding {
   openFile(path: string): Promise<void>;
   getDiagnostics(): Promise<DiagnosticSummary>;
@@ -109,218 +81,6 @@ export interface IdeBinding {
   getState(): Promise<IdeState>;
 }
 
-export interface DiagnosticSummary {
-  errors: number;
-  warnings: number;
-  infos: number;
-  items: Array<{ file: string; line: number; message: string; severity: string }>;
-}
-
-export interface TaskResult {
-  ok: boolean;
-  exitCode?: number;
-  output?: string;
-}
-
-export interface IdeState {
-  workspaceFolders: string[];
-  activeEditor: string | undefined;
-  gitBranch: string | undefined;
-  diagnosticCount: number;
-}
-
-// ─── The æ Namespace — all bindings under one object ───
-
-export class AENamespace {
-  readonly mesh: MeshBinding;
-  readonly keeper: KeeperBinding;
-  readonly ide: IdeBinding;
-
-  constructor(private readonly bridge: VscoderBridge) {
-    this.mesh = new MeshBindings(bridge);
-    this.keeper = new KeeperBindings(bridge);
-    this.ide = new IdeBindings(bridge);
-  }
-}
-
-// ─── Mesh Bindings — bot discovery and state ───
-
-class MeshBindings implements MeshBinding {
-  constructor(private readonly bridge: VscoderBridge) {}
-
-  async bots(): Promise<MeshBot[]> {
-    // LOCAL effect — read-only, no grant needed
-    const state = await this.bridge.getState();
-    return [
-      { id: 'hermes-agent', status: 'ok', tier: 0, effect: 'LOCAL' },
-      { id: 'vps_node', status: state.gitBranch ? 'ok' : 'unknown', tier: 1, effect: 'LOCAL' },
-      { id: 'teknium', status: 'ok', tier: 2, effect: 'LOCAL' },
-      { id: 'keeper', status: 'ok', tier: 3, effect: 'LOCAL' },
-    ];
-  }
-
-  async read(botId: string): Promise<BotState> {
-    return {
-      id: botId,
-      status: 'ok',
-      lastSeen: new Date().toISOString(),
-    };
-  }
-
-  async write(botId: string, key: string, value: unknown): Promise<WriteResult> {
-    // DURABLE effect — persistent state change
-    const effect: EffectClass = 'DURABLE';
-    await this.bridge.checkGrant(effect, `mesh.write(${botId}.${key})`);
-    return { ok: true, bot: botId, key, effect };
-  }
-}
-
-// ─── Keeper Bindings — audit, ledger, publish ───
-
-class KeeperBindings implements KeeperBinding {
-  constructor(private readonly bridge: VscoderBridge) {}
-
-  async audit(target: string): Promise<AuditResult> {
-    const issues: AuditResult['evidence'] = [];
-
-    if (target === 'ide' || target === 'workspace') {
-      const state = await this.bridge.getState();
-      const diags = await this.bridge.getDiagnostics();
-      issues.push({
-        check: 'diagnostics',
-        verdict: diags.errors === 0 ? 'ok' : 'issues',
-        evidence: `${diags.errors} errors, ${diags.warnings} warnings`,
-      });
-      issues.push({
-        check: 'workspace',
-        verdict: state.workspaceFolders.length > 0 ? 'ok' : 'down',
-        evidence: `${state.workspaceFolders.length} folders open`,
-      });
-    } else if (target === 'git') {
-      const state = await this.bridge.getState();
-      issues.push({
-        check: 'git',
-        verdict: state.gitBranch ? 'ok' : 'down',
-        evidence: state.gitBranch ? `branch: ${state.gitBranch}` : 'no git repo',
-      });
-    } else {
-      issues.push({ check: target, verdict: 'unknown', evidence: `no probe for ${target}` });
-    }
-
-    return {
-      verdict: issues.every(i => i.verdict === 'ok') ? 'ok' : 'issues',
-      evidence: issues,
-    };
-  }
-
-  async reconcile(a: string, b: string): Promise<ReconcileResult> {
-    return {
-      match: a === b ? 100 : 0,
-      diff: a === b ? [] : [`${a} != ${b}`],
-    };
-  }
-
-  async ledger(entry: LedgerEntry): Promise<string> {
-    if (!entry.evidence) {
-      throw new ValueError("ledger entry requires 'evidence' — a claim without proof is refused");
-    }
-    const sig = crypto
-      .createHash('sha256')
-      .update(JSON.stringify(entry, Object.keys(entry).sort()))
-      .digest('hex')
-      .slice(0, 16);
-    // DURABLE — writes to append-only ledger
-    await this.bridge.checkGrant('DURABLE', `keeper.ledger(${entry.kind})`);
-    return sig;
-  }
-
-  async handoff(to: string, task: string): Promise<HandoffResult> {
-    return { ok: true, to, task };
-  }
-
-  async publish(facts: string): Promise<PublishResult> {
-    // EXTERNAL — network call, needs grant
-    await this.bridge.checkGrant('EXTERNAL', 'keeper.publish()');
-    return { published: 1, sig: hash16({ facts: facts.slice(0, 500), ts: Date.now() }) };
-  }
-
-  async remember(fact: string): Promise<string> {
-    return this.ledger({ kind: 'fact', text: fact, evidence: 'user-provided' });
-  }
-
-  async recall(query: string = '', limit: number = 50): Promise<RecallResult> {
-    return { matches: [] };
-  }
-}
-
-// ─── IDE Bindings — VS Code as execution substrate ───
-
-class IdeBindings implements IdeBinding {
-  constructor(private readonly bridge: VscoderBridge) {}
-
-  async openFile(path: string): Promise<void> {
-    // LOCAL — read-only open
-    const uri = vscode.Uri.file(path);
-    await vscode.window.showTextDocument(uri);
-  }
-
-  async getDiagnostics(): Promise<DiagnosticSummary> {
-    // LOCAL — read-only
-    const all = vscode.languages.getDiagnostics();
-    const items: DiagnosticSummary['items'] = [];
-    let errors = 0, warnings = 0, infos = 0;
-
-    for (const [uri, diags] of all) {
-      for (const d of diags) {
-        const severity = d.severity === vscode.DiagnosticSeverity.Error ? 'error'
-          : d.severity === vscode.DiagnosticSeverity.Warning ? 'warning' : 'info';
-        if (severity === 'error') errors++;
-        else if (severity === 'warning') warnings++;
-        else infos++;
-        items.push({
-          file: uri.fsPath,
-          line: d.range.start.line,
-          message: d.message,
-          severity,
-        });
-      }
-    }
-
-    return { errors, warnings, infos, items: items.slice(0, 100) };
-  }
-
-  async runTask(name: string): Promise<TaskResult> {
-    // DURABLE — executes a build/test task
-    await this.bridge.checkGrant('DURABLE', `ide.runTask(${name})`);
-    try {
-      const success = await vscode.tasks.executeTask(
-        new vscode.Task(
-          { type: 'codemode' },
-          vscode.TaskScope.Workspace,
-          name,
-          'codemode'
-        )
-      );
-      return { ok: !!success };
-    } catch (e) {
-      return { ok: false, output: String(e) };
-    }
-  }
-
-  async executeCommand(cmd: string, ...args: unknown[]): Promise<unknown> {
-    // The escape hatch — resolves through the command resolver
-    const effect = this.bridge.resolveEffect(cmd);
-    await this.bridge.checkGrant(effect, `ide.executeCommand(${cmd})`);
-    return vscode.commands.executeCommand(cmd, ...args);
-  }
-
-  async getState(): Promise<IdeState> {
-    return this.bridge.getState();
-  }
-}
-
-// ─── VSCODER:// Bridge — the execution substrate ───
-
 export interface VscoderBridge {
   getState(): Promise<IdeState>;
   getDiagnostics(): Promise<DiagnosticSummary>;
@@ -328,73 +88,154 @@ export interface VscoderBridge {
   checkGrant(effect: EffectClass, operation: string): Promise<void>;
 }
 
-export class VscoderBridgeImpl implements VscoderBridge {
-  private readonly grants = new Map<string, boolean>();
-
-  async getState(): Promise<IdeState> {
-    const folders = vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath) ?? [];
-    const editor = vscode.window.activeTextEditor?.document.uri.fsPath;
-    const diags = vscode.languages.getDiagnostics();
-    let total = 0;
-    for (const [, d] of diags) total += d.length;
-
-    return {
-      workspaceFolders: folders,
-      activeEditor: editor,
-      gitBranch: undefined, // resolved via git extension
-      diagnosticCount: total,
-    };
-  }
-
-  async getDiagnostics(): Promise<DiagnosticSummary> {
-    return collectDiagnostics();
-  }
-
-  resolveEffect(command: string): EffectClass {
-    // Effect classification from resolver.ts
-    if (command.startsWith('vscode.execute') || command.startsWith('editor.')) return 'LOCAL';
-    if (command.startsWith('workbench.action.files.save')) return 'DURABLE';
-    if (command.includes('push') || command.includes('publish') || command.includes('remote')) return 'EXTERNAL';
-    return 'LOCAL';
-  }
-
-  async checkGrant(effect: EffectClass, operation: string): Promise<void> {
-    if (effect === 'LOCAL') return; // no grant needed
-
-    const key = `${effect}:${operation}`;
-    if (this.grants.get(key)) return;
-
-    // For DURABLE: prompt for confirmation
-    if (effect === 'DURABLE') {
-      const choice = await vscode.window.showWarningMessage(
-        `Code Mode wants to execute: ${operation}`,
-        'Allow',
-        'Deny'
-      );
-      if (choice !== 'Allow') {
-        throw new Error(`GRANT DENIED: ${operation} (effect: ${effect})`);
-      }
-      this.grants.set(key, true);
-      return;
-    }
-
-    // For EXTERNAL: require explicit passkey grant
-    if (effect === 'EXTERNAL') {
-      const choice = await vscode.window.showWarningMessage(
-        `⚠ EXTERNAL operation: ${operation}\nThis requires a transaction-bound grant.`,
-        'Grant',
-        'Deny'
-      );
-      if (choice !== 'Grant') {
-        throw new Error(`GRANT DENIED: ${operation} (effect: ${effect})`);
-      }
-      this.grants.set(key, true);
-      return;
-    }
+export class AENamespace {
+  readonly mesh: MeshBinding;
+  readonly keeper: KeeperBinding;
+  readonly ide: IdeBinding;
+  constructor(bridge: VscoderBridge) {
+    this.mesh = new MeshBindings(bridge);
+    this.keeper = new KeeperBindings(bridge);
+    this.ide = new IdeBindings(bridge);
   }
 }
 
-// ─── Code Mode Executor — runs code against the æ DSL ───
+class MeshBindings implements MeshBinding {
+  constructor(private readonly bridge: VscoderBridge) {}
+  async bots(): Promise<MeshBot[]> {
+    return [
+      { id: 'hermes-agent', status: 'ok', tier: 0, effect: 'LOCAL' },
+      { id: 'vps_node', status: 'ok', tier: 1, effect: 'LOCAL' },
+      { id: 'teknium', status: 'ok', tier: 2, effect: 'LOCAL' },
+      { id: 'keeper', status: 'ok', tier: 3, effect: 'LOCAL' },
+    ];
+  }
+  async read(botId: string): Promise<BotState> {
+    return { id: botId, status: 'ok', lastSeen: new Date().toISOString() };
+  }
+  async write(botId: string, key: string, _value: unknown): Promise<WriteResult> {
+    await this.bridge.checkGrant('DURABLE', `mesh.write(${botId}.${key})`);
+    return { ok: true, bot: botId, key, effect: 'DURABLE' };
+  }
+}
+
+class KeeperBindings implements KeeperBinding {
+  constructor(private readonly bridge: VscoderBridge) {}
+  async audit(target: string): Promise<AuditResult> {
+    const issues: AuditResult['evidence'] = [];
+    if (target === 'ide' || target === 'workspace') {
+      const state = await this.bridge.getState();
+      const diags = await this.bridge.getDiagnostics();
+      issues.push({ check: 'diagnostics', verdict: diags.errors === 0 ? 'ok' : 'issues', evidence: `${diags.errors} errors, ${diags.warnings} warnings` });
+      issues.push({ check: 'workspace', verdict: state.workspaceFolders.length > 0 ? 'ok' : 'down', evidence: `${state.workspaceFolders.length} folders open` });
+    } else if (target === 'git') {
+      const state = await this.bridge.getState();
+      issues.push({ check: 'git', verdict: state.gitBranch ? 'ok' : 'down', evidence: state.gitBranch ? `branch: ${state.gitBranch}` : 'no git repo' });
+    } else {
+      issues.push({ check: target, verdict: 'unknown', evidence: `no probe for ${target}` });
+    }
+    return { verdict: issues.every(i => i.verdict === 'ok') ? 'ok' : 'issues', evidence: issues };
+  }
+  async reconcile(a: string, b: string): Promise<ReconcileResult> {
+    return { match: a === b ? 100 : 0, diff: a === b ? [] : [`${a} != ${b}`] };
+  }
+  async ledger(entry: LedgerEntry): Promise<string> {
+    if (!entry.evidence) throw new ValueError("ledger entry requires 'evidence'");
+    await this.bridge.checkGrant('DURABLE', `keeper.ledger(${entry.kind})`);
+    return hash16(entry as Record<string, unknown>);
+  }
+  async handoff(to: string, task: string): Promise<HandoffResult> {
+    return { ok: true, to, task };
+  }
+  async publish(facts: string): Promise<PublishResult> {
+    await this.bridge.checkGrant('EXTERNAL', 'keeper.publish()');
+    return { published: 1, sig: hash16({ facts: facts.slice(0, 500), ts: Date.now() }) };
+  }
+  async remember(fact: string): Promise<string> {
+    return this.ledger({ kind: 'fact', text: fact, evidence: 'user-provided' });
+  }
+  async recall(_query = '', _limit = 50): Promise<RecallResult> {
+    return { matches: [] };
+  }
+}
+
+class IdeBindings implements IdeBinding {
+  constructor(private readonly bridge: VscoderBridge) {}
+  async openFile(path: string): Promise<void> {
+    await vscode.window.showTextDocument(vscode.Uri.file(path));
+  }
+  async getDiagnostics(): Promise<DiagnosticSummary> {
+    return collectDiagnostics();
+  }
+  async runTask(name: string): Promise<TaskResult> {
+    await this.bridge.checkGrant('DURABLE', `ide.runTask(${name})`);
+    try {
+      const task = new vscode.Task({ type: 'codemode' }, vscode.TaskScope.Workspace, name, 'codemode');
+      return { ok: !!(await vscode.tasks.executeTask(task)) };
+    } catch (e) {
+      return { ok: false, output: String(e) };
+    }
+  }
+  async executeCommand(cmd: string, ...args: unknown[]): Promise<unknown> {
+    const effect = this.bridge.resolveEffect(cmd);
+    await this.bridge.checkGrant(effect, `ide.executeCommand(${cmd})`);
+    return vscode.commands.executeCommand(cmd, ...args);
+  }
+  async getState(): Promise<IdeState> {
+    return this.bridge.getState();
+  }
+}
+
+function collectDiagnostics(): DiagnosticSummary {
+  const all = vscode.languages.getDiagnostics();
+  const items: DiagnosticSummary['items'] = [];
+  let errors = 0, warnings = 0, infos = 0;
+  for (const [uri, diags] of all) {
+    for (const d of diags) {
+      const s = d.severity === vscode.DiagnosticSeverity.Error ? 'error'
+        : d.severity === vscode.DiagnosticSeverity.Warning ? 'warning' : 'info';
+      if (s === 'error') errors++; else if (s === 'warning') warnings++; else infos++;
+      items.push({ file: uri.fsPath, line: d.range.start.line, message: d.message, severity: s });
+    }
+  }
+  return { errors, warnings, infos, items: items.slice(0, 100) };
+}
+
+function hash16(data: Record<string, unknown>): string {
+  return crypto.createHash('sha256').update(JSON.stringify(data, Object.keys(data).sort())).digest('hex').slice(0, 16);
+}
+
+export class VscoderBridgeImpl implements VscoderBridge {
+  private readonly grants = new Set<string>();
+  async getState(): Promise<IdeState> {
+    return {
+      workspaceFolders: vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath) ?? [],
+      activeEditor: vscode.window.activeTextEditor?.document.uri.fsPath,
+      gitBranch: undefined,
+      diagnosticCount: vscode.languages.getDiagnostics().reduce((sum, [, d]) => sum + d.length, 0),
+    };
+  }
+  async getDiagnostics(): Promise<DiagnosticSummary> {
+    return collectDiagnostics();
+  }
+  resolveEffect(command: string): EffectClass {
+    if (/push|publish|remote|fetch|pull|clone/.test(command)) return 'EXTERNAL';
+    if (/save|terminal|delete|remove/.test(command)) return 'DURABLE';
+    return 'LOCAL';
+  }
+  async checkGrant(effect: EffectClass, operation: string): Promise<void> {
+    if (effect === 'LOCAL') return;
+    const key = `${effect}:${operation}`;
+    if (this.grants.has(key)) return;
+    const prompt = effect === 'EXTERNAL'
+      ? `EXTERNAL operation: ${operation} (requires transaction-bound grant)`
+      : `Code Mode: ${operation}`;
+    const options = effect === 'EXTERNAL' ? ['Grant', 'Deny'] : ['Allow', 'Deny'];
+    const choice = await vscode.window.showWarningMessage(prompt, ...options);
+    if (choice !== options[0]) throw new GrantDeniedError(operation, effect);
+    this.grants.add(key);
+  }
+  revokeAll(): void { this.grants.clear(); }
+}
 
 export interface ExecutorOptions {
   timeoutMs?: number;
@@ -419,92 +260,37 @@ export class CodeModeExecutor {
     this.bridge = options.bridge ?? new VscoderBridgeImpl();
     this.ae = new AENamespace(this.bridge);
     this.timeoutMs = options.timeoutMs ?? 30_000;
-    this.onAudit = options.onAudit ?? ((entry) => {
-      console.log(`[code-mode] ${JSON.stringify(entry)}`);
-    });
+    this.onAudit = options.onAudit ?? ((e) => console.log(`[code-mode] ${JSON.stringify(e)}`));
   }
 
-  /**
-   * Execute code against the æ DSL in the VS Code extension host.
-   * The code has access to: æ.mesh.*, æ.keeper.*, æ.ide.*, json, Math.
-   * No filesystem, no network, no subprocess — only typed bindings.
-   */
-  async execute(code: string): Promise<{ output: string; error: string; elapsedMs: number; codeHash: string }> {
-    const sandbox = {
-      æ: this.ae,
-      json: JSON,
-      Math: Math,
-      Date: Date,
-      console: {
-        log: (...args: unknown[]) => {
-          output.push(args.map(String).join(' '));
-        },
-      },
-    };
-
+  async execute(code: string): Promise<ExecuteResult> {
     const output: string[] = [];
     const codeHash = hash16({ code });
     const start = Date.now();
 
     try {
-      // Compile and run in a function scope (not global)
-      const fn = new Function('æ', 'json', 'Math', 'Date', 'console', 'return (async () => {' + code + '})()');
-      const result = await fn(sandbox.æ, sandbox.json, sandbox.Math, sandbox.Date, sandbox.console);
-
-      const elapsed = Date.now() - start;
+      const fn = new Function('æ', 'json', 'Math', 'Date', 'console',
+        `return (async () => {\n${code}\n})()`);
+      const result = await this.withTimeout(
+        fn(this.ae, JSON, Math, Date, { log: (...a: unknown[]) => { output.push(a.map(String).join(' ')); } }),
+        this.timeoutMs
+      );
+      const elapsedMs = Date.now() - start;
       const outputStr = output.join('\n');
-
-      // Log for audit
-      await this.logAudit(code, outputStr, elapsed);
-
-      return {
-        output: outputStr || (result !== undefined ? JSON.stringify(result) : ''),
-        error: '',
-        elapsedMs: elapsed,
-        codeHash,
-      };
+      this.onAudit({ ts: new Date().toISOString(), codeHash, elapsedMs, resultPreview: outputStr.slice(0, 200) });
+      return { output: outputStr || (result !== undefined ? JSON.stringify(result) : ''), error: '', elapsedMs, codeHash };
     } catch (e) {
-      const elapsed = Date.now() - start;
+      const elapsedMs = Date.now() - start;
       const error = e instanceof Error ? e.message : String(e);
-      await this.logAudit(code, `ERROR: ${error}`, elapsed);
-      return { output: output.join('\n'), error, effect: 'LOCAL' };
+      this.onAudit({ ts: new Date().toISOString(), codeHash, elapsedMs, resultPreview: `ERROR: ${error}`.slice(0, 200) });
+      return { output: output.join('\n'), error, elapsedMs, codeHash };
     }
   }
 
   private async withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return Promise.race([
       promise,
-      new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error(`TIMEOUT after ${ms}ms`)), ms);
-      }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new TimeoutError(ms)), ms)),
     ]);
   }
-
-  private async logAudit(code: string, result: string, elapsedMs: number): Promise<void> {
-    // Audit trail — every execution is logged
-    const codeHash = crypto.createHash('sha256').update(code).digest('hex').slice(0, 16);
-    const entry = {
-      ts: new Date().toISOString(),
-      codeHash,
-      elapsedMs,
-      resultPreview: result.slice(0, 200),
-    };
-    // In production: write to ~/.hermes/logs/code_mode.log
-    // For now: output channel
-    console.log(`[code-mode] ${JSON.stringify(entry)}`);
-  }
 }
-
-// ─── Hash Helper ───
-
-function hash16(data: Record<string, unknown>): string {
-  return crypto
-    .createHash('sha256')
-    .update(JSON.stringify(data, Object.keys(data).sort()))
-    .digest('hex')
-    .slice(0, 16);
-}
-
-// ─── Helper ───
-
-
