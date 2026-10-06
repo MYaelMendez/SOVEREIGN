@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "vscode": "./vendor/vscode-shim.js",
+    "crypto": "./vendor/node-crypto-shim.js",
+    "http": "./vendor/node-http-shim.js",
+    "fs": "./vendor/node-fs-shim.js",
+    "path": "./vendor/node-path-shim.js",
+    "child_process": "./vendor/node-child-process-shim.js"
+  }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VSCODER:// v0.1 — VS Code-native Autonomous Engineering Agent</title>
+<style>
+:root {
+  --void: #050505;
+  --panel: #0a0a0f;
+  --gold: #D4AF37;
+  --gold2: #f0d487;
+  --emerald: #00ff9d;
+  --cyan: #00eaff;
+  --violet: #8c72ff;
+  --orange: #ff9a4d;
+  --ink: #e8e6df;
+  --muted: #6f6a5c;
+  --line: rgba(212, 175, 55, .22);
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --display: "Orbitron", sans-serif;
+  --error: #ff7b72;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--void); color: var(--ink); font-family: var(--mono); }
+#app { display: grid; grid-template-rows: auto 1fr auto; height: 100vh; padding: 12px; gap: 10px; }
+.header { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.title { font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: .08em; }
+.subtitle { font-size: 11px; color: var(--muted); letter-spacing: .12em; }
+.status { font-size: 10px; color: var(--emerald); display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
+.main { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; }
+.panel h2 { font-size: 12px; color: var(--gold); margin-bottom: 8px; letter-spacing: .06em; }
+.panel pre { font-size: 10px; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; }
+.footer { display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--line); padding-top: 8px; }
+.btn { background: linear-gradient(135deg, rgba(212, 175, 55, .15), rgba(0, 255, 163, .08)); border: 1px solid rgba(212, 175, 55, .65); color: var(--gold); padding: 8px 12px; border-radius: 8px; font: inherit; font-size: 11px; cursor: pointer; }
+.btn:hover { background: rgba(212, 175, 55, .2); }
+.btn.secondary { border-color: var(--line); color: var(--muted); }
+#log { font-size: 9px; color: var(--muted); max-height: 120px; overflow: auto; white-space: pre-wrap; }
+.err { color: var(--error); }
+input, textarea { width: 100%; background: #060609; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 11px; margin-bottom: 8px; }
+textarea { resize: vertical; min-height: 60px; }
+.capability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.cap-card { background: #060609; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.cap-card .name { color: var(--gold); font-size: 11px; font-weight: 700; }
+.cap-card .desc { color: var(--muted); font-size: 10px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="title">VSCODER://</div>
+    <div class="subtitle">v0.1 · VS Code-native autonomous engineering agent</div>
+    <div class="status" id="status">READY</div>
+  </div>
+  <div class="main">
+    <div class="panel">
+      <h2>INSTRUCTION</h2>
+      <textarea id="instruction" rows="3" placeholder="e.g. optimize vision-supervision"></textarea>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" onclick="runTool('vscoder_observe')">Observe</button>
+        <button class="btn" onclick="runTool('vscoder_plan')">Plan</button>
+        <button class="btn" onclick="runTool('vscoder_refactor')">Refactor</button>
+        <button class="btn" onclick="runTool('vscoder_build')">Build</button>
+        <button class="btn" onclick="runTool('vscoder_test')">Test</button>
+        <button class="btn" onclick="runTool('vscoder_debug')">Debug</button>
+        <button class="btn" onclick="runTool('vscoder_benchmark')">Benchmark</button>
+        <button class="btn" onclick="runTool('vscoder_git_diff')">Git Diff</button>
+        <button class="btn" onclick="runTool('vscoder_receipt')">Receipt</button>
+      </div>
+      <h2 style="margin-top:12px">PARAMETERS</h2>
+      <input id="paramKey" placeholder="param key (e.g. kind, command)"/>
+      <input id="paramValue" placeholder="param value"/>
+      <h2 style="margin-top:12px">CAPABILITY GRAPH</h2>
+      <div class="capability-grid">
+        <div class="cap-card"><div class="name">LSP</div><div class="desc">Symbols, References, Definitions</div></div>
+        <div class="cap-card"><div class="name">Refactor</div><div class="desc">Rename, Extract, Move, Code Actions</div></div>
+        <div class="cap-card"><div class="name">Build</div><div class="desc">Tasks, Compilation, PyCompile</div></div>
+        <div class="cap-card"><div class="name">Test</div><div class="desc">Pytest, Test API, Coverage</div></div>
+        <div class="cap-card"><div class="name">Debug</div><div class="desc">Breakpoints, Sessions, Inspection</div></div>
+        <div class="cap-card"><div class="name">Git</div><div class="desc">Diff, Status, Commit, Branch</div></div>
+        <div class="cap-card"><div class="name">Benchmark</div><div class="desc">Latency, FPS, VRAM, GPU Util</div></div>
+        <div class="cap-card"><div class="name">Receipt</div><div class="desc">SHA-256 Hash Chain, Verify</div></div>
+        <div class="cap-card"><div class="name">WebMCP</div><div class="desc">HTTP :8123, 9 Tools, Offline</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>OUTPUT</h2>
+      <pre id="output">Awaiting instruction...</pre>
+    </div>
+  </div>
+  <div class="footer">
+    <span style="font-size:10px;color:var(--muted)">WebMCP: :8123 · LSP: active · Receipts: <span id="receiptCount">0</span> · Hash Chain: <span id="hashChain">—</span></span>
+  </div>
+  <div id="log"></div>
+</div>
+<script>
+const logEl = document.getElementById('log');
+const outputEl = document.getElementById('output');
+const statusEl = document.getElementById('status');
+const receiptCountEl = document.getElementById('receiptCount');
+const hashChainEl = document.getElementById('hashChain');
+const log = (t, err=false) => { const d = document.createElement('div'); if(err) d.className='err'; d.textContent = new Date().toLocaleTimeString() + ' ' + t; logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight; };
+
+async function runTool(tool) {
+  const instruction = document.getElementById('instruction').value;
+  const paramKey = document.getElementById('paramKey').value;
+  const paramValue = document.getElementById('paramValue').value;
+  const params = { instruction };
+  if (paramKey) params[paramKey] = paramValue;
+  statusEl.textContent = 'RUNNING: ' + tool;
+  log('invoke ' + tool);
+  try {
+    const resp = await fetch('http://localhost:8123/api/invoke', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ tool, params })
+    });
+    const data = await resp.json();
+    outputEl.textContent = JSON.stringify(data, null, 2);
+    statusEl.textContent = 'READY';
+    log('done ' + tool);
+    updateReceiptCount();
+  } catch(e) {
+    outputEl.textContent = 'Error: ' + e.message;
+    statusEl.textContent = 'ERROR';
+    log('error: ' + e.message, true);
+  }
+}
+
+async function updateReceiptCount() {
+  try {
+    const resp = await fetch('http://localhost:8123/api/receipts');
+    const data = await resp.json();
+    receiptCountEl.textContent = data.count;
+    if (data.chain.length > 0) {
+      const last = data.chain[data.chain.length - 1];
+      hashChainEl.textContent = last.hash.slice(0, 16) + '...';
+    }
+  } catch(e) {}
+}
+
+updateReceiptCount();
+log('VSCODER:// v0.1 initialized');
+</script>
+</body>
+</html>

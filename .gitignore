@@ -28,9 +28,21 @@ qc64*.txt
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .pytest_cache/
 .venv/
 
-# Local-custody secret files — never commit
+# Node / VS Code extensions
+node_modules/
+*.vsix
+*.vsixmanifest
+.vscode-test/
+
+# Compiled output
+out/
+dist/
+
+# Sovereign local-custody secret files — never commit
 secrets.json
 *.secrets.json
