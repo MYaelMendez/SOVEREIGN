@@ -325,7 +325,7 @@ class WebMCPServer {
       const output = execSync(buildCmd, { cwd: workspaceRoot, timeout: 30000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 2000) };
     } catch (e: unknown) {
-      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: (e as Error & { stdout?: string }).stdout ?? "".slice(0, 2000), stderr: (e as Error & { stderr?: string }).stderr ?? "".slice(0, 2000) };
+      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: ((e as Error & { stdout?: string }).stdout ?? "").slice(0, 2000), stderr: ((e as Error & { stderr?: string }).stderr ?? "").slice(0, 2000) };
     }
 
     this.receipts.add('build', buildCmd, JSON.stringify(result));
@@ -341,7 +341,7 @@ class WebMCPServer {
       const output = execSync(testCmd, { cwd: workspaceRoot, timeout: 60000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 3000) };
     } catch (e: unknown) {
-      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: (e as Error & { stdout?: string }).stdout ?? "".slice(0, 3000), stderr: (e as Error & { stderr?: string }).stderr ?? "".slice(0, 3000) };
+      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: ((e as Error & { stdout?: string }).stdout ?? "").slice(0, 3000), stderr: ((e as Error & { stderr?: string }).stderr ?? "").slice(0, 3000) };
     }
 
     this.receipts.add('test', testCmd, JSON.stringify(result));
@@ -382,7 +382,7 @@ class WebMCPServer {
       const output = execSync(benchCmd, { cwd: workspaceRoot, timeout: 120000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 3000) };
     } catch (e: unknown) {
-      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: (e as Error & { stdout?: string }).stdout ?? "".slice(0, 3000) };
+      result = { success: false, error: (e instanceof Error ? e.message : String(e)), stdout: ((e as Error & { stdout?: string }).stdout ?? "").slice(0, 3000) };
     }
 
     this.receipts.add('benchmark', benchCmd, JSON.stringify(result));
