@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ://videolab/video-edit-3d · VIDEO-EDIT-3D · Fleet Compute</title>
+<meta name="description" content="3D video editing via fleet compute — video files projected onto animated mesh surfaces in a WebGL environment. Three.js r170 + three-video-player."/>
+<link rel="canonical" href="https://myaelmendez.github.io/aipodcast_me/video-edit-3d.html"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --void:#050505;--gold:#D4AF37;--gold-glow:rgba(212,175,55,.32);
+    --neon:#00ffa3;--cyan:#00eaff;--violet:#8c72ff;--ink:#e8e6df;--muted:#6f6a5c;
+    --line:rgba(212,175,55,.22);--border-hot:rgba(212,175,55,.5);
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --display:"Orbitron",system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:var(--ink);font-family:var(--mono)}
+  canvas{display:block}
+  #stage{position:fixed;inset:0;z-index:0}
+  /* Scanlines — gold-on-void signature */
+  .scan{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.12;
+    background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 4px)}
+  .vig{position:fixed;inset:0;z-index:3;pointer-events:none;
+    background:radial-gradient(circle at 50% 45%,transparent 34%,rgba(5,5,5,.55) 72%,rgba(5,5,5,.95) 100%)}
+  /* HUD */
+  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:12px 14px calc(14px)}
+  .bar{display:flex;justify-content:space-between;gap:10px;font-size:8.5px;letter-spacing:.16em;color:var(--muted);
+    border:1px solid var(--line);border-top:2px solid var(--gold);padding:8px 11px;
+    background:rgba(8,8,7,.82);pointer-events:auto;width:min(100%,560px)}
+  .bar .live{color:var(--neon);display:flex;align-items:center;gap:6px}
+  .bar .dot{width:5px;height:5px;background:var(--neon);border-radius:50%;
+    box-shadow:0 0 10px var(--neon);animation:blink 2s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .readout{text-align:right;font-size:8px;letter-spacing:.14em;color:var(--muted);
+    border:1px solid var(--line);background:rgba(8,8,7,.78);padding:8px 10px;pointer-events:auto;min-width:126px}
+  .readout b{display:block;color:var(--gold);font-weight:700;font-size:9px;letter-spacing:.1em}
+  .readout span{display:block;margin-top:4px}
+  /* Stage title */
+  #title{position:fixed;top:14px;left:14px;z-index:8;pointer-events:none}
+  #title h1{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.04em;color:var(--gold);text-shadow:0 0 20px var(--gold-glow)}
+  #title .sub{font-size:8px;letter-spacing:.16em;color:var(--muted);margin-top:3px}
+  /* Controls */
+  #ctrls{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:8;
+    display:flex;gap:8px;flex-wrap:wrap;pointer-events:auto}
+  .btn{border:1px solid var(--line);background:rgba(8,8,7,.8);color:var(--gold);
+    font:700 9px var(--mono);letter-spacing:.14em;padding:9px 13px;cursor:pointer;transition:all .15s}
+  .btn:hover{background:rgba(212,175,55,.1)}
+  .btn:active{background:var(--gold);color:#050505}
+  .btn.act{border-color:var(--neon);color:var(--neon)}
+  /* Object selector */
+  #selector{position:fixed;top:50%;left:14px;z-index:8;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+  .obj{border:1px solid var(--line);background:rgba(8,8,7,.8);color:var(--gold);
+    font:700 8.5px var(--mono);letter-spacing:.14em;padding:7px 11px;cursor:pointer;width:140px;text-align:left}
+  .obj:hover{background:rgba(212,175,55,.1)}
+  .obj.act{border-color:var(--neon);color:var(--neon)}
+  /* Boot */
+  #boot{position:fixed;inset:0;z-index:900;background:var(--void);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;
+    transition:opacity .8s,visibility .8s}
+  #boot.done{opacity:0;visibility:hidden}
+  #boot .bg{font-size:52px;color:var(--gold);text-shadow:0 0 40px var(--gold-glow)}
+  #boot .bl{font-size:10px;letter-spacing:.26em;color:var(--muted)}
+  #boot .bline{width:170px;height:1px;background:rgba(212,175,55,.15);position:relative;overflow:hidden}
+  #boot .bline i{position:absolute;inset:0;background:var(--gold);transform-origin:left;animation:load 1.8s ease forwards}
+  @keyframes load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="vig"></div>
+<div class="scan"></div>
+
+<div id="title">
+  <h1>VIDEO-EDIT-3D · FLEET COMPUTE</h1>
+  <div class="sub">æ://videolab/video-edit-3d · Three.js r170 · three-video-player.js</div>
+</div>
+
+<div id="selector">
+  <div class="obj act" data-shape="cube">📦 CUBE · fleet-waves</div>
+  <div class="obj" data-shape="sphere">🔵 SPHERE · cuda-mcp2</div>
+  <div class="obj" data-shape="torus">donut · markets-radar</div>
+  <div class="obj" data-shape="cylinder">🍾 CYLINDER · aertx-demo</div>
+  <div class="obj" data-shape="ring">⬭ RING · inside-compute</div>
+</div>
+
+<div id="ctrls">
+  <button class="btn act" id="bPlay">▶ PLAY</button>
+  <button class="btn" id="bPause">⏸ PAUSE</button>
+  <button class="btn" id="bMute">🔇 MUTE</button>
+  <button class="btn" id="bAuto">🔄 AUTO</button>
+</div>
+
+<div id="hud">
+  <div class="bar">
+    <span>æ://videolab/video-edit-3d</span>
+    <span id="statusLabel">INIT</span>
+    <span class="live"><span class="dot"></span>3D VIDEO SURFACES</span>
+  </div>
+  <div class="readout">
+    <b>COMPUTE STATUS</b>
+    <span id="roObjects">-- objects</span>
+    <span id="roFps">-- fps</span>
+    <span id="roTime">-- / --</span>
+  </div>
+</div>
+
+<div id="boot">
+  <div class="bg">3D</div>
+  <div class="bl">INITIALIZING VIDEO-EDIT-3D FLEET</div>
+  <div class="bline"><i></i></div>
+  <div class="bl" style="font-size:8px" id="bootmode">THREE.JS LOADING</div>
+</div>
+
+<script src="../vendor/three.global.js"></script>
+<script src="./three-video-player.js"></script>
+<script>
+/* OrbitControls loaded dynamically — CDN optional */
+let OrbitControls = null;
+
+/* ══════════════════════════════════════════════════════════
+   VIDEO-EDIT-3D — mapping video onto 3D surfaces
+   Fleet Compute: each surface is a compute node.
+   ══════════════════════════════════════════════════════════ */
+
+const VIDEOS = [
+  { id: 'fleet',  name: 'fleet-waves',       src: 'fleet-waves-development.mp4' },
+  { id: 'cuda',   name: 'cuda-mcp2',         src: 'cuda-mcp2.mp4' },
+  { id: 'markets', name: 'markets-radar',    src: 'markets-radar.mp4' },
+  { id: 'aertx',  name: 'aertx-demo',        src: 'aertx-demo.mp4' },
+  { id: 'inside', name: 'inside-compute',    src: 'inside-compute.mp4' },
+];
+
+const SHAPES = {
+  cube:     { geom: () => new THREE.BoxGeometry(5, 5, 5),       label: 'BOX' },
+  sphere:   { geom: () => new THREE.SphereGeometry(3, 64, 32),  label: 'SPHERE' },
+  torus:    { geom: () => new THREE.TorusGeometry(3, 0.9, 20, 200), label: 'DONUT' },
+  cylinder: { geom: () => new THREE.CylinderGeometry(2, 2, 6, 48), label: 'CYLINDER' },
+  ring:     { geom: () => new THREE.RingGeometry(1.5, 3, 64),   label: 'RING' },
+};
+
+const CENTER_VIDEO = 'fleet-waves-development.mp4';
+const BASE_PATH = '/aipodcast_me/';
+
+let renderer, scene, camera, controls;
+let players = {};  // id → ThreeVideoPlayer
+let activeShape = 'cube';
+let autoRotate = true;
+let centerPlayer = null;
+let orbitParticles = null;
+
+const stage = document.getElementById('stage');
+
+/* ── Init renderer: WebGL (global three.global.js) with orbit controls ── */
+async function init() {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setClearColor(0x050505);
+  stage.appendChild(renderer.domElement);
+
+  /* ── Try to load OrbitControls from CDN (optional) ── */
+  try {
+    const mod = await import('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js');
+    OrbitControls = mod.OrbitControls;
+  } catch(e) {
+    console.warn('OrbitControls CDN unavailable, using manual orbit');
+  }
+
+  scene  = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x050505, 0.008);
+
+  camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
+  camera.position.set(0, 5, 14);
+
+  if (OrbitControls) {
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 6;
+    controls.maxDistance = 60;
+  } else {
+    /* Manual orbit fallback */
+    controls = {
+      update: () => {},
+      enableDamping: false,
+      target: new THREE.Vector3(0, 0, 0),
+      minDistance: 6,
+      maxDistance: 60,
+    };
+  }
+
+  /* ── Lights (gold key + cyan rim) ── */
+  scene.add(new THREE.AmbientLight(0x101418, 2.0));
+
+  const keyLight = new THREE.DirectionalLight(0xD4AF37, 2.0);
+  keyLight.position.set(10, 18, 12);
+  scene.add(keyLight);
+
+  const rimLight = new THREE.PointLight(0x00eaff, 35, 90);
+  rimLight.position.set(-18, 8, -14);
+  scene.add(rimLight);
+
+  /* ── Central video plane (fleet-waves) ── */
+  centerPlayer = new ThreeVideoPlayer({
+    src: BASE_PATH + CENTER_VIDEO,
+    geometry: new THREE.PlaneGeometry(10, 5.625),
+    loop: true,
+    muted: true,
+  });
+  centerPlayer.mesh.position.set(0, 0, 0);
+  centerPlayer.mesh.name = 'center-video';
+  scene.add(centerPlayer.mesh);
+
+  /* ── 3D objects with video textures around the center ── */
+  buildVideoSurfaces();
+
+  /* ── Particle orbit (subtle background) ── */
+  buildOrbit();
+
+  /* ── Interaction ── */
+  setupControls();
+  window.addEventListener('resize', onResize);
+
+  renderer.setAnimationLoop(animate);
+
+  setTimeout(() => {
+    document.getElementById('boot').classList.add('done');
+  }, 1200);
+
+  document.getElementById('statusLabel').textContent = 'GPU://WEBGL';
+  document.getElementById('bootmode').textContent = 'GPU://READY';
+}
+
+/* ── Build 3D objects with video mapped onto surfaces ── */
+function buildVideoSurfaces() {
+  const radius = 11;
+  const objects = Object.entries(SHAPES);
+
+  objects.forEach(([shapeKey, shapeInfo], i) => {
+    const video = VIDEOS[(i + 1) % VIDEOS.length];
+    const player = new ThreeVideoPlayer({
+      src: BASE_PATH + video.src,
+      geometry: shapeInfo.geom(),
+      loop: true,
+      muted: true,
+      material: new THREE.MeshBasicMaterial({
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      }),
+    });
+
+    // Position objects in a ring around center
+    const angle = (i / objects.length) * Math.PI * 2;
+    player.mesh.position.set(
+      Math.cos(angle) * radius,
+      Math.sin(0.3) * radius * 0.3,
+      Math.sin(angle) * radius
+    );
+    player.mesh.name = `surface-${shapeKey}`;
+    player.video.play();  // start loading
+
+    // Store for timeline
+    players[shapeKey] = { player, angle, video };
+
+    scene.add(player.mesh);
+  });
+
+  /* ── Center player is the "active" one ── */
+  centerPlayer.video.play();
+
+  updateObjectList();
+  updateReadouts();
+}
+
+/* ── Particle orbit: subtle gold points ── */
+function buildOrbit() {
+  const COUNT = 500;
+  const rng = mulberry32(42);
+  const positions = new Float32Array(COUNT * 3);
+  const colors = new Float32Array(COUNT * 3);
+  const color = new THREE.Color();
+
+  for (let i = 0; i < COUNT; i++) {
+    const phi = rng() * Math.PI * 2;
+    const theta = rng() * Math.PI;
+    const r = lerp(16, 22, rng());
+    positions[i * 3]     = Math.sin(theta) * Math.cos(phi) * r;
+    positions[i * 3 + 1] = Math.sin(theta) * Math.sin(phi) * r;
+    positions[i * 3 + 2] = Math.cos(theta) * r;
+
+    color.setHSL(rng() * 0.1 + 0.1, 0.8, 0.6 + rng() * 0.2);
+    colors[i * 3]     = color.r;
+    colors[i * 3 + 1] = color.g;
+    colors[i * 3 + 2] = color.b;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  orbitParticles = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.35,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }));
+  scene.add(orbitParticles);
+}
+
+/* ── UI controls ── */
+function setupControls() {
+  document.getElementById('bPlay').onclick = () => {
+    centerPlayer.play();
+    Object.values(players).forEach(v => v.player.play());
+    document.getElementById('bPlay').classList.add('act');
+    document.getElementById('bPause').classList.remove('act');
+  };
+
+  document.getElementById('bPause').onclick = () => {
+    centerPlayer.pause();
+    Object.values(players).forEach(v => v.player.pause());
+    document.getElementById('bPause').classList.add('act');
+    document.getElementById('bPlay').classList.remove('act');
+  };
+
+  document.getElementById('bMute').onclick = () => {
+    const wasMuted = centerPlayer.video.muted;
+    centerPlayer.video.muted = !wasMuted;
+    document.getElementById('bMute').textContent = wasMuted ? '🔊 UNMUTE' : '🔇 MUTE';
+    document.getElementById('bMute').classList.toggle('act', wasMuted);
+  };
+
+  document.getElementById('bAuto').onclick = () => {
+    autoRotate = !autoRotate;
+    document.getElementById('bAuto').classList.toggle('act', autoRotate);
+  };
+
+  /* ── Object selector ── */
+  document.querySelectorAll('#selector .obj').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelector('#selector .obj.act').classList.remove('act');
+      btn.classList.add('act');
+      activeShape = btn.dataset.shape;
+      document.getElementById('statusLabel').textContent = SHAPES[activeShape].label + ' ACTIVE';
+    };
+  });
+}
+
+/* ── Animation timeline — drives all video surfaces + geometry ── */
+let frames = 0;
+let lastFps = performance.now();
+
+function animate(t) {
+  const elapsed = t * 0.001;
+  const tl = (elapsed % 60) / 60;  // 60s loop
+
+  /* ── Auto-orbit camera ── */
+  if (autoRotate) {
+    const r = Math.hypot(camera.position.x, camera.position.z);
+    const a = Math.atan2(camera.position.z, camera.position.x) + 0.0012;
+    camera.position.x = Math.cos(a) * r;
+    camera.position.z = Math.sin(a) * r;
+  }
+
+  /* ── Animate center video plane ── */
+  centerPlayer.mesh.rotation.y = elapsed * 0.15;
+  centerPlayer.mesh.rotation.x = Math.sin(elapsed * 0.4) * 0.1;
+  centerPlayer.mesh.position.y = Math.sin(elapsed * 0.3) * 0.5;
+
+  /* ── Animate 3D surfaces with timeline ── */
+  Object.entries(players).forEach(([key, { player, angle }]) => {
+    // Each object rotates at a different phase
+    const phase = angle;
+    player.mesh.rotation.y = elapsed * (0.3 + (key.length * 0.05));
+    player.mesh.rotation.x = elapsed * 0.2;
+    player.mesh.position.y = Math.sin(elapsed * 0.5 + phase) * 2;
+
+    // Highlight active selection
+    if (key === activeShape) {
+      player.material.emissive = new THREE.Color(0x00eaff);
+      player.material.emissiveIntensity = 0.3 + Math.sin(elapsed * 3) * 0.2;
+    } else {
+      player.material.emissiveIntensity = Math.max(0, player.material.emissiveIntensity - 0.05);
+    }
+  });
+
+  /* ── Orbit particles ── */
+  if (orbitParticles) {
+    orbitParticles.rotation.y = elapsed * 0.04;
+    orbitParticles.rotation.z = elapsed * 0.02;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  /* ── FPS counter ── */
+  frames++;
+  if (performance.now() - lastFps > 1000) {
+    document.getElementById('roFps').textContent =
+      Math.round(frames * 1000 / (performance.now() - lastFps)) + ' fps';
+    frames = 0;
+    lastFps = performance.now();
+    updateReadouts(tl);
+  }
+}
+
+/* ── Deterministic frame injection for CDP capture ── */
+/*
+ * __renderFrame(i, total) is called by the CDP render harness.
+ * It must be deterministic: the same i/total always produces the same frame.
+ */
+window.__renderFrame = function(i, total) {
+  const progress = i / Math.max(1, total - 1);
+
+  /* ── Drive timeline to exact frame ── */
+  const elapsed = progress * 60;  // 60 second timeline
+  const phase = elapsed;
+
+  /* ── Center video plane ── */
+  centerPlayer.mesh.rotation.y = phase * 0.15;
+  centerPlayer.mesh.rotation.x = Math.sin(phase * 0.4) * 0.1;
+  centerPlayer.mesh.position.y = Math.sin(phase * 0.3) * 0.5;
+
+  /* ── Seek each video surface to matching timeline position ── */
+  Object.entries(players).forEach(([key, { player, angle }]) => {
+    player.mesh.rotation.y = phase * (0.3 + (key.length * 0.05));
+    player.mesh.rotation.x = phase * 0.2;
+    player.mesh.position.y = Math.sin(phase * 0.5 + angle) * 2;
+
+    if (key === activeShape) {
+      player.material.emissive = new THREE.Color(0x00eaff);
+      player.material.emissiveIntensity = 0.3 + Math.sin(phase * 3) * 0.2;
+    } else {
+      player.material.emissiveIntensity = 0.2;
+    }
+  });
+
+  if (orbitParticles) {
+    orbitParticles.rotation.y = phase * 0.04;
+    orbitParticles.rotation.z = phase * 0.02;
+  }
+
+  /* ── Force render ── */
+  controls.update();
+  renderer.render(scene, camera);
+};
+
+/* ── Timeline-based video seek (3D surfaces project video in sync) ── */
+function syncVideosToTimeline(tl) {
+  if (!centerPlayer._loaded) return;
+  const vidDuration = centerPlayer.duration;
+  if (vidDuration > 0) {
+    centerPlayer.video.currentTime = tl * vidDuration;
+    centerPlayer.texture.needsUpdate = true;
+  }
+}
+
+/* ── Readouts ── */
+function updateObjectList() {
+  document.getElementById('roObjects').textContent =
+    Object.keys(players).length + 1 + ' surfaces';  // +1 for center
+}
+
+function updateReadouts(tl = 0) {
+  const t = (tl * 60).toFixed(1);
+  document.getElementById('roTime').textContent = t + 's / 60.0s';
+}
+
+/* ── Resize ── */
+function onResize() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+}
+
+/* ── Utilities ── */
+function lerp(a, b, t) { return a + (b - a) * t; }
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ══════════════════════════════════════════════════════════
+   Fleet Compute API surface — C² surface
+   ══════════════════════════════════════════════════════════
+   window.fleetWaves = {
+     play(), pause(), mute(), setShape(name), setAutoRotate(), renderFrame(i, total)
+   }
+══════════════════════════════════════════════════════════ */
+window.fleetWaves = {
+  play:   () => { centerPlayer.play(); Object.values(players).forEach(v => v.player.play()); },
+  pause:  () => { centerPlayer.pause(); Object.values(players).forEach(v => v.player.pause()); },
+  mute:   (on = true) => {
+    centerPlayer.video.muted = on;
+    Object.values(players).forEach(v => v.player.video.muted = on);
+  },
+  setShape: (name) => {
+    if (SHAPES[name]) { activeShape = name; }
+  },
+  setAutoRotate: (on) => { autoRotate = on; },
+  renderFrame: (i, total) => {
+    if (typeof window.__renderFrame === 'function') {
+      window.__renderFrame(i, total);
+    }
+  },
+  getObjects: () => Object.keys(players).map(k => ({ id: k, name: players[k].video.name })),
+  getTime: () => ({ current: centerPlayer.currentTime, duration: centerPlayer.duration }),
+};
+
+/* ── Boot ── */
+init().catch(err => {
+  const msg = err instanceof Error ? err.message : String(err);
+  document.getElementById('boot').innerHTML =
+    '<div class="bg">3D</div><div class="bl">RUNTIME ERROR</div>' +
+    `<div class="bl" style="font-size:8px;max-width:280px;text-align:center">${msg}</div>`;
+});
+
+console.info('%cæ://videolab/video-edit-3d%c fleet compute — video mapped onto 3D surfaces',
+  'color:#D4AF37;background:#050505;padding:5px 10px;font-weight:bold',
+  'color:#00eaff;font-family:monospace');
+</script>
+</body>
+</html>
