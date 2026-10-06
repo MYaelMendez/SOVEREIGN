@@ -37,6 +37,15 @@ export interface IPCMessage<T = unknown> {
   target?: string;
 }
 
+/**
+ * A typed envelope for IPC message payloads that carry RPC metadata.
+ */
+export interface IpcPayload {
+  __ipc_call__?: string;
+  __ipc_response__?: boolean;
+  data?: unknown;
+}
+
 /** Options for creating a channel. */
 export interface ChannelOptions {
   /** Channel name. */
@@ -249,12 +258,12 @@ export async function call<TRequest, TResponse>(
           message.payload &&
           typeof message.payload === 'object' &&
           '__ipc_call__' in message.payload &&
-          (message.payload as any).__ipc_call__ === callId &&
-          (message.payload as any).__ipc_response__ === true
+          (message.payload as IpcPayload).__ipc_call__ === callId &&
+          (message.payload as IpcPayload).__ipc_response__ === true
         ) {
           if (timer) clearTimeout(timer);
           unsubscribe();
-          resolve((message.payload as any).data);
+          resolve((message.payload as IpcPayload).data as TResponse);
         }
       }
     );
@@ -297,10 +306,10 @@ export function respond<TRequest, TResponse>(
         payload &&
         typeof payload === 'object' &&
         '__ipc_call__' in payload &&
-        (payload as any).__ipc_response__ === false
+        (payload as IpcPayload).__ipc_response__ === false
       ) {
-        const callId = (payload as any).__ipc_call__;
-        const requestData = (payload as any).data as TRequest;
+        const callId = (payload as IpcPayload).__ipc_call__ as string;
+        const requestData = (payload as IpcPayload).data as TRequest;
 
         try {
           const result = await handler(requestData);

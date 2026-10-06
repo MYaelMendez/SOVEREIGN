@@ -242,7 +242,7 @@ function runInTerminal(
 
 // ─── Alternative: Direct Execution with Output Capture ───────────────────────
 
-import { exec } from 'child_process';
+import { exec, type ExecException } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -265,10 +265,18 @@ async function executeBenchmark(
       maxBuffer: 10 * 1024 * 1024, // 10MB
     });
     return { output: stdout + stderr, exitCode: 0 };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      const execErr = err as ExecException;
+      const stderr = execErr.stderr ?? '';
+      return {
+        output: execErr.stdout ? execErr.stdout + stderr : execErr.message,
+        exitCode: execErr.code ?? 1,
+      };
+    }
     return {
-      output: err.stdout ? err.stdout + err.stderr : err.message,
-      exitCode: err.code ?? 1,
+      output: String(err),
+      exitCode: 1,
     };
   }
 }
@@ -341,13 +349,13 @@ export async function run(operation: BenchmarkOperation): Promise<BenchmarkResul
       receipt,
       success: true,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       operation,
       metrics: { latencyP50: 0, latencyP95: 0, fps: 0, vramMax: 0, gpuUtilization: 0 },
       receipt: generateReceipt(operation.name, { latencyP50: 0, latencyP95: 0, fps: 0, vramMax: 0, gpuUtilization: 0 }, '', null),
       success: false,
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }

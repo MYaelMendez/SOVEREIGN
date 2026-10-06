@@ -129,7 +129,7 @@ export interface HandlerContext {
   /** The authenticated session. */
   session: Session;
   /** The raw params from the request. */
-  params: any;
+  params: Record<string, unknown>;
   /** The connection ID. */
   connectionId: string;
 }
@@ -461,7 +461,7 @@ export class IpcServer {
     if (state.closed) return;
 
     // Parse JSON
-    let message: any;
+    let message: Record<string, unknown>;
     try {
       message = JSON.parse(rawMessage);
     } catch {
@@ -482,7 +482,7 @@ export class IpcServer {
       return;
     }
 
-    const request = message as JsonRpcRequest | JsonRpcNotification;
+    const request = message as unknown as JsonRpcRequest | JsonRpcNotification;
     const requestId = "id" in request ? request.id : null;
 
     // Check if method is public

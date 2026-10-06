@@ -198,7 +198,8 @@ class WebMCPServer {
     return [
       'vscoder_observe', 'vscoder_plan', 'vscoder_refactor',
       'vscoder_build', 'vscoder_test', 'vscoder_debug',
-      'vscoder_benchmark', 'vscoder_git_diff', 'vscoder_receipt'
+      'vscoder_benchmark', 'vscoder_git_diff', 'vscoder_receipt',
+      'vscoder_gpu_verify'
     ];
   }
 
@@ -213,6 +214,7 @@ class WebMCPServer {
       case 'vscoder_benchmark': return this.toolBenchmark(params);
       case 'vscoder_git_diff': return this.toolGitDiff(params);
       case 'vscoder_receipt': return this.toolReceipt(params);
+      case 'vscoder_gpu_verify': return this.toolGpuVerify(params);
       default: throw new Error(`Unknown tool: ${tool}`);
     }
   }
@@ -433,6 +435,64 @@ class WebMCPServer {
       last,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * vscoder_gpu_verify — RTX 3050-accelerated batch hash verification.
+   *
+   * Dispatches QR receipts to the GPU via CUDA kernels (Sha256 XOR-reduce +
+   * receipt cross-verify). Returns the GPU-verified chain hash.
+   *
+   * Uses: ae://r/<sha> QR index → RTX 3050 CUDA kernels → verified chain.
+   * Local-first: no cloud. RTX 3050 compute capability 8.6.
+   */
+  private toolGpuVerify(params: ToolParams): ToolResult {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+    const hashes = (params.hashes as string[] | undefined) || [];
+    const batchSize = (params.batchSize as number) || hashes.length || 500;
+
+    // Build a temporary hash list for the GPU kernel script
+    const hashesJson = JSON.stringify(hashes, null, 2);
+    const tmpPath = path.join(workspaceRoot || '', '.vscoder-gpu-cache.json');
+
+    try {
+      fs.writeFileSync(tmpPath, hashesJson, 'utf8');
+
+      // Execute the CUDA kernel script via GPU Python
+      const gpuScript = path.join(workspaceRoot || '', 'agents/qr_gpu_cuda_v2.py');
+      const output = execSync(
+        `"C:\\gpu\\Scripts\\python.exe" "${gpuScript}" --verify "${tmpPath}"`,
+        { cwd: workspaceRoot || '', timeout: 60000, encoding: 'utf8', stdio: 'pipe' }
+      );
+
+      // Parse GPU output
+      const gpuMatch = output.match(/GPU:\s*([\d.]+)ms.*?verified=(\d+)\/(\d+)\s*\|.*?chain=([a-f0-9]+)/s);
+      const chainMatch = output.match(/Chain match: (PASS|FAIL)/);
+
+      // Clean up temp file
+      try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }
+
+      return {
+        gpu: true,
+        device: 'RTX 3050 (compute 8.6, 2560 CUDA cores)',
+        kernels: ['sha256_xor_reduce', 'receipt_verify_batch'],
+        verified: gpuMatch ? parseInt(gpuMatch[2]) : 0,
+        total: gpuMatch ? parseInt(gpuMatch[3]) : 0,
+        gpu_ms: gpuMatch ? parseFloat(gpuMatch[1]) : 0,
+        chain_hash: gpuMatch ? gpuMatch[4] : null,
+        chain_match: chainMatch ? chainMatch[1] : 'FAIL',
+        ae_receipt: `ae://receipt/${gpuMatch ? gpuMatch[4]?.slice(0, 24) : 'unknown'}`,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (e: unknown) {
+      try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }
+      return {
+        gpu: false,
+        error: (e instanceof Error ? e.message : String(e)),
+        device: 'RTX 3050',
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 
   private getWebviewHtml(): string {

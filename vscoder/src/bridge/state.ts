@@ -307,12 +307,12 @@ export class IDEStateObserver {
 
     // Test events (via test controller)
     this.disposables.push(
-      (vscode.tests as any).onDidChangeTestResults?.(this.onDidChangeTestResults, this) ?? { dispose: () => {} },
+      (vscode as { tests?: { onDidChangeTestResults?: Function } }).tests?.onDidChangeTestResults?.(this.onDidChangeTestResults, this) ?? { dispose: () => {} },
     );
 
     // Extension state
     this.disposables.push(
-      (vscode.extensions as any).onDidChange?.(this.onDidChangeExtensions, this) ?? { dispose: () => {} },
+      (vscode as { extensions?: { onDidChange?: Function } }).extensions?.onDidChange?.(this.onDidChangeExtensions, this) ?? { dispose: () => {} },
     );
 
     // Initial state capture

@@ -77,7 +77,7 @@ async function executeCodeActionProvider(
   kind?: vscode.CodeActionKind,
   token?: vscode.CancellationToken,
 ): Promise<vscode.CodeAction[]> {
-  const args: any[] = [uri, range];
+  const args: unknown[] = [uri, range];
   if (kind) {
     args.push(kind.value);
   }

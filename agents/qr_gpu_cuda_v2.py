@@ -220,4 +220,17 @@ def main():
     print(f"Source audit:   ae://audit/847dc30fb86078768626d6b1")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 2 and sys.argv[1] == '--verify':
+        verify_file = sys.argv[2]
+        with open(verify_file) as f:
+            hashes = [line.strip() for line in f if line.strip()]
+        init_gf_tables()
+        system = QRReceiptSystem()
+        # Create minimal receipts for verification
+        receipts = [{'content_sha256': h} for h in hashes]
+        verified, chain_hash, gpu_ms, chain_match = system.batch_verify_gpu(receipts)
+        print(f"GPU: {gpu_ms:.2f}ms | verified={verified}/{len(hashes)} | chain={chain_hash[:24]}")
+        print(f"Chain match: {'PASS' if chain_match else 'FAIL'}")
+    else:
+        main()

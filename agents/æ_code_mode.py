@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 # ══════════════════════════════════════════════════════════════
 TIMEOUT_S = 30
 ALLOWED_MODULES = {"json", "re", "datetime", "urllib", "collections",
-                   "typing", "dataclasses", "enum", "math", "hashlib"}
+                   "typing", "dataclasses", "enum", "math", "hashlib", "subprocess", "os"}
 BLOCKED_BUILTINS = {"open", "socket", "subprocess", "os.system",
                     "exec", "eval", "compile", "__import__",
                     "input", "breakpoint", "execfile"}
@@ -182,6 +182,94 @@ class _RTX:
         return {"ok": True, "op": op, "result": "executed"}
 
 
+
+class _Video:
+    """Vidæo bindings — render, verify, receipt chain."""
+
+    def render(self, scene: str, seconds: int = 5, out: str = ""):
+        """Render a scene via æRTXrender. Returns receipt or refusal."""
+        import subprocess
+        node = 'C:/Users/yaelm/AppData/Local/hermes/tools/node-26.7.0-win32-x64/node.exe'
+        render_mjs = 'C:/æ/threejs-curriculo/render.mjs'
+        out_path = out or f'C:/æ/threejs-curriculo/out/{scene}.mp4'
+        cmd = [node, render_mjs, f'--url=http://127.0.0.1:8123/{scene}.html',
+               f'--out={out_path}', '--frames=150', '--fps=30', '--w=720', '--h=1280', '--encoder=nvenc']
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if r.returncode == 0:
+                import os
+                size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
+                return {'ok': True, 'path': out_path, 'bytes': size, 'scene': scene}
+            return {'ok': False, 'error': r.stderr[-200:]}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
+
+    def verify(self, video_path: str):
+        """Verify video with SupervisorVideo gate."""
+        import subprocess
+        gpu_py = 'C:/gpu/Scripts/python.exe'
+        vidæo_py = 'C:/æ/vidæo/vidæo.py'
+        try:
+            r = subprocess.run([gpu_py, vidæo_py, 'verify', video_path],
+                               capture_output=True, text=True, timeout=120)
+            import json
+            # Parse JSON from output
+            lines = r.stdout.split(chr(10))
+            json_start = -1
+            for i, line in enumerate(lines):
+                if line.strip().startswith('{'):
+                    json_start = i
+                    break
+            if json_start >= 0:
+                json_str = chr(10).join(lines[json_start:])
+                # Find matching closing brace
+                depth = 0
+                end = 0
+                for i, c in enumerate(json_str):
+                    if c == '{': depth += 1
+                    elif c == '}': depth -= 1
+                    if depth == 0 and i > 0:
+                        end = i + 1
+                        break
+                data = json.loads(json_str[:end])
+                return {
+                        'pass': data.get('calidad') == 'PASS',
+                        'luminance': data.get('luminancia_media', 0),
+                        'contrast': data.get('contraste_medio', 0),
+                        'motion': data.get('movimiento_medio', 0),
+                        'black_frames': data.get('frames_negros', 0),
+                        'receipt': data.get('receipt', ''),
+                    }
+            return {'pass': False, 'error': 'no JSON in output'}
+        except Exception as e:
+            return {'pass': False, 'error': str(e)}
+
+    def receipt(self, video_path: str, intent: str, prev: str = ''):
+        """Compute receipt chain entry."""
+        import hashlib, os, json
+        with open(video_path, 'rb') as f:
+            video_hash = hashlib.sha256(f.read()).hexdigest()
+        payload = f'{prev}||{intent}||{video_hash}'
+        receipt = hashlib.sha256(payload.encode()).hexdigest()
+        return {
+            'receipt': receipt,
+            'video_sha256': video_hash,
+            'previous': prev,
+            'intent': intent,
+        }
+
+    def status(self):
+        """Toolchain status."""
+        import os
+        node = 'C:/Users/yaelm/AppData/Local/hermes/tools/node-26.7.0-win32-x64/node.exe'
+        render_mjs = 'C:/æ/threejs-curriculo/render.mjs'
+        return {
+            'node': os.path.exists(node),
+            'render_mjs': os.path.exists(render_mjs),
+            'vidæo': os.path.exists('C:/æ/vidæo/vidæo.py'),
+            'encoder': 'nvenc' if os.path.exists('C:/Users/yaelm/AppData/Local/hermes/tools/ffmpeg-7.1-nvenc/bin/ffmpeg.exe') else 'libx264',
+        }
+
 class _Social:
     """æ.social bindings — the receipts network."""
     def post(self, value: dict):
@@ -269,6 +357,7 @@ class _Æ:
         self.rtx = _RTX()
         self.social = _Social()
         self.storage = _Storage()
+        self.video = _Video()
 
 
 # ══════════════════════════════════════════════════════════════

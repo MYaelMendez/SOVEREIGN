@@ -188,7 +188,7 @@ async function getDefaultBuildTask(): Promise<vscode.Task | undefined> {
   );
   if (buildTasks.length > 0) {
     // Return the default build task (isDefault) or the first one
-    return buildTasks.find((t) => (t.group as any)?.isDefault) ?? buildTasks[0];
+    return buildTasks.find((t) => t.group?.isDefault) ?? buildTasks[0];
   }
   // Fallback: look for common build task names
   const names = ['build', 'compile', 'tsc', 'npm run build', 'yarn build'];
