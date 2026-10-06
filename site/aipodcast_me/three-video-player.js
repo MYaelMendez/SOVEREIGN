@@ -191,12 +191,17 @@ class ThreeVideoPlayer {
    * @param {number} [fps=30]  Frames per second for the target timeline
    */
   seekFrame(i, total, fps = 30) {
-    if (!this._loaded || this._duration === 0) return;
+    if (this._duration === 0) {
+      // Video metadata may not have loaded yet in headless Chrome
+      // Try to get duration from the video element directly
+      try { this._duration = this.video.duration || 0; } catch(e) {}
+      if (this._duration === 0) return;
+    }
     const duration = total / fps;
     const t = (i / Math.max(1, total - 1)) * duration;
     this.video.currentTime = t;
     // Mark texture for update
-    this.texture.needsUpdate = true;
+    if (this.texture) this.texture.needsUpdate = true;
   }
 
   /**

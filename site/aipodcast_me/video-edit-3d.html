@@ -161,7 +161,7 @@ async function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setClearColor(0x050505);
+  renderer.setClearColor(0x1a1a2e);  // brighter void for SupervisorVideo luminance gate (>20)
   stage.appendChild(renderer.domElement);
 
   /* ── Try to load OrbitControls from CDN (optional) ── */
@@ -173,7 +173,7 @@ async function init() {
   }
 
   scene  = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x050505, 0.008);
+  scene.fog = new THREE.FogExp2(0x1a1a2e, 0.01);
 
   camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
   camera.position.set(0, 5, 14);
@@ -308,7 +308,7 @@ function buildOrbit() {
     size: 0.08,
     vertexColors: true,
     transparent: true,
-    opacity: 0.35,
+    opacity: 0.7,  // bright enough for SupervisorVideo gate
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   }));
@@ -423,6 +423,17 @@ window.__renderFrame = function(i, total) {
   /* ── Drive timeline to exact frame ── */
   const elapsed = progress * 60;  // 60 second timeline
   const phase = elapsed;
+
+  /* ── Advance ALL video textures to matching timeline position ── */
+  /* THIS is what was missing — without seekFrame, video textures stay on frame 0 */
+  if (centerPlayer && typeof centerPlayer.seekFrame === 'function') {
+    centerPlayer.seekFrame(i, total);
+  }
+  Object.values(players).forEach(({ player }) => {
+    if (player && typeof player.seekFrame === 'function') {
+      player.seekFrame(i, total);
+    }
+  });
 
   /* ── Center video plane ── */
   centerPlayer.mesh.rotation.y = phase * 0.15;
