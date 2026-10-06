@@ -1,0 +1,41 @@
+{
+  "title": "golden ratio æ://",
+  "description": "Golden ratio spiral of 5000 gold particles on void. Mathematical beauty: golden angle distribution, breathing pulse, spiral wave, converging to æ glyph. Pure math as art.",
+  "duration": 6,
+  "fps": 30,
+  "width": 720,
+  "height": 1280,
+  "particles": 5000,
+  "style": "gold-on-void",
+  "palette": "gold",
+  "motion": 0.03,
+  "scenes": [
+    {
+      "start": 0,
+      "end": 2.0,
+      "description": "5000 gold particles emerge from void center in golden angle spiral, slow rotation begins",
+      "camera": "zoom out from center",
+      "particles": true,
+      "colors": ["#D4AF37", "#050505", "#ffd700"]
+    },
+    {
+      "start": 2.0,
+      "end": 4.0,
+      "description": "Spiral breathes with golden ratio pulse, rings rotate at different speeds, particles flow along spiral arms",
+      "camera": "slow orbit",
+      "particles": true,
+      "colors": ["#D4AF37", "#00eaff", "#050505"]
+    },
+    {
+      "start": 4.0,
+      "end": 6.0,
+      "description": "All particles converge to center forming æ glyph, gold glow intensifies, fade to pure gold",
+      "camera": "zoom to center",
+      "particles": true,
+      "colors": ["#D4AF37", "#ffd700", "#050505"]
+    }
+  ],
+  "scene_html": "golden-ratio.html",
+  "pipeline": "CDP → NVENC",
+  "palette_valid": true
+}

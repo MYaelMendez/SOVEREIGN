@@ -1,0 +1,15 @@
+{
+  "title": "\u00e6:// text in video",
+  "text_lines": [
+    "text in video",
+    "spec-driven",
+    "gold on void"
+  ],
+  "description": "Spec-driven text in video. The producer injects ?text=Line1|Line2|Line3 into the scene; text-video.html reveals it deterministically via __renderFrame. Same HTML renders any text. Path: HTML -> Chrome CDP -> NVENC -> SupervisorVideo gate -> VLC pane -> github.io.",
+  "duration": 6,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "text-video.html",
+  "pipeline": "HTML (spec text) -> CDP -> NVENC -> SupervisorVideo -> VLC -> github.io"
+}

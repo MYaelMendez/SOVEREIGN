@@ -1,0 +1,41 @@
+{
+  "title": "this is agentic engineering",
+  "description": "5-second vertical video showcasing the AEE cycle applied to video production. Agentic engineering means: deterministic pipeline, GPU-accelerated generation, verifiable receipts, zero cloud.",
+  "duration": 5,
+  "fps": 30,
+  "width": 720,
+  "height": 1280,
+  "particles": 2000,
+  "style": "gold-on-void",
+  "palette": "gold",
+  "motion": 0.03,
+  "scenes": [
+    {
+      "start": 0,
+      "end": 1.5,
+      "description": "Gold particles emerge from void, forming the text THIS IS",
+      "camera": "slow zoom",
+      "particles": true,
+      "colors": ["#D4AF37", "#050505"]
+    },
+    {
+      "start": 1.5,
+      "end": 3.5,
+      "description": "Gold particles form AGENTIC ENGINEERING in wireframe, orbiting slowly",
+      "camera": "orbit",
+      "particles": true,
+      "colors": ["#D4AF37", "#ffd700"]
+    },
+    {
+      "start": 3.5,
+      "end": 5.0,
+      "description": "SHA-256 receipt appears as QR code, particles converge, fade to gold glow",
+      "camera": "static",
+      "particles": true,
+      "colors": ["#D4AF37", "#000000"]
+    }
+  ],
+  "scene_html": "fleet-waves.html",
+  "pipeline": "CDP → NVENC",
+  "palette_valid": true
+}

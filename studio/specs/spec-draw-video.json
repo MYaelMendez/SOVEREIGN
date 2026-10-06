@@ -1,0 +1,18 @@
+{
+  "title": "\u00e6://draw",
+  "text_lines": ["drawing in video", "spec-driven shapes", "stroke by stroke"],
+  "description": "Deterministic drawing in video. The spec carries a shapes[] array; the producer injects it as ?shapes=<json>; draw-video.html strokes each shape progressively (the drawing gesture, not a fade). Primitives: line | rect | circle | arrow | polyline | polygon | text. Zero CDN, zero framework, zero ML.",
+  "duration": 6,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "shapes": [
+    { "t": "polyline", "pts": [[220, 800], [460, 560], [700, 720], [940, 480]], "w": 8, "c": "#D4AF37" },
+    { "t": "rect", "x": 1060, "y": 460, "w": 360, "h": 280, "r": 18, "lw": 8, "c": "#D4AF37" },
+    { "t": "circle", "cx": 1640, "cy": 600, "r": 130, "lw": 8, "c": "#00eaff" },
+    { "t": "arrow", "x1": 220, "y1": 940, "x2": 1700, "y2": 940, "w": 7, "c": "#D4AF37" },
+    { "t": "text", "x": 960, "y": 250, "s": 72, "c": "#ffd98a", "tx": "draw://" }
+  ],
+  "scene_html": "draw-video.html",
+  "pipeline": "draw-video.html (spec shapes) -> CDP -> NVENC -> supervisionvidaeo -> VLC -> github.io"
+}

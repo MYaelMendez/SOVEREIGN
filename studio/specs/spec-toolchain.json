@@ -1,0 +1,41 @@
+{
+  "title": "the toolchain",
+  "description": "Demonstrates the sovereign video toolchain end-to-end: the AEE cycle (SPEC → RTL → SIM → SYNTH → P&R → GDS → FAB → TEST) rendered on the RTX 3050, verified by the deterministic gate, receipted with SHA-256, and published to the truth surface. Zero cloud. Zero ML.",
+  "duration": 5,
+  "fps": 30,
+  "width": 720,
+  "height": 1280,
+  "particles": 2500,
+  "style": "gold-on-void",
+  "palette": "gold",
+  "motion": 0.04,
+  "scenes": [
+    {
+      "start": 0,
+      "end": 1.5,
+      "description": "Gold particles emerge from void, forming the text THE TOOLCHAIN",
+      "camera": "slow zoom",
+      "particles": true,
+      "colors": ["#D4AF37", "#050505"]
+    },
+    {
+      "start": 1.5,
+      "end": 3.5,
+      "description": "Pipeline stages as connected nodes: SPEC->RTL->SIM->SYNTH->P&R->GDS->FAB->TEST, particles flow along the chain",
+      "camera": "orbit",
+      "particles": true,
+      "colors": ["#D4AF37", "#ffd700", "#050505"]
+    },
+    {
+      "start": 3.5,
+      "end": 5.0,
+      "description": "All particles converge to center forming the ae glyph, gold glow intensifies, fade to pure gold",
+      "camera": "zoom to center",
+      "particles": true,
+      "colors": ["#D4AF37", "#ffd700", "#050505"]
+    }
+  ],
+  "scene_html": "fleet-waves.html",
+  "pipeline": "CuPy GPU -> NVENC -> SupervisorVideo -> VLC -> github.io",
+  "palette_valid": true
+}

@@ -1,0 +1,41 @@
+{
+  "title": "🛸🛸🛸",
+  "description": "8-second vertical video featuring three UFOs (U+1F6F8) flying across a gold-on-void canvas. Particles trail behind each ship, converging into the æ:// glyph at the end. Deterministic render via CDP + CuPy, supervised by SupervisorVideo.",
+  "duration": 8,
+  "fps": 30,
+  "width": 720,
+  "height": 1280,
+  "particles": 3000,
+  "style": "gold-on-void",
+  "palette": "gold",
+  "motion": 0.05,
+  "scenes": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "description": "Three UFOs emerge from void at bottom, begin slow ascent with particle trails",
+      "camera": "low angle",
+      "particles": true,
+      "colors": ["#D4AF37", "#050505", "#00eaff"]
+    },
+    {
+      "start": 2.5,
+      "end": 5.5,
+      "description": "UFOs fly in triangular formation across the frame, leaving gold particle trails",
+      "camera": "follow",
+      "particles": true,
+      "colors": ["#D4AF37", "#ffd700", "#050505"]
+    },
+    {
+      "start": 5.5,
+      "end": 8.0,
+      "description": "UFOs converge at center, particles form æ glyph, all fade to gold glow",
+      "camera": "zoom to center",
+      "particles": true,
+      "colors": ["#D4AF37", "#050505", "#ffd700"]
+    }
+  ],
+  "scene_html": "fleet-waves.html",
+  "pipeline": "CDP → NVENC",
+  "palette_valid": true
+}
