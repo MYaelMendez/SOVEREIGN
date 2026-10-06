@@ -1,0 +1,11 @@
+{
+  "name": "vlc-media-player",
+  "label": "VLC Player",
+  "description": "Control VLC via HTTP API — play, pause, stop, seek, volume, fullscreen. Gold-on-void interface.",
+  "icon": "Play",
+  "version": "0.1.0",
+  "tab": { "path": "/vlc", "position": "after:skills" },
+  "entry": "dist/index.js",
+  "css": "dist/style.css",
+  "api": "plugin_api.py"
+}

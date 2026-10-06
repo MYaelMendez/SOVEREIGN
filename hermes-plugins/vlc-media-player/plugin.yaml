@@ -1,0 +1,15 @@
+name: vlc-media-player
+version: 0.2.0
+description: "VLC Media Player — control VLC via HTTP API with gold-on-void interface. Play, pause, stop, seek, volume, fullscreen."
+author: "Yael Mendez"
+kind: standalone
+provides_tools:
+  - vlc_status
+  - vlc_play
+  - vlc_pause
+  - vlc_stop
+  - vlc_seek
+  - vlc_open
+  - vlc_volume
+provides_hooks:
+  - on_session_end
