@@ -9,6 +9,21 @@ import { execSync } from 'child_process';
 // VSCODER:// v0.1 — VS Code-native autonomous engineering agent
 // ═══════════════════════════════════════════════════════════
 
+// ── Tool parameter/return types (no `any`) ──
+
+interface ToolParams {
+  instruction?: string;
+  kind?: string;
+  newName?: string;
+  path?: string;
+  query?: string;
+  command?: string;
+  config?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface ToolResult extends Record<string, unknown> {}
+
 // ── Receipt System with SHA-256 Hash Chain ──
 
 interface ReceiptEntry {
@@ -187,7 +202,7 @@ class WebMCPServer {
     ];
   }
 
-  async invokeTool(tool: string, params: any): Promise<any> {
+  async invokeTool(tool: string, params: ToolParams): Promise<ToolResult> {
     switch (tool) {
       case 'vscoder_observe': return this.toolObserve(params);
       case 'vscoder_plan': return this.toolPlan(params);
@@ -204,7 +219,7 @@ class WebMCPServer {
 
   // ── WebMCP Tool Implementations ──
 
-  private toolObserve(params: any): any {
+  private toolObserve(params: ToolParams): ToolResult {
     const workspaceFolders = vscode.workspace.workspaceFolders || [];
     const editors = vscode.window.visibleTextEditors.map(e => ({
       path: e.document.uri.fsPath,
@@ -226,13 +241,13 @@ class WebMCPServer {
     return result;
   }
 
-  private async toolPlan(params: any): Promise<any> {
+  private async toolPlan(params: ToolParams): Promise<ToolResult> {
     const instruction = params.instruction || 'optimize workspace';
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
 
     // Use LSP to gather symbols from active editor
     const editor = vscode.window.activeTextEditor;
-    let symbols: any[] = [];
+    let symbols: Array<{name: string; kind: string; location?: string}> = [];
     if (editor) {
       try {
         const doc = editor.document;
@@ -267,7 +282,7 @@ class WebMCPServer {
     return plan;
   }
 
-  private async toolRefactor(params: any): Promise<any> {
+  private async toolRefactor(params: ToolParams): Promise<ToolResult> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return { error: 'No active editor' };
@@ -278,7 +293,7 @@ class WebMCPServer {
     const refactorKind = params.kind || 'rename';
     const newName = params.newName || 'refactoredSymbol';
 
-    let result: any = { kind: refactorKind, applied: false };
+    let result: Record<string, unknown> = { kind: refactorKind, applied: false };
 
     try {
       if (refactorKind === 'rename') {
@@ -316,11 +331,11 @@ class WebMCPServer {
     return result;
   }
 
-  private async toolBuild(params: any): Promise<any> {
+  private async toolBuild(params: ToolParams): Promise<ToolResult> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
     const buildCmd = params.command || 'python -m py_compile';
 
-    let result: any;
+    let result: Record<string, unknown>;
     try {
       const output = execSync(buildCmd, { cwd: workspaceRoot, timeout: 30000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 2000) };
@@ -332,11 +347,11 @@ class WebMCPServer {
     return result;
   }
 
-  private async toolTest(params: any): Promise<any> {
+  private async toolTest(params: ToolParams): Promise<ToolResult> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
     const testCmd = params.command || 'python -m pytest --tb=short -q';
 
-    let result: any;
+    let result: Record<string, unknown>;
     try {
       const output = execSync(testCmd, { cwd: workspaceRoot, timeout: 60000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 3000) };
@@ -348,7 +363,7 @@ class WebMCPServer {
     return result;
   }
 
-  private async toolDebug(params: any): Promise<any> {
+  private async toolDebug(params: ToolParams): Promise<ToolResult> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
     const debugConfig = params.config || {
       type: 'python',
@@ -361,7 +376,7 @@ class WebMCPServer {
     try {
       const success = await vscode.debug.startDebugging(
         vscode.workspace.workspaceFolders?.[0],
-        debugConfig
+        debugConfig as vscode.DebugConfiguration
       );
       const result = { success, config: debugConfig };
       this.receipts.add('debug', JSON.stringify(params), JSON.stringify(result));
@@ -373,11 +388,11 @@ class WebMCPServer {
     }
   }
 
-  private async toolBenchmark(params: any): Promise<any> {
+  private async toolBenchmark(params: ToolParams): Promise<ToolResult> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
     const benchCmd = params.command || 'python -m pytest --benchmark-only --benchmark-json=benchmark.json';
 
-    let result: any;
+    let result: Record<string, unknown>;
     try {
       const output = execSync(benchCmd, { cwd: workspaceRoot, timeout: 120000, encoding: 'utf8' });
       result = { success: true, output: output.slice(0, 3000) };
@@ -389,10 +404,10 @@ class WebMCPServer {
     return result;
   }
 
-  private async toolGitDiff(params: any): Promise<any> {
+  private async toolGitDiff(params: ToolParams): Promise<ToolResult> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
 
-    let result: any;
+    let result: Record<string, unknown>;
     try {
       const diff = execSync('git diff --stat', { cwd: workspaceRoot, timeout: 10000, encoding: 'utf8' });
       const status = execSync('git status --short', { cwd: workspaceRoot, timeout: 10000, encoding: 'utf8' });
@@ -406,7 +421,7 @@ class WebMCPServer {
     return result;
   }
 
-  private toolReceipt(params: any): any {
+  private toolReceipt(params: ToolParams): ToolResult {
     const chain = this.receipts.getChain();
     const valid = this.receipts.verify();
     const last = this.receipts.getLast();
@@ -592,9 +607,9 @@ function openAgentPanel(context: vscode.ExtensionContext): void {
   );
 
   panel.webview.html = getAgentPanelHtml();
-  panel.webview.onDidReceiveMessage(async (message: any) => {
-    if (message?.command === 'vscoder.invoke') {
-      const result = await webmcpServer?.invokeTool(message.tool, message.params);
+  panel.webview.onDidReceiveMessage(async (message: { type?: string; command?: string; tool?: string; params?: ToolParams; path?: string; text?: string; selection?: unknown; value?: unknown }) => {
+    if (message?.command === 'vscoder.invoke' && message.tool) {
+      const result = await webmcpServer?.invokeTool(message.tool, message.params || {});
       panel.webview.postMessage({ command: 'vscoder.result', result });
     }
   });
