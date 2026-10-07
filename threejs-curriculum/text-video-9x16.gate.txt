@@ -1,0 +1,16 @@
+
+[93mVIDÆO — supervise text-video-9x16.mp4[0m
+  [92m✓[0m PASS (lum 27.06 con 13.96 mov 1.717)
+{
+  "video": "C:\\\u00e6\\threejs-curriculum\\text-video-9x16.mp4",
+  "frames_analizados": 18,
+  "frames_negros": 0,
+  "frames_con_qr": 0,
+  "luminancia_media": 27.06,
+  "contraste_medio": 13.96,
+  "movimiento_medio": 1.717,
+  "calidad": "PASS",
+  "razones": [],
+  "receipt": "f6ec8bfaf89e6f06ffaaf2a2c6422eec450d7abf4c0c7557ca8508772e12f739",
+  "supervisado_at": "2026-10-07T05:00:33.852333+00:00"
+}

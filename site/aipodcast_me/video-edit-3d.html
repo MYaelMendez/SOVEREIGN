@@ -24,7 +24,7 @@
   .scan{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.12;
     background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 4px)}
   .vig{position:fixed;inset:0;z-index:3;pointer-events:none;
-    background:radial-gradient(circle at 50% 45%,transparent 34%,rgba(5,5,5,.55) 72%,rgba(5,5,5,.95) 100%)}
+    background:radial-gradient(circle at 50% 45%,transparent 46%,rgba(5,5,5,.30) 80%,rgba(5,5,5,.62) 100%)}
   /* HUD */
   #hud{position:fixed;inset:0;z-index:10;pointer-events:none;
     display:flex;flex-direction:column;justify-content:space-between;
@@ -161,7 +161,7 @@ async function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setClearColor(0x1a1a2e);  // brighter void for SupervisorVideo luminance gate (>20)
+  renderer.setClearColor(0x223049);  // brighter void for SupervisorVideo luminance gate (>20)
   stage.appendChild(renderer.domElement);
 
   /* ── Try to load OrbitControls from CDN (optional) ── */

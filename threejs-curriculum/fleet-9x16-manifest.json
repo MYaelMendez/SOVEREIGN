@@ -1,0 +1,38 @@
+{
+  "fleet-waves": {
+    "bytes": 3001521,
+    "verdict": "\u001b[92m✓\u001b[0m PASS (lum 21.09 con 20.49 mov 1.779)",
+    "lum": "21.09",
+    "con": "20.49",
+    "mov": "1.779",
+    "negros": "0",
+    "receipt": "\"0ef2ca227b98b739e5a7453db766d67e35ed189c30340828cfcc1d75765c90eb\""
+  },
+  "draw-video": {
+    "bytes": 419900,
+    "verdict": "\u001b[92m✓\u001b[0m PASS (lum 23.1 con 11.73 mov 0.715)",
+    "lum": "23.1",
+    "con": "11.73",
+    "mov": "0.715",
+    "negros": "0",
+    "receipt": "\"5043187ff7d0802f2f1b30f279af143131ab5eaf627aaba4e43d42ace815b28b\""
+  },
+  "text-video": {
+    "bytes": 1217308,
+    "verdict": "\u001b[92m✓\u001b[0m PASS (lum 27.06 con 13.96 mov 1.717)",
+    "lum": "27.06",
+    "con": "13.96",
+    "mov": "1.717",
+    "negros": "0",
+    "receipt": "\"f6ec8bfaf89e6f06ffaaf2a2c6422eec450d7abf4c0c7557ca8508772e12f739\""
+  },
+  "video-edit-3d": {
+    "bytes": 493747,
+    "verdict": "\u001b[92m✓\u001b[0m PASS (lum 37.05 con 13.18 mov 1.258)",
+    "lum": "37.05",
+    "con": "13.18",
+    "mov": "1.258",
+    "negros": "0",
+    "receipt": "\"3ec120b251aa29c79d448d0b6df037874cfbb5f9451be2824041d2d1d7372521\""
+  }
+}

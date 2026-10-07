@@ -1,0 +1,16 @@
+
+[93mVIDÆO — supervise video-edit-3d-9x16.mp4[0m
+  [92m✓[0m PASS (lum 37.05 con 13.18 mov 1.258)
+{
+  "video": "C:\\\u00e6\\threejs-curriculum\\video-edit-3d-9x16.mp4",
+  "frames_analizados": 18,
+  "frames_negros": 0,
+  "frames_con_qr": 0,
+  "luminancia_media": 37.05,
+  "contraste_medio": 13.18,
+  "movimiento_medio": 1.258,
+  "calidad": "PASS",
+  "razones": [],
+  "receipt": "3ec120b251aa29c79d448d0b6df037874cfbb5f9451be2824041d2d1d7372521",
+  "supervisado_at": "2026-10-07T05:00:36.828525+00:00"
+}

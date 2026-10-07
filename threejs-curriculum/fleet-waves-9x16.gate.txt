@@ -1,0 +1,16 @@
+
+[93mVIDÆO — supervise fleet-waves-9x16.mp4[0m
+  [92m✓[0m PASS (lum 21.09 con 20.49 mov 1.779)
+{
+  "video": "C:\\\u00e6\\threejs-curriculum\\fleet-waves-9x16.mp4",
+  "frames_analizados": 18,
+  "frames_negros": 0,
+  "frames_con_qr": 0,
+  "luminancia_media": 21.09,
+  "contraste_medio": 20.49,
+  "movimiento_medio": 1.779,
+  "calidad": "PASS",
+  "razones": [],
+  "receipt": "0ef2ca227b98b739e5a7453db766d67e35ed189c30340828cfcc1d75765c90eb",
+  "supervisado_at": "2026-10-07T05:00:27.671813+00:00"
+}
