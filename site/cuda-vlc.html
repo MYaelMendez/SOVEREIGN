@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>æ://cuda-vlc · sovereign live stream</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/aether.css">
+<style>
+.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{background:#0a0a0f;border:1px solid var(--border);border-radius:9px;padding:8px 10px;text-align:center}
+.chip .k{font-size:8px;color:var(--muted);letter-spacing:1px}
+.chip .v{font-size:14px;color:var(--gold);margin-top:3px}
+.chip .v.nv{color:var(--nv)}.chip .v.neon{color:var(--neon)}.chip .v.cy{color:var(--cyan)}
+.console{background:#060609;border:1px solid var(--border);padding:10px;border-radius:6px;font-size:10px;color:var(--nv);white-space:pre-wrap;min-height:90px;line-height:1.6;max-height:160px;overflow-y:auto}
+.console .err{color:#ff7b72}.console .ok{color:var(--neon)}
+.code{font-size:10px;color:var(--muted)}
+.code b{color:var(--gold)}
+</style>
+
+<meta property="og:title" content="æ://cuda-vlc · sovereign live stream">
+<meta property="og:description" content="æ://cuda-vlc · sovereign live stream — sovereign agentic surface">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://myaelmendez.github.io/cuda-vlc.html">
+<meta property="og:image" content="https://myaelmendez.github.io/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="æ://cuda-vlc · sovereign live stream">
+<meta name="twitter:description" content="æ://cuda-vlc · sovereign live stream — sovereign agentic surface">
+<meta name="twitter:image" content="https://myaelmendez.github.io/og-image.png">
+
+<script>
+  console.log('analytics: ready — configure Cloudflare Web Analytics token');
+</script>
+</head>
+<body>
+<canvas id="mesh"></canvas><div class="scan"></div><div class="vig"></div>
+<div class="wrap">
+
+  <div class="statusbar">
+    <span>æ:// CUDA-VLC</span>
+    <span>NVENC · LOCAL-ONLY</span>
+    <span class="live"><span class="dot"></span>SOVEREIGN</span>
+  </div>
+
+  <div class="hero">
+    <div class="glyph">æ</div>
+    <div class="cmd">&gt;_æ<span class="dim">:</span>cuda-vlc<span class="cur">&nbsp;</span></div>
+    <div class="sub">CUDA HANDS → NVENC → <em>VLC LIVE STREAM</em> · NO CLOUD RENT</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>TELEMETRY</span><span class="tag" id="mode">IDLE</span></div>
+    <div class="bar">
+      <div class="chip"><div class="k">ENCODER</div><div class="v nv" id="enc">h264_nvenc</div></div>
+      <div class="chip"><div class="k">STATE</div><div class="v neon" id="state">idle</div></div>
+      <div class="chip"><div class="k">PORT</div><div class="v cy" id="port">—</div></div>
+      <div class="chip"><div class="k">VLC</div><div class="v" id="vlc">—</div></div>
+    </div>
+    <div class="console" id="con">awaiting command…</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>STREAM CONTROL</span><span class="tag">+æ://cuda-vlc</span></div>
+    <div class="row">
+      <label for="src">SOURCE</label>
+      <select id="src">
+        <option value="test">testsrc (loop)</option>
+        <option value="gpu">gpu · CUDA telemetry viz</option>
+      </select>
+      <button class="nv" id="play">▶ GO LIVE</button>
+      <button class="ghost" id="stop">■ STOP</button>
+      <button class="ghost" id="stat">⟳ STATUS</button>
+    </div>
+    <div class="code" style="margin-top:8px">scheme: <b>+æ://cuda-vlc play &lt;src&gt;</b> · ffmpeg listens on <b>tcp://localhost:17344</b> · VLC connects as client · encoder = RTX NVENC</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>THE PIPELINE</span><span class="tag">LOCAL</span></div>
+    <div class="linkrow foot">
+      <a href="./gpu-preview.html">gpu-preview (agent)</a>
+      <a href="./sim.html">glocal-agent sim</a>
+      <a href="./fleet.html">+æ://fleet</a>
+      <a href="./mesh-agenti.html">+æ://mesh</a>
+    </div>
+    <div class="code" style="margin-top:8px;line-height:1.7">
+      source (testsrc | gpu_mcp) → <b style="color:var(--nv)">ffmpeg -c:v h264_nvenc</b> (CUDA silicon)<br>
+      → <b style="color:var(--cyan)">mpegts over tcp://localhost:17344?listen</b> → <b style="color:var(--gold)">vlc://play tcp://localhost:17344</b><br>
+      all on Victus. GPU pays, nobody rents. #opensourceware.
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="./index.html">hub</a>
+    <a href="./mesh-agenti.html">mesh</a>
+    <a href="./fleet.html">fleet</a>
+    <a href="./cuda-vlc.html">cuda-vlc</a>
+    <a href="./porter.html">porter</a>
+    <a href="./secret-source-bridge.html">secret-bridge</a>
+    <a href="./demo.html">demo</a>
+    <a href="./sovereign-state.html">sovereign-state</a>
+    <a href="./cuda-blueprint.html">cuda-blueprint</a>
+  </div>
+  <div class="hash">#HERMIPHICATIONISINEVITABLE</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="./assets/qrcode.js"></script>
+<script src="./assets/jsQR.js"></script>
+<script src="./assets/aether.js?v=2"></script>
+<script>
+const {$, Aether} = window;
+const SCHEME="+æ://cuda-vlc";
+const con=$('#con');
+function log(m,cls=''){const el=document.createElement('div');if(cls)el.className=cls;el.textContent=m;con.appendChild(el);con.scrollTop=con.scrollHeight;}
+function toast(m){Aether.toast(m);}
+
+/* agentic GUI drives +æ://cuda-vlc via the conductor bridge when present.
+   BRIDGE null in standalone page → logs intent, no fake launch. */
+const BRIDGE=null;
+async function hermes(cmd){
+  if(!BRIDGE){log('cuda-vlc → '+cmd+'  (bridge offline; run via conductor)','');return {offline:true,stdout:''};}
+  const r=await fetch(BRIDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({cmd})});
+  return await r.json();
+}
+async function refresh(){
+  const r=await hermes(SCHEME+' status');
+  if(r.offline){$('#mode').textContent='OFFLINE';$('#state').textContent='no bridge';return;}
+  const live=!!r.live,port=r.port||0;
+  $('#mode').textContent=live?'LIVE':'IDLE';
+  $('#mode').style.color=live?'var(--neon)':'var(--muted)';
+  $('#state').textContent=live?'LIVE':'idle';
+  $('#port').textContent=port?(':'+port):'—';
+  $('#vlc').textContent=live?'playing':'—';
+}
+$('#play').addEventListener('click',async()=>{
+  const src=$('#src').value;
+  $('#play').disabled=true;
+  log('▶ dispatching '+SCHEME+' play '+src,'ok');
+  const r=await hermes(SCHEME+' play '+src);
+  if(!r.offline){log(r.stdout.trim()||'launched','ok');if(r.encoder)log('encoder: '+r.encoder,'');toast('NVENC stream LIVE');}
+  setTimeout(()=>$('#play').disabled=false,800);
+  refresh();
+});
+$('#stop').addEventListener('click',async()=>{
+  log('■ '+SCHEME+' stop','');
+  const r=await hermes(SCHEME+' stop');
+  if(!r.offline)log(r.stdout.trim()||'stopped','ok');
+  toast('stream stopped');refresh();
+});
+$('#stat').addEventListener('click',refresh);
+refresh();setInterval(refresh,4000);
+Aether.mesh();
+</script>
+</body>
+</html>

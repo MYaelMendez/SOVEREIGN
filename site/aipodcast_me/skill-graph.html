@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ:// skill-graph — sovereign topology</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--void:#050505;--gold:#D4AF37;--ink:#f0ece4;--muted:rgba(240,236,228,.42);--border:rgba(212,175,55,.16);--hot:rgba(212,175,55,.5);--glow:rgba(212,175,55,.32);--neon:#00ff9d;--page:#48deac}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--void);color:var(--ink);font-family:'JetBrains Mono',monospace;overflow:hidden}
+#graph{position:fixed;inset:0;z-index:1;cursor:grab}#graph.drag{cursor:grabbing}
+.scan{position:fixed;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px)}
+.vig{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 42%,rgba(5,5,5,.9) 100%)}
+.tl{position:fixed;top:14px;left:14px;z-index:10;pointer-events:none}
+.tl .cmd{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:16px;color:var(--gold);text-shadow:0 0 16px var(--glow)}
+.tl h1{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;margin-top:4px}
+.tl .st{font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:1px}
+.tl .st b{color:var(--gold)}
+.tl .meta{font-size:9px;color:rgba(240,236,228,.3);margin-top:3px}
+.panel{position:fixed;top:14px;right:14px;z-index:10;width:300px;max-height:calc(100vh - 28px);overflow-y:auto;border:1px solid var(--border);background:rgba(5,5,5,.88);backdrop-filter:blur(6px)}
+.ph{padding:9px 12px;border-bottom:1px solid var(--border);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);display:flex;justify-content:space-between}
+.search{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 12px;outline:none}
+.search::placeholder{color:var(--muted)}
+.quick{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.qb{border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 7px;cursor:pointer;letter-spacing:.5px}
+.qb:hover{border-color:var(--hot);color:var(--ink)}.qb.on{background:var(--gold);color:#050505;border-color:var(--gold);font-weight:700}
+.legend{padding:6px 12px;border-bottom:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);padding:2px 0;cursor:pointer}
+.leg:hover{color:var(--ink)}.leg .sw{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leg .ct{margin-left:auto;color:rgba(240,236,228,.3)}.leg.off{opacity:.32}
+.detail{padding:10px 12px;font-size:11px;line-height:1.6}
+.detail .nm{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold);word-break:break-word}
+.detail .badge{display:inline-block;font-size:8px;padding:1px 5px;border:1px solid var(--hot);color:var(--gold);margin-left:6px;vertical-align:middle}
+.detail .badge.f{border-color:rgba(0,255,157,.4);color:var(--neon)}
+.detail .badge.p{border-color:rgba(72,222,172,.4);color:var(--page)}
+.detail .row{color:var(--muted);margin-top:5px}.detail .row b{color:var(--ink);font-weight:400}
+.detail .nb{color:var(--muted);font-size:10px;margin-top:8px;border-top:1px solid var(--border);padding-top:6px}
+.detail .nb span{display:inline-block;color:var(--ink);border:1px solid var(--border);padding:1px 5px;margin:2px 3px 0 0;cursor:pointer}
+.detail .nb span:hover{border-color:var(--hot);color:var(--gold)}
+.actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap}
+.ab{border:1px solid var(--gold);background:transparent;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 7px;cursor:pointer;letter-spacing:.5px}
+.ab:hover{background:var(--gold);color:#050505}.ab.on{background:var(--gold);color:#050505;font-weight:700}
+.hint{padding:8px 12px;font-size:9px;color:rgba(240,236,228,.28);letter-spacing:.5px;line-height:1.5}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--gold);color:#050505;padding:8px 16px;border-radius:4px;font-size:11px;font-weight:700;z-index:1000;display:none}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+<canvas id="graph"></canvas><div class="scan"></div><div class="vig"></div>
+<div class="tl">
+  <div class="cmd">&gt;_æ graph</div>
+  <h1>SOVEREIGN TOPOLOGY</h1>
+  <div class="st"><b id="nc">0</b> nodes · <b id="ec">0</b> edges · <b id="skc">0</b> skills · <b id="pgc">0</b> pages</div>
+  <div class="meta" id="sig"></div>
+</div>
+<div class="panel">
+  <div class="ph"><span>◈ FILTER</span><span id="vis" style="color:var(--muted)"></span></div>
+  <input class="search" id="q" placeholder="&gt; find a node…" autocomplete="off"/>
+  <div class="quick">
+    <button class="qb" id="qb-sov">◈ sovereign</button>
+    <button class="qb" id="qb-fleet">◈ fleet</button>
+    <button class="qb" id="qb-hub">◈ hubs</button>
+    <button class="qb" id="qb-page">◈ pages</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="detail" id="detail"><div class="row">Hover a node to inspect. Click to pin. Edge weight: declared 3 · tag 2 · mention 1.</div></div>
+  <div class="actions" id="actions"></div>
+  <div class="hint">navigate: click node → open page · convert: pin page → click convert · regenerate: <b>python gen_skill_graph.py</b></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const G={"nodes": [{"id": "ae-as-skill", "g": "sovereign", "col": "#D4AF37", "deg": 12, "sz": 11, "sov": true, "fleet": false, "ln": 211, "tags": ["ae", "sovereign", "stack"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/sovereign/ae-as-skill/SKILL.md", "url": null}, {"id": "cri-index", "g": "sovereign", "col": "#D4AF37", "deg": 5, "sz": 8, "sov": true, "fleet": false, "ln": 62, "tags": ["cri", "consumer", "redline", "index", "economic"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/sovereign/cri-index/SKILL.md", "url": null}, {"id": "mail-agent", "g": "sovereign", "col": "#D4AF37", "deg": 4, "sz": 8, "sov": true, "fleet": false, "ln": 45, "tags": ["mail", "email", "imap", "smtp", "triage"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/email/mail-agent/SKILL.md", "url": null}, {"id": "deploy-surfaces", "g": "sovereign", "col": "#D4AF37", "deg": 8, "sz": 9, "sov": true, "fleet": false, "ln": 180, "tags": ["deploy", "github-pages", "surface"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/deploy-surfaces/SKILL.md", "url": null}, {"id": "glocal-mesh", "g": "sovereign", "col": "#D4AF37", "deg": 7, "sz": 9, "sov": true, "fleet": false, "ln": 150, "tags": ["mesh", "glocal", "topology", "tier"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/glocal-mesh/SKILL.md", "url": null}, {"id": "rtx-telemetry", "g": "sovereign", "col": "#D4AF37", "deg": 4, "sz": 7, "sov": true, "fleet": false, "ln": 80, "tags": ["rtx", "telemetry", "nvidia", "gpu"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/rtx-telemetry/SKILL.md", "url": null}, {"id": "sovereign-cuda-bridge", "g": "sovereign", "col": "#D4AF37", "deg": 3, "sz": 6, "sov": true, "fleet": false, "ln": 60, "tags": ["cuda", "bridge", "sovereign"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/sovereign-cuda-bridge/SKILL.md", "url": null}, {"id": "html-as-skill", "g": "sovereign", "col": "#D4AF37", "deg": 6, "sz": 8, "sov": true, "fleet": false, "ln": 95, "tags": ["html", "viewport", "surface"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/html-as-skill/SKILL.md", "url": null}, {"id": "qr-as-skill", "g": "sovereign", "col": "#D4AF37", "deg": 5, "sz": 7, "sov": true, "fleet": false, "ln": 70, "tags": ["qr", "key", "contract", "infrastructure"], "type": "skill", "path": "C:/Users/yaelm/AppData/Local/hermes/skills/qr-as-skill/SKILL.md", "url": null}, {"id": "hermes-agent", "g": "fleet", "col": "#00ff9d", "deg": 10, "sz": 10, "sov": false, "fleet": true, "ln": 214, "tags": ["hermes", "agent", "intent"], "type": "skill", "path": null, "url": null}, {"id": "claude-code", "g": "fleet", "col": "#00ff9d", "deg": 6, "sz": 8, "sov": false, "fleet": true, "ln": 755, "tags": ["claude", "code", "delegate"], "type": "skill", "path": null, "url": null}, {"id": "opencode", "g": "fleet", "col": "#00ff9d", "deg": 5, "sz": 7, "sov": false, "fleet": true, "ln": 220, "tags": ["opencode", "delegate"], "type": "skill", "path": null, "url": null}, {"id": "agentic-interpreter", "g": "fleet", "col": "#00ff9d", "deg": 4, "sz": 7, "sov": false, "fleet": true, "ln": 219, "tags": ["interpreter", "delegate"], "type": "skill", "path": null, "url": null}, {"id": "agentic-entrepreneurship", "g": "business", "col": "#de7a48", "deg": 8, "sz": 10, "sov": false, "fleet": false, "ln": 1367, "tags": ["agentic", "business", "entrepreneurship"], "type": "skill", "path": null, "url": null}, {"id": "domain-codemode", "g": "business", "col": "#de7a48", "deg": 5, "sz": 7, "sov": false, "fleet": false, "ln": 126, "tags": ["domain", "codemode"], "type": "skill", "path": null, "url": null}, {"id": "aipodcast_me/index.html", "g": "pages", "col": "#48deac", "deg": 3, "sz": 6, "sov": false, "fleet": false, "ln": 580, "tags": ["surface", "hq", "gold-on-void"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/index.html"}, {"id": "aipodcast_me/discover.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 400, "tags": ["surface", "webgpu", "torus"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/discover.html"}, {"id": "aipodcast_me/loop.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 350, "tags": ["surface", "webgpu", "webllm"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/loop.html"}, {"id": "aipodcast_me/cri_surface.html", "g": "pages", "col": "#48deac", "deg": 3, "sz": 6, "sov": false, "fleet": false, "ln": 302, "tags": ["surface", "cri", "economic"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/cri_surface.html"}, {"id": "aipodcast_me/vscoder.html", "g": "pages", "col": "#48deac", "deg": 4, "sz": 7, "sov": false, "fleet": false, "ln": 613, "tags": ["surface", "vscoder", "engineering"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/vscoder.html"}, {"id": "aipodcast_me/skill-graph.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 195, "tags": ["surface", "graph", "topology"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/skill-graph.html"}, {"id": "aipodcast_me/qr_keys.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 580, "tags": ["surface", "qr", "keys"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/qr_keys.html"}, {"id": "keeper.html", "g": "pages", "col": "#48deac", "deg": 3, "sz": 6, "sov": false, "fleet": false, "ln": 200, "tags": ["surface", "keeper", "custodian"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/keeper.html"}, {"id": "constellation.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 180, "tags": ["surface", "webgpu", "mesh"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/constellation.html"}, {"id": "markets.html", "g": "pages", "col": "#48deac", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 250, "tags": ["surface", "markets", "data"], "type": "page", "path": null, "url": "https://myaelmendez.github.io/aipodcast_me/markets.html"}, {"id": "ae_code_mode.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 463, "tags": ["code-mode", "sandbox"], "type": "page", "path": "C:/æ/agents/æ_code_mode.py", "url": null}, {"id": "cri_engine.py", "g": "standalone", "col": "#debe48", "deg": 3, "sz": 6, "sov": false, "fleet": false, "ln": 644, "tags": ["cri", "engine", "calculate"], "type": "page", "path": "C:/æ/agents/cri_engine.py", "url": null}, {"id": "cri_server.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 352, "tags": ["cri", "api", "server"], "type": "page", "path": "C:/æ/agents/cri_server.py", "url": null}, {"id": "qr_key_manager.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 457, "tags": ["qr", "keys", "ed25519"], "type": "page", "path": "C:/æ/agents/qr_key_manager.py", "url": null}, {"id": "contract_qr.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 480, "tags": ["qr", "contracts", "multisig"], "type": "page", "path": "C:/æ/agents/contract_qr.py", "url": null}, {"id": "qr_server.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 379, "tags": ["qr", "api", "server"], "type": "page", "path": "C:/æ/agents/qr_server.py", "url": null}, {"id": "mail_agent.py", "g": "standalone", "col": "#debe48", "deg": 3, "sz": 6, "sov": false, "fleet": false, "ln": 501, "tags": ["mail", "agent", "smtp"], "type": "page", "path": "C:/æ/agents/mail_agent.py", "url": null}, {"id": "keeper_email.py", "g": "standalone", "col": "#debe48", "deg": 2, "sz": 5, "sov": false, "fleet": false, "ln": 280, "tags": ["keeper", "email", "delivery"], "type": "page", "path": "C:/æ/agents/keeper_email.py", "url": null}], "edges": [{"s": "ae-as-skill", "t": "cri-index", "w": 3}, {"s": "ae-as-skill", "t": "mail-agent", "w": 2}, {"s": "ae-as-skill", "t": "deploy-surfaces", "w": 3}, {"s": "ae-as-skill", "t": "glocal-mesh", "w": 3}, {"s": "ae-as-skill", "t": "html-as-skill", "w": 2}, {"s": "ae-as-skill", "t": "qr-as-skill", "w": 2}, {"s": "ae-as-skill", "t": "rtx-telemetry", "w": 2}, {"s": "ae-as-skill", "t": "sovereign-cuda-bridge", "w": 2}, {"s": "cri-index", "t": "mail-agent", "w": 2}, {"s": "deploy-surfaces", "t": "glocal-mesh", "w": 2}, {"s": "html-as-skill", "t": "qr-as-skill", "w": 2}, {"s": "aipodcast_me/cri_surface.html", "t": "cri-index", "w": 3}, {"s": "aipodcast_me/vscoder.html", "t": "ae-as-skill", "w": 3}, {"s": "aipodcast_me/qr_keys.html", "t": "qr-as-skill", "w": 3}, {"s": "keeper.html", "t": "mail-agent", "w": 2}, {"s": "aipodcast_me/skill-graph.html", "t": "ae-as-skill", "w": 2}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/discover.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/loop.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/cri_surface.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/vscoder.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/qr_keys.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "keeper.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "constellation.html", "w": 1}, {"s": "aipodcast_me/index.html", "t": "aipodcast_me/skill-graph.html", "w": 1}, {"s": "hermes-agent", "t": "claude-code", "w": 2}, {"s": "hermes-agent", "t": "opencode", "w": 2}, {"s": "hermes-agent", "t": "agentic-interpreter", "w": 2}, {"s": "agentic-entrepreneurship", "t": "domain-codemode", "w": 2}, {"s": "cri_engine.py", "t": "cri-index", "w": 3}, {"s": "cri_server.py", "t": "cri-index", "w": 2}, {"s": "mail_agent.py", "t": "mail-agent", "w": 3}, {"s": "keeper_email.py", "t": "mail-agent", "w": 2}, {"s": "qr_key_manager.py", "t": "qr-as-skill", "w": 3}, {"s": "contract_qr.py", "t": "qr-as-skill", "w": 3}, {"s": "qr_server.py", "t": "qr-as-skill", "w": 2}, {"s": "ae_code_mode.py", "t": "ae-as-skill", "w": 2}], "groups": [{"key": "sovereign", "label": "◈ SOVEREIGN SKILLS", "col": "#D4AF37"}, {"key": "fleet", "label": "◈ FLEET SKILLS", "col": "#00ff9d"}, {"key": "business", "label": "◈ BUSINESS SKILLS", "col": "#de7a48"}, {"key": "pages", "label": "◈ PAGES (convertible)", "col": "#48deac"}, {"key": "standalone", "label": "◈ STANDALONE", "col": "#debe48"}], "stats": {"declared": 3, "tag": 2, "mention": 1}};
+const cv=document.getElementById('graph'),ctx=cv.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+const idx={};G.nodes.forEach((n,i)=>idx[n.id]=i);
+const N=G.nodes.map(n=>({...n,x:0,y:0,vx:0,vy:0,r:n.sz}));
+const E=G.edges.map(e=>({...e,a:idx[e.s],b:idx[e.t]})).filter(e=>e.a!=null&&e.b!=null);
+const nbr=N.map(()=>new Set());E.forEach(e=>{nbr[e.a].add(e.b);nbr[e.b].add(e.a);});
+document.getElementById('nc').textContent=N.length;
+document.getElementById('ec').textContent=E.length;
+document.getElementById('skc').textContent=N.filter(n=>n.type==='skill').length;
+document.getElementById('pgc').textContent=N.filter(n=>n.type==='page').length;
+const S=G.stats;
+document.getElementById('sig').textContent=`declared ${S.declared} · tag ${S.tag} · mention ${S.mention}`;
+const groups=G.groups,gAng={};groups.forEach((g,i)=>gAng[g.key]=(i/groups.length)*Math.PI*2);
+const R0=Math.min(W,H)*0.34;
+N.forEach(n=>{const a=gAng[n.g]??Math.random()*6.28;n.x=W/2+Math.cos(a)*R0+(Math.random()-.5)*80;n.y=H/2+Math.sin(a)*R0+(Math.random()-.5)*80;});
+let alpha=1;
+function tick(){
+  for(let i=0;i<N.length;i++){const a=N[i];for(let j=i+1;j<N.length;j++){const b=N[j];let dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;if(d2<1)d2=1;if(d2>90000)continue;const f=900/d2,d=Math.sqrt(d2),fx=(dx/d)*f,fy=(dy/d)*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;}}
+  E.forEach(e=>{const a=N[e.a],b=N[e.b];const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;const target=70+(a.r+b.r)*3;const f=(d-target)*0.008*e.w;const fx=(dx/d)*f,fy=(dy/d)*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
+  N.forEach(n=>{const a=gAng[n.g]??0,ax=W/2+Math.cos(a)*R0,ay=H/2+Math.sin(a)*R0;n.vx+=(ax-n.x)*0.006+(W/2-n.x)*0.002;n.vy+=(ay-n.y)*0.006+(H/2-n.y)*0.002;n.vx*=0.82;n.vy*=0.82;n.x+=n.vx*alpha;n.y+=n.vy*alpha;});
+  alpha=Math.max(0.08,alpha*0.995);
+}
+let ox=0,oy=0,zoom=1;
+const toWorld=(px,py)=>({x:(px-W/2-ox)/zoom+W/2,y:(py-H/2-oy)/zoom+H/2});
+let hover=null,pinned=null,drag=null,didDrag=false;
+const hidden=new Set();let focusMode=null;
+function hexA(h,a){const n=parseInt(h.replace('#',''),16);return`rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+function visible(n){if(hidden.has(n.g))return false;if(focusMode==='sov'&&!n.sov)return false;if(focusMode==='fleet'&&!n.fleet)return false;if(focusMode==='hub'&&n.deg<6)return false;if(focusMode==='page'&&n.type!=='page')return false;return true;}
+function draw(){
+  ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(W/2+ox,H/2+oy);ctx.scale(zoom,zoom);ctx.translate(-W/2,-H/2);
+  E.forEach(e=>{const a=N[e.a],b=N[e.b];if(!visible(a)||!visible(b))return;const lit=(pinned!=null&&(e.a===pinned||e.b===pinned))||(hover!=null&&(e.a===hover||e.b===hover));const base=e.w>=3?0.20:e.w>=2?0.14:0.09;ctx.strokeStyle=lit?'rgba(212,175,55,.6)':`rgba(212,175,55,${base})`;ctx.lineWidth=(lit?1.6:e.w>=3?1.1:0.7)/zoom;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();});
+  N.forEach((n,i)=>{if(!visible(n))return;const isH=i===hover||i===pinned||(pinned!=null&&nbr[pinned].has(i));const r=n.r*(isH?1.35:1);const cc=n.sov?'#D4AF37':n.fleet?'#00ff9d':n.col;
+    if(isH||n.deg>=6||n.sov||n.fleet){const gr=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);gr.addColorStop(0,hexA(cc,isH?0.5:n.sov||n.fleet?0.35:0.22));gr.addColorStop(1,hexA(cc,0));ctx.fillStyle=gr;ctx.beginPath();ctx.arc(n.x,n.y,r*4,0,7);ctx.fill();}
+    ctx.fillStyle=isH?cc:hexA(cc,0.72);ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();
+    if(n.sov||n.fleet){ctx.strokeStyle=hexA(cc,.9);ctx.lineWidth=1.2/zoom;ctx.beginPath();ctx.arc(n.x,n.y,r+2/zoom,0,7);ctx.stroke();}
+    if(n.deg>=8||isH||n.sov||n.fleet||n.type==='page'){ctx.fillStyle=isH?'rgba(240,236,228,.95)':'rgba(240,236,228,.6)';ctx.font=`${(isH?10.5:9.5)/zoom}px 'JetBrains Mono', monospace`;ctx.textAlign='center';ctx.fillText(n.id,n.x,n.y-r-5/zoom);}});
+  ctx.restore();
+}
+function loop(){tick();draw();requestAnimationFrame(loop);}
+function hit(px,py){const w=toWorld(px,py);let best=null,bd=1e9;N.forEach((n,i)=>{if(!visible(n))return;const d=Math.hypot(n.x-w.x,n.y-w.y);if(d<Math.max(9,n.r+5)&&d<bd){bd=d;best=i;}});return best;}
+cv.addEventListener('mousemove',ev=>{if(drag){drag.dx=ev.clientX-drag.x;drag.dy=ev.clientY-drag.y;ox=drag.ox+drag.dx;oy=drag.oy+drag.dy;didDrag=true;return;}const i=hit(ev.clientX,ev.clientY);if(i!==hover){hover=i;if(i!=null)showDetail(N[i]);}cv.style.cursor=i!=null?'pointer':'grab';});
+cv.addEventListener('mousedown',ev=>{drag={x:ev.clientX,y:ev.clientY,ox,oy};didDrag=false;cv.classList.add('drag');});
+addEventListener('mouseup',ev=>{if(drag&&!didDrag){const i=hit(ev.clientX,ev.clientY);if(pinned===i){pinned=null;showDetail(null);}else if(i!=null){pinned=i;showDetail(N[i]);openNode(N[i]);}}drag=null;cv.classList.remove('drag');});
+cv.addEventListener('wheel',ev=>{ev.preventDefault();const f=ev.deltaY<0?1.12:1/1.12;const w=toWorld(ev.clientX,ev.clientY);zoom=Math.max(0.25,Math.min(4,zoom*f));const w2=toWorld(ev.clientX,ev.clientY);ox+=(w2.x-w.x)*zoom;oy+=(w2.y-w.y)*zoom;},{passive:false});
+const detail=document.getElementById('detail');
+function showDetail(n){
+  if(!n){detail.innerHTML='<div class="row">Hover a node to inspect. Click to pin. Edge weight: declared 3 · tag 2 · mention 1.</div>';return;}
+  const i=idx[n.id],ns=[...nbr[i]].map(k=>N[k].id).sort();
+  const lbl=(G.groups.find(g=>g.key===n.g)||{}).label||n.g;
+  const typeLabel=n.type==='skill'?'SKILL':n.type==='page'?'PAGE':'STANDALONE';
+  const typeBadge=n.type==='skill'?'':'<span class="badge p">'+typeLabel+'</span>';
+  detail.innerHTML=`<div class="nm">${n.id}${n.sov?'<span class="badge">SOVEREIGN</span>':''}${n.fleet?'<span class="badge f">FLEET</span>':''}${typeBadge}</div><div class="row">group <b>${lbl}</b></div><div class="row">degree <b>${n.deg}</b> · ${n.ln} lines · type <b>${n.type}</b></div>${n.path?`<div class="row">path <b>${n.path}</b></div>`:''}${n.url?`<div class="row">url <b>${n.url}</b></div>`:''}${ns.length?`<div class="nb">neighbors (${ns.length}): ${ns.map(x=>`<span data-go="${x}">${x}</span>`).join('')}</div>`:`<div class="nb">no connections — standalone</div>`}`;
+  detail.querySelectorAll('[data-go]').forEach(el=>{el.addEventListener('click',()=>{const k=idx[el.dataset.go];if(k==null)return;pinned=k;showDetail(N[k]);ox=-(N[k].x-W/2)*zoom;oy=-(N[k].y-H/2)*zoom;})});
+  const act=document.getElementById('actions');act.innerHTML='';
+  if(n.type==='page'&&n.url){const ab=document.createElement('button');ab.className='ab';ab.textContent='OPEN';ab.onclick=()=>window.open(n.url,'_blank');act.appendChild(ab);}
+  if(n.type==='page'){const ab=document.createElement('button');ab.className='ab';ab.textContent='CONVERT → SKILL';ab.onclick=()=>convertPage(n);act.appendChild(ab);}
+  if(n.type==='skill'&&n.path){const ab=document.createElement('button');ab.className='ab';ab.textContent='VIEW SKILL';ab.onclick=()=>window.open(n.path.replace(/\\/g,'/'),'_blank');act.appendChild(ab);}
+}
+function openNode(n){if(n.url)window.open(n.url,'_blank');else if(n.path)window.open(n.path.replace(/\\/g,'/'),'_blank');}
+function convertPage(n){
+  const name=n.id.replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+  const skillName=name.replace(/-skill$/,'')+'-skill';
+  const frontmatter=`---\nname: ${skillName}\ndescription: "Use when building ${name} surface."\nversion: 1.0.0\nauthor: Yael Méndez × Hermes Agent\nlicense: MIT\nmetadata:\n  hermes:\n    tags: [${n.tags.join(', ')}]\n    category: sovereign\n---\n\n# ${skillName}\n\nSurface converted from page.\n`;
+  const blob=new Blob([frontmatter],{type:'text/markdown'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=skillName+'.md';a.click();URL.revokeObjectURL(url);
+  toast('Converted: '+skillName+'.md');
+  n.type='skill';n.sov=true;n.col='#D4AF37';n.sz=8;
+  if(!G.groups.find(g=>g.key==='sovereign'))G.groups.push({key:'sovereign',label:'◈ SOVEREIGN SKILLS',col:'#D4AF37'});
+  rebuild();
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+const legend=document.getElementById('legend');const counts={};N.forEach(n=>counts[n.g]=(counts[n.g]||0)+1);
+legend.innerHTML=G.groups.filter(g=>counts[g.key]).map(g=>`<div class="leg" data-g="${g.key}"><span class="sw" style="background:${g.col}"></span>${g.label}<span class="ct">${counts[g.key]}</span></div>`).join('');
+legend.addEventListener('click',e=>{const el=e.target.closest('.leg');if(!el)return;const g=el.dataset.g;if(hidden.has(g)){hidden.delete(g);el.classList.remove('off');}else{hidden.add(g);el.classList.add('off');}updateVis();});
+function updateVis(){document.getElementById('vis').textContent=N.filter(visible).length+'/'+N.length;}
+updateVis();
+function setFocus(m){focusMode=(focusMode===m)?null:m;document.querySelectorAll('.qb').forEach(b=>b.classList.toggle('on',b.id==='qb-'+focusMode));pinned=null;updateVis();}
+document.getElementById('qb-sov').onclick=()=>setFocus('sov');
+document.getElementById('qb-fleet').onclick=()=>setFocus('fleet');
+document.getElementById('qb-hub').onclick=()=>setFocus('hub');
+document.getElementById('qb-page').onclick=()=>setFocus('page');
+document.getElementById('q').addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();if(!q){hover=null;pinned=null;return;}const m=N.find(n=>visible(n)&&n.id.toLowerCase().includes(q));if(m){pinned=idx[m.id];hover=idx[m.id];showDetail(m);ox=-(m.x-W/2)*zoom;oy=-(m.y-H/2)*zoom;}});
+loop();
+function rebuild(){for(let i=0;i<N.length;i++)idx[N[i].id]=i;for(let i=0;i<nbr.length;i++)nbr[i].clear();E.forEach(e=>{nbr[e.a].add(e.b);nbr[e.b].add(e.a);});document.getElementById('skc').textContent=N.filter(n=>n.type==='skill').length;document.getElementById('pgc').textContent=N.filter(n=>n.type==='page').length;const counts={};N.forEach(n=>counts[n.g]=(counts[n.g]||0)+1);legend.innerHTML=G.groups.filter(g=>counts[g.key]).map(g=>`<div class="leg" data-g="${g.key}"><span class="sw" style="background:${g.col}"></span>${g.label}<span class="ct">${counts[g.key]}</span></div>`).join('');}
+
+</script>
+</body>
+</html>

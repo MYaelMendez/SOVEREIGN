@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>glocal cuda blueprint • hermes agent × nvidia #opensourceware</title>
+<meta name="description" content="Hermes Agent GLOCAL CUDA capability: a droplet brain (public identity/data) routes CUDA jobs over a reverse tunnel to sovereign Victus RTX 3050 hands and on-demand cloud burst pods. Mixture of Devices addressed as one +æ://route tower — codemode, not server-admin. NVIDIA glocal: compute distributed-local.">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--gold-glow:rgba(212,175,55,.32);--neon:#00ff9d;--ink:#f0ece4;--muted:rgba(240,236,228,.4);--border:rgba(212,175,55,.16);--border-hot:rgba(212,175,55,.5);--nv:#76b900;--dur:.2s;--ease:cubic-bezier(.2,.7,.2,1)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--void);color:var(--ink);font-family:'JetBrains Mono',monospace;overflow-x:hidden}
+canvas#mesh{position:fixed;inset:0;z-index:0}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px)}
+.vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(5,5,5,.92) 100%)}
+.wrap{position:relative;z-index:10;max-width:840px;margin:0 auto;padding:clamp(20px,5vw,56px) clamp(14px,4vw,28px);display:flex;flex-direction:column;gap:clamp(14px,2.6vh,24px)}
+.statusbar{display:flex;justify-content:space-between;align-items:center;font-size:clamp(7px,1.1vw,10px);letter-spacing:2px;color:var(--muted);text-transform:uppercase;border:1px solid var(--border);padding:8px 14px}
+.statusbar .live{display:flex;align-items:center;gap:6px;color:var(--neon)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 8px var(--neon);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.hero{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.glyph{font-size:clamp(44px,11vw,88px);filter:drop-shadow(0 0 24px var(--gold-glow));animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.cmd{font-family:'Orbitron';font-weight:900;font-size:clamp(20px,5.5vw,46px);letter-spacing:clamp(1px,.4vw,4px);color:var(--gold);text-shadow:0 0 28px var(--gold-glow);line-height:1}
+.cmd .dim{color:var(--muted)}.cmd .cur{display:inline-block;width:.5ch;background:var(--gold);animation:blink 1s step-end infinite;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.sub{font-size:clamp(9px,1.8vw,13px);letter-spacing:2px;color:var(--ink);text-transform:uppercase}
+.sub em{font-style:normal;color:var(--gold)}
+.pills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.pill{font-size:clamp(6px,1vw,9px);letter-spacing:1.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);text-transform:uppercase}
+.pill.hot{border-color:rgba(212,175,55,.4);color:var(--gold)}
+.pill.nv{border-color:rgba(118,185,0,.4);color:var(--nv)}
+.panel{border:1px solid var(--border-hot);background:rgba(5,5,5,.7);box-shadow:0 0 40px rgba(212,175,55,.08);padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;font-size:clamp(7px,1.1vw,10px);letter-spacing:2px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px}
+.panel-head .tag{color:var(--neon);border:1px solid rgba(0,255,157,.25);padding:2px 8px;border-radius:999px;font-size:8px}
+.diagram{font-size:11px;line-height:1.8;color:var(--muted);background:#0b0b0b;border:1px solid var(--border);padding:14px;border-radius:4px;white-space:pre-wrap;word-break:break-word}
+.diagram b{color:var(--gold)}.diagram .n{color:var(--neon)}.diagram .x{color:#ff6b6b}.diagram .v{color:var(--nv)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px}
+.step{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:11px;color:var(--ink);line-height:1.6}
+.step::before{content:counter(s);flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1px solid var(--border-hot);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-weight:900;font-size:11px}
+.code{font-size:10px;color:var(--muted);background:#0b0b0b;border:1px solid var(--border);padding:12px;border-radius:4px;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.code b{color:var(--gold)}.code .c{color:var(--neon)}.code .x{color:#ff6b6b}.code .v{color:var(--nv)}
+.linkrow{display:flex;flex-wrap:wrap;gap:8px}
+.linkrow a{color:var(--gold);text-decoration:none;border-bottom:1px dotted var(--gold);font-size:11px}
+.linkrow a:hover{color:#fff}
+.lie{color:#ff6b6b}
+.ok{color:var(--neon)}
+.foot{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:center;font-size:clamp(7px,1.1vw,10px);letter-spacing:1px}
+.foot a{color:var(--muted);text-decoration:none;transition:color .15s}
+.foot a:hover{color:var(--gold)}
+.hash{text-align:center;font-family:'Orbitron';font-weight:700;font-size:clamp(9px,1.6vw,13px);background:linear-gradient(90deg,var(--gold),var(--neon),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px}
+</style>
+
+<meta property="og:title" content="glocal cuda blueprint · hermes agent × nvidia #opensourceware">
+<meta property="og:description" content="Hermes Agent GLOCAL CUDA capability: a droplet brain (public identity/data) routes CUDA jobs over a reverse tunnel to sovereign Victus RTX 3050 hands and on-demand cloud burst pods. Mixture of Devices addressed as one +æ://route tower — codemode, not server-admin. NVIDIA glocal: compute distributed-local.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://myaelmendez.github.io/glocal-cuda-blueprint.html">
+<meta property="og:image" content="https://myaelmendez.github.io/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="glocal cuda blueprint · hermes agent × nvidia #opensourceware">
+<meta name="twitter:description" content="Hermes Agent GLOCAL CUDA capability: a droplet brain (public identity/data) routes CUDA jobs over a reverse tunnel to sovereign Victus RTX 3050 hands and on-demand cloud burst pods. Mixture of Devices addressed as one +æ://route tower — codemode, not server-admin. NVIDIA glocal: compute distributed-local.">
+<meta name="twitter:image" content="https://myaelmendez.github.io/og-image.png">
+
+<script>
+  console.log('analytics: ready — configure Cloudflare Web Analytics token');
+</script>
+</head>
+<body>
+<canvas id="mesh"></canvas><div class="scan"></div><div class="vig"></div>
+<div class="wrap">
+
+  <div class="statusbar">
+    <span>æ:// GLOCAL CUDA · HERMES AGENT</span>
+    <span>BRANDED æææ:// TOWER</span>
+    <span class="live"><span class="dot"></span>NVIDIA GLOCAL</span>
+  </div>
+
+  <div class="hero">
+    <div class="glyph">æ</div>
+    <div class="cmd">GLOCAL <span class="dim">CUDA</span><span class="cur"></span></div>
+    <div class="sub">HERMES AGENT × <em>NVIDIA</em> · distributed-local compute</div>
+    <div class="pills">
+      <span class="pill hot">#opensourceware</span>
+      <span class="pill">#hermiphicationisinevitable</span>
+      <span class="pill nv">NVIDIA glocal</span>
+      <span class="pill">TensorRT-LLM</span>
+      <span class="pill">Mixture of Devices</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>CAPABILITY · GLOCAL CUDA</span><span class="tag">SPEC</span></div>
+    <div class="diagram"><b>Hermes Agent</b> (conductor, pc://conductor) owns the route tower.
+Compute is a <span class="v">Mixture of Devices (MoD)</span> — addressed, not administered.
+
+<span class="v">brain</span>   <b>droplet</b> 129.212.180.252:3000  — public identity/data, rtx3050:// front door
+        │ reverse SSH tunnel (ed25519, key-only)
+        ▼
+<span class="v">hands</span>  <b>Victus RTX 3050 6GB</b> 127.0.0.1:3050 — sovereign CUDA, compute-capability 8.6
+        │ +æ://route register vps://cloud &lt;ep&gt;
+        ▼
+<span class="v">burst</span>  <b>cloud pod</b> (RunPod/Vast/DO-gpu) — same vps_node, per-job cost
+
+<span class="n">All three are MoD nodes. One +æ://route tower. Codemode: a device is a language-op.</span>
+<span class="x">The droplet holds zero keys — secrets resolve via +æ://secrets at runtime.</span></div>
+    <div class="row" style="font-size:11px;color:var(--muted);line-height:1.7">
+      <span><b style="color:var(--gold)">Brain</b> (droplet) is the public surface. No GPU, no keys — it routes.</span><br>
+      <span><b style="color:var(--nv)">Hands</b> (RTX 3050) run the silicon: nvcc 13.3, nvidia-smi, TensorRT-LLM ready. Reached only via tunnel.</span><br>
+      <span><b style="color:var(--nv)">Burst</b> (cloud) is optional, codemode-ready: provision → register → dispatch → destroy.</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>BRING UP THE BRIDGE</span><span class="tag">FLOW</span></div>
+    <div class="code">bash rtx-bridge.sh up        <span class="c"># self-healing GPU endpoint + reverse tunnel</span>
+bash rtx-bridge.sh test       <span class="c"># E2E: matmul droplet → tunnel → RTX 3050</span>
+bash rtx-bridge.sh install    <span class="c"># systemd --user: survives Victus reboot</span>
+bash rtx-bridge.sh down       <span class="c"># tear down</span></div>
+    <div class="steps">
+      <div class="step"><div><b>Prove it</b> — a request to the public droplet runs a kernel on the local GPU:</div></div>
+    </div>
+    <div class="code">ssh root@129.212.180.252 \
+  "curl -s 'http://127.0.0.1:3050/xrpc/ae.vps.rtx?op=matmul&n=512'"
+<span class="ok"># → {"ok":true,"probe":{"name":"NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+#     "memory_total_mib":6144,"utilization_gpu":0},"run":{"host_ms":~496,"n":512}}</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>ROUTE TOWER CONTRACT</span><span class="tag">+æ://route</span></div>
+    <div class="code">+æ://route                              <span class="c"># list MoD: Victus + neuromitosis + cloud slot</span>
++æ://route register vps://cloud &lt;ep&gt; --host &lt;h&gt;   <span class="c"># add burst pod as addressable route</span>
+vps://neuromitosis                     <span class="c"># probe droplet liveness + records + compute</span>
+vps://cloud                            <span class="c"># probe burst pod (after register)</span>
+
+dispatch (Hermes Agent → GPU):
+  vps_node.dispatch_rtx(op, n)  → gpu_mcp GPUAgent: probe → compile_kernel → run_kernel
+  op ∈ {matmul, ...}   n = matrix dim   (extend toward TensorRT-LLM inference)</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>PROVISION A CLOUD HAND</span><span class="tag">CODEMODE</span></div>
+    <div class="steps">
+      <div class="step"><div>Pick a pod host — <b style="color:var(--nv)">RunPod</b>/Vast.ai (cheapest burst) or <b style="color:var(--nv)">DO-gpu</b> (native, needs GPU-access request + heavier commit). NVIDIA glocal: burst hands appear on demand.</div></div>
+      <div class="step"><div>Deploy the <b>identical</b> <code>vps_node.py</code> + <code>secret_source.py</code> — same chassis, different physical silicon. Keys resolve via <code>+æ://secrets</code> at runtime; <span class="lie">never bake a token into the image</span>.</div></div>
+      <div class="step"><div>Register + verify:</div></div>
+    </div>
+    <div class="code">+æ://route register vps://cloud http://&lt;pod-ip&gt;:3000 --host runpod-rtx4090
+curl -s 'http://&lt;pod-ip&gt;:3000/xrpc/ae.vps.rtx?op=matmul&n=1024'   <span class="c"># verify burst hands</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>PROVEN PROFILE</span><span class="tag">RTX 3050</span></div>
+    <div class="code">hands : <b>RTX 3050 6GB Laptop GPU</b> · compute-capability <b>8.6</b> · nvcc <b>13.3</b> · driver <b>592.27</b>
+surface: python vps_node.py --host 127.0.0.1 --port 3050  (ThreadingHTTPServer, JSON)
+tools  : probe_gpu · compile_kernel (matmul.cu) · run_kernel · rust_build_wasm
+proven : matmul 512×512 → <span class="v">host_ms ~496</span> on real silicon, zero cloud rent
+stack  : Hermes Agent conductor → +æ://route → droplet tunnel → gpu-mcp → CUDA</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>BRAND · æææ:// TOWER</span><span class="tag">NAMESPACE</span></div>
+    <div class="code">our built backbone is branded under the <b>æææ:///</b> (triple-ashe) namespace:
+  <b>æææ://neuromitosis</b>  → GLOCAL backbone (droplet brain: identity/data + rtx front door)
+  <b>æææ://cuda</b>         → NemoClaw GLOCAL CUDA tower (Hermes Agent conducts)
+  both delegate to the same <b>vps://</b> + <b>NVIDIA://</b> engines already verified.
+
+<span class="c">DNS:</span> æææ.com (punycode xn--6caa.com) is registered + live, but presently
+points at 185.134.245.113 — <span class="x">not yet our droplet (129.212.180.252)</span>.
+Repoint A/AAAA → droplet to make æææ.com actually serve this tower. Until then the
+<b>scheme</b> is real + routed; the <b>domain</b> is the one remaining step.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>PITFALLS</span><span class="tag">AVOID</span></div>
+    <div class="steps">
+      <div class="step"><div><b class="lie">Zombie endpoint</b> — a stale <code>vps_node</code> holding :3050 serves old code and masks fixes. Kill by PID (taskkill) before re-probing. The <code>while true</code> wrapper restarts on death; a leftover orphan does not.</div></div>
+      <div class="step"><div><b>GPU context contention</b> — two processes can't both own the CUDA context. One endpoint per GPU. A foreground test + background server collide → <code>list index out of range</code>.</div></div>
+      <div class="step"><div><b>Cloud cost creep</b> — a forgotten pod is the only recurring bill. Destroy on idle; the route slot stays codemode-ready with no spend.</div></div>
+      <div class="step"><div><b>Keys on the pod</b> — resolve secrets at runtime via <code>+æ://secrets</code> broker, same as Victus. Never image-bake.</div></div>
+      <div class="step"><div><b>Droplet is brain, not hands</b> — it has no GPU; <code>rtx3050://ready</code> is an advertisement. Real silicon is Victus/cloud behind the tunnel.</div></div>
+      <div class="step"><div><b>C:\ae vs C:\æ</b> — unicode path is real. Latin silently fails (same trap as secrets).</div></div>
+    </div>
+  </div>
+
+  <div class="linkrow" style="justify-content:center">
+    <a href="./glocal-cuda-mesh.html">↳ cuda mesh (live)</a>
+    <a href="./glocal-secrets-blueprint.html">↳ glocal secrets</a>
+    <a href="./cuda-blueprint.html">↳ sovereign cuda product</a>
+    <a href="./index.html">↳ hub</a>
+  </div>
+
+  <div class="foot">
+    <a href="./index.html">hub</a><a href="./fleet.html">fleet</a><a href="./mesh-agenti.html">mesh</a>
+    <a href="./cuda-vlc.html">cuda-vlc</a><a href="./sovereign-state.html">sovereign-state</a>
+    <a href="./aaa-protocol.html">æææ:// protocol</a>
+    <a href="https://github.com/MYaelMendez/gpu-mcp">gpu-mcp (MIT)</a>
+  </div>
+  <div class="hash">#hermiphicationisinevitable</div>
+</div>
+<script src="./assets/aether.js?v=2"></script>
+<script>
+if(window.Aether && Aether.mount){Aether.mount('#mesh','#D4AF37');}
+</script>
+</body>
+</html>

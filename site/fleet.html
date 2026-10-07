@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>fleet • +æ://fleet • mixture of devices</title>
+<meta name="description" content="fleet — the bootstrap surface of the sovereign device mixture. Open on any device, pair with the engineering computer, publish your capability manifest, join the MoD×MoA×MoM.">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/aether.css">
+<style>
+.qr-wrap{flex-direction:column}
+.manifest b{color:var(--gold)}
+.node{border:1px solid var(--border);border-radius:4px;padding:12px;background:#0b0b0b}
+.node .name{font-family:'Orbitron';font-weight:700;color:var(--gold);font-size:13px}
+.node .role{font-size:9px;color:var(--neon);text-transform:uppercase;letter-spacing:1px}
+.node .cap{font-size:10px;color:var(--muted);line-height:1.7;margin-top:6px}
+.node .cap b{color:var(--gold)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:8px}
+.step{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:11px;color:var(--ink);line-height:1.6}
+.step::before{content:counter(s);flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1px solid var(--border-hot);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-weight:900;font-size:11px}
+</style>
+</head>
+<body>
+<canvas id="mesh"></canvas><div class="scan"></div><div class="vig"></div>
+<div class="wrap">
+
+  <div class="statusbar">
+    <span>æ:// FLEET</span>
+    <span>MoD × MoA × MoM</span>
+    <span class="live"><span class="dot"></span>ONLINE</span>
+  </div>
+
+  <div class="hero">
+    <div class="glyph">æ</div>
+    <div class="cmd">&gt;_æ<span class="dim">:</span>fleet<span class="cur">&nbsp;</span></div>
+    <div class="sub">ONE ENGINEERING COMPUTER · <em>MANY SOVEREIGN DEVICES</em></div>
+    <div class="pills">
+      <span class="pill hot">+æ://fleet</span>
+      <span class="pill">DEVICE MIXTURE</span>
+      <span class="pill">AGENT MIXTURE</span>
+      <span class="pill">MODEL MIXTURE</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>ENGINEERING COMPUTER · OFFER FLEET QR</span><span class="tag">VICTUS</span></div>
+    <div class="row">
+      <label for="ecName">node</label>
+      <input id="ecName" type="text" value="victus" autocomplete="off" spellcheck="false"/>
+      <label for="ecModels">models</label>
+      <input id="ecModels" type="text" value="local/ollama:11434,nous-portal(opt-in)" autocomplete="off" spellcheck="false"/>
+      <button id="ecOfferBtn">+æ://fleet offer</button>
+    </div>
+    <div id="ecOut" class="qr-wrap hidden">
+      <div class="qr-box"><canvas id="ecQr"></canvas></div>
+      <div class="qr-meta">
+        <div>route: <b id="ecRoute">—</b></div>
+        <div style="margin-top:6px">On the new device, open <b>fleet.html</b> and scan this to join the mixture.</div>
+        <div style="margin-top:6px;color:var(--neon)">manifest carries device + model caps · opt-in only</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>DEVICE · JOIN FLEET</span><span class="tag">NEW NODE</span></div>
+    <div class="row">
+      <label for="devName">node</label>
+      <input id="devName" type="text" value="node-01" autocomplete="off" spellcheck="false"/>
+      <label for="devModels">models</label>
+      <input id="devModels" type="text" value="local/ollama:11434" autocomplete="off" spellcheck="false"/>
+      <button id="scanBtn">scan offer</button>
+      <button id="pasteBtn" class="ghost">paste</button>
+    </div>
+    <div id="scanView"><video id="video" playsinline></video></div>
+    <div id="joinOut" class="hidden">
+      <div class="manifest" id="joinManifest">—</div>
+      <div style="margin-top:10px" class="accept-cmd"><span class="p">&gt;_æ:</span> <span id="joinCmd">—</span></div>
+      <div class="row" style="margin-top:4px"><button id="copyJoin" class="ghost">copy command</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>FLEET REGISTRY · MoD</span><span class="tag">LIVE</span></div>
+    <div id="registry" class="registry"><div class="manifest">loading fleet.json…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>PROTOCOL</span><span class="tag">+æ://fleet</span></div>
+    <div class="steps">
+      <div class="step">On the <b style="color:var(--gold)">&nbsp;engineering computer</b>, run <b style="color:var(--gold)">&nbsp;+æ://fleet offer</b>. A QR carries the node's capability manifest: <code>ae://fleet?host=&lt;name&gt;&mesh=pc://mesh/&lt;name&gt;/local&models=&lt;csv&gt;&role=engineering-computer</code>.</div>
+      <div class="step">On a <b style="color:var(--gold)">&nbsp;device</b>, open <b style="color:var(--gold)">&nbsp;fleet.html</b>, scan (or paste) the offer, then run <b style="color:var(--gold)">&nbsp;+æ://fleet join &lt;manifest&gt;</b> on the engineering computer to register it.</div>
+      <div class="step">The node joins the <b style="color:var(--gold)">&nbsp;mixture of devices</b>. Each node advertises models (MoM) + agents (MoA); the router selects across them.</div>
+      <div class="step">Dispatch via <b style="color:var(--gold)">&nbsp;+æ://route &lt;task&gt;</b> — chooses device × agent × model, opt-in, no cloud broker. Local-default.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="./index.html">hub</a>
+    <a href="./mesh-agenti.html">mesh</a>
+    <a href="./cuda-vlc.html">cuda-vlc</a>
+      <a href="./porter.html">porter</a>
+    <a href="./secret-source-bridge.html">secret-bridge</a>
+    <a href="./demo.html">demo</a>
+    <a href="./sovereign-state.html">sovereign-state</a>
+    <a href="./agentic.html">#startabusiness</a>
+  </div>
+  <div class="hash">#HERMIPHICATIONISINEVITABLE</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="./assets/qrcode.js"></script>
+<script src="./assets/jsQR.js"></script>
+<script src="./assets/aether.js?v=2"></script>
+<script>
+const {$, Aether} = window;
+function lanIP(){return Aether.lanIP();}
+
+$('#ecOfferBtn').addEventListener('click',()=>{
+  const name=($('#ecName').value||'victus').trim().replace(/[^a-z0-9_-]/gi,'');
+  const models=encodeURIComponent(($('#ecModels').value||'').trim());
+  const manifest=`ae://fleet?host=${name}&mesh=pc://mesh/${name}/local&models=${models}&role=engineering-computer&token=${Aether.tokenHex(12)}&via=wifi`;
+  Aether.QR.render(manifest,$('#ecQr'),6);
+  $('#ecRoute').textContent=`pc://mesh/${name}/local`;
+  $('#ecOut').classList.remove('hidden');
+  Aether.toast('fleet QR emitted');
+});
+
+let cam=null;
+$('#scanBtn').addEventListener('click',()=>{
+  const view=$('#scanView'),video=$('#video');
+  if(view.style.display==='block'){cam&&cam.stop();view.style.display='none';return;}
+  cam=Aether.scanCamera(video,d=>d.startsWith('ae://fleet'),handle);
+  view.style.display='block';cam.start();
+});
+$('#pasteBtn').addEventListener('click',()=>{const m=prompt('paste the ae://fleet manifest:');if(m)handle(m.trim());});
+function handle(m){
+  if(!m.startsWith('ae://fleet')){Aether.toast('not a fleet manifest');return;}
+  $('#joinManifest').innerHTML=renderManifest(m);
+  const dev=($('#devName').value||'node-01').trim();
+  const models=encodeURIComponent(($('#devModels').value||'').trim());
+  const cmd=`+æ://fleet join ${m} &node=${dev}&models=${models}`;
+  $('#joinCmd').textContent=cmd;
+  $('#joinOut').classList.remove('hidden');
+  Aether.toast('manifest captured');
+}
+function renderManifest(m){
+  const q=new URLSearchParams(m.split('?')[1]);
+  return `<b>host</b> ${q.get('host')||'—'}<br><b>mesh</b> ${q.get('mesh')||'—'}<br><b>role</b> ${q.get('role')||'—'}<br><b>models</b> ${decodeURIComponent(q.get('models')||'—')}`;
+}
+$('#copyJoin').addEventListener('click',()=>{navigator.clipboard.writeText($('#joinCmd').textContent).then(()=>Aether.toast('copied')).catch(()=>Aether.toast('copy failed'));});
+
+async function loadRegistry(){
+  try{
+    const r=await fetch('./fleet.json',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const f=await r.json();
+    const box=$('#registry');box.innerHTML='';
+    (f.registry||[]).forEach(n=>{
+      const d=document.createElement('div');d.className='node';
+      d.innerHTML=`<div class="name">${n.node}</div><div class="role">${n.role} · ${n.status||'—'}</div>
+        <div class="cap"><b>route</b> ${n.route||'—'}<br><b>device</b> ${(n.device&&n.device.gpu)||'—'}<br>
+        <b>models</b> ${(n.models||[]).join(', ')}<br><b>agents</b> ${(n.agents||[]).join(', ')}</div>`;
+      box.appendChild(d);
+    });
+    if(!(f.registry||[]).length)box.innerHTML='<div class="manifest">registry empty</div>';
+  }catch(e){$('#registry').innerHTML=`<div class="manifest err">registry fetch failed: ${e.message}</div>`;}
+}
+loadRegistry();
+Aether.mesh();
+</script>
+</body>
+</html>
