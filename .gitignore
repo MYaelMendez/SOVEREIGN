@@ -46,3 +46,7 @@ dist/
 # Sovereign local-custody secret files — never commit
 secrets.json
 *.secrets.json
+
+# Organized loose root files (2026-10)
+scratch/
+_installers/
