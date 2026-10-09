@@ -1,0 +1,10 @@
+{
+  "title": "CRI:// Consumer Redline Index",
+  "text_lines": ["score 50.0", "7 components", "coverage 100%"],
+  "description": "Consumer Redline Index V1 — evidence-backed measurement of consumer economic pressure. 7 components, each weighted 0.14. Score 50.0 = neutral pressure.",
+  "duration": 6,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "cri-canvas.html"
+}

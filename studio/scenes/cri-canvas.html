@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080">
+<title>CRI:// Consumer Redline Index</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#050505;color:#D4AF37;font-family:'JetBrains Mono','Consolas',monospace}
+  #root{position:relative;width:100%;height:100%}
+  .scanlines{position:absolute;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.20) 3px,rgba(0,0,0,.20) 4px)}
+</style>
+</head>
+<body>
+<div id="root" data-width="1920" data-height="1080">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="scanlines"></div>
+</div>
+<script>
+(function(){
+  var P=new URLSearchParams(location.search);
+  var TITLE=P.get('title')||'CRI:// Consumer Redline Index';
+  var TEXT=P.get('text')||'score 50.0';
+  var LINES=TEXT.split('|').map(function(s){return s.trim()}).filter(Boolean);
+
+  var canv=document.getElementById('c');
+  var ctx=canv.getContext('2d');
+  var W=1920,H=1080,GOLD='#D4AF37',CYAN='#00eaff',GREEN='#00eaa0',RED='#ff5050',ORANGE='#ff8c00';
+
+  function hexA(h,a){h=h.replace('#','');return'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'}
+
+  var components=[
+    {name:'ESSENTIALS',score:50.0,weight:0.14,color:CYAN},
+    {name:'DEBT',score:50.0,weight:0.14,color:GREEN},
+    {name:'CREDIT',score:50.0,weight:0.14,color:GOLD},
+    {name:'SAVINGS',score:50.0,weight:0.14,color:CYAN},
+    {name:'INCOME',score:50.0,weight:0.14,color:GREEN},
+    {name:'LABOR',score:50.0,weight:0.14,color:GOLD},
+    {name:'LIQUIDITY',score:50.0,weight:0.14,color:CYAN}
+  ];
+
+  function drawBar(x,y,w,h,pct,color,label,val){
+    ctx.fillStyle='rgba(212,175,55,0.08)';
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle=color;
+    ctx.fillRect(x,y,w*pct,h);
+    ctx.fillStyle=hexA(GOLD,0.7);
+    ctx.font='11px "JetBrains Mono",monospace';
+    ctx.textAlign='left';
+    ctx.fillText(label,x,y-4);
+    ctx.textAlign='right';
+    ctx.fillStyle=hexA(color,0.9);
+    ctx.fillText(val,x+w,y-4);
+  }
+
+  function render(p){
+    p=Math.max(0,Math.min(1,p));
+    var g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#12182a');g.addColorStop(0.5,'#151a2a');g.addColorStop(1,'#101520');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+    var aura=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,900);
+    aura.addColorStop(0,hexA(GOLD,0.06));aura.addColorStop(1,hexA(GOLD,0));
+    ctx.fillStyle=aura;ctx.fillRect(0,0,W,H);
+
+    for(var i=0;i<120;i++){
+      var x=(i*137.508+p*60)%W,y=(i*97.31+p*40)%H;
+      var tw=0.5+0.5*Math.sin(p*Math.PI*2+i);
+      ctx.fillStyle=hexA(GOLD,0.12*tw);
+      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+    }
+
+    ctx.font='700 32px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.9);ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillText(TITLE,W/2,60);
+    ctx.font='400 14px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.4);
+    ctx.fillText('evidence-backed measurement · 7 components · weight 0.14 each',W/2,85);
+
+    // CRI Score gauge (top center)
+    var gaugeX=W/2,gaugeY=200,gaugeR=80;
+    ctx.beginPath();ctx.arc(gaugeX,gaugeY,gaugeR,0,Math.PI*2);
+    ctx.strokeStyle='rgba(212,175,55,0.15)';ctx.lineWidth=8;ctx.stroke();
+    var scorePct=50.0/100;
+    var reveal=Math.max(0,Math.min(1,(p-0.05)/0.3));
+    ctx.beginPath();ctx.arc(gaugeX,gaugeY,gaugeR,-Math.PI/2,-Math.PI/2+Math.PI*2*scorePct*reveal);
+    ctx.strokeStyle=CYAN;ctx.lineWidth=8;ctx.stroke();
+    ctx.font='700 48px "JetBrains Mono",monospace';
+    ctx.fillStyle=CYAN;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('50.0',gaugeX,gaugeY);
+    ctx.font='400 12px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.5);
+    ctx.fillText('CRI SCORE',gaugeX,gaugeY+gaugeR+20);
+
+    // Component bars (left panel)
+    var p1x=40,p1y=320,p1w=880,p1h=680;
+    ctx.strokeStyle=hexA(GOLD,0.15);ctx.strokeRect(p1x,p1y,p1w,p1h);
+    ctx.fillStyle=hexA(GOLD,0.6);ctx.font='600 14px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('COMPONENTS (weight 0.14 each)',p1x+16,p1y+24);
+    var barH=40,barGap=20;
+    for(var ci=0;ci<components.length;ci++){
+      var c=components[ci];
+      var by=p1y+50+ci*(barH+barGap);
+      var bw=(c.score/100)*(p1w-160);
+      var creveal=Math.max(0,Math.min(1,(p-0.15-ci*0.08)/0.3));
+      drawBar(p1x+16,by,bw,barH,creveal,c.color,c.name,c.score.toFixed(1));
+    }
+
+    // Right panel: indicators
+    var p2x=960,p2y=320,p2w=920,p2h=680;
+    ctx.strokeStyle=hexA(GOLD,0.15);ctx.strokeRect(p2x,p2y,p2w,p2h);
+    ctx.fillStyle=hexA(GOLD,0.6);ctx.font='600 14px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('INDICATORS',p2x+16,p2y+24);
+    var indicators=[
+      {name:'CPI All Items',val:50.0},
+      {name:'Debt Service Ratio',val:50.0},
+      {name:'Credit Utilization',val:50.0},
+      {name:'Personal Savings Rate',val:50.0},
+      {name:'Real Disposable Income',val:50.0},
+      {name:'Unemployment Rate',val:50.0},
+      {name:'Liquidity Headroom',val:50.0}
+    ];
+    var ibarH=30,ibarGap=28;
+    for(var ii=0;ii<indicators.length;ii++){
+      var ind=indicators[ii];
+      var iy=p2y+50+ii*(ibarH+ibarGap);
+      var iw=(ind.val/100)*(p2w-200);
+      var ireveal=Math.max(0,Math.min(1,(p-0.2-ii*0.06)/0.3));
+      drawBar(p2x+16,iy,iw,ibarH,ireveal,ii%2===0?CYAN:GREEN,ind.name,ind.val.toFixed(1));
+    }
+
+    ctx.fillStyle=hexA(CYAN,0.5);ctx.fillRect(0,H-6,W*p,4);
+
+    ctx.font='400 11px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.35);ctx.textAlign='left';
+    ctx.fillText('CRI:// release/v1 · 2026-10-04 · status VALID',40,H-50);
+    ctx.textAlign='right';
+    ctx.fillText('sha256:cri2026...',W-40,H-50);
+
+    if(LINES.length){
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='600 28px "JetBrains Mono",monospace';
+      for(var li=0;li<LINES.length;li++){
+        var lp2=Math.max(0,Math.min(1,(p-0.85)/0.15));
+        ctx.fillStyle=hexA('#ffd98a',0.85*lp2);
+        ctx.fillText(LINES[li],W/2,H-100+li*40);
+      }
+    }
+
+    var sy=((p*1.4)%1)*H;
+    var sg=ctx.createLinearGradient(0,sy-80,0,sy+80);
+    sg.addColorStop(0,'rgba(0,234,255,0)');sg.addColorStop(0.5,'rgba(0,234,255,0.045)');sg.addColorStop(1,'rgba(0,234,255,0)');
+    ctx.fillStyle=sg;ctx.fillRect(0,sy-80,W,160);
+  }
+
+  window.__renderFrame=function(i,total){render(i/Math.max(1,total-1))};
+  render(0);
+})();
+</script>
+</body>
+</html>
