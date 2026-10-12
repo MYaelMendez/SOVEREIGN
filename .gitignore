@@ -1,5 +1,6 @@
 # === C:\ae sovereign root .gitignore ===
 # Nested first-party git repos are tracked independently — do NOT embed as gitlinks.
+aeqr/
 hermes-fork/
 github-pages/
 htmlvideo/

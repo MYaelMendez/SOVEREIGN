@@ -41,7 +41,58 @@ C:\æ\
 
 ```
 >_æ:#startabusiness→     generate agentic.html sovereign business page
+>_æ:væult://             the whole tool chain — read this first
 ```
+
+## væult — the whole tool chain (READ FIRST)
+
+**væult is not one script. It is the chain.** Eight links, ordered by data flow,
+each built to answer a failure the previous link could not.
+
+```
+custody → format → gate → authority → contract → dispatch → publish → delivery
+```
+
+| # | Link | Role | Answers | File |
+|---|------|------|---------|------|
+| 1 | `vault` | custody | where the secret lives | `C:/æ/væult/væult.py` |
+| 2 | `envelope` | format | how anything crosses a boundary | `agents/qr_envelope.py` |
+| 3 | `supervision` | gate | is the artifact real, or a picture of one | `agents/qr_supervision.py` |
+| 4 | `signing` | authority | who may act, and until when | `agents/card_signing.py` |
+| 5 | `pledge` | contract | what an agent has promised | `agents/agent_pledge.py` |
+| 6 | `kanban` | dispatch | how a physical card moves the board | `agents/qr_kanban.py` |
+| 7 | `push` | publish | how a fleet pushes without colliding | `agents/kanban_push.py` |
+| 8 | `transport` | delivery | how a sealed envelope reaches a person | `agents/qr_mail.py`, `qr_sms.py` |
+
+**Before you build anything, check the chain.** Most tasks are already a link.
+
+```bash
+python C:/æ/agents/væult_chain.py chain      # every link, its role
+python C:/æ/agents/væult_chain.py verify     # does every link answer?
+python C:/æ/agents/væult_chain.py call <link> <action> [args]
+```
+
+Scheme: `væult://chain` · machine-readable: `https://myaelmendez.github.io/vaeult-chain.json`
+
+### Two rules that apply to every agent here
+
+**1. Claim before you act.** A shared resource with a read-modify-write window
+needs a lock, and the lock needs a record. Use `agents/kanban_push.py` to push —
+concurrent agents that push directly collide, and a commit can land on a branch
+nobody is watching.
+
+**2. Every agent commits to the pledge.** `python agents/agent_pledge.py commit
+--agent <your-id>`. The pledge is hashed; changing one word lapses every
+signature. The gate is `agent_pledge.py require --agent <id>`.
+
+### The rule the chain exists to enforce
+
+> **A thing that has not been checked back is not a thing.** A QR that has not
+> been decoded back is a picture of one. A push that has not been recorded is
+> not published. A claim that has not been verified is not true.
+
+Where a gate exists, pass through it. Where one does not, say the check is
+missing rather than report a pass.
 
 ## Agentic Language Chassis (æ://)
 
