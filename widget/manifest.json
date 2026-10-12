@@ -12,21 +12,50 @@
       "module": "dist/widget_compute.wasm",
       "hash": "sha256:00d5500a58f66441d0318181da9061f9d36538e0c86c296960be3fd158bb7f2f",
       "bytes": 7982,
-      "exports": ["wave", "dot", "hash64", "answer"]
+      "exports": [
+        "wave",
+        "dot",
+        "hash64",
+        "answer"
+      ]
     },
     "inputs": [
-      { "name": "x", "type": "i32", "desc": "grid column" },
-      { "name": "y", "type": "i32", "desc": "grid row" },
-      { "name": "t", "type": "i32", "desc": "frame index" },
-      { "name": "seed", "type": "i32", "desc": "deterministic seed" }
+      {
+        "name": "x",
+        "type": "i32",
+        "desc": "grid column"
+      },
+      {
+        "name": "y",
+        "type": "i32",
+        "desc": "grid row"
+      },
+      {
+        "name": "t",
+        "type": "i32",
+        "desc": "frame index"
+      },
+      {
+        "name": "seed",
+        "type": "i32",
+        "desc": "deterministic seed"
+      }
     ],
     "outputs": [
-      { "name": "displacement", "type": "f32", "desc": "mesh Z offset in [-1,1]" }
+      {
+        "name": "displacement",
+        "type": "f32",
+        "desc": "mesh Z offset in [-1,1]"
+      }
     ]
   },
   "interface": {
     "scene": "widget.html",
-    "controls": ["orbit", "zoom", "auto-rotate"],
+    "controls": [
+      "orbit",
+      "zoom",
+      "auto-rotate"
+    ],
     "viewport": "720x1280",
     "aspect": "9:16",
     "renderer": "webgl",
@@ -34,10 +63,18 @@
     "deterministic": true
   },
   "trust": {
-    "permissions": ["wasm:instantiate", "render:webgl", "fetch:localhost"],
+    "permissions": [
+      "wasm:instantiate",
+      "render:webgl",
+      "fetch:localhost"
+    ],
     "module_hash": "sha256:00d5500a58f66441d0318181da9061f9d36538e0c86c296960be3fd158bb7f2f",
     "authority": "human",
     "checked_independently_of": "qr",
-    "note": "The QR only addresses this manifest. Trust comes from re-hashing the module and comparing to trust.module_hash — the QR can be forged, copied or stale and it does not matter."
+    "note": "The QR only addresses this manifest. Trust comes from re-hashing the module and comparing to trust.module_hash — the QR can be forged, copied or stale and it does not matter.",
+    "publisher_pubkey": "e24e54416a7b03397dfdcf6432ce2c9f353e825273a3ffb1e73b5f5e6892697f",
+    "publisher_fingerprint": "9da8ac94fa9c69ad",
+    "signature": "adfb0c56be32806d6efd41002abda9539cc2b9c0dead501d9ed03ae0f9764de63d03ea945038e8666df67e7b3b5657d4789f703c04c0a728ab338c17d4038203",
+    "signed_at": "2026-10-08T00:41:54.813368+00:00"
   }
 }

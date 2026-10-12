@@ -224,7 +224,7 @@ input[type=range]::-webkit-slider-thumb{
   <div class="text-3xl mb-4">🜁</div>
   <div class="text-sm tracking-widest">INITIALIZING ZEITGEIST</div>
   <div id="renderMode" class="text-[10px] text-cyan-500/70 mt-3">
-    WebGL · æOS LATTICE
+    WEBGPU · æOS LATTICE
   </div>
 </div>
 
@@ -503,10 +503,22 @@ input[type=range]::-webkit-slider-thumb{
 </div>
 
 
-<script src="./vendor/three.global.js"></script>
-<script src="./vendor/three.OrbitControls.js"></script>
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/tsl":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.tsl.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 
-<script>
+
+<script type="module">
+
+import * as THREE from "three/webgpu";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 
 /* ============================================================
@@ -669,10 +681,10 @@ let droneGain;
    INITIALIZATION
 ============================================================ */
 
-function init(){
+async function init(){
 
   renderer =
-    new THREE.WebGLRenderer({
+    new THREE.WebGPURenderer({
       antialias:true,
       alpha:false
     });
@@ -697,10 +709,15 @@ function init(){
     .getElementById("canvas-wrap")
     .appendChild(renderer.domElement);
 
+  await renderer.init();
+
+
   document
     .getElementById("renderMode")
     .textContent =
-      "WebGL · æOS LATTICE";
+      navigator.gpu
+        ? "WEBGPU · æOS LATTICE"
+        : "WEBGL2 FALLBACK · æOS LATTICE";
 
 
   scene =
@@ -729,7 +746,7 @@ function init(){
 
 
   controls =
-    new THREE.OrbitControls(
+    new OrbitControls(
       camera,
       renderer.domElement
     );
@@ -1331,7 +1348,9 @@ function init(){
     );
 
 
-  requestAnimationFrame(animate);
+  renderer.setAnimationLoop(
+    animate
+  );
 }
 
 
@@ -2526,8 +2545,6 @@ function animate(){
     scene,
     camera
   );
-
-  requestAnimationFrame(animate);
 }
 
 
@@ -2566,9 +2583,9 @@ function onResize(){
    BOOT
 ============================================================ */
 
-try {
-  init();
-} catch(error){
+init()
+.catch(
+  error=>{
 
     console.error(
       error
@@ -2602,10 +2619,24 @@ try {
       `;
 
   }
-}
+);
 
 </script>
 
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/zeitgeist-4d.html&color=D4AF37&bgcolor=050505" 
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>
 

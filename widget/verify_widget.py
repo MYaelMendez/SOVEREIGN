@@ -18,6 +18,8 @@ import json
 import os
 import sys
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -29,6 +31,16 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
+def verify_signature(public_key_hex: str, message: str, signature_hex: str) -> bool:
+    """Verify an Ed25519 signature against a public key."""
+    try:
+        pk = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
+        pk.verify(bytes.fromhex(signature_hex), message.encode())
+        return True
+    except Exception:
+        return False
+
+
 def verify(manifest_path: str) -> dict:
     man = json.load(open(manifest_path, encoding="utf-8"))
     base = os.path.dirname(os.path.abspath(manifest_path))
@@ -38,15 +50,36 @@ def verify(manifest_path: str) -> dict:
     module_rel = cap.get("module", "")
     module_abs = os.path.join(base, module_rel)
 
+    trust = man.get("trust", {})
     result = {
         "widget": man.get("identity", {}).get("id"),
         "version": man.get("identity", {}).get("version"),
         "publisher": man.get("identity", {}).get("publisher"),
         "module": module_rel,
         "declared_hash": declared,
-        "permissions": man.get("trust", {}).get("permissions", []),
+        "permissions": trust.get("permissions", []),
+        "publisher_fingerprint": trust.get("publisher_fingerprint", ""),
     }
 
+    # ── 1. AUTHENTICITY: verify the publisher's Ed25519 signature ──
+    pubkey_hex = trust.get("publisher_pubkey", "")
+    sig_hex = trust.get("signature", "")
+    if not pubkey_hex or not sig_hex:
+        result.update(ok=False, reason="no publisher signature — cannot verify authenticity")
+        return result
+
+    # Reconstruct the signed message: everything except trust.signature
+    signable = {k: v for k, v in man.items() if k != "trust"}
+    signable["trust"] = {k: v for k, v in trust.items() if k != "signature"}
+    msg = json.dumps(signable, sort_keys=True, ensure_ascii=True)
+
+    sig_ok = verify_signature(pubkey_hex, msg, sig_hex)
+    result["signature_valid"] = sig_ok
+    if not sig_ok:
+        result.update(ok=False, reason="SIGNATURE INVALID — manifest not signed by claimed publisher")
+        return result
+
+    # ── 2. INTEGRITY: verify the WASM module hash ──
     if not os.path.exists(module_abs):
         result.update(ok=False, reason=f"module not found: {module_abs}")
         return result
@@ -55,8 +88,13 @@ def verify(manifest_path: str) -> dict:
     result["actual_hash"] = actual
     result["actual_bytes"] = os.path.getsize(module_abs)
     result["hash_match"] = (actual == declared)
-    result["ok"] = result["hash_match"]
-    result["reason"] = "hash verified" if result["hash_match"] else "HASH MISMATCH — module tampered or stale"
+    if not result["hash_match"]:
+        result.update(ok=False, reason="HASH MISMATCH — module tampered or stale")
+        return result
+
+    # ── 3. PERMISSIONS: declared capabilities ──
+    result["ok"] = True
+    result["reason"] = "signature verified + hash verified"
     return result
 
 
@@ -75,6 +113,8 @@ def main(argv: list[str]) -> int:
     print(f"  module     : {r['module']}")
     print(f"  declared   : {r['declared_hash']}")
     print(f"  actual     : {r.get('actual_hash','(missing)')}")
+    print(f"  fingerprint: {r.get('publisher_fingerprint','(none)')}")
+    print(f"  signature  : {'✓ valid' if r.get('signature_valid') else '✗ invalid'}")
     print(f"  permissions: {', '.join(r['permissions'])}")
     verdict = "✓ VERIFIED" if r.get("ok") else "✗ REJECTED"
     print(f"  {verdict}  — {r['reason']}")

@@ -126,9 +126,20 @@
   </div>
 </div>
 
-<script src="../vendor/three.global.js"></script>
-<script src="../vendor/three.OrbitControls.js"></script>
-<script>
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/tsl":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.tsl.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three/webgpu";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 /* ══════════════════════════════════════════════════════════
    TAXONOMY — episode clusters with videolab wired in
@@ -164,7 +175,7 @@ const CATEGORIES = [
 const FIELD_RADIUS = 15;
 
 /* ══════════════════════════════════════════════════════════
-   RENDERER — WebGL2 (classic global build)
+   RENDERER — WebGPU (auto-falls back to WebGL2)
    ══════════════════════════════════════════════════════════ */
 
 let renderer, scene, camera, controls;
@@ -176,15 +187,16 @@ const stage = document.getElementById("stage");
 
 async function init(){
 
-  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+  renderer = new THREE.WebGPURenderer({ antialias:true, alpha:false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(0x050505);
   stage.appendChild(renderer.domElement);
 
-  /* WebGLRenderer initializes synchronously — no async GPU device init */
+  await renderer.init();                       /* WebGPU device acquisition */
 
-  const label = "GPU://WEBGL2";
+  const gpu = !!navigator.gpu;
+  const label = gpu ? "GPU://WEBGPU" : "GPU://WEBGL2 FALLBACK";
   document.getElementById("modeLabel").textContent = label;
   document.getElementById("bootmode").textContent  = label;
 
@@ -194,7 +206,7 @@ async function init(){
   camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .1, 400);
   camera.position.set(0, 13, 34);
 
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = .05;
   controls.minDistance = 8;
@@ -503,10 +515,24 @@ init().catch(err => {
     String(err.message || err) + '</div>';
 });
 
-console.info("%cæ:/aipodcast.me/discover%c WebGL2 episodic field",
+console.info("%cæ:/aipodcast.me/discover%c WebGPU episodic field",
   "color:#D4AF37;background:#050505;padding:5px 10px;font-weight:bold",
   "color:#00ff9d;font-family:monospace");
 </script>
 
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/discover.html&color=D4AF37&bgcolor=050505" 
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>

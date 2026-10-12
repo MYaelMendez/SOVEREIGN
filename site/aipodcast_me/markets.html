@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <meta name="theme-color" content="#050505"/>
-<title>æ:/markets · sovereign market tape · WebGL · WebMCP</title>
-<meta name="description" content="Sovereign market tape — 20 tickers rendered as a live WebGL particle field. Client-side, no API key. WebMCP for native tool context if available."/>
+<title>æ:/markets · sovereign market tape · WebGPU · WebMCP</title>
+<meta name="description" content="Sovereign market tape — 20 tickers rendered as a live WebGPU particle field. Client-side, no API key. WebMCP for native tool context if available."/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -124,12 +124,23 @@
   </div>
 </div>
 
-<script src="../vendor/three.global.js"></script>
-<script>
-/* Sovereign market tape — global THREE + OrbitControls from three.global.js */
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/tsl":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.tsl.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three/webgpu";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 /* ══════════════════════════════════════════════════════════
-   SOVEREIGN MARKET TAPE — 20 tickers as a live WebGL field
+   SOVEREIGN MARKET TAPE — 20 tickers as a live WebGPU field
    Client-side, no API key. Yahoo Finance chart API (keyless).
    WebMCP for native tool discovery (if available).
    ══════════════════════════════════════════════════════════ */
@@ -262,6 +273,7 @@ let renderer, scene, camera, controls;
 let nodes = [], nodeMeshes = [], field, halo;
 let selected = -1, autoOrbit = true, pointerDown = null;
 
+let adapter = null, device = null, gpuCtx = null;
 let mcpHost = null, mcpShape = "";
 
 const stage = document.getElementById("stage");
@@ -277,14 +289,18 @@ const RING_RADIUS = 11;
 const SECTOR_RADIUS = 4.2;
 
 async function init() {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer = new THREE.WebGPURenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(0x050505);
   stage.appendChild(renderer.domElement);
 
-  document.getElementById("modeLabel").textContent = "GPU://WEBGL";
-  document.getElementById("bootmode").textContent = "GPU://WEBGL · WEBMCP://SCANNING";
+  await renderer.init();
+
+  const gpuOk = !!navigator.gpu;
+  const label = gpuOk ? "GPU://WEBGPU LIVE" : "GPU://FALLBACK";
+  document.getElementById("modeLabel").textContent = label;
+  document.getElementById("bootmode").textContent = "GPU://" + (gpuOk ? "WEBGPU LIVE" : "FALLBACK") + " · WEBMCP://SCANNING";
 
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x050505, 0.012);
@@ -292,7 +308,7 @@ async function init() {
   camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 400);
   camera.position.set(0, 16, 36);
 
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   controls.minDistance = 8;
@@ -645,7 +661,7 @@ function probeWebMCP() {
   const found = findModelContext();
   if (!found) {
     document.getElementById("bootmode").textContent =
-      "GPU://WEBGL · WEBMCP://ABSENT (native API not found)";
+      "GPU://WEBGPU LIVE · WEBMCP://ABSENT (native API not found)";
     return false;
   }
 
@@ -658,12 +674,12 @@ function probeWebMCP() {
     typeof mcpHost.addTool        === "function" ? "addTool"        : "";
 
   if (!shape) {
-    document.getElementById("bootmode").textContent = "GPU://WEBGL · WEBMCP://UNKNOWN";
+    document.getElementById("bootmode").textContent = "GPU://LIVE · WEBMCP://UNKNOWN";
     return false;
   }
 
   mcpShape = shape;
-  document.getElementById("bootmode").textContent = "GPU://WEBGL · WEBMCP://" + shape.toUpperCase();
+  document.getElementById("bootmode").textContent = "GPU://WEBGPU LIVE · WEBMCP://" + shape.toUpperCase();
 
   try {
     const specs = MCP_TOOLS.map(t => ({
@@ -687,9 +703,23 @@ init().catch(err => {
     String(err.message || err) + '</div>';
 });
 
-console.info("%cæ:/markets%c WebGL market tape · keyless · sovereign",
+console.info("%cæ:/markets%c WebGPU market tape · keyless · sovereign",
   "color:#D4AF37;background:#050505;padding:5px 10px;font-weight:bold",
   "color:#00ff9d;font-family:monospace");
 </script>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/markets.html&color=D4AF37&bgcolor=050505" 
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>

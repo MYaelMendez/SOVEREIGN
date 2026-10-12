@@ -124,10 +124,22 @@ canvas{display:block;position:fixed;inset:0;z-index:1}
 <div class="stats" id="stats"><span class="ok">◉</span> loading…</div>
 <div class="brand">#OSW</div>
 
-<script src="./vendor/three.global.js"></script>
-<script src="./vendor/three.OrbitControls.js"></script>
-<script>
-(async () => {
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CAPABILITY DATA — fetched from the generated mesh, with a live GPU probe.
@@ -172,7 +184,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.autoRotate = true;
@@ -307,15 +319,11 @@ function buildScene(data) {
   scene.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.08, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })));
 }
 
-// postprocessing (optional - only when THREE.EffectComposer is vendored;
-// otherwise the scene renders directly via renderer.render in animate()).
-let composer = null;
-if (typeof THREE.EffectComposer !== 'undefined') {
-  composer = new THREE.EffectComposer(renderer);
-  composer.addPass(new THREE.RenderPass(scene, camera));
-  composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.4, 0.84));
-  composer.addPass(new THREE.OutputPass());
-}
+// postprocessing
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.4, 0.84));
+composer.addPass(new OutputPass());
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // UI
@@ -526,12 +534,12 @@ function animate() {
     if (camera.position.distanceTo(flyTarget.pos) < 0.2) flyTarget = null;
   }
   controls.update();
-  if (composer) composer.render(); else renderer.render(scene, camera);
+  composer.render();
 }
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight); if (composer) composer.setSize(innerWidth, innerHeight);
+  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -554,7 +562,20 @@ window.__CAPABILITY_MESH__ = {
   data: DATA,
 };
 console.log(`æ:// capability mesh — ${DATA.skills.length} skills · ${DATA.nodes.length} nodes`);
-})();
 </script>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/capability-mesh.html&color=D4AF37&bgcolor=050505" 
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>

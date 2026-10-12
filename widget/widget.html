@@ -43,11 +43,11 @@
   </div>
 </div>
 
-<script src="../site/vendor/three.global.js"></script>
+<script src="./vendor/three.global.js"></script>
 <script>
-/* ── widget runtime: verify hash → instantiate WASM → drive Three.js ── */
-const MANIFEST_URL = '../widget/manifest.json';
-const WASM_URL     = '../widget/dist/widget_compute.wasm';
+/* ── widget runtime: verify signature → hash → instantiate WASM → drive Three.js ── */
+const MANIFEST_URL = './manifest.json';
+const WASM_URL     = './dist/widget_compute.wasm';
 const EXPECTED_HASH = '00d5500a58f66441d0318181da9061f9d36538e0c86c296960be3fd158bb7f2f';
 
 const statusEl = document.getElementById('wstatus');
@@ -60,9 +60,64 @@ async function sha256hex(buf){
   return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+/* Ed25519 signature verification using WebCrypto (no external deps). */
+async function verifyEd25519(pubkeyHex, message, signatureHex) {
+  try {
+    const pubkeyBytes = new Uint8Array(pubkeyHex.match(/.{2}/g).map(b=>parseInt(b,16)));
+    const sigBytes = new Uint8Array(signatureHex.match(/.{2}/g).map(b=>parseInt(b,16)));
+    const key = await crypto.subtle.importKey(
+      'raw', pubkeyBytes, { name: 'Ed25519' }, false, ['verify']
+    );
+    return await crypto.subtle.verify('Ed25519', key, sigBytes, new TextEncoder().encode(message));
+  } catch(e) {
+    return false;
+  }
+}
+
 let waveFn=null, t=0;
 
 async function boot(){
+  // 0) fetch the manifest and verify the publisher's Ed25519 signature
+  const manResp = await fetch(MANIFEST_URL);
+  const man = await manResp.json();
+  const trust = man.trust || {};
+  const pubkeyHex = trust.publisher_pubkey || '';
+  const sigHex = trust.signature || '';
+
+  if (!pubkeyHex || !sigHex) {
+    statusEl.textContent = 'REJECTED — no publisher signature';
+    statusEl.className = 'bad';
+    return;
+  }
+
+  // Reconstruct the signed message: everything except trust.signature
+  // Must match Python's json.dumps(sort_keys=True) — recursive key sort
+  function deepSort(obj) {
+    if (Array.isArray(obj)) return obj.map(deepSort);
+    if (obj && typeof obj === 'object') {
+      const sorted = {};
+      for (const k of Object.keys(obj).sort()) sorted[k] = deepSort(obj[k]);
+      return sorted;
+    }
+    return obj;
+  }
+  const signable = {};
+  for (const [k,v] of Object.entries(man)) {
+    if (k !== 'trust') signable[k] = v;
+  }
+  signable.trust = {};
+  for (const [k,v] of Object.entries(trust)) {
+    if (k !== 'signature') signable.trust[k] = v;
+  }
+  const msg = JSON.stringify(deepSort(signable));
+
+  const sigOk = await verifyEd25519(pubkeyHex, msg, sigHex);
+  if (!sigOk) {
+    statusEl.textContent = 'REJECTED — signature invalid';
+    statusEl.className = 'bad';
+    return;
+  }
+
   // 1) fetch the WASM, hash it, verify against the manifest's declared hash
   const resp = await fetch(WASM_URL);
   const bytes = await resp.arrayBuffer();
@@ -155,5 +210,18 @@ window.__renderFrame = function(i, total){
 
 boot().catch(e => { statusEl.textContent = 'ERR ' + e.message; statusEl.className='bad'; });
 </script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/widget/widget.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>

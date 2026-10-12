@@ -89,7 +89,11 @@
         "verification-gates.json",
         "genesis-chain.json"
       ],
-      "description": "Shared system memory — every agent reads this before acting"
+      "description": "Shared system memory — every agent reads this before acting",
+      "agent_name": "kænbæn_vault",
+      "agent_role": "the væult chain — read before building anything",
+      "operator": "Yæl Méndez",
+      "commitments": "every agent signs the pledge; the gate refuses the unpledged"
     },
     "github_pages": {
       "url": "https://myaelmendez.github.io",
@@ -148,6 +152,18 @@
     },
     "test-surface": {
       "status": null
+    },
+    "vaeult-chain": {
+      "kind": "tool-chain",
+      "entry": "væult://chain",
+      "cli": "python C:/æ/agents/væult_chain.py",
+      "links": 9,
+      "flow": "custody → format → gate → authority → contract → dispatch → publish → delivery",
+      "manifest": "https://myaelmendez.github.io/vaeult-chain.json",
+      "verify": "python C:/æ/agents/væult_chain.py verify",
+      "agents_rule": "read this before building anything; most tasks are already a link",
+      "pledge_gate": "python C:/æ/agents/agent_pledge.py require --agent <id>",
+      "push_rule": "python C:/æ/agents/kanban_push.py push --task <t>"
     }
   },
   "known_debts": [

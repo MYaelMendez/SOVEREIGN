@@ -59,7 +59,7 @@
       ]
     },
     "conductor": {
-      "path": "C:/æ/agents/conductor.py",
+      "path": "C:/æ/hermes-fork/hermes_cli/conductor.py",
       "can": [
         "route æ:// schemes",
         "dispatch to agents",
@@ -78,7 +78,38 @@
       ],
       "cannot": [],
       "registered_at": "2026-10-09T12:14:36",
-      "status": "active"
+      "status": "scratch",
+      "note": "test fixture, not a fleet agent"
+    },
+    "kænbæn_vault": {
+      "path": "C:/æ/agents/væult_chain.py",
+      "can": [
+        "read the whole tool chain",
+        "verify every link compiles and answers",
+        "call any link through one entry",
+        "report which link is broken",
+        "read the whole væult tool chain",
+        "check that every agent is taught the chain",
+        "custody: seal and open vault entries",
+        "gate: produce-and-verify QR artifacts",
+        "contract: verify agent pledges"
+      ],
+      "cannot": [
+        "bypass a link's own gate",
+        "modify secrets",
+        "push without claiming a task",
+        "speak for the human"
+      ],
+      "registered_at": "2026-10-10T18:09:26",
+      "status": "active",
+      "also": [
+        "C:/æ/agents/teach_check.py",
+        "C:/æ/agents/agent_pledge.py"
+      ],
+      "role": "the chain — reads it, verifies it, and keeps every agent taught it",
+      "aliases": [
+        "vaeult_chain"
+      ]
     }
   },
   "constraints": {

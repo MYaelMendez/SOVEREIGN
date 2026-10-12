@@ -1,6 +1,6 @@
 // MÆCH Language Interpreter v1.0
 // Territorial Reactive Tabular Programming System
-// Replaces React with native MÆCH execution
+// Spec/grammar renderer — not a React replacement, not a Mech runtime
 
 class MechInterpreter {
     constructor() {

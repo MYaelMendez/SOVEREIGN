@@ -92,9 +92,19 @@ canvas{display:block;width:100%!important;height:100%!important}
   </div>
 </div>
 
-<script src="./vendor/three.global.js"></script>
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.webgpu.js",
+    "three/tsl":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.tsl.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 
-<script>
+<script type="module">
+import * as THREE from "three/webgpu";
 
 /* ══════════════════════════════════════════════════════════════════════
    keeper — avatar
@@ -136,22 +146,23 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 const $ = id => document.getElementById(id);
 
 /* ── capability probe — report what we actually are, never assume ── */
-const gpuOK = !!window.WebGLRenderingContext;
+const gpuOK = !!navigator.gpu;
 
 let renderer, scene, camera;
 let nodeObjs = [], edgeObjs = [], seal, haloA, haloB, stars;
 let t0 = 0, sweep = 0;
 
-function init(){
-  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+async function init(){
+  renderer = new THREE.WebGPURenderer({ antialias:true, alpha:false });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(0x050505);
   $("stage").appendChild(renderer.domElement);
+  await renderer.init();
 
   $("gpu").textContent = gpuOK
-    ? "GPU://WEBGL · the seal is drawn by the machine"
-    : "GPU://NO WEBGL · 2D fallback (honest, not faked)";
+    ? "GPU://WEBGPU · the seal is drawn by the machine"
+    : "GPU://NO WEBGPU · 2D fallback (honest, not faked)";
 
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x050505, 0.030);
@@ -172,7 +183,7 @@ function init(){
   setState();
 
   addEventListener("resize", onResize);
-  requestAnimationFrame(animate);
+  renderer.setAnimationLoop(animate);
 }
 
 /* ── the seal: a ring that is incomplete. the ward shows its own limit. ── */
@@ -408,8 +419,8 @@ function animate(){
   camera.position.y = 3.4 + Math.sin(t*.17)*1.1;
   camera.position.z = 20 + Math.cos(t*.09)*1.6;
   camera.lookAt(0, 0, 0);
+
   renderer.render(scene, camera);
-  requestAnimationFrame(animate);
 }
 
 function onResize(){
@@ -419,12 +430,24 @@ function onResize(){
   renderer.setSize(innerWidth, innerHeight);
 }
 
-try {
-  init();
-} catch(err) {
+init().catch(err => {
   $("gpu").textContent = "GPU://ERROR " + (err.message || err);
   console.error(err);
-}
+});
 </script>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/keeper.html&color=D4AF37&bgcolor=050505" 
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
 </body>
 </html>
