@@ -1,0 +1,18 @@
+{
+  "spec": "fase20-hauge",
+  "scene": "fase20-hauge.html",
+  "mp4": "https://myaelmendez.github.io/aipodcast_me/fase20-hauge.mp4",
+  "gate": "PASS",
+  "gate_details": {
+    "luminance": 27.93,
+    "contrast": 26.58,
+    "motion": 5.093,
+    "negros": 0
+  },
+  "gate_cmd": "C:/gpu/Scripts/python.exe C:/æ/vidæo/vidæo.py verify C:/æ/studio/output/fase20-hauge.mp4",
+  "receipt": "ebc1958ce7a7f953af0409d8308a97ddfd0c4e8f6262aaa5f42f7ec7f9bb8d7e",
+  "sha256": "47a169a817b90828",
+  "commit": "60b738a video: fase20-hauge.mp4 + html — HANS NIELSEN HAUGE · LALI (gate PASS lum 27.93 con 26.58 mov 5.093 negros 0)",
+  "spec": "studio/specs/spec-fase20.json",
+  "url": "https://myaelmendez.github.io/aipodcast_me/fase20-hauge.html"
+}

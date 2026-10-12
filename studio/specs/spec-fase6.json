@@ -1,0 +1,9 @@
+{
+  "title": "æ:// fase6-shaders — Advanced Shaders",
+  "text": "Semana 6 · Ray Marching · Volumetric · GPU Particles · Tessellation · Compute",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase6-shaders.html"
+}

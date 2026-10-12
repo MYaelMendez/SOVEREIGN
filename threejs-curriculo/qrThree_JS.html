@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>qrThree_JS — QR Codes in Three.js</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;overflow:hidden}
+canvas{display:block}
+</style>
+</head>
+<body>
+<script src="./vendor/qrcode.js"></script>
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ── QR Code Data ──
+const qrData = [
+  {text: 'ae://receipt/1e6e19b8', label: 'VIDEO RECEIPT', color: '#D4AF37'},
+  {text: 'ae://receipt/84c858d5', label: 'QR BADGE', color: '#00FF9D'},
+  {text: 'ae://receipt/baf6764e', label: 'GLOCAL VISION', color: '#00EAFF'},
+  {text: 'ae://receipt/f07e1d5f', label: 'CHAIN LINK', color: '#FF6B6B'},
+  {text: 'ae://receipt/528973f2', label: 'GENESIS', color: '#FFD700'},
+  {text: 'ae://receipt/237dd01', label: 'COMMIT', color: '#FF9F43'},
+];
+
+// ── Generate QR codes as textures ──
+const qrTextures = [];
+for (const qr of qrData) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  QRCode.toCanvas(canvas, qr.text, {
+    width: 256,
+    margin: 2,
+    color: { dark: qr.color, light: '#050505' }
+  });
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  qrTextures.push({ texture, label: qr.label, color: qr.color });
+}
+
+// ── Scene setup ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(60, 720 / 1280, 0.1, 100);
+camera.position.set(0, 0, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(720, 1280);
+renderer.setPixelRatio(1);
+document.body.appendChild(renderer.domElement);
+
+// ── Lights ──
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambient);
+const point = new THREE.PointLight(0xD4AF37, 1.5, 30);
+point.position.set(5, 5, 8);
+scene.add(point);
+const point2 = new THREE.PointLight(0x00EAFF, 0.8, 25);
+point2.position.set(-6, -3, 5);
+scene.add(point2);
+
+// ── QR Code planes ──
+const planes = [];
+const cols = 3;
+const rows = 2;
+const spacingX = 2.8;
+const spacingY = 3.5;
+
+for (let i = 0; i < qrTextures.length; i++) {
+  const col = i % cols;
+  const row = Math.floor(i / cols);
+  const x = (col - (cols - 1) / 2) * spacingX;
+  const y = ((rows - 1) / 2 - row) * spacingY;
+
+  // QR code plane
+  const geo = new THREE.PlaneGeometry(2, 2);
+  const mat = new THREE.MeshBasicMaterial({
+    map: qrTextures[i].texture,
+    transparent: true,
+    opacity: 0.95,
+    side: THREE.DoubleSide
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, 0);
+  mesh.userData = { baseY: y, phase: i * 0.5, label: qrTextures[i].label };
+  scene.add(mesh);
+  planes.push(mesh);
+
+  // Glow ring behind QR
+  const ringGeo = new THREE.RingGeometry(1.1, 1.2, 32);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(qrTextures[i].color),
+    transparent: true,
+    opacity: 0.3,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.set(x, y, -0.1);
+  ring.userData = { baseY: y, phase: i * 0.5 };
+  scene.add(ring);
+  planes.push(ring);
+}
+
+// ── Central title ──
+const titleCanvas = document.createElement('canvas');
+titleCanvas.width = 512;
+titleCanvas.height = 128;
+const tctx = titleCanvas.getContext('2d');
+tctx.fillStyle = '#050505';
+tctx.fillRect(0, 0, 512, 128);
+tctx.font = 'bold 48px monospace';
+tctx.fillStyle = '#D4AF37';
+tctx.textAlign = 'center';
+tctx.fillText('QR = THE CHIP', 256, 60);
+tctx.font = '24px monospace';
+tctx.fillStyle = '#00FF9D';
+tctx.fillText('silicon ∩ information', 256, 100);
+const titleTexture = new THREE.CanvasTexture(titleCanvas);
+const titleGeo = new THREE.PlaneGeometry(4, 1);
+const titleMat = new THREE.MeshBasicMaterial({ map: titleTexture, transparent: true, side: THREE.DoubleSide });
+const titleMesh = new THREE.Mesh(titleGeo, titleMat);
+titleMesh.position.set(0, 3.2, 0);
+scene.add(titleMesh);
+
+// ── Neural mesh background ──
+const bgGeo = new THREE.BufferGeometry();
+const bgCount = 80;
+const bgPositions = new Float32Array(bgCount * 3);
+for (let i = 0; i < bgCount; i++) {
+  bgPositions[i * 3] = (Math.random() - 0.5) * 16;
+  bgPositions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+  bgPositions[i * 3 + 2] = (Math.random() - 0.5) * 6 - 2;
+}
+bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+const bgMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.05, transparent: true, opacity: 0.4 });
+const bgPoints = new THREE.Points(bgGeo, bgMat);
+scene.add(bgPoints);
+
+// ── Animation state ──
+let time = 0;
+
+// ── Deterministic render hook ──
+window.__renderFrame = function(i, total) {
+  time = (i / Math.max(1, total - 1)) * Math.PI * 2;
+
+  // Animate QR planes
+  for (const p of planes) {
+    if (p.userData.baseY !== undefined) {
+      p.position.y = p.userData.baseY + Math.sin(time + p.userData.phase) * 0.15;
+    }
+    if (p.geometry && p.geometry.type === 'RingGeometry') {
+      p.rotation.z = time * 0.5 + p.userData.phase;
+    }
+  }
+
+  // Animate background
+  bgPoints.rotation.y = time * 0.05;
+
+  // Camera drift
+  camera.position.x = Math.sin(time * 0.3) * 0.3;
+  camera.position.y = Math.cos(time * 0.2) * 0.2;
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+};
+
+// Initial render
+window.__renderFrame(0, 100);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/qrThree_JS.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

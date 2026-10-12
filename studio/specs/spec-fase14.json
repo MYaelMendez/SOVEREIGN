@@ -1,0 +1,9 @@
+{
+  "title": "æ:// fase14-xmlsvg — XML/SVG → Dataflow Geometry",
+  "text": "Semana 14 · XML/SVG parsing · dataflow · 3D geometry",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase14-xmlsvg-dataflow.html"
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR = Simulated Chip — Three.js Proof</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; font-family: 'JetBrains Mono', 'Consolas', monospace; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px;
+    background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, transparent 100%);
+    color: #D4AF37; pointer-events: none; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #hud h1 { font-size: 14px; letter-spacing: 4px; text-transform: uppercase; }
+  #hud .stats { font-size: 10px; color: rgba(212,175,55,0.5); }
+  #proof-panel {
+    position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 24px;
+    background: linear-gradient(0deg, rgba(5,5,5,0.95) 0%, transparent 100%);
+    color: #D4AF37; z-index: 10; display: flex; gap: 16px; align-items: center;
+    font-size: 11px;
+  }
+  .proof-step {
+    padding: 6px 12px; border: 1px solid rgba(212,175,55,0.2); border-radius: 3px;
+    color: rgba(240,236,228,0.5); transition: all 0.3s;
+  }
+  .proof-step.active { border-color: #D4AF37; color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .proof-step.done { border-color: #00ff9d; color: #00ff9d; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px);
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>QR = Simulated Chip — Proof</h1>
+  <div class="stats" id="stats">FPS: 0 | Phase: 0/6</div>
+</div>
+<div class="scanlines"></div>
+<div id="proof-panel">
+  <div class="proof-step" data-phase="0">1. SPEC</div>
+  <div class="proof-step" data-phase="1">2. RTL</div>
+  <div class="proof-step" data-phase="2">3. SIM</div>
+  <div class="proof-step" data-phase="3">4. GDS</div>
+  <div class="proof-step" data-phase="4">5. QR Encode</div>
+  <div class="proof-step" data-phase="5">6. QR = Chip</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ═══════════════════════════════════════════════════════════
+// SCENE
+// ═══════════════════════════════════════════════════════════
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.015);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 3, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+
+scene.add(new THREE.AmbientLight(0x404040, 0.5));
+
+const goldLight = new THREE.PointLight(0xD4AF37, 3, 30);
+goldLight.position.set(0, 5, 5);
+scene.add(goldLight);
+
+const cyanLight = new THREE.PointLight(0x00eaff, 2, 20);
+cyanLight.position.set(-5, 3, -5);
+scene.add(cyanLight);
+
+// ═══════════════════════════════════════════════════════════
+// CHIP GROUP — the QR as simulated chip
+// ═══════════════════════════════════════════════════════════
+
+const chipGroup = new THREE.Group();
+scene.add(chipGroup);
+
+// Chip substrate (silicon die)
+const substrateGeo = new THREE.BoxGeometry(2, 0.1, 2);
+const substrateMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1a2e,
+  metalness: 0.9,
+  roughness: 0.3,
+});
+const substrate = new THREE.Mesh(substrateGeo, substrateMat);
+chipGroup.add(substrate);
+
+// QR code on top of chip (the simulated chip identity)
+const qrGroup = new THREE.Group();
+qrGroup.position.y = 0.06;
+chipGroup.add(qrGroup);
+
+// Generate QR pattern as 3D blocks
+const qrSize = 21; // QR version 2 = 21x21 modules
+const moduleSize = 0.08;
+const qrModules = [];
+
+// Simple QR-like pattern (finder patterns + data)
+function isQRModule(row, col) {
+  // Finder patterns (3 corners)
+  if (row < 7 && col < 7) return (row === 0 || row === 6 || col === 0 || col === 6 || (row >= 2 && row <= 4 && col >= 2 && col <= 4));
+  if (row < 7 && col >= qrSize - 7) return (row === 0 || row === 6 || col === qrSize - 1 || col === qrSize - 7 || (row >= 2 && row <= 4 && col >= qrSize - 5 && col <= qrSize - 3));
+  if (row >= qrSize - 7 && col < 7) return (row === qrSize - 1 || row === qrSize - 7 || col === 0 || col === 6 || (row >= qrSize - 5 && row <= qrSize - 3 && col >= 2 && col <= 4));
+  // Data modules (pseudo-random)
+  return ((row * 7 + col * 13 + row * col) % 3) === 0;
+}
+
+const moduleGeo = new THREE.BoxGeometry(moduleSize * 0.9, 0.02, moduleSize * 0.9);
+const moduleMat = new THREE.MeshStandardMaterial({
+  color: 0xD4AF37,
+  emissive: 0xD4AF37,
+  emissiveIntensity: 0.3,
+  metalness: 0.8,
+  roughness: 0.2,
+});
+
+for (let row = 0; row < qrSize; row++) {
+  for (let col = 0; col < qrSize; col++) {
+    if (isQRModule(row, col)) {
+      const module = new THREE.Mesh(moduleGeo, moduleMat);
+      module.position.set(
+        (col - qrSize / 2) * moduleSize,
+        0,
+        (row - qrSize / 2) * moduleSize
+      );
+      qrGroup.add(module);
+      qrModules.push(module);
+    }
+  }
+}
+
+// Chip pins (connections to physical world)
+const pinGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8);
+const pinMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.95, roughness: 0.1 });
+
+for (let i = 0; i < 8; i++) {
+  const angle = (i / 8) * Math.PI * 2;
+  const pin = new THREE.Mesh(pinGeo, pinMat);
+  pin.position.set(Math.cos(angle) * 1.2, -0.15, Math.sin(angle) * 1.2);
+  chipGroup.add(pin);
+}
+
+// ═══════════════════════════════════════════════════════════
+// DIGITAL TWIN — floating data above chip
+// ═══════════════════════════════════════════════════════════
+
+const digitalGroup = new THREE.Group();
+digitalGroup.position.y = 2;
+scene.add(digitalGroup);
+
+// Data particles representing chip information
+const particleCount = 500;
+const particleGeo = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleColors = new Float32Array(particleCount * 3);
+
+for (let i = 0; i < particleCount; i++) {
+  particlePositions[i * 3] = (Math.random() - 0.5) * 3;
+  particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 2;
+  particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+  
+  const color = new THREE.Color();
+  color.setHSL(0.5 + Math.random() * 0.2, 0.8, 0.5);
+  particleColors[i * 3] = color.r;
+  particleColors[i * 3 + 1] = color.g;
+  particleColors[i * 3 + 2] = color.b;
+}
+
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  size: 0.03,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.7,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+
+const digitalParticles = new THREE.Points(particleGeo, particleMat);
+digitalGroup.add(digitalParticles);
+
+// Connection lines between chip and digital twin
+const lineGeo = new THREE.BufferGeometry();
+const linePositions = new Float32Array(6 * 2 * 3);
+const lineCount = 6;
+
+for (let i = 0; i < lineCount; i++) {
+  const x = (Math.random() - 0.5) * 1.5;
+  const z = (Math.random() - 0.5) * 1.5;
+  linePositions[i * 6] = x;
+  linePositions[i * 6 + 1] = 0.1;
+  linePositions[i * 6 + 2] = z;
+  linePositions[i * 6 + 3] = x * 1.5;
+  linePositions[i * 6 + 4] = 2;
+  linePositions[i * 6 + 5] = z * 1.5;
+}
+
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+const lineMat = new THREE.LineBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.3 });
+const connectionLines = new THREE.LineSegments(lineGeo, lineMat);
+scene.add(connectionLines);
+
+// ═══════════════════════════════════════════════════════════
+// AEE CYCLE RING
+// ═══════════════════════════════════════════════════════════
+
+const cycleGroup = new THREE.Group();
+cycleGroup.position.y = -1.5;
+scene.add(cycleGroup);
+
+const phases = ['SPEC', 'RTL', 'SIM', 'SYNTH', 'P&R', 'GDS', 'FAB', 'TEST'];
+const phaseMeshes = [];
+
+phases.forEach((phase, i) => {
+  const angle = (i / phases.length) * Math.PI * 2;
+  const radius = 3;
+  
+  const geo = new THREE.SphereGeometry(0.15, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37,
+    emissive: 0xD4AF37,
+    emissiveIntensity: 0.3,
+    metalness: 0.8,
+    roughness: 0.2,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  cycleGroup.add(mesh);
+  phaseMeshes.push(mesh);
+});
+
+// Ring connecting phases
+const ringGeo = new THREE.TorusGeometry(3, 0.02, 8, 64);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.2 });
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = Math.PI / 2;
+cycleGroup.add(ring);
+
+// ═══════════════════════════════════════════════════════════
+// POST-PROCESSING
+// ═══════════════════════════════════════════════════════════
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.3, 0.85));
+composer.addPass(new OutputPass());
+
+// ═══════════════════════════════════════════════════════════
+// ANIMATION — 6 phases proving QR = Simulated Chip
+// ═══════════════════════════════════════════════════════════
+
+const clock = new THREE.Clock();
+let frame = 0;
+let currentPhase = 0;
+const phaseDuration = 3; // seconds per phase
+let phaseTime = 0;
+
+const proofSteps = document.querySelectorAll('.proof-step');
+
+function setPhase(phase) {
+  currentPhase = phase;
+  proofSteps.forEach((step, i) => {
+    step.classList.remove('active', 'done');
+    if (i < phase) step.classList.add('done');
+    if (i === phase) step.classList.add('active');
+  });
+  document.getElementById('stats').textContent = 
+    `FPS: ${Math.round(1 / clock.getDelta())} | Phase: ${phase + 1}/6`;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  frame++;
+  phaseTime += clock.getDelta();
+
+  // Phase progression
+  if (phaseTime > phaseDuration) {
+    phaseTime = 0;
+    setPhase((currentPhase + 1) % 6);
+  }
+
+  // Phase 0: SPEC — chip is dark, waiting
+  if (currentPhase === 0) {
+    substrateMat.emissiveIntensity = 0;
+    moduleMat.emissiveIntensity = 0;
+  }
+  
+  // Phase 1: RTL — modules start glowing
+  if (currentPhase === 1) {
+    moduleMat.emissiveIntensity = 0.1 + (phaseTime / phaseDuration) * 0.3;
+  }
+  
+  // Phase 2: SIM — modules pulse
+  if (currentPhase === 2) {
+    moduleMat.emissiveIntensity = 0.3 + Math.sin(t * 5) * 0.2;
+    qrGroup.rotation.y = t * 0.5;
+  }
+  
+  // Phase 3: GDS — QR pattern locks in
+  if (currentPhase === 3) {
+    moduleMat.emissiveIntensity = 0.5;
+    qrGroup.rotation.y = 0;
+    qrModules.forEach((m, i) => {
+      m.material.emissiveIntensity = 0.3 + Math.sin(t * 3 + i * 0.1) * 0.2;
+    });
+  }
+  
+  // Phase 4: QR Encode — connection lines appear
+  if (currentPhase === 4) {
+    lineMat.opacity = 0.3 + (phaseTime / phaseDuration) * 0.5;
+    digitalParticles.rotation.y = t * 0.2;
+  }
+  
+  // Phase 5: QR = Chip — full proof
+  if (currentPhase === 5) {
+    moduleMat.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
+    lineMat.opacity = 0.8;
+    digitalParticles.rotation.y = t * 0.5;
+    chipGroup.position.y = Math.sin(t) * 0.1;
+    digitalGroup.position.y = 2 + Math.sin(t) * 0.2;
+  }
+
+  // Cycle ring rotation
+  cycleGroup.rotation.y = t * 0.1;
+  
+  // Highlight current phase
+  phaseMeshes.forEach((mesh, i) => {
+    mesh.material.emissiveIntensity = i === currentPhase ? 0.8 : 0.2;
+    mesh.scale.setScalar(i === currentPhase ? 1.3 : 1);
+  });
+
+  if (frame % 10 === 0) {
+    const fps = Math.round(1 / clock.getDelta());
+    document.getElementById('stats').textContent = 
+      `FPS: ${fps} | Phase: ${currentPhase + 1}/6 | ${['SPEC','RTL','SIM','GDS','QR Encode','QR = Chip'][currentPhase]}`;
+  }
+
+  controls.update();
+  composer.render();
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+
+window.__PROOF__ = { ready: true, phases: 6, qrModules: qrModules.length, revision: '186' };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/qr-chip-proof.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

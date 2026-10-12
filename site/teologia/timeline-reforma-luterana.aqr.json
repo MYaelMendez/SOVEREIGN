@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/timeline-reforma-luterana",
+  "region": "es-LATAM",
+  "sha256": "aa6654e9f5dccd17a5f57ac8d0b5e2ac6899095f64972bf887a9febea6103c9a",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-11T03:53:40Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/timeline-reforma-luterana|es-LATAM|sha256:aa6654e9f5dccd17a5f57ac8d0b5e2ac6899095f64972bf887a9febea6103c9a|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-timeline.svg",
+  "html": "C:\\æ\\site\\teologia\\timeline-reforma-luterana.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

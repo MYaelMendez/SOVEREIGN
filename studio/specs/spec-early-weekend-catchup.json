@@ -1,0 +1,10 @@
+{
+  "title": "Early Weekend Catch-Up Report",
+  "text_lines": ["S&P 500 +0.85%", "NASDAQ +1.23%", "DOW +0.42%"],
+  "description": "Weekly market summary of major indexes — equities, commodities, crypto, and bonds.",
+  "duration": 8,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "early-weekend-catchup.html"
+}

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+        background: #050505; color: #D4AF37;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+      }
+      #root {
+        width: 100%; height: 100%; position: relative; overflow: hidden;
+        background:
+          radial-gradient(ellipse at 50% 50%, rgba(212,175,55,0.08) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(212,175,55,0.03) 2px, rgba(212,175,55,0.03) 4px);
+      }
+      .scanlines {
+        position: absolute; inset: 0; pointer-events: none; z-index: 100;
+        background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
+      }
+      .scene-content {
+        display: flex; flex-direction: column; justify-content: center;
+        width: 100%; height: 100%; padding: 80px 120px; gap: 40px;
+      }
+      .title {
+        font-size: 96px; font-weight: 700; letter-spacing: -0.02em;
+        color: #D4AF37; text-shadow: 0 0 40px rgba(212,175,55,0.4);
+      }
+      .subtitle {
+        font-size: 36px; color: rgba(212,175,55,0.7); font-weight: 400;
+        letter-spacing: 0.05em;
+      }
+      .metrics { display: flex; gap: 60px; margin-top: 20px; }
+      .metric { display: flex; flex-direction: column; gap: 8px; }
+      .metric-label {
+        font-size: 18px; color: rgba(212,175,55,0.5); text-transform: uppercase;
+        letter-spacing: 0.15em;
+      }
+      .metric-value {
+        font-size: 48px; font-weight: 700; color: #D4AF37;
+        text-shadow: 0 0 20px rgba(212,175,55,0.3);
+      }
+      .metric-unit { font-size: 24px; color: rgba(212,175,55,0.6); }
+      .wireup { display: flex; align-items: center; gap: 40px; margin-top: 40px; }
+      .node {
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
+        padding: 24px 32px; border: 1px solid rgba(212,175,55,0.3);
+        border-radius: 8px; background: rgba(212,175,55,0.05);
+      }
+      .node-label { font-size: 20px; color: #D4AF37; font-weight: 600; }
+      .node-sub { font-size: 14px; color: rgba(212,175,55,0.5); }
+      .arrow { font-size: 32px; color: rgba(212,175,55,0.4); }
+      .footer {
+        position: absolute; bottom: 40px; left: 120px; right: 120px;
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 16px; color: rgba(212,175,55,0.4);
+      }
+      .pulse { animation: pulse 2s ease-in-out infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-9hlr" id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-8pzc" class="scanlines"></div>
+      <div data-hf-id="hf-cn5c" class="scene-content">
+        <h1 data-hf-id="hf-es5v" id="title" class="clip" data-start="0" data-duration="12" data-track-index="0">CUDA_MCP²</h1>
+        <p data-hf-id="hf-o89d" id="subtitle" class="clip" data-start="0.5" data-duration="11" data-track-index="1">Sovereign Compute Mesh — Live from Victus RTX 3050</p>
+        <div data-hf-id="hf-0lxk" id="metrics" class="metrics clip" data-start="1" data-duration="10" data-track-index="2">
+          <div data-hf-id="hf-dq4c" class="metric">
+            <span data-hf-id="hf-3rvo" class="metric-label">Brain</span>
+            <span data-hf-id="hf-ok6c" class="metric-value">{{brain_tok_s}} <span data-hf-id="hf-z89w" class="metric-unit">tok/s</span></span>
+          </div>
+          <div data-hf-id="hf-q6lw" class="metric">
+            <span data-hf-id="hf-blg4" class="metric-label">Matmul</span>
+            <span data-hf-id="hf-vz1d" class="metric-value">{{matmul_host_ms}} <span data-hf-id="hf-ilnk" class="metric-unit">ms</span></span>
+          </div>
+          <div data-hf-id="hf-ozot" class="metric">
+            <span data-hf-id="hf-sk86" class="metric-label">GPU</span>
+            <span data-hf-id="hf-cg29" class="metric-value">{{gpu_name}} <span data-hf-id="hf-6re3" class="metric-unit">{{gpu_mem}}</span></span>
+          </div>
+        </div>
+        <div data-hf-id="hf-49f4" id="wireup" class="wireup clip" data-start="1.5" data-duration="9" data-track-index="3">
+          <div data-hf-id="hf-cdek" class="node">
+            <span data-hf-id="hf-gb5a" class="node-label">Droplet</span>
+            <span data-hf-id="hf-q55k" class="node-sub">129.212.180.252:3000</span>
+          </div>
+          <span data-hf-id="hf-v68i" class="arrow">→</span>
+          <div data-hf-id="hf-7gt0" class="node">
+            <span data-hf-id="hf-32rq" class="node-label">Tunnel</span>
+            <span data-hf-id="hf-g58k" class="node-sub">SSH Reverse</span>
+          </div>
+          <span data-hf-id="hf-f1jq" class="arrow">→</span>
+          <div data-hf-id="hf-dywf" class="node pulse">
+            <span data-hf-id="hf-0eyq" class="node-label">Victus</span>
+            <span data-hf-id="hf-bf1n" class="node-sub">RTX 3050 6GB</span>
+          </div>
+        </div>
+      </div>
+      <div data-hf-id="hf-fu0t" id="footer" class="footer clip" data-start="0" data-duration="12" data-track-index="4">
+        <span data-hf-id="hf-63ew">æ:// language is compute</span>
+        <span data-hf-id="hf-r7kx">#hermiphicationisinevitable</span>
+      </div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#title", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0);
+      tl.fromTo("#subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.5);
+      tl.fromTo("#metrics", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1);
+      tl.fromTo("#wireup", { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }, 1.5);
+      tl.fromTo(".footer", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  <!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/videolab/scenes/cuda-mcp2.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

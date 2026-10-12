@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/augsburgo",
+  "region": "es-LATAM",
+  "sha256": "a8e1cfbbbd7146c71ca75fd50d9fcc508ca6c466cadf82800b518eda2308b358",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-12T20:22:13Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/augsburgo|es-LATAM|sha256:a8e1cfbbbd7146c71ca75fd50d9fcc508ca6c466cadf82800b518eda2308b358|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-augsburgo.svg",
+  "html": "C:\\æ\\site\\teologia\\confesion-de-augsburgo.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

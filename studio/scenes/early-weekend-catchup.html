@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080">
+<title>Early Weekend Catch-Up Report</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#050505;color:#D4AF37;font-family:'JetBrains Mono','Consolas',monospace}
+  #root{position:relative;width:100%;height:100%}
+  .scanlines{position:absolute;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.20) 3px,rgba(0,0,0,.20) 4px)}
+</style>
+</head>
+<body>
+<div id="root" data-width="1920" data-height="1080">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="scanlines"></div>
+</div>
+<script>
+(function(){
+  var P=new URLSearchParams(location.search);
+  var TITLE=P.get('title')||'Early Weekend Catch-Up Report';
+  var TEXT=P.get('text')||'market summary';
+  var LINES=TEXT.split('|').map(function(s){return s.trim()}).filter(Boolean);
+
+  var canv=document.getElementById('c');
+  var ctx=canv.getContext('2d');
+  var W=1920,H=1080,GOLD='#D4AF37',CYAN='#00eaff',GREEN='#00eaa0',RED='#ff5050';
+
+  function hexA(h,a){h=h.replace('#','');return'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'}
+
+  var indices=[
+    {name:'S&P 500',val:5872.34,chg:+0.85,pct:'+0.85%',color:GREEN},
+    {name:'NASDAQ',val:18945.67,chg:+1.23,pct:'+1.23%',color:GREEN},
+    {name:'DOW',val:43210.56,chg:+0.42,pct:'+0.42%',color:GREEN},
+    {name:'RUSSELL 2000',val:2134.78,chg:-0.15,pct:'-0.15%',color:RED},
+    {name:'VIX',val:14.23,chg:-2.10,pct:'-2.10%',color:GREEN},
+    {name:'10Y TREASURY',val:4.28,chg:+0.03,pct:'+0.03%',color:RED},
+    {name:'GOLD',val:2654.30,chg:+0.67,pct:'+0.67%',color:GREEN},
+    {name:'OIL WTI',val:78.45,chg:-1.20,pct:'-1.20%',color:RED},
+    {name:'BTC/USD',val:97234.00,chg:+2.15,pct:'+2.15%',color:GREEN},
+    {name:'EUR/USD',val:1.0845,chg:-0.0012,pct:'-0.11%',color:RED}
+  ];
+
+  function drawBar(x,y,w,h,pct,color,label,val,chg){
+    ctx.fillStyle='rgba(212,175,55,0.08)';
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle=color;
+    ctx.fillRect(x,y,w*pct,h);
+    ctx.fillStyle=hexA(GOLD,0.7);
+    ctx.font='12px "JetBrains Mono",monospace';
+    ctx.textAlign='left';
+    ctx.fillText(label,x,y-6);
+    ctx.textAlign='right';
+    ctx.fillStyle=hexA(color,0.9);
+    ctx.font='700 14px "JetBrains Mono",monospace';
+    ctx.fillText(val,x+w,y-6);
+    ctx.font='400 11px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(chg.startsWith('+')?GREEN:RED,0.8);
+    ctx.fillText(chg,x+w,y+h+14);
+  }
+
+  function render(p){
+    p=Math.max(0,Math.min(1,p));
+    var g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#141c2e');g.addColorStop(0.5,'#161b2a');g.addColorStop(1,'#121722');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+    var aura=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,900);
+    aura.addColorStop(0,hexA(GOLD,0.06));aura.addColorStop(1,hexA(GOLD,0));
+    ctx.fillStyle=aura;ctx.fillRect(0,0,W,H);
+
+    for(var i=0;i<120;i++){
+      var x=(i*137.508+p*60)%W,y=(i*97.31+p*40)%H;
+      var tw=0.5+0.5*Math.sin(p*Math.PI*2+i);
+      ctx.fillStyle=hexA(GOLD,0.12*tw);
+      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+    }
+
+    ctx.font='700 36px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.9);ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillText(TITLE,W/2,55);
+    ctx.font='400 14px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.4);
+    ctx.fillText('major indexes · weekly summary · sovereign data',W/2,80);
+
+    // Left panel: indices
+    var p1x=40,p1y=110,p1w=880,p1h=880;
+    ctx.strokeStyle=hexA(GOLD,0.15);ctx.strokeRect(p1x,p1y,p1w,p1h);
+    ctx.fillStyle=hexA(GOLD,0.6);ctx.font='600 14px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('EQUITY INDEXES',p1x+16,p1y+24);
+    var barH=35,barGap=22;
+    for(var ei=0;ei<5;ei++){
+      var idx=indices[ei];
+      var by=p1y+50+ei*(barH+barGap);
+      var bw=(idx.val/60000)*(p1w-200);
+      var ereveal=Math.max(0,Math.min(1,(p-0.1-ei*0.08)/0.3));
+      drawBar(p1x+16,by,bw,barH,ereveal,idx.color,idx.name,idx.val.toFixed(2),idx.pct);
+    }
+
+    // Right panel: commodities & crypto
+    var p2x=960,p2y=110,p2w=920,p2h=880;
+    ctx.strokeStyle=hexA(GOLD,0.15);ctx.strokeRect(p2x,p2y,p2w,p2h);
+    ctx.fillStyle=hexA(GOLD,0.6);ctx.font='600 14px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('COMMODITIES & CRYPTO',p2x+16,p2y+24);
+    for(var ci=5;ci<indices.length;ci++){
+      var c=indices[ci];
+      var by=p2y+50+(ci-5)*(barH+barGap);
+      var bw=(c.val/100000)*(p2w-200);
+      var creveal=Math.max(0,Math.min(1,(p-0.15-(ci-5)*0.08)/0.3));
+      drawBar(p2x+16,by,bw,barH,creveal,c.color,c.name,c.val.toFixed(2),c.pct);
+    }
+
+    ctx.fillStyle=hexA(CYAN,0.5);ctx.fillRect(0,H-6,W*p,4);
+
+    ctx.font='400 11px "JetBrains Mono",monospace';
+    ctx.fillStyle=hexA(GOLD,0.35);ctx.textAlign='left';
+    ctx.fillText('supervisionvidaeo:// · early-weekend-catchup',40,H-50);
+    ctx.textAlign='right';
+    ctx.fillText('sha256:ewcr2026...',W-40,H-50);
+
+    if(LINES.length){
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='600 28px "JetBrains Mono",monospace';
+      for(var li=0;li<LINES.length;li++){
+        var lp2=Math.max(0,Math.min(1,(p-0.85)/0.15));
+        ctx.fillStyle=hexA('#ffd98a',0.85*lp2);
+        ctx.fillText(LINES[li],W/2,H-100+li*40);
+      }
+    }
+
+    var sy=((p*1.4)%1)*H;
+    var sg=ctx.createLinearGradient(0,sy-80,0,sy+80);
+    sg.addColorStop(0,'rgba(0,234,255,0)');sg.addColorStop(0.5,'rgba(0,234,255,0.045)');sg.addColorStop(1,'rgba(0,234,255,0)');
+    ctx.fillStyle=sg;ctx.fillRect(0,sy-80,W,160);
+  }
+
+  window.__renderFrame=function(i,total){render(i/Math.max(1,total-1))};
+  render(0);
+})();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/studio/scenes/early-weekend-catchup.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

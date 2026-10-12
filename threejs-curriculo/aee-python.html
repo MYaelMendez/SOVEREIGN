@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Electronic Engineering Python</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 720, H = 1280;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.015);
+
+const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);
+camera.position.set(0, 0, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+
+scene.add(new THREE.AmbientLight(0x404040, 0.5));
+
+const goldLight = new THREE.PointLight(0xD4AF37, 3, 30);
+goldLight.position.set(0, 3, 3);
+scene.add(goldLight);
+
+const cyanLight = new THREE.PointLight(0x00eaff, 2, 20);
+cyanLight.position.set(-3, -2, -3);
+scene.add(cyanLight);
+
+// ── Python logo colors: blue + yellow ──
+const PY_BLUE = 0x3776AB;
+const PY_YELLOW = 0xFFD43B;
+
+// ── Scene 1: Python logo (two interlocking snakes) ──
+const pyGroup = new THREE.Group();
+scene.add(pyGroup);
+
+// Top snake (blue)
+const topSnake = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(0.6, 0.2, 64, 16, 2, 3),
+  new THREE.MeshStandardMaterial({
+    color: PY_BLUE, emissive: PY_BLUE, emissiveIntensity: 0.3,
+    metalness: 0.8, roughness: 0.2,
+  })
+);
+topSnake.position.y = 0.5;
+pyGroup.add(topSnake);
+
+// Bottom snake (yellow)
+const bottomSnake = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(0.6, 0.2, 64, 16, 2, 3),
+  new THREE.MeshStandardMaterial({
+    color: PY_YELLOW, emissive: PY_YELLOW, emissiveIntensity: 0.3,
+    metalness: 0.8, roughness: 0.2,
+  })
+);
+bottomSnake.position.y = -0.5;
+bottomSnake.rotation.z = Math.PI;
+pyGroup.add(bottomSnake);
+
+// ── Scene 2: Code particles (Python keywords) ──
+const codeGroup = new THREE.Group();
+codeGroup.visible = false;
+scene.add(codeGroup);
+
+const keywords = ['def', 'class', 'import', 'return', 'if', 'else', 'for', 'while', 'try', 'except', 'lambda', 'yield', 'async', 'await', 'with', 'as', 'from', 'raise', 'pass'];
+const pCount = 5000;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(pCount * 3);
+const pCol = new Float32Array(pCount * 3);
+for (let i = 0; i < pCount; i++) {
+  pPos[i*3] = (Math.random()-0.5)*10;
+  pPos[i*3+1] = (Math.random()-0.5)*16;
+  pPos[i*3+2] = (Math.random()-0.5)*10;
+  const c = new THREE.Color();
+  c.setHSL(0.55 + Math.random()*0.15, 0.8, 0.3+Math.random()*0.4);
+  pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const codeParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  size: 0.03, vertexColors: true, transparent: true, opacity: 0.7,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+}));
+codeGroup.add(codeParticles);
+
+// ── Scene 3: AEE cycle ring ──
+const aeeGroup = new THREE.Group();
+aeeGroup.visible = false;
+scene.add(aeeGroup);
+
+const phases = ['SPEC', 'RTL', 'SIM', 'SYNTH', 'P&R', 'GDS', 'FAB', 'TEST'];
+const phaseMeshes = [];
+phases.forEach((phase, i) => {
+  const angle = (i / phases.length) * Math.PI * 2;
+  const radius = 2.5;
+  const geo = new THREE.SphereGeometry(0.2, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.4,
+    metalness: 0.8, roughness: 0.2,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  aeeGroup.add(mesh);
+  phaseMeshes.push(mesh);
+});
+const ringGeo = new THREE.TorusGeometry(2.5, 0.02, 8, 64);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.3 });
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = Math.PI / 2;
+aeeGroup.add(ring);
+
+// ── Scene 4: QR code (Python) ──
+const qrGroup = new THREE.Group();
+qrGroup.visible = false;
+qrGroup.position.y = -3;
+scene.add(qrGroup);
+const qrSize = 15;
+const qrModuleSize = 0.08;
+const qrGeo = new THREE.BoxGeometry(qrModuleSize*0.9, 0.02, qrModuleSize*0.9);
+const qrMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.3 });
+function isQR(r, c) {
+  if (r<7 && c<7) return (r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4));
+  if (r<7 && c>=qrSize-7) return (r===0||r===6||c===qrSize-1||c===qrSize-7||(r>=2&&r<=4&&c>=qrSize-5&&c<=qrSize-3));
+  if (r>=qrSize-7 && c<7) return (r===qrSize-1||r===qrSize-7||c===0||c===6||(r>=qrSize-5&&r<=qrSize-3&&c>=2&&c<=4));
+  return ((r*7+c*13+r*c)%3)===0;
+}
+for (let r=0; r<qrSize; r++) for (let c=0; c<qrSize; c++) {
+  if (isQR(r,c)) {
+    const m = new THREE.Mesh(qrGeo, qrMat);
+    m.position.set((c-qrSize/2)*qrModuleSize, 0, (r-qrSize/2)*qrModuleSize);
+    qrGroup.add(m);
+  }
+}
+
+// ── Post-processing ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.4, 0.3, 0.85));
+composer.addPass(new OutputPass());
+
+// ── Animation ──
+const clock = new THREE.Clock();
+const SCENE_DURATION = 4;
+const TOTAL_SCENES = 4;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const sceneIndex = Math.floor(t / SCENE_DURATION) % TOTAL_SCENES;
+
+  pyGroup.visible = sceneIndex === 0;
+  codeGroup.visible = sceneIndex === 1;
+  aeeGroup.visible = sceneIndex === 2;
+  qrGroup.visible = sceneIndex === 3;
+
+  if (pyGroup.visible) {
+    topSnake.rotation.x = t * 0.3;
+    topSnake.rotation.y = t * 0.5;
+    bottomSnake.rotation.x = -t * 0.3;
+    bottomSnake.rotation.y = -t * 0.5;
+  }
+  if (codeGroup.visible) {
+    codeParticles.rotation.y = t * 0.05;
+  }
+  if (aeeGroup.visible) {
+    aeeGroup.rotation.y = t * 0.2;
+    phaseMeshes.forEach((m, i) => {
+      m.material.emissiveIntensity = 0.3 + Math.sin(t * 2 + i) * 0.2;
+    });
+  }
+  if (qrGroup.visible) {
+    qrGroup.rotation.y = Math.sin(t * 0.5) * 0.1;
+  }
+
+  controls.update();
+  composer.render();
+}
+animate();
+
+window.__AEE_PYTHON__ = { ready: true, scenes: TOTAL_SCENES, width: W, height: H };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/aee-python.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

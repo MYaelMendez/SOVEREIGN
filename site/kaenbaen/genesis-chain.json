@@ -1,0 +1,320 @@
+{
+  "system": "æ://",
+  "version": "2026-10-07",
+  "description": "Immutable receipt chain — the system's memory",
+  "genesis": {
+    "receipt": "ae://receipt/b487ce83a1c34884c7657831",
+    "gpu_chain": "ae://chain/eb2c433b928af11207824013",
+    "timestamp": "2026-10-07T19:59:37Z",
+    "description": "Fleet self-application — 5 bugs fixed in capture pipeline"
+  },
+  "chain": [
+    {
+      "receipt": "ae://receipt/b487ce83a1c34884c7657831",
+      "prev": "genesis",
+      "description": "Fleet self-application — capture pipeline fixes"
+    },
+    {
+      "receipt": "ae://receipt/03f5a4b7c8e9d6a2f150e7c9d3b8a4",
+      "prev": "ae://receipt/b487ce83a1c34884c7657831",
+      "description": "Fleet cron run 001"
+    },
+    {
+      "receipt": "ae://receipt/04d4a4b7c8e9d6a2f150e7c9d3b8a46",
+      "prev": "ae://receipt/03f5a4b7c8e9d6a2f150e7c9d3b8a4",
+      "description": "Fleet cron run 002"
+    },
+    {
+      "receipt": "ae://receipt/qr-24ca7680b23a732b",
+      "prev": "ae://receipt/04d4a4b7c8e9d6a2f150e7c9d3b8a46",
+      "description": "QR route supervised PASS (c11ef95fcf9b)",
+      "timestamp": "2026-10-10T12:41:02",
+      "artifacts": [
+        {
+          "envelope_sha256": "c11ef95fcf9b53dfe566ad1a2163ee0d3f64cd9fd6d7bcf5bbfaa19c035ec37d",
+          "image_sha256": "060492a088fd0dd1222ad6649dca35d2e2acf3688be131296c1e87c3cfb1b586",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-94e7345325dd3b15",
+      "prev": "ae://receipt/qr-24ca7680b23a732b",
+      "description": "QR route supervised PASS (545ad206b12f)",
+      "timestamp": "2026-10-10T12:41:02",
+      "artifacts": [
+        {
+          "envelope_sha256": "545ad206b12fc2d9da9cad595f4d7a645bf0bc986fc03aa0b864173b95caba3a",
+          "image_sha256": "91d280ab63bc03a21332bca1456cf011c78663bf177ec463c45176c7f17dd259",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-9b2a4ee8ed628f69",
+      "prev": "ae://receipt/qr-94e7345325dd3b15",
+      "description": "QR capability supervised PASS (315d927393dd)",
+      "timestamp": "2026-10-10T12:43:11",
+      "artifacts": [
+        {
+          "envelope_sha256": "315d927393dd34420ebafd3fbed1ffc7d873c4bddf2f794903e6f332995862b6",
+          "image_sha256": "e4c2906078a6e937e870588bd8c02152dfe101f0635981a614663fa9c2f28c67",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-12417806a7bdeba4",
+      "prev": "ae://receipt/qr-9b2a4ee8ed628f69",
+      "description": "QR capability supervised PASS (b6a734042d57)",
+      "timestamp": "2026-10-10T12:43:26",
+      "artifacts": [
+        {
+          "envelope_sha256": "b6a734042d57a47f498aeaedd37bfe2312b58578068fb2fcbc4f1aaa13ceae56",
+          "image_sha256": "2df0d40185466df6d23391f68847203b33769075a93045f976d36148e17d70c4",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-f2053bb0b460d221",
+      "prev": "ae://receipt/qr-12417806a7bdeba4",
+      "description": "QR capability supervised PASS (7e146c9350a5)",
+      "timestamp": "2026-10-10T12:43:57",
+      "artifacts": [
+        {
+          "envelope_sha256": "7e146c9350a513e5c860c0370e2b9a9112828a905196b1f7b0bb9cd6db9f5bb2",
+          "image_sha256": "20f640c9bc0cece88a6728635d387c6105cf0b276f4aed281c153be2eff8c6ac",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-8949c2b8a87b4cb8",
+      "prev": "ae://receipt/qr-f2053bb0b460d221",
+      "description": "QR secret supervised PASS (22877aa3af8f)",
+      "timestamp": "2026-10-10T12:44:06",
+      "artifacts": [
+        {
+          "envelope_sha256": "22877aa3af8f6f6de36722114bce8fb6e290b5a81320de0d82232d01575b1bb5",
+          "image_sha256": "f4ea15a6392b5a69f2aea6ee02b14b0fb9cc17e14ba4f7aa9e71d7ffce3620ba",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-4d4c5979622b2d28",
+      "prev": "ae://receipt/qr-8949c2b8a87b4cb8",
+      "description": "QR key supervised PASS (11e13fbde28b)",
+      "timestamp": "2026-10-10T12:44:07",
+      "artifacts": [
+        {
+          "envelope_sha256": "11e13fbde28b4473bcaf3f4886b26d8ea94cb5e0d79d57b75a1af3eb1f10fb14",
+          "image_sha256": "e9e6940183d269ee45abc16a4b57cd4ebd2fb348da16800e04c62c63c421b359",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-766cf5a69ed2791d",
+      "prev": "ae://receipt/qr-4d4c5979622b2d28",
+      "description": "QR secret supervised PASS (5b3df37cbd1b)",
+      "timestamp": "2026-10-10T12:44:07",
+      "artifacts": [
+        {
+          "envelope_sha256": "5b3df37cbd1b60c85e733e04d7fc2d58eb53b3ee682ad87b9691f03e8ded9adb",
+          "image_sha256": "e3953c0da4cda2669f14b758d5351259ab13967564b6234ba7d61529a805338d",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-0986361cd2dbddc0",
+      "prev": "ae://receipt/qr-766cf5a69ed2791d",
+      "description": "QR contract supervised PASS (110b688a5002)",
+      "timestamp": "2026-10-10T12:44:07",
+      "artifacts": [
+        {
+          "envelope_sha256": "110b688a50025290ece78cb7bbf6203322ad5d973440a3642bce74cb293f019b",
+          "image_sha256": "91078c362e6237e5172858c7ad05c17f2b1a278d22beb48cc3a501866894038b",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-0c0433dfda747e72",
+      "prev": "ae://receipt/qr-0986361cd2dbddc0",
+      "description": "QR capability supervised PASS (d6ec52dc6fe7)",
+      "timestamp": "2026-10-10T12:44:07",
+      "artifacts": [
+        {
+          "envelope_sha256": "d6ec52dc6fe7321ce7c7014d2fb29abead60f68e20dd94d191b5cea0093707a9",
+          "image_sha256": "db1ffe867c2e85063cb0247b43f62c791b238907b6c8898da539bd0a4af6c453",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-2bd78ef258079c94",
+      "prev": "ae://receipt/qr-0c0433dfda747e72",
+      "description": "QR route supervised PASS (e6ad1cbc831c)",
+      "timestamp": "2026-10-10T12:44:08",
+      "artifacts": [
+        {
+          "envelope_sha256": "e6ad1cbc831c839cde8064f1d15011a9789406f14628867aa1e7850b8e620e99",
+          "image_sha256": "bf5e78db02a29199653d10de63ef94aae03b3abee0715824b8df5092424b6eda",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-f190c0b1c93080ec",
+      "prev": "ae://receipt/qr-2bd78ef258079c94",
+      "description": "QR handoff supervised PASS (589a3bfdad8c)",
+      "timestamp": "2026-10-10T12:44:08",
+      "artifacts": [
+        {
+          "envelope_sha256": "589a3bfdad8c0dbda65005b2d90aebb571ee3c39f176e8a053a91b326b3c8df3",
+          "image_sha256": "e7b8d6ad59bea008c70f60421c0b0fdfde7e466694cd51afb84f10b82a60bf9b",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-e77375f62f49c7bb",
+      "prev": "ae://receipt/qr-f190c0b1c93080ec",
+      "description": "QR identity supervised PASS (9198a1347bf0)",
+      "timestamp": "2026-10-10T12:44:08",
+      "artifacts": [
+        {
+          "envelope_sha256": "9198a1347bf01457f70fa7df340333e09b5f1e502b529e270ea320ba150d41dc",
+          "image_sha256": "cf5f1200d8c001415cb914e92d898ac286dc8bf2806f3e7b061f19e45d1475bf",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "ae://receipt/qr-aadd4a2349a9d456",
+      "prev": "ae://receipt/qr-e77375f62f49c7bb",
+      "description": "QR manifest supervised PASS (b739c208475a)",
+      "timestamp": "2026-10-10T12:44:08",
+      "artifacts": [
+        {
+          "envelope_sha256": "b739c208475adbcf39b62eb617e0aae2bb3783b4872cdaead88d3c5ae8ffe9a5",
+          "image_sha256": "8cfcbbf786cdedfc09dfeb7ade51e95a249e2b81dc44660f3260a6a7b513a0e9",
+          "decoders": [
+            "cv2",
+            "pyzbar"
+          ]
+        }
+      ]
+    }
+  ],
+  "capture_receipts": [
+    {
+      "file": "ae-capture-20261007-194545.png",
+      "sha256": "624cd130991b38a432fa3a157d5bf19ee2e28c8fa11401f382c2f15a16fe554f",
+      "prev": "genesis"
+    },
+    {
+      "file": "ae-capture-20261007-200032.png",
+      "sha256": "49ea9bf9a0b148920023408fc451158855d024a4ef8fb301da9e529de4e41fd5",
+      "prev": "624cd130991b38a432fa3a157d5bf19ee2e28c8fa11401f382c2f15a16fe554f"
+    }
+  ],
+  "principle": "Each receipt chains to the previous. The chain is the memory.",
+  "aee_receipts": [
+    {
+      "receipt": "ae://receipt/aee-spec-001-6d2d6be292f6141e",
+      "description": "SPEC-001 UART Transmitter — design phase complete",
+      "artifacts": [
+        "SPEC-001-uart-tx.md",
+        "uart_tx.v",
+        "uart_tx_tb.v"
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "type": "teologia-audit",
+      "timestamp": "2026-10-08T13:56:32Z",
+      "files_checked": 19,
+      "corrupt_files": [],
+      "missing_links": [],
+      "qr_badges_ok": true,
+      "live_status": {
+        "live": true,
+        "status": 200
+      },
+      "sha256": "0c6d6b9ca51294de"
+    },
+    {
+      "type": "teologia-audit",
+      "timestamp": "2026-10-08T14:03:25Z",
+      "files_checked": 19,
+      "corrupt_files": [],
+      "missing_links": [],
+      "qr_badges_ok": true,
+      "live_status": {
+        "live": true,
+        "status": 200
+      },
+      "sha256": "ce6a55d746ad2838"
+    },
+    {
+      "type": "python-verify",
+      "sha256": "test123",
+      "detail": "testing write API",
+      "timestamp": "2026-10-09T12:43:02",
+      "agent": "hermes"
+    },
+    {
+      "receipt": "ae://receipt/33f1978a8b003b6b",
+      "type": "selftest",
+      "sha256": "test",
+      "detail": "kænbæn selftest",
+      "agent": "kænbæn",
+      "timestamp": "2026-10-10T17:52:09",
+      "prev": "ae://receipt/qr-aadd4a2349a9d456"
+    }
+  ]
+}

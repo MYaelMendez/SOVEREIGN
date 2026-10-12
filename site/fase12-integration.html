@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase12-integration — WebMCP + Agent Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#stage{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:1}
+#stage canvas{display:block;width:1920px;height:1080px}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.30) 0px,rgba(0,0,0,0.30) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:420px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud .loop{font-size:16px;letter-spacing:2px}
+#hud .st{opacity:0.45;transition:opacity .2s,color .2s,text-shadow .2s}
+#hud .st.on{opacity:1;color:#eafcff;text-shadow:0 0 16px rgba(0,234,255,0.9)}
+#hud .ar{color:var(--gold);opacity:0.6;margin:0 8px}
+#hud ul{list-style:none;margin-top:22px;font-size:14px;line-height:1.95}
+#hud li{opacity:0.72}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:var(--cyan)}
+#queue{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);z-index:50;color:var(--gold);
+  font-size:15px;letter-spacing:3px;text-align:center}
+#qbar{margin-top:12px;width:620px;height:12px;border:1px solid var(--gold);border-radius:7px;overflow:hidden;background:rgba(212,175,55,0.06)}
+#qfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00eaff);transition:width .15s linear}
+#readout{position:fixed;bottom:44px;right:150px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px;text-align:right}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);
+  border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <h1>æ:// fase12-integration</h1>
+  <div class="sub">Week 12 — WebMCP + Three.js + Agent Loop</div>
+  <div class="rule"></div>
+  <div class="loop">agent loop:
+    <span class="st" data-st="0">perceive</span><span class="ar">&rarr;</span><span
+      class="st" data-st="1">plan</span><span class="ar">&rarr;</span><span
+      class="st" data-st="2">act</span><span class="ar">&rarr;</span><span
+      class="st" data-st="3">verify</span>
+  </div>
+  <ul>
+    <li>webmcp transport &middot; <span class="v">connected</span></li>
+    <li>three.js &middot; <span class="v">r160</span></li>
+    <li>renderer &middot; <span class="v">h264_nvenc / 1920&times;1080</span></li>
+    <li>gate &middot; <span class="v">lum&gt;20 &middot; contrast&gt;8 &middot; motion&gt;0.5</span></li>
+  </ul>
+</div>
+
+<div id="queue">task queue <span id="qcount">0 / 0</span>
+  <div id="qbar"><div id="qfill"></div></div>
+</div>
+
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span><br>t <span class="g" id="tt">0.00</span>s</div>
+
+<div id="badge"
+  onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+  onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+  onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+  title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase12-integration.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1920, H = 1080, DURATION = 12.0;
+const GOLD = 0xD4AF37, CYAN = 0x00eaff;
+
+/* ---- renderer ---- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 400);
+camera.position.set(0, 0.7, 12.5);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+document.getElementById('stage').appendChild(renderer.domElement);
+
+const composer = new EffectComposer(renderer);
+composer.setSize(W, H);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.50, 0.60, 0.72);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ---- backdrop glow ---- */
+const backdropMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan; varying vec2 vUv;
+    void main(){
+      vec2 p = vUv - 0.5;
+      float d = length(p * vec2(1.0, 0.80));
+      float core = smoothstep(0.54, 0.0, d);
+      float ring = smoothstep(0.035, 0.0, abs(d - 0.46));
+      vec3 col = uGold * core * 0.15;
+      col += uCyan * ring * 0.12;
+      col += uGold * 0.011;
+      col *= 0.88 + 0.12 * sin(uTime * 1.3);
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(80, 48), backdropMat);
+backdrop.position.z = -18;
+scene.add(backdrop);
+
+/* ---- central æ symbol : torus knot ---- */
+const knotMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: `
+    uniform float uTime;
+    varying vec3 vN; varying vec3 vW;
+    void main(){
+      vec3 n = normalize(normal);
+      vec4 wp0 = modelMatrix * vec4(position, 1.0);
+      float wave = sin(wp0.x * 3.0 + uTime * 2.2) * 0.045
+                 + sin(wp0.y * 2.4 - uTime * 1.7) * 0.045;
+      vec3 p = position + n * wave;
+      vec4 wp = modelMatrix * vec4(p, 1.0);
+      vW = wp.xyz;
+      vN = normalize(mat3(modelMatrix) * n);
+      gl_Position = projectionMatrix * viewMatrix * wp;
+    }`,
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan;
+    varying vec3 vN; varying vec3 vW;
+    void main(){
+      vec3 V = normalize(cameraPosition - vW);
+      vec3 N = normalize(vN);
+      float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 2.4);
+      float diff = 0.35 + 0.65 * max(dot(N, normalize(vec3(0.4, 0.9, 0.6))), 0.0);
+      float pulse = 0.65 + 0.35 * sin(uTime * 2.6);
+      vec3 col = uGold * diff * (0.95 + 0.7 * pulse);
+      col += uCyan * fres * 1.15;
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.5, 0.42, 220, 28, 2, 3), knotMat);
+scene.add(knot);
+
+/* halo sphere around the symbol */
+const haloMat = new THREE.MeshBasicMaterial({
+  color: CYAN, transparent: true, opacity: 0.08, side: THREE.BackSide,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const halo = new THREE.Mesh(new THREE.SphereGeometry(3.0, 32, 32), haloMat);
+scene.add(halo);
+
+/* ---- agent task definitions ---- */
+const TASKS = [
+  { id: '01', name: 'perceive', sub: 'scan surface + tokens' },
+  { id: '02', name: 'plan',     sub: 'decompose goal' },
+  { id: '03', name: 'act',      sub: 'webmcp tool call' },
+  { id: '04', name: 'verify',   sub: 'gate + assert' },
+  { id: '05', name: 'reflect',  sub: 'update memory' },
+  { id: '06', name: 'emit',     sub: 'surface result' }
+];
+const N = TASKS.length;
+
+/* ---- arc placement (gap kept at centre for the æ symbol) ---- */
+const PANEL_X = [-8.6, -5.72, -2.86, 2.86, 5.72, 8.6];
+function panelZ(x) { return -3.2 - (1.0 - Math.pow(Math.abs(x) / 8.6, 2)) * 4.6; }
+
+/* ---- canvas-texture sprites ---- */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+const panels = [];
+for (let i = 0; i < N; i++) {
+  const c = document.createElement('canvas');
+  c.width = 640; c.height = 320;
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(2.72, 1.36, 1);
+  sp.position.set(PANEL_X[i], 0.35, panelZ(PANEL_X[i]));
+  sp.renderOrder = 5;
+  scene.add(sp);
+  panels.push({ c, ctx, tex, mat, sp, state: null });
+}
+
+function drawPanel(p, task, state, t) {
+  const ctx = p.ctx, w = p.c.width, h = p.c.height;
+  const active = state === 'run';
+  const done = state === 'done';
+  const accent = active ? '#00eaff' : (done ? '#ffe9a8' : '#D4AF37');
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = active ? 'rgba(4,22,26,0.95)' : 'rgba(9,9,7,0.92)';
+  roundRect(ctx, 8, 8, w - 16, h - 16, 20);
+  ctx.fill();
+
+  ctx.save();
+  ctx.lineWidth = active ? 7 : 3;
+  ctx.strokeStyle = accent;
+  ctx.shadowColor = accent;
+  ctx.shadowBlur = active ? 30 : 10;
+  roundRect(ctx, 8, 8, w - 16, h - 16, 20);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = accent;
+  ctx.font = 'bold 30px "JetBrains Mono", monospace';
+  ctx.fillText('TASK ' + task.id, 36, 68);
+
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 26px "JetBrains Mono", monospace';
+  ctx.fillText(active ? 'RUNNING' : (done ? 'DONE' : 'QUEUED'), w - 36, 68);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = active ? '#eafcff' : '#D4AF37';
+  ctx.font = 'bold 56px "JetBrains Mono", monospace';
+  ctx.fillText(task.name, 36, 162);
+
+  ctx.fillStyle = active ? '#8fecff' : 'rgba(212,175,55,0.62)';
+  ctx.font = '28px "JetBrains Mono", monospace';
+  ctx.fillText(task.sub, 36, 210);
+
+  const bx = 36, by = 248, bw = w - 72, bh = 14;
+  ctx.fillStyle = 'rgba(255,255,255,0.09)';
+  roundRect(ctx, bx, by, bw, bh, 7); ctx.fill();
+  let frac = 0;
+  if (done) frac = 1;
+  else if (active) frac = 0.25 + 0.7 * (0.5 + 0.5 * Math.sin(t * 4.0));
+  ctx.fillStyle = accent;
+  roundRect(ctx, bx, by, Math.max(2, bw * frac), bh, 7); ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(w - 52, 122, 12, 0, Math.PI * 2);
+  ctx.fillStyle = accent;
+  ctx.fill();
+
+  p.tex.needsUpdate = true;
+}
+
+/* ---- task stream particles : panels -> core ---- */
+const SCOUNT = 260;
+const sPos = new Float32Array(SCOUNT * 3);
+const sCol = new Float32Array(SCOUNT * 3);
+const sGeo = new THREE.BufferGeometry();
+sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+sGeo.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
+const cGold2 = new THREE.Color(GOLD), cCyan2 = new THREE.Color(CYAN);
+for (let i = 0; i < SCOUNT; i++) {
+  const c = cGold2.clone().lerp(cCyan2, Math.random() * 0.6);
+  sCol[i * 3] = c.r; sCol[i * 3 + 1] = c.g; sCol[i * 3 + 2] = c.b;
+}
+function dotTexture2() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0.0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+  grd.addColorStop(1.0, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const sMat = new THREE.PointsMaterial({
+  size: 0.16, map: dotTexture2(), vertexColors: true, transparent: true,
+  opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+});
+scene.add(new THREE.Points(sGeo, sMat));
+
+/* ---- HUD handles ---- */
+const stepEls = Array.prototype.slice.call(document.querySelectorAll('#hud .st'));
+const elQcount = document.getElementById('qcount');
+const elQfill = document.getElementById('qfill');
+const elFc = document.getElementById('fc');
+const elTc = document.getElementById('tc');
+const elTt = document.getElementById('tt');
+
+const STEP_OF = ['0', '1', '2', '3', '1', '2']; // task -> loop step index
+
+/* ---- deterministic frame renderer ---- */
+function renderAt(t) {
+  knotMat.uniforms.uTime.value = t;
+  backdropMat.uniforms.uTime.value = t;
+
+  knot.rotation.y = t * 0.42;
+  knot.rotation.x = t * 0.20;
+  knot.rotation.z = Math.sin(t * 0.3) * 0.25;
+
+  const hp = 0.030 + 0.025 * (0.5 + 0.5 * Math.sin(t * 1.8));
+  haloMat.opacity = hp;
+  halo.scale.setScalar(1 + Math.sin(t * 0.6) * 0.05);
+
+  /* task queue progression */
+  const ai = Math.floor(t * 1.25) % N;
+  for (let i = 0; i < N; i++) {
+    const p = panels[i];
+    const state = i < ai ? 'done' : (i === ai ? 'run' : 'queue');
+    if (state !== p.state || state === 'run') {
+      drawPanel(p, TASKS[i], state, t);
+      p.state = state;
+    }
+    const target = state === 'run' ? 1.10 : 1.0;
+    const cur = p.sp.scale.x;
+    const ns = cur + (2.72 * target - cur) * 0.35;
+    p.sp.scale.set(ns, ns * 0.5, 1);
+    if (state === 'run') {
+      const g = 0.85 + 0.15 * Math.sin(t * 6.0);
+      p.mat.color.setRGB(g, g, g);
+    } else {
+      p.mat.color.setRGB(state === 'done' ? 0.82 : 0.60, state === 'done' ? 0.82 : 0.60, state === 'done' ? 0.82 : 0.60);
+    }
+    p.sp.position.y = 0.35 + Math.sin(t * 1.4 + i * 0.9) * 0.10;
+  }
+
+  /* task stream particles : from each panel toward the core */
+  for (let i = 0; i < SCOUNT; i++) {
+    const pi = i % N;
+    const sx = PANEL_X[pi], sz = panelZ(PANEL_X[pi]), sy = 0.35;
+    const ph = (t * 0.55 + (i * 0.137)) % 1;
+    const ease = ph * ph * (3 - 2 * ph);
+    sPos[i * 3]     = sx * (1 - ease) + Math.sin(t * 2.0 + i) * 0.12;
+    sPos[i * 3 + 1] = sy * (1 - ease) + Math.sin(t * 1.7 + i * 0.6) * 0.15;
+    sPos[i * 3 + 2] = sz * (1 - ease) + Math.sin(t * 1.3 + i * 0.4) * 0.12;
+  }
+  sGeo.attributes.position.needsUpdate = true;
+
+  /* HUD : agent loop highlight */
+  const st = Math.floor(t * 1.9) % 4;
+  for (let k = 0; k < stepEls.length; k++) stepEls[k].classList.toggle('on', k === st);
+
+  /* HUD : queue bar */
+  const doneCount = ai;
+  elQcount.textContent = doneCount + ' / ' + N;
+  elQfill.style.width = ((doneCount / N) * 100).toFixed(1) + '%';
+
+  composer.render();
+}
+
+/* ---- external frame hook (drives æRTXrender / vidæo producer) ---- */
+let driven = false;
+window.__renderFrame = function (i, total) {
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  elFc.textContent = i;
+  elTc.textContent = total;
+  elTt.textContent = t.toFixed(2);
+  return true;
+};
+
+/* ---- live loop for standalone viewing ---- */
+function loop() {
+  requestAnimationFrame(loop);
+  if (driven) return;
+  renderAt((performance.now() / 1000) % DURATION);
+}
+loop();
+
+window.__renderFrame(0, 1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fase12-integration.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

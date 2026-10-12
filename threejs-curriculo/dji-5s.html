@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DJI · 5s</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#050505;overflow:hidden;font-family:'JetBrains Mono',monospace}
+  canvas{display:block}
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10;color:#D4AF37}
+  .top{position:absolute;top:44px;left:0;right:0;text-align:center;
+    font-size:11px;letter-spacing:5px;color:rgba(212,175,55,.55)}
+  .sym{position:absolute;top:74px;left:0;right:0;text-align:center;
+    font-size:44px;font-weight:700;letter-spacing:6px;
+    text-shadow:0 0 40px rgba(212,175,55,.5)}
+  .name{position:absolute;top:128px;left:0;right:0;text-align:center;
+    font-size:10px;letter-spacing:3px;color:rgba(240,236,228,.5)}
+  .price{position:absolute;top:50%;left:0;right:0;text-align:center;
+    transform:translateY(-50%);font-size:78px;font-weight:700;letter-spacing:-2px;
+    text-shadow:0 0 50px rgba(212,175,55,.45)}
+  .chg{position:absolute;top:calc(50% + 62px);left:0;right:0;text-align:center;
+    font-size:30px;font-weight:700;letter-spacing:2px}
+  .range{position:absolute;bottom:180px;left:0;right:0;text-align:center;
+    font-size:10px;letter-spacing:2px;color:rgba(240,236,228,.55);line-height:2}
+  .range b{color:#D4AF37}
+  .src{position:absolute;bottom:96px;left:0;right:0;text-align:center;
+    font-size:8px;letter-spacing:2px;color:rgba(212,175,55,.4)}
+  .brand{position:absolute;bottom:56px;left:0;right:0;text-align:center;
+    font-size:11px;letter-spacing:4px}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="top">DOW JONES INDUSTRIAL AVERAGE</div>
+  <div class="sym">^DJI</div>
+  <div class="name">DJI · NEW YORK STOCK EXCHANGE</div>
+  <div class="price" id="price">—</div>
+  <div class="chg" id="chg">—</div>
+  <div class="range" id="range"></div>
+  <div class="src">SOURCE · droplet broker → upstream chart API · snapshot</div>
+  <div class="brand">æ://</div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 720, H = 1280, FPS = 30, DUR = 5, TOTAL = FPS * DUR;
+
+// ── REAL DATA — the droplet broker's DJI quote (fetched at build time) ──
+const DJI = {
+  price: 51176.96,
+  prev: 50926.60,
+  chg: 250.36,
+  pct: 0.49,
+  high: null,
+  low: null,
+  exchange: 'DJI',
+  marketTime: 1790974817,
+};
+
+const UP = 0x00ff9d, GOLD = 0xD4AF37;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+camera.position.set(0, 0, 11);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x223344, 0.7));
+const l1 = new THREE.PointLight(GOLD, 3, 40); l1.position.set(3, 4, 8); scene.add(l1);
+const l2 = new THREE.PointLight(UP, 2, 30); l2.position.set(-4, -2, 6); scene.add(l2);
+
+// ── THE TAPE — a price line drawn across the frame ──
+// Deterministic walk that ENDS at the real price. The last point is truth.
+const pts = [];
+const N = 120;
+const start = DJI.prev, end = DJI.price;
+let seed = 1337;
+const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+for (let i = 0; i <= N; i++) {
+  const t = i / N;
+  // ease from prev to price with a deterministic wobble that vanishes at t=1
+  const base = start + (end - start) * (t * t * (3 - 2 * t));
+  const wob = Math.sin(t * 14) * (end - start) * 0.35 * (1 - t);
+  pts.push(base + wob);
+}
+const lo = Math.min(...pts), hi = Math.max(...pts);
+const norm = (v) => (v - lo) / (hi - lo || 1);
+
+const lineGeo = new THREE.BufferGeometry();
+const linePos = new Float32Array((N + 1) * 3);
+const lineCol = new Float32Array((N + 1) * 3);
+for (let i = 0; i <= N; i++) {
+  linePos[i*3]   = (i / N - 0.5) * 7.5;
+  linePos[i*3+1] = (norm(pts[i]) - 0.5) * 3.2;
+  linePos[i*3+2] = 0;
+  const c = new THREE.Color().setHSL(0.42, 0.9, 0.5 + norm(pts[i]) * 0.2);
+  lineCol[i*3] = c.r; lineCol[i*3+1] = c.g; lineCol[i*3+2] = c.b;
+}
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+lineGeo.setAttribute('color', new THREE.BufferAttribute(lineCol, 3));
+const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 }));
+scene.add(line);
+
+// the endpoint marker — where truth lands
+const dot = new THREE.Mesh(
+  new THREE.SphereGeometry(0.09, 16, 16),
+  new THREE.MeshBasicMaterial({ color: UP })
+);
+dot.position.set(3.75, (norm(end) - 0.5) * 3.2, 0);
+scene.add(dot);
+
+// a glow ring around the endpoint
+const ring = new THREE.Mesh(
+  new THREE.RingGeometry(0.18, 0.24, 32),
+  new THREE.MeshBasicMaterial({ color: UP, transparent: true, opacity: 0.7, side: THREE.DoubleSide })
+);
+ring.position.copy(dot.position);
+scene.add(ring);
+
+// ── BACKGROUND PARTICLES — the market field ──
+const PN = 1800;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(PN * 3);
+const pCol = new Float32Array(PN * 3);
+for (let i = 0; i < PN; i++) {
+  pPos[i*3]   = (Math.random() - 0.5) * 16;
+  pPos[i*3+1] = (Math.random() - 0.5) * 22;
+  pPos[i*3+2] = (Math.random() - 0.5) * 14 - 4;
+  const c = new THREE.Color().setHSL(0.12 + Math.random()*0.06, 0.6, 0.25 + Math.random()*0.25);
+  pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const pMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `uniform float uTime; varying vec3 vColor;
+    void main(){ vColor=color; vec3 p=position;
+      p.y = mod(p.y + uTime*0.5 + 11.0, 22.0) - 11.0;
+      vec4 mv=modelViewMatrix*vec4(p,1.0); gl_PointSize=2.0*(300.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `varying vec3 vColor;
+    void main(){ float d=length(gl_PointCoord-0.5); if(d>0.5)discard; gl_FragColor=vec4(vColor,(1.0-d*2.0)*0.4); }`,
+  vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+scene.add(new THREE.Points(pGeo, pMat));
+
+// ── POST ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.75, 0.5, 0.85));
+const GradePass = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){ vec2 d=vUv-0.5; float r2=dot(d,d);
+      float ca=0.0018+r2*0.005; vec3 col;
+      col.r=texture2D(tDiffuse,vUv+d*ca).r; col.g=texture2D(tDiffuse,vUv).g; col.b=texture2D(tDiffuse,vUv-d*ca).b;
+      col*=smoothstep(1.15,0.25,r2*2.2);
+      col*=1.0-0.05*step(0.5,fract(vUv.y*uRes.y*0.5));
+      col+=(rand(vUv*uRes+uTime)-0.5)*0.03;
+      gl_FragColor=vec4(col,1.0); }`,
+};
+const gradePass = new ShaderPass(GradePass);
+composer.addPass(gradePass);
+composer.addPass(new OutputPass());
+
+// ── TEXT ──
+const el = {
+  price: document.getElementById('price'),
+  chg: document.getElementById('chg'),
+  range: document.getElementById('range'),
+};
+const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+el.chg.textContent = `▲ +${fmt(DJI.chg)}  (${DJI.pct >= 0 ? '+' : ''}${DJI.pct.toFixed(2)}%)`;
+el.chg.style.color = '#00ff9d';
+el.chg.style.textShadow = '0 0 30px rgba(0,255,157,0.5)';
+
+function applyFrame(t) {
+  pMat.uniforms.uTime.value = t;
+  gradePass.uniforms.uTime.value = t;
+
+  // the price counts up from prev to price over the 5s
+  const prog = Math.min(1, t / (DUR * 0.72));
+  const eased = prog * prog * (3 - 2 * prog);
+  const shown = DJI.prev + (DJI.price - DJI.prev) * eased;
+  el.price.textContent = fmt(shown);
+
+  // the line draws in, left to right
+  const draw = Math.min(1, t / (DUR * 0.62));
+  lineGeo.setDrawRange(0, Math.max(2, Math.floor((N + 1) * draw)));
+
+  // endpoint marker appears once the line lands
+  const land = Math.max(0, Math.min(1, (t - DUR * 0.62) * 4));
+  dot.scale.setScalar(0.2 + land * 0.8);
+  ring.scale.setScalar(0.4 + land * 0.6 + Math.sin(t * 6) * 0.06 * land);
+  ring.material.opacity = 0.7 * land;
+
+  el.range.innerHTML =
+    `PREV <b>${fmt(DJI.prev)}</b> &nbsp;·&nbsp; CHANGE <b>+${fmt(DJI.chg)}</b><br>` +
+    `EXCHANGE <b>${DJI.exchange}</b> &nbsp;·&nbsp; STATUS <b>CLOSED</b>`;
+
+  camera.position.x = Math.sin(t * 0.35) * 0.35;
+  camera.position.y = Math.sin(t * 0.28) * 0.2;
+  camera.lookAt(0, 0, 0);
+  line.rotation.y = Math.sin(t * 0.2) * 0.08;
+}
+
+const clock = new THREE.Clock();
+let driven = false;
+function animate() {
+  requestAnimationFrame(animate);
+  if (driven) return;
+  applyFrame(clock.getElapsedTime());
+  composer.render();
+}
+animate();
+
+window.__renderFrame = (i, total) => { driven = true; applyFrame(i / FPS); composer.render(); return true; };
+window.__DJI__ = { ready: true, price: DJI.price, deterministic: true };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/dji-5s.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "pc-code",
+  "displayName": "PC://CODE",
+  "description": "Sovereign coding agent for VS Code — deterministic state machine, capability routing, receipt chain",
+  "version": "0.1.0",
+  "publisher": "pc-code",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "AI",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "pc-code",
+    "agent",
+    "sovereign",
+    "state-machine",
+    "receipts"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:pcCode.open"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "pcCode.open",
+        "title": "PC://CODE: Open Sovereign Agent"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/vscode": "^1.140.0",
+    "typescript": "^5.9.3"
+  }
+}

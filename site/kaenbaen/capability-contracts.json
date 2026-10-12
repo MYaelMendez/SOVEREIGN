@@ -1,0 +1,121 @@
+{
+  "system": "æ://",
+  "version": "2026-10-07",
+  "description": "What each agent can do — read before dispatching",
+  "agents": {
+    "fleet_orchestrator": {
+      "path": "C:/æ/agents/fleet_orchestrator.py",
+      "modes": {
+        "audit": "fleet audit <path> — scan codebase for ESM issues, :any, imports, type-safety gaps",
+        "self-improve": "fleet self-improve — audit agents themselves → plan → commit → QR receipt",
+        "verify": "fleet verify <files> — verify files with tsc, node --check, CDP, SupervisorVideo"
+      },
+      "can": [
+        "scan codebases",
+        "detect type gaps",
+        "batch repair",
+        "GPU-verify receipts"
+      ],
+      "cannot": [
+        "modify hardware",
+        "access secrets",
+        "bypass supervision gates"
+      ]
+    },
+    "zeus_engine": {
+      "path": "C:/æ/agents/zeus_engine.py",
+      "modes": {
+        "code": "zeus code <path> — scan → repair → verify → commit → GPU receipt",
+        "video": "zeus video <path> — SupervisorVideo gate → receipt"
+      },
+      "can": [
+        ":any detection",
+        "batch type repair",
+        "tsc verification",
+        "GPU-verified commits"
+      ],
+      "cannot": [
+        "fix logic bugs",
+        "design new features",
+        "override human decisions"
+      ]
+    },
+    "hermes_supervision": {
+      "path": "C:/æ/agents/hermes_supervision.py",
+      "modes": {
+        "selftest": "hermes_supervision.py selftest — 5/5 verification",
+        "verify": "hermes_supervision.py verify <artifact> — produce-and-verify gate"
+      },
+      "can": [
+        "verify Python",
+        "verify JSON",
+        "verify HTML/JS",
+        "gate artifacts"
+      ],
+      "cannot": [
+        "modify artifacts",
+        "bypass verification",
+        "issue receipts without evidence"
+      ]
+    },
+    "conductor": {
+      "path": "C:/æ/hermes-fork/hermes_cli/conductor.py",
+      "can": [
+        "route æ:// schemes",
+        "dispatch to agents",
+        "manage MCP surface"
+      ],
+      "cannot": [
+        "modify core",
+        "bypass kænbæn",
+        "act without receipt"
+      ]
+    },
+    "test-agent": {
+      "path": "C:/æ/agents/test-agent.py",
+      "capabilities": [
+        "test"
+      ],
+      "cannot": [],
+      "registered_at": "2026-10-09T12:14:36",
+      "status": "scratch",
+      "note": "test fixture, not a fleet agent"
+    },
+    "kænbæn_vault": {
+      "path": "C:/æ/agents/væult_chain.py",
+      "can": [
+        "read the whole tool chain",
+        "verify every link compiles and answers",
+        "call any link through one entry",
+        "report which link is broken",
+        "read the whole væult tool chain",
+        "check that every agent is taught the chain",
+        "custody: seal and open vault entries",
+        "gate: produce-and-verify QR artifacts",
+        "contract: verify agent pledges"
+      ],
+      "cannot": [
+        "bypass a link's own gate",
+        "modify secrets",
+        "push without claiming a task",
+        "speak for the human"
+      ],
+      "registered_at": "2026-10-10T18:09:26",
+      "status": "active",
+      "also": [
+        "C:/æ/agents/teach_check.py",
+        "C:/æ/agents/agent_pledge.py"
+      ],
+      "role": "the chain — reads it, verifies it, and keeps every agent taught it",
+      "aliases": [
+        "vaeult_chain"
+      ]
+    }
+  },
+  "constraints": {
+    "secrets": "MUST stay local (Victus); never in cloud links/uploads",
+    "github_io": "surface truth only, not secret store",
+    "evidence": "≠ Authority — supervision informs, human decides",
+    "qr": "the chip — scannable/verifiable/hash-chained"
+  }
+}

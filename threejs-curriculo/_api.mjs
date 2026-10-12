@@ -1,0 +1,44 @@
+import * as THREE from './vendor/three.module.js';
+import { SimplexNoise } from './vendor/addons/math/SimplexNoise.js';
+const out = { rev: THREE.REVISION };
+out.DataUtils = typeof THREE.DataUtils;
+out.toHalfFloat = typeof (THREE.DataUtils && THREE.DataUtils.toHalfFloat);
+out.fromHalfFloat = typeof (THREE.DataUtils && THREE.DataUtils.fromHalfFloat);
+out.halfOne = THREE.DataUtils.toHalfFloat(1.0);
+out.roundtrip = THREE.DataUtils.fromHalfFloat(THREE.DataUtils.toHalfFloat(0.75));
+out.AnimationMixer = typeof THREE.AnimationMixer;
+out.AnimationClip = typeof THREE.AnimationClip;
+out.VectorKeyframeTrack = typeof THREE.VectorKeyframeTrack;
+out.QuaternionKeyframeTrack = typeof THREE.QuaternionKeyframeTrack;
+out.NumberKeyframeTrack = typeof THREE.NumberKeyframeTrack;
+out.DataTexture = typeof THREE.DataTexture;
+out.InstancedMesh = typeof THREE.InstancedMesh;
+out.DynamicDrawUsage = typeof THREE.DynamicDrawUsage;
+out.InstancedBufferAttribute = typeof THREE.InstancedBufferAttribute;
+out.FloatType = THREE.FloatType;
+out.HalfFloatType = THREE.HalfFloatType;
+out.RGBAFormat = THREE.RGBAFormat;
+out.SimplexNoise = typeof SimplexNoise;
+out.SRGBColorSpace = THREE.SRGBColorSpace;
+out.hasRaycaster = typeof THREE.Raycaster;
+out.hasRay = typeof THREE.Ray;
+out.hasBox3 = typeof THREE.Box3;
+// mixer sanity
+const root = new THREE.Object3D();
+const track = new THREE.VectorKeyframeTrack('.position', [0,1,2], [0,0,0, 1,2,3, 0,0,0]);
+const clip = new THREE.AnimationClip('c', 2, [track]);
+const mixer = new THREE.AnimationMixer(root);
+mixer.clipAction(clip).play();
+mixer.update(1.0);
+out.mixerPos = [ +root.position.x.toFixed(3), +root.position.y.toFixed(3), +root.position.z.toFixed(3) ];
+// simplex noise sanity
+const sn = new SimplexNoise();
+out.simplexSample = +sn.noise3d(0.3, 0.5, 0.7).toFixed(4);
+// BufferGeometry with Uint32 index + transferable-style arrays
+const n = 4;
+const pos = new Float32Array(n*3); const idx = new Uint32Array(6);
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+geo.setIndex(new THREE.BufferAttribute(idx,1));
+out.geoIndexBytes = geo.index.array.BYTES_PER_ELEMENT;
+console.log(JSON.stringify(out,null,1));

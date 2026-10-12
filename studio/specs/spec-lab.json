@@ -1,0 +1,16 @@
+{
+  "title": "æ://lab",
+  "text_lines": ["opensourceware media lab", "sovereign toolchain", "spec→render→gate→deploy"],
+  "duration": 5,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "shapes": [
+    { "t": "polyline", "pts": [[180,850],[420,580],[660,750],[900,520]], "w": 7, "c": "#D4AF37" },
+    { "t": "rect", "x": 980, "y": 380, "w": 360, "h": 280, "r": 18, "lw": 7, "c": "#D4AF37" },
+    { "t": "circle", "cx": 1520, "cy": 600, "r": 110, "lw": 7, "c": "#00eaff" },
+    { "t": "arrow", "x1": 160, "y1": 940, "x2": 1740, "y2": 940, "w": 6, "c": "#D4AF37" },
+    { "t": "text", "x": 760, "y": 200, "s": 56, "c": "#ffd98a", "tx": "æ://" }
+  ],
+  "scene_html": "draw-video.html"
+}

@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>æ:// Studio — Teleprompter + VLC 9:16</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #050505;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    color: #f0ece4;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 56.25vh;
+    margin: 0 auto;
+    background: #050505;
+  }
+
+  /* HUD */
+  #hud {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #D4AF37;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  #hud .title { font-weight: 700; }
+  #hud .status { color: rgba(212,175,55,0.5); }
+
+  /* Main */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* VLC Section */
+  #vlc-section {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+  }
+  .vlc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .vlc-title { font-size: 10px; color: #D4AF37; letter-spacing: 1px; }
+  .vlc-state {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,68,68,0.15);
+    color: #ff4444;
+  }
+  .vlc-state.playing { background: rgba(0,255,157,0.15); color: #00ff9d; }
+  .vlc-state.paused { background: rgba(212,175,55,0.15); color: #D4AF37; }
+
+  #vlc-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .vlc-btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vlc-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .vlc-btn.active { background: #D4AF37; color: #050505; }
+
+  #vlc-seek-row, #vlc-vol-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  #vlc-seek-row span, #vlc-vol-row span {
+    font-size: 9px;
+    color: rgba(240,236,228,0.4);
+    min-width: 30px;
+  }
+  #vlc-seek-row input[type="range"], #vlc-vol-row input[type="range"] {
+    flex: 1;
+    accent-color: #D4AF37;
+    height: 24px;
+  }
+  #vlc-status {
+    font-size: 9px;
+    color: rgba(240,236,228,0.3);
+    text-align: center;
+    padding: 2px;
+  }
+
+  /* Media Library */
+  #media-section {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+  }
+  .media-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .media-title { font-size: 10px; color: #D4AF37; letter-spacing: 1px; }
+  .media-count { font-size: 9px; color: rgba(240,236,228,0.4); }
+  #media-grid {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .media-item {
+    flex-shrink: 0;
+    width: 80px;
+    padding: 6px;
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .media-item:hover { border-color: #D4AF37; background: rgba(212,175,55,0.05); }
+  .media-item.active { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .media-item .media-icon { font-size: 16px; margin-bottom: 2px; }
+  .media-item .media-name {
+    font-size: 8px;
+    color: rgba(240,236,228,0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .media-item .media-size {
+    font-size: 7px;
+    color: rgba(240,236,228,0.3);
+  }
+  #media-empty {
+    font-size: 9px;
+    color: rgba(240,236,228,0.3);
+    text-align: center;
+    padding: 8px;
+  }
+  #media-browse {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  #media-browse input[type="file"] {
+    display: none;
+  }
+  .media-browse-btn {
+    flex: 1;
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 10px;
+    font-size: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .media-browse-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+
+  /* Teleprompter */
+  #prompter-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #text-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    mask-image: linear-gradient(transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(transparent 0%, black 10%, black 90%, transparent 100%);
+  }
+  #text {
+    font-size: 22px;
+    line-height: 1.7;
+    color: #f0ece4;
+    text-align: center;
+    white-space: pre-wrap;
+    max-width: 100%;
+    transition: transform 0.1s linear;
+  }
+
+  /* Controls */
+  #prompter-controls {
+    padding: 8px;
+    border-top: 1px solid rgba(212,175,55,0.15);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .prompter-btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+    min-height: 36px;
+  }
+  .prompter-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .prompter-btn.active { background: #D4AF37; color: #050505; }
+
+  /* Script selector */
+  #script-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(5,5,5,0.98);
+    border-top: 1px solid rgba(212,175,55,0.3);
+    padding: 8px;
+    display: none;
+    z-index: 20;
+    max-height: 70%;
+    flex-direction: column;
+  }
+  #script-panel.open { display: flex; }
+  #script-panel h3 {
+    font-size: 10px;
+    color: #D4AF37;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  #script-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .script-item {
+    padding: 8px;
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .script-item:hover { border-color: #D4AF37; background: rgba(212,175,55,0.05); }
+  .script-item.active { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .script-item .script-name { font-size: 11px; color: #D4AF37; }
+  .script-item .script-desc { font-size: 9px; color: rgba(240,236,228,0.4); margin-top: 2px; }
+  #script-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: flex-end;
+  }
+
+  /* Edit panel */
+  #edit-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(5,5,5,0.98);
+    border-top: 1px solid rgba(212,175,55,0.3);
+    padding: 8px;
+    display: none;
+    z-index: 20;
+    max-height: 60%;
+    flex-direction: column;
+  }
+  #edit-panel.open { display: flex; }
+  #edit-textarea {
+    flex: 1;
+    min-height: 120px;
+    background: #0a0a0a;
+    border: 1px solid rgba(212,175,55,0.2);
+    color: #f0ece4;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px;
+    resize: none;
+    outline: none;
+  }
+  #edit-textarea:focus { border-color: #D4AF37; }
+  #edit-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: flex-end;
+  }
+
+  .scanlines {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px);
+  }
+  #mirror-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 4;
+    background: repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(212,175,55,0.03) 4px, rgba(212,175,55,0.03) 5px);
+    display: none;
+  }
+  #mirror-overlay.active { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <span class="title">æ:// Studio</span>
+    <span class="status" id="status">READY</span>
+  </div>
+
+  <div id="main">
+    <!-- VLC -->
+    <div id="vlc-section">
+      <div class="vlc-header">
+        <span class="vlc-title">VLC PLAYER</span>
+        <span class="vlc-state" id="vlc-state">STOPPED</span>
+      </div>
+      <div id="vlc-controls">
+        <button class="vlc-btn" id="vlc-prev">⏮</button>
+        <button class="vlc-btn" id="vlc-play">▶</button>
+        <button class="vlc-btn" id="vlc-pause">⏸</button>
+        <button class="vlc-btn" id="vlc-stop">⏹</button>
+        <button class="vlc-btn" id="vlc-next">⏭</button>
+        <button class="vlc-btn" id="vlc-open">📂</button>
+      </div>
+      <div id="vlc-seek-row">
+        <span>Seek</span>
+        <input type="range" id="vlc-seek" min="0" max="100" value="0">
+        <span id="vlc-time">0:00 / 0:00</span>
+      </div>
+      <div id="vlc-vol-row">
+        <span>Vol</span>
+        <input type="range" id="vlc-vol" min="0" max="100" value="50">
+        <span id="vlc-vol-val">50%</span>
+      </div>
+      <div id="vlc-status">VLC HTTP: checking...</div>
+    </div>
+
+    <!-- Media Library -->
+    <div id="media-section">
+      <div class="media-header">
+        <span class="media-title">MEDIA LIBRARY</span>
+        <span class="media-count" id="media-count">0 files</span>
+      </div>
+      <div id="media-grid"></div>
+      <div id="media-empty">No media found. Click Browse to load MP4s from your desktop.</div>
+      <div id="media-browse">
+        <button class="media-browse-btn" id="btn-browse-desktop">📁 Desktop</button>
+        <button class="media-browse-btn" id="btn-browse-æ">📁 C:/æ</button>
+        <button class="media-browse-btn" id="btn-browse-videolab">📁 Vidæo</button>
+      </div>
+    </div>
+
+    <!-- Teleprompter -->
+    <div id="prompter-section">
+      <div id="text-container">
+        <div id="text"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="prompter-controls">
+      <button class="prompter-btn" id="btn-play">▶ Play</button>
+      <button class="prompter-btn" id="btn-pause">⏸ Pause</button>
+      <button class="prompter-btn" id="btn-reset">↺ Reset</button>
+      <button class="prompter-btn" id="btn-mirror">Mirror</button>
+      <button class="prompter-btn" id="btn-scripts">Scripts</button>
+      <button class="prompter-btn" id="btn-edit">Edit</button>
+    </div>
+  </div>
+
+  <!-- Script Panel -->
+  <div id="script-panel">
+    <h3>SCRIPT LIBRARY</h3>
+    <div id="script-list"></div>
+    <div id="script-actions">
+      <button class="prompter-btn" id="btn-scripts-close">Close</button>
+    </div>
+  </div>
+
+  <!-- Edit Panel -->
+  <div id="edit-panel">
+    <textarea id="edit-textarea" placeholder="Paste your script here..."></textarea>
+    <div id="edit-actions">
+      <button class="prompter-btn" id="btn-edit-cancel">Cancel</button>
+      <button class="prompter-btn" id="btn-edit-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="scanlines"></div>
+<div id="mirror-overlay"></div>
+
+<script>
+const SCRIPTS = [
+  {
+    name: 'æ:// Manifesto',
+    desc: 'The core message — attention, compute, sovereign',
+    text: `æ:// — Attention is all you need.
+
+The language is compute.
+The chassis is always a language.
+The surface is an addressable route.
+
+Sovereign. Local. Alive.
+
+We build agentic electronic engineering.
+We generate Three.js with GPU.
+We verify with QR Vision.
+We encode with ffmpeg.
+We prove with receipts.
+
+The droplet is the private client corpus.
+The QR is the simulated chip.
+The vault is multilayered, multipermission.
+
+MCP³ — GitHub.io as MCP server, PDS for social.
+Monæco — the editor surface.
+Vidæo — agentic video engineering.
+
+>_ æ:// — start a business.
+>_ æ:// — the seam is the work.
+>_ æ:// — open sourceware.`
+  },
+  {
+    name: 'Product Demo',
+    desc: 'Demo script for product showcase',
+    text: `Today I want to show you something special.
+
+This is æ:// — a sovereign computing stack.
+
+It runs locally on your machine.
+It generates code with GPU acceleration.
+It verifies everything with QR Vision.
+It proves every action with receipts.
+
+No cloud required.
+No vendor lock-in.
+No silent drift.
+
+The language is compute.
+The chassis is always a language.
+The surface is an addressable route.
+
+Let me show you how it works...`
+  },
+  {
+    name: 'Tutorial Intro',
+    desc: 'Introduction for tutorial videos',
+    text: `Welcome to this tutorial.
+
+I'm Yael, and today we're building something real.
+
+Not a demo. Not a mockup.
+A working system, running on local hardware.
+
+We'll use Three.js for rendering.
+We'll use llama.cpp for code generation.
+We'll use QR Vision for verification.
+We'll use ffmpeg for encoding.
+
+Every step is verifiable.
+Every action has a receipt.
+Every result is proven.
+
+Let's begin.`
+  },
+  {
+    name: 'Announcement',
+    desc: 'Product announcement script',
+    text: `Big news today.
+
+We've been building in the open.
+And now it's ready.
+
+æ:// is a sovereign computing stack.
+Local-first. GPU-accelerated. Verified.
+
+The droplet is the private client corpus.
+The QR is the simulated chip.
+The vault is multilayered, multipermission.
+
+MCP³ — GitHub.io as MCP server, PDS for social.
+
+This is just the beginning.
+
+>_ æ:// — start a business.
+>_ æ:// — the seam is the work.
+>_ æ:// — open sourceware.`
+  },
+  {
+    name: 'Code Review',
+    desc: 'Script for code review sessions',
+    text: `Let's review this code together.
+
+First, we observe the current state.
+Then, we plan our changes.
+Then, we execute with precision.
+Finally, we verify with receipts.
+
+Every mutation is tracked.
+Every result is proven.
+Every action is reversible.
+
+This is agentic engineering.
+Not guesswork. Not hope.
+Measured, verified, proven.
+
+Let's look at the diff...`
+  },
+  {
+    name: 'Custom',
+    desc: 'Your own script — click Edit to write',
+    text: ''
+  }
+];
+
+let currentScriptIndex = 0;
+let playing = false;
+let speed = 1.0;
+let fontSize = 22;
+let scrollY = 0;
+let mirror = false;
+let lastTime = 0;
+let rafId = null;
+
+const textEl = document.getElementById('text');
+const container = document.getElementById('text-container');
+const statusEl = document.getElementById('status');
+const editPanel = document.getElementById('edit-panel');
+const editTextarea = document.getElementById('edit-textarea');
+const scriptPanel = document.getElementById('script-panel');
+const scriptList = document.getElementById('script-list');
+
+function renderText() {
+  textEl.style.fontSize = fontSize + 'px';
+  textEl.style.transform = mirror ? `translateY(${-scrollY}px) scaleX(-1)` : `translateY(${-scrollY}px)`;
+}
+
+function updateStatus() {
+  const state = playing ? 'PLAYING' : 'PAUSED';
+  statusEl.textContent = `${state} · ${speed.toFixed(1)}× · ${fontSize}px${mirror ? ' · MIRROR' : ''}`;
+}
+
+function tick(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (playing) {
+    scrollY += speed * 50 * dt;
+    renderText();
+    const maxScroll = textEl.scrollHeight - container.clientHeight;
+    if (scrollY >= maxScroll) {
+      playing = false;
+      updateStatus();
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true;
+  lastTime = 0;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+  updateStatus();
+}
+
+function pause() {
+  playing = false;
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('btn-pause').classList.add('active');
+  updateStatus();
+}
+
+function reset() {
+  scrollY = 0;
+  renderText();
+  pause();
+}
+
+function setSpeed(val) {
+  speed = Math.max(0.1, Math.min(5.0, val));
+  updateStatus();
+}
+
+function setFontSize(val) {
+  fontSize = Math.max(14, Math.min(48, val));
+  renderText();
+  updateStatus();
+}
+
+function toggleMirror() {
+  mirror = !mirror;
+  document.getElementById('mirror-overlay').classList.toggle('active', mirror);
+  document.getElementById('btn-mirror').classList.toggle('active', mirror);
+  renderText();
+  updateStatus();
+}
+
+function openScriptPanel() {
+  renderScriptList();
+  scriptPanel.classList.add('open');
+  editPanel.classList.remove('open');
+}
+
+function closeScriptPanel() {
+  scriptPanel.classList.remove('open');
+}
+
+function renderScriptList() {
+  scriptList.innerHTML = '';
+  SCRIPTS.forEach((script, i) => {
+    const div = document.createElement('div');
+    div.className = `script-item${i === currentScriptIndex ? ' active' : ''}`;
+    div.innerHTML = `<div class="script-name">${script.name}</div><div class="script-desc">${script.desc}</div>`;
+    div.addEventListener('click', () => loadScript(i));
+    scriptList.appendChild(div);
+  });
+}
+
+function loadScript(index) {
+  currentScriptIndex = index;
+  const script = SCRIPTS[index];
+  if (script.text) {
+    textEl.textContent = script.text;
+    scrollY = 0;
+    renderText();
+  } else {
+    openEditor();
+  }
+  closeScriptPanel();
+}
+
+function openEditor() {
+  editTextarea.value = textEl.textContent;
+  editPanel.classList.add('open');
+  scriptPanel.classList.remove('open');
+  editTextarea.focus();
+}
+
+function closeEditor() {
+  editPanel.classList.remove('open');
+}
+
+function applyEditor() {
+  const newText = editTextarea.value;
+  textEl.textContent = newText;
+  SCRIPTS[currentScriptIndex].text = newText;
+  scrollY = 0;
+  renderText();
+  closeEditor();
+}
+
+// VLC
+const VLC_HTTP = 'http://127.0.0.1:8081/requests/status.json';
+const VLC_AUTH = 'Basic ' + btoa(':hermes');
+
+async function vlcCommand(cmd, params = {}) {
+  const qs = Object.entries({ command: cmd, ...params })
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+    .join('&');
+  try {
+    const resp = await fetch(`${VLC_HTTP}?${qs}`, { headers: { 'Authorization': VLC_AUTH } });
+    return await resp.json();
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+async function pollVlcStatus() {
+  try {
+    const resp = await fetch(VLC_HTTP, { headers: { 'Authorization': VLC_AUTH } });
+    const data = await resp.json();
+    updateVlcUI(data);
+  } catch (e) {
+    document.getElementById('vlc-status').textContent = 'VLC HTTP: not running';
+    const stateEl = document.getElementById('vlc-state');
+    stateEl.textContent = 'OFFLINE';
+    stateEl.className = 'vlc-state';
+  }
+}
+
+function fmtTime(seconds) {
+  if (!seconds || isNaN(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function updateVlcUI(data) {
+  const state = data.state || 'stopped';
+  const stateEl = document.getElementById('vlc-state');
+  stateEl.textContent = state.toUpperCase();
+  stateEl.className = `vlc-state ${state}`;
+
+  const time = data.time || 0;
+  const length = data.length || 0;
+  const percent = length > 0 ? Math.round((time / length) * 100) : 0;
+  document.getElementById('vlc-seek').value = percent;
+  document.getElementById('vlc-time').textContent = `${fmtTime(time)} / ${fmtTime(length)}`;
+
+  const vol = data.volume || 0;
+  const volPercent = Math.round((vol / 512) * 100);
+  document.getElementById('vlc-vol').value = volPercent;
+  document.getElementById('vlc-vol-val').textContent = `${volPercent}%`;
+
+  document.getElementById('vlc-status').textContent = `VLC HTTP: ${state} · ${data.information?.category?.meta?.filename || 'no media'}`;
+}
+
+// Event listeners
+document.getElementById('btn-play').addEventListener('click', play);
+document.getElementById('btn-pause').addEventListener('click', pause);
+document.getElementById('btn-reset').addEventListener('click', reset);
+document.getElementById('btn-mirror').addEventListener('click', toggleMirror);
+document.getElementById('btn-scripts').addEventListener('click', openScriptPanel);
+document.getElementById('btn-edit').addEventListener('click', openEditor);
+document.getElementById('btn-edit-cancel').addEventListener('click', closeEditor);
+document.getElementById('btn-edit-apply').addEventListener('click', applyEditor);
+document.getElementById('btn-scripts-close').addEventListener('click', closeScriptPanel);
+
+document.getElementById('vlc-play').addEventListener('click', () => vlcCommand('pl_play'));
+document.getElementById('vlc-pause').addEventListener('click', () => vlcCommand('pl_pause'));
+document.getElementById('vlc-stop').addEventListener('click', () => vlcCommand('pl_stop'));
+document.getElementById('vlc-prev').addEventListener('click', () => vlcCommand('pl_prev'));
+document.getElementById('vlc-next').addEventListener('click', () => vlcCommand('pl_next'));
+document.getElementById('vlc-open').addEventListener('click', () => {
+  const path = prompt('Enter media file path or URL:');
+  if (path) {
+    vlcCommand('pl_empty').then(() => {
+      vlcCommand('pl_add', { input: path }).then(() => vlcCommand('pl_play'));
+    });
+  }
+});
+document.getElementById('vlc-seek').addEventListener('change', () => vlcCommand('seek', { val: `${document.getElementById('vlc-seek').value}%` }));
+document.getElementById('vlc-vol').addEventListener('change', () => vlcCommand('volume', { val: String(Math.round((Number(document.getElementById('vlc-vol').value) / 100) * 512)) }));
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case ' ': e.preventDefault(); playing ? pause() : play(); break;
+    case 'ArrowUp': e.preventDefault(); setSpeed(speed + 0.2); break;
+    case 'ArrowDown': e.preventDefault(); setSpeed(speed - 0.2); break;
+    case 'ArrowLeft': e.preventDefault(); scrollY = Math.max(0, scrollY - 80); renderText(); break;
+    case 'ArrowRight': e.preventDefault(); scrollY += 80; renderText(); break;
+    case 'm': case 'M': toggleMirror(); break;
+    case 'r': case 'R': reset(); break;
+    case 'e': case 'E': editPanel.classList.contains('open') ? closeEditor() : openEditor(); break;
+    case 's': case 'S': scriptPanel.classList.contains('open') ? closeScriptPanel() : openScriptPanel(); break;
+    case '+': case '=': setFontSize(fontSize + 2); break;
+    case '-': setFontSize(fontSize - 2); break;
+    case 'Escape': closeEditor(); closeScriptPanel(); break;
+  }
+});
+
+// ── Media Library ──
+const MEDIA_DIRS = [
+  { name: 'Desktop', path: 'C:/Users/yaelm/Desktop' },
+  { name: 'C:/æ', path: 'C:/æ' },
+  { name: 'Vidæo', path: 'C:/æ/videolab' },
+  { name: 'Three.js', path: 'C:/æ/threejs-curriculo' },
+  { name: 'Downloads', path: 'C:/Users/yaelm/Downloads' },
+];
+
+let mediaFiles = [];
+
+function scanMediaDir(dirPath) {
+  // Use fetch to a local endpoint, or use the File System Access API
+  // For now, use a simple approach: try to fetch a directory listing
+  // Since we can't list directories from browser, we'll use a known list
+  // or prompt the user to select files
+
+  // Try to use the File System Access API (Chrome/Edge)
+  if ('showDirectoryPicker' in window) {
+    return pickDirectoryFS();
+  }
+
+  // Fallback: use a predefined list of known media files
+  return Promise.resolve(getKnownMediaFiles(dirPath));
+}
+
+async function pickDirectoryFS() {
+  try {
+    const dirHandle = await window.showDirectoryPicker();
+    const files = [];
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'file' && entry.name.match(/\.(mp4|webm|mkv|avi|mov)$/i)) {
+        const file = await entry.getFile();
+        files.push({
+          name: file.name,
+          size: file.size,
+          path: file.name, // Can't get full path from FS API
+          url: URL.createObjectURL(file),
+        });
+      }
+    }
+    return files;
+  } catch (e) {
+    return [];
+  }
+}
+
+function getKnownMediaFiles(dirPath) {
+  // Known media files on the system
+  const known = {
+    'C:/æ/videolab': [
+      { name: 'cuda-mcp2.mp4', size: 254664, path: 'C:/æ/videolab/cuda-mcp2.mp4' },
+      { name: 'holomesh.mp4', size: 1073844, path: 'C:/æ/videolab/holomesh.mp4' },
+    ],
+    'C:/æ/threejs-curriculo': [
+      { name: 'constellation.mp4', size: 97122, path: 'C:/æ/threejs-curriculo/constellation.mp4' },
+    ],
+    'C:/æ/cuda-mcp2-demo': [
+      { name: 'cuda-mcp2.mp4', size: 254664, path: 'C:/æ/cuda-mcp2-demo/cuda-mcp2.mp4' },
+    ],
+  };
+  return known[dirPath] || [];
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderMediaGrid() {
+  const grid = document.getElementById('media-grid');
+  const empty = document.getElementById('media-empty');
+  const count = document.getElementById('media-count');
+
+  grid.innerHTML = '';
+  count.textContent = `${mediaFiles.length} files`;
+
+  if (mediaFiles.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  mediaFiles.forEach((file, i) => {
+    const div = document.createElement('div');
+    div.className = 'media-item';
+    div.innerHTML = `
+      <div class="media-icon">🎬</div>
+      <div class="media-name">${file.name}</div>
+      <div class="media-size">${formatSize(file.size)}</div>
+    `;
+    div.addEventListener('click', () => openMediaInVlc(file));
+    grid.appendChild(div);
+  });
+}
+
+function openMediaInVlc(file) {
+  // Mark active
+  document.querySelectorAll('.media-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  // Open in VLC via HTTP API
+  vlcCommand('pl_empty').then(() => {
+    vlcCommand('pl_add', { input: file.path }).then(() => {
+      vlcCommand('pl_play');
+    });
+  });
+}
+
+// Browse buttons
+document.getElementById('btn-browse-desktop').addEventListener('click', () => {
+  const files = getKnownMediaFiles('C:/Users/yaelm/Desktop');
+  mediaFiles = files;
+  renderMediaGrid();
+});
+
+document.getElementById('btn-browse-æ').addEventListener('click', () => {
+  // Scan C:/æ for media
+  const allFiles = [];
+  MEDIA_DIRS.forEach(dir => {
+    allFiles.push(...getKnownMediaFiles(dir.path));
+  });
+  mediaFiles = allFiles;
+  renderMediaGrid();
+});
+
+document.getElementById('btn-browse-videolab').addEventListener('click', () => {
+  mediaFiles = getKnownMediaFiles('C:/æ/videolab');
+  renderMediaGrid();
+});
+
+// Also try FS API for Desktop
+if ('showDirectoryPicker' in window) {
+  document.getElementById('btn-browse-desktop').addEventListener('click', async () => {
+    const files = await pickDirectoryFS();
+    if (files.length > 0) {
+      mediaFiles = files;
+      renderMediaGrid();
+    }
+  }, { once: true });
+}
+
+// Init
+textEl.textContent = SCRIPTS[0].text;
+renderText();
+updateStatus();
+rafId = requestAnimationFrame(tick);
+pollVlcStatus();
+setInterval(pollVlcStatus, 2000);
+
+window.__STUDIO__ = {
+  ready: true,
+  aspectRatio: '9:16',
+  portable: true,
+  scripts: SCRIPTS.length,
+  vlcHttp: VLC_HTTP,
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/studio-9x16.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

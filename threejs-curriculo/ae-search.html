@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>&gt;_æ://</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#D4AF37;--gold-bright:#FFD700;--void:#050505;--green:#00FF9D;--cyan:#00EAFF;--ink:rgba(255,255,255,.95);--dim:rgba(255,255,255,.4);--border:rgba(212,175,55,.2);--border-hot:rgba(212,175,55,.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:var(--ink);font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,175,55,.08) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(0,234,255,.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,.15) 3px,transparent 4px);pointer-events:none;z-index:9999}
+.wrap{position:relative;z-index:1;text-align:center;width:min(600px,90vw)}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(24px,5vw,42px);font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff 0%,var(--gold-bright) 30%,var(--gold) 60%,#8B6914 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(212,175,55,.3))}
+.search-box{margin-top:32px;border:2px solid var(--border-hot);border-radius:8px;background:rgba(5,5,5,.95);overflow:hidden;display:flex;align-items:stretch}
+.search-icon{padding:18px 16px;background:rgba(212,175,55,.1);color:var(--gold);font-family:'Orbitron',sans-serif;font-size:16px;display:flex;align-items:center;border-right:2px solid var(--border)}
+.search-input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:16px;padding:18px 16px;letter-spacing:.5px;caret-color:var(--gold)}
+.search-input::placeholder{color:var(--dim);font-size:14px}
+.search-btn{background:var(--gold);color:var(--void);border:none;font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;padding:18px 28px;cursor:pointer;text-transform:uppercase;transition:all .15s}
+.search-btn:hover{background:var(--gold-bright);transform:scale(1.02)}
+.hints{margin-top:24px;font-size:11px;color:var(--dim);line-height:1.8}
+.hints b{color:var(--gold)}
+.status{margin-top:16px;font-size:10px;color:var(--green);letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&gt;_æ://</h1>
+  <div class="search-box">
+    <div class="search-icon">&gt;_æ:</div>
+    <input class="search-input" id="search" placeholder="type your intent... e.g. 'render a circuit', 'verify media', 'start a business'" autocomplete="off" spellcheck="false" autofocus>
+    <button class="search-btn" onclick="runSearch()">RUN</button>
+  </div>
+  <div class="hints">
+    <b>Win+S</b> æ:// Search · <b>Win+Shift+S</b> Command Prompt · <b>Win+`</b> Omnibox<br>
+    <b>Esc</b> close · <b>Enter</b> execute
+  </div>
+  <div class="status" id="status">● SYSTEM READY</div>
+</div>
+<script>
+const search = document.getElementById('search');
+const status = document.getElementById('status');
+
+function runSearch() {
+  const q = search.value.trim();
+  if (!q) return;
+  status.textContent = '● EXECUTING: ' + q.toUpperCase();
+  // TODO: integrate with hermes-supervision:// or omnibox
+  setTimeout(() => { status.textContent = '● COMPLETE: ' + q.toUpperCase(); }, 1500);
+}
+
+search.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runSearch();
+  if (e.key === 'Escape') window.close();
+});
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/ae-search.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

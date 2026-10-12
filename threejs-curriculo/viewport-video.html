@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three.js Curriculum — 21s Viewport</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #050505; overflow: hidden; font-family: 'Consolas', monospace; }
+canvas { display: block; width: 100vw; height: 100vh; }
+#overlay {
+  position: fixed; bottom: 20px; left: 20px; color: #D4AF37;
+  font-size: 14px; z-index: 10; text-shadow: 0 0 10px #D4AF37;
+}
+#phase {
+  position: fixed; top: 20px; left: 20px; color: #D4AF37;
+  font-size: 18px; z-index: 10; text-shadow: 0 0 10px #D4AF37;
+}
+</style>
+</head>
+<body>
+<div id="phase">Fase 1: Fundamentos</div>
+<div id="overlay">Three.js 0.186.1 — Curriculum Viewport</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ===== CONFIGURATION =====
+const DURATION = 21; // seconds
+const PHASES = 12;
+const PHASE_DURATION = DURATION / PHASES; // 1.75s per phase
+const FPS = 30;
+const WIDTH = 1280;
+const HEIGHT = 720;
+
+// ===== RENDERER =====
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(WIDTH, HEIGHT);
+renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+// ===== SCENE =====
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+// ===== CAMERA =====
+const camera = new THREE.PerspectiveCamera(60, WIDTH / HEIGHT, 0.1, 1000);
+camera.position.set(0, 5, 15);
+
+// ===== CONTROLS =====
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+
+// ===== LIGHTING =====
+const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(5, 10, 7);
+scene.add(directionalLight);
+
+const pointLight = new THREE.PointLight(0xD4AF37, 2, 50);
+pointLight.position.set(0, 5, 0);
+scene.add(pointLight);
+
+// ===== POST-PROCESSING =====
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(WIDTH, HEIGHT),
+  0.8,  // strength
+  0.4,  // radius
+  0.85  // threshold
+);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+// ===== PHASE CONTENT =====
+let currentPhase = 0;
+let phaseObjects = [];
+
+// Perlin noise implementation
+function noise2D(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf);
+  const v = yf * yf * (3 - 2 * yf);
+  const a = Math.sin(xi * 12.9898 + yi * 78.233) * 43758.5453;
+  const b = Math.sin((xi + 1) * 12.9898 + yi * 78.233) * 43758.5453;
+  const c = Math.sin(xi * 12.9898 + (yi + 1) * 78.233) * 43758.5453;
+  const d = Math.sin((xi + 1) * 12.9898 + (yi + 1) * 78.233) * 43758.5453;
+  const r1 = a - Math.floor(a), r2 = b - Math.floor(b);
+  const r3 = c - Math.floor(c), r4 = d - Math.floor(d);
+  return r1 + u * (r2 - r1) + v * (r3 - r1) + u * v * (r1 - r2 - r3 + r4);
+}
+
+function clearPhase() {
+  phaseObjects.forEach(obj => {
+    scene.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+      else obj.material.dispose();
+    }
+  });
+  phaseObjects = [];
+}
+
+function setPhase(n) {
+  clearPhase();
+  currentPhase = n;
+  const phaseEl = document.getElementById('phase');
+  phaseEl.textContent = `Fase ${n}: ${getPhaseName(n)}`;
+
+  switch(n) {
+    case 1: createPhase1(); break;
+    case 2: createPhase2(); break;
+    case 3: createPhase3(); break;
+    case 4: createPhase4(); break;
+    case 5: createPhase5(); break;
+    case 6: createPhase6(); break;
+    case 7: createPhase7(); break;
+    case 8: createPhase8(); break;
+    case 9: createPhase9(); break;
+    case 10: createPhase10(); break;
+    case 11: createPhase11(); break;
+    case 12: createPhase12(); break;
+  }
+}
+
+function getPhaseName(n) {
+  const names = [
+    '', 'Fundamentos', 'Geometría', 'Materiales', 'Shader Básico',
+    'Shaders Intermedios', 'Shaders Avanzados', 'Escalabilidad',
+    'Arquitectura', 'Web Workers', 'Post-Processing', 'Efectos Avanzados', 'WebMCP'
+  ];
+  return names[n] || 'Unknown';
+}
+
+// ===== PHASE 1: Fundamentos =====
+function createPhase1() {
+  const geometry = new THREE.BoxGeometry(2, 2, 2);
+  const material = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.8, roughness: 0.2 });
+  const cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
+  phaseObjects.push(cube);
+
+  const edges = new THREE.EdgesGeometry(geometry);
+  const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+  cube.add(line);
+}
+
+// ===== PHASE 2: Geometría =====
+function createPhase2() {
+  // Procedural terrain with Perlin noise
+  const size = 50, divisions = 50;
+  const geometry = new THREE.PlaneGeometry(size, size, divisions, divisions);
+  const positions = geometry.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i], y = positions[i + 1];
+    positions[i + 2] = noise2D(x * 0.1, y * 0.1) * 3;
+  }
+  geometry.computeVertexNormals();
+  const material = new THREE.MeshStandardMaterial({ color: 0x2d5a27, wireframe: false, side: THREE.DoubleSide });
+  const terrain = new THREE.Mesh(geometry, material);
+  terrain.rotation.x = -Math.PI / 2;
+  scene.add(terrain);
+  phaseObjects.push(terrain);
+
+  // 1000 instanced cubes
+  const cubeGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+  const cubeMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37 });
+  const instanced = new THREE.InstancedMesh(cubeGeo, cubeMat, 1000);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < 1000; i++) {
+    dummy.position.set(
+      (Math.random() - 0.5) * 40,
+      Math.random() * 5 + 2,
+      (Math.random() - 0.5) * 40
+    );
+    dummy.updateMatrix();
+    instanced.setMatrixAt(i, dummy.matrix);
+  }
+  scene.add(instanced);
+  phaseObjects.push(instanced);
+}
+
+// ===== PHASE 3: Materiales =====
+function createPhase3() {
+  const materials = [
+    new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.9, roughness: 0.1 }),
+    new THREE.MeshStandardMaterial({ color: 0x00ff00, metalness: 0.5, roughness: 0.3 }),
+    new THREE.MeshStandardMaterial({ color: 0x0000ff, metalness: 0.1, roughness: 0.9 }),
+    new THREE.MeshStandardMaterial({ color: 0xffff00, metalness: 0.8, roughness: 0.2 }),
+    new THREE.MeshStandardMaterial({ color: 0xff00ff, metalness: 0.3, roughness: 0.7 }),
+    new THREE.MeshStandardMaterial({ color: 0x00ffff, metalness: 0.6, roughness: 0.4 }),
+    new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.4, roughness: 0.6 }),
+    new THREE.MeshStandardMaterial({ color: 0x8800ff, metalness: 0.7, roughness: 0.3 }),
+    new THREE.MeshStandardMaterial({ color: 0x00ff88, metalness: 0.2, roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ color: 0xff0088, metalness: 0.5, roughness: 0.5 }),
+  ];
+
+  for (let i = 0; i < 10; i++) {
+    const geo = new THREE.SphereGeometry(1, 32, 32);
+    const mat = materials[i];
+    const sphere = new THREE.Mesh(geo, mat);
+    sphere.position.set((i - 4.5) * 3, 0, 0);
+    scene.add(sphere);
+    phaseObjects.push(sphere);
+  }
+}
+
+// ===== PHASE 4: Shader Básico =====
+function createPhase4() {
+  const vertexShader = `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  const fragmentShader = `
+    uniform float time;
+    varying vec2 vUv;
+    void main() {
+      float r = sin(vUv.x * 10.0 + time) * 0.5 + 0.5;
+      float g = sin(vUv.y * 10.0 + time * 1.3) * 0.5 + 0.5;
+      float b = sin((vUv.x + vUv.y) * 5.0 + time * 0.7) * 0.5 + 0.5;
+      gl_FragColor = vec4(r, g, b, 1.0);
+    }
+  `;
+
+  const geometry = new THREE.PlaneGeometry(20, 20);
+  const material = new THREE.ShaderMaterial({
+    vertexShader, fragmentShader,
+    uniforms: { time: { value: 0 } }
+  });
+  const plane = new THREE.Mesh(geometry, material);
+  plane.rotation.x = -Math.PI / 2;
+  scene.add(plane);
+  phaseObjects.push(plane);
+  phaseObjects.push({ isShaderMaterial: true, material });
+}
+
+// ===== PHASE 5: Shaders Intermedios =====
+function createPhase5() {
+  const vertexShader = `
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  const fragmentShader = `
+    uniform float time;
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    void main() {
+      float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+      vec3 color = mix(vec3(0.1, 0.2, 0.8), vec3(0.8, 0.2, 0.1), fresnel);
+      color += sin(time + vUv.x * 20.0) * 0.1;
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `;
+
+  const geometry = new THREE.TorusKnotGeometry(3, 1, 100, 16);
+  const material = new THREE.ShaderMaterial({
+    vertexShader, fragmentShader,
+    uniforms: { time: { value: 0 } }
+  });
+  const torus = new THREE.Mesh(geometry, material);
+  scene.add(torus);
+  phaseObjects.push(torus);
+  phaseObjects.push({ isShaderMaterial: true, material });
+}
+
+// ===== PHASE 6: Shaders Avanzados =====
+function createPhase6() {
+  const vertexShader = `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  const fragmentShader = `
+    uniform float time;
+    varying vec2 vUv;
+    float noise(vec2 p) {
+      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+    float smoothNoise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = noise(i);
+      float b = noise(i + vec2(1.0, 0.0));
+      float c = noise(i + vec2(0.0, 1.0));
+      float d = noise(i + vec2(1.0, 1.0));
+      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    }
+    void main() {
+      vec2 uv = vUv * 5.0;
+      float n = smoothNoise(uv + time * 0.5);
+      n += smoothNoise(uv * 2.0 + time * 0.3) * 0.5;
+      n += smoothNoise(uv * 4.0 + time * 0.7) * 0.25;
+      vec3 color = vec3(n * 0.5, n * 0.8, n * 1.0);
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `;
+
+  const geometry = new THREE.PlaneGeometry(30, 30);
+  const material = new THREE.ShaderMaterial({
+    vertexShader, fragmentShader,
+    uniforms: { time: { value: 0 } }
+  });
+  const plane = new THREE.Mesh(geometry, material);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.y = -2;
+  scene.add(plane);
+  phaseObjects.push(plane);
+  phaseObjects.push({ isShaderMaterial: true, material });
+}
+
+// ===== PHASE 7: Escalabilidad =====
+function createPhase7() {
+  // 100k instanced particles
+  const count = 100000;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 100;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+    colors[i * 3] = Math.random();
+    colors[i * 3 + 1] = Math.random() * 0.5 + 0.5;
+    colors[i * 3 + 2] = Math.random();
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const material = new THREE.PointsMaterial({ size: 0.5, vertexColors: true });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+  phaseObjects.push(points);
+}
+
+// ===== PHASE 8: Arquitectura =====
+function createPhase8() {
+  // Scene with multiple objects
+  const group = new THREE.Group();
+  for (let i = 0; i < 20; i++) {
+    const geo = new THREE.BoxGeometry(
+      Math.random() * 2 + 0.5,
+      Math.random() * 2 + 0.5,
+      Math.random() * 2 + 0.5
+    );
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5),
+      metalness: 0.5,
+      roughness: 0.5
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(
+      (Math.random() - 0.5) * 30,
+      Math.random() * 10,
+      (Math.random() - 0.5) * 30
+    );
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+    group.add(mesh);
+    phaseObjects.push(mesh);
+  }
+  scene.add(group);
+  phaseObjects.push(group);
+}
+
+// ===== PHASE 9: Web Workers (simulated) =====
+function createPhase9() {
+  // Animated grid showing parallel processing concept
+  const gridSize = 10;
+  const spacing = 2;
+  const group = new THREE.Group();
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      const geo = new THREE.BoxGeometry(1, 1, 1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL((x + z) / (gridSize * 2), 0.8, 0.5),
+        metalness: 0.3,
+        roughness: 0.7
+      });
+      const cube = new THREE.Mesh(geo, mat);
+      cube.position.set(
+        (x - gridSize / 2) * spacing,
+        Math.sin(x * 0.5 + z * 0.5) * 2,
+        (z - gridSize / 2) * spacing
+      );
+      group.add(cube);
+      phaseObjects.push(cube);
+    }
+  }
+  scene.add(group);
+  phaseObjects.push(group);
+}
+
+// ===== PHASE 10: Post-Processing =====
+function createPhase10() {
+  const geometry = new THREE.TorusKnotGeometry(4, 1.5, 200, 32);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37,
+    metalness: 0.9,
+    roughness: 0.1,
+    emissive: 0x332200,
+    emissiveIntensity: 0.5
+  });
+  const torus = new THREE.Mesh(geometry, material);
+  scene.add(torus);
+  phaseObjects.push(torus);
+
+  // Add glow spheres
+  for (let i = 0; i < 5; i++) {
+    const geo = new THREE.SphereGeometry(0.5, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(i / 5, 1, 0.5)
+    });
+    const sphere = new THREE.Mesh(geo, mat);
+    sphere.position.set(
+      Math.cos(i * Math.PI * 2 / 5) * 8,
+      Math.sin(i * Math.PI * 2 / 5) * 8,
+      0
+    );
+    scene.add(sphere);
+    phaseObjects.push(sphere);
+  }
+}
+
+// ===== PHASE 11: Efectos Avanzados =====
+function createPhase11() {
+  const geometry = new THREE.IcosahedronGeometry(5, 1);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37,
+    metalness: 0.95,
+    roughness: 0.05,
+    emissive: 0x443300,
+    emissiveIntensity: 0.3,
+    wireframe: true
+  });
+  const ico = new THREE.Mesh(geometry, material);
+  scene.add(ico);
+  phaseObjects.push(ico);
+
+  // Inner glow
+  const innerGeo = new THREE.IcosahedronGeometry(3, 2);
+  const innerMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa00,
+    transparent: true,
+    opacity: 0.3
+  });
+  const inner = new THREE.Mesh(innerGeo, innerMat);
+  scene.add(inner);
+  phaseObjects.push(inner);
+}
+
+// ===== PHASE 12: WebMCP =====
+function createPhase12() {
+  // Network topology visualization
+  const group = new THREE.Group();
+  const nodeCount = 8;
+  const nodes = [];
+  for (let i = 0; i < nodeCount; i++) {
+    const geo = new THREE.SphereGeometry(0.8, 32, 32);
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setHSL(i / nodeCount, 0.8, 0.5),
+      metalness: 0.5,
+      roughness: 0.5
+    });
+    const sphere = new THREE.Mesh(geo, mat);
+    const angle = (i / nodeCount) * Math.PI * 2;
+    sphere.position.set(Math.cos(angle) * 10, 0, Math.sin(angle) * 10);
+    group.add(sphere);
+    nodes.push(sphere);
+    phaseObjects.push(sphere);
+  }
+
+  // Connecting lines
+  for (let i = 0; i < nodeCount; i++) {
+    const next = (i + 1) % nodeCount;
+    const points = [nodes[i].position, nodes[next].position];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xD4AF37 });
+    const line = new THREE.Line(lineGeo, lineMat);
+    group.add(line);
+    phaseObjects.push(line);
+  }
+
+  scene.add(group);
+  phaseObjects.push(group);
+}
+
+// ===== ANIMATION =====
+let startTime = performance.now();
+let isPlaying = true;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const elapsed = (performance.now() - startTime) / 1000;
+  const phaseIndex = Math.floor(elapsed / PHASE_DURATION) % PHASES + 1;
+
+  if (phaseIndex !== currentPhase) {
+    setPhase(phaseIndex);
+  }
+
+  // Update shader uniforms
+  phaseObjects.forEach(obj => {
+    if (obj.isShaderMaterial) {
+      obj.material.uniforms.time.value = elapsed;
+    }
+  });
+
+  // Rotate objects
+  phaseObjects.forEach(obj => {
+    if (obj.isMesh && !obj.isInstancedMesh) {
+      obj.rotation.x += 0.005;
+      obj.rotation.y += 0.01;
+    }
+  });
+
+  // Camera movement
+  const camAngle = elapsed * 0.3;
+  camera.position.x = Math.sin(camAngle) * 20;
+  camera.position.z = Math.cos(camAngle) * 20;
+  camera.lookAt(0, 0, 0);
+
+  controls.update();
+  composer.render();
+}
+
+// ===== START =====
+setPhase(1);
+animate();
+
+// ===== EXPORT API =====
+window.__viewport = {
+  play: () => { isPlaying = true; startTime = performance.now() - (currentPhase - 1) * PHASE_DURATION * 1000; },
+  pause: () => { isPlaying = false; },
+  seek: (time) => { startTime = performance.now() - time * 1000; },
+  getCurrentPhase: () => currentPhase,
+  getElapsed: () => (performance.now() - startTime) / 1000
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/viewport-video.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

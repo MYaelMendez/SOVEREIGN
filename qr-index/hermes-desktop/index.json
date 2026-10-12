@@ -1,0 +1,536 @@
+{
+  "generated_at": "2026-10-04T16:57:29.338141+00:00",
+  "plugin_count": 31,
+  "plugins": [
+    {
+      "name": "ae-letterspace",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\ae-letterspace",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "funding-loops",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\funding-loops",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "glocal-dashboard",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\glocal-dashboard",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "glocal-funding",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\glocal-funding",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "html-forge",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\html-forge",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "llm-store",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\llm-store",
+      "registered_at": "2026-10-04T16:57:28.077559+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "local-scale",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\local-scale",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "media-agent",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\media-agent",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "mp4-factory",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\mp4-factory",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "privateclient-vault",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\privateclient-vault",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "py-nl",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\py-nl",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "repo-forge",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\repo-forge",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "sovereign-mesh",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\sovereign-mesh",
+      "registered_at": "2026-10-04T16:57:28.078584+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "sovereign-mesh-dashboard-manager",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\sovereign-mesh-dashboard-manager",
+      "registered_at": "2026-10-04T16:57:28.079106+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "vlc-media-player",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\desktop-plugins\\vlc-media-player",
+      "registered_at": "2026-10-04T16:57:28.079106+00:00",
+      "has_desktop": true
+    },
+    {
+      "name": "ae-letterspace",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\ae-letterspace",
+      "registered_at": "2026-10-04T16:57:28.079609+00:00",
+      "description": "æ Letterspace Navigator — every domain as a live surface.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "funding-loops",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\funding-loops",
+      "registered_at": "2026-10-04T16:57:28.080107+00:00",
+      "description": "Funding Loop Dashboard — the three economic loops, kept strictly separate.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "glocal-dashboard",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\glocal-dashboard",
+      "registered_at": "2026-10-04T16:57:28.080608+00:00",
+      "description": "Glocal Dashboard — supervision CV + mesh + compute, from live probes.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "glocal-funding",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\glocal-funding",
+      "registered_at": "2026-10-04T16:57:28.081112+00:00",
+      "description": "Glocal Funding Dashboard — funding loops against the glocal substrate.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "html-forge",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\html-forge",
+      "registered_at": "2026-10-04T16:57:28.081112+00:00",
+      "description": "HTML Forge plugin.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "keeper",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\keeper",
+      "registered_at": "2026-10-04T16:57:28.082137+00:00",
+      "description": "keeper — the glocal memory constellation's impulse.",
+      "has_tools": true
+    },
+    {
+      "name": "llm-store",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\llm-store",
+      "registered_at": "2026-10-04T16:57:28.082667+00:00",
+      "description": "LLM.STORE Digital Twin — the model store surface.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "local-scale",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\local-scale",
+      "registered_at": "2026-10-04T16:57:28.084115+00:00",
+      "description": "Local Compute Scale — what this machine can actually do.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "media-agent",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\media-agent",
+      "registered_at": "2026-10-04T16:57:28.084610+00:00",
+      "description": "Media Development Agent plugin.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "mp4-factory",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\mp4-factory",
+      "registered_at": "2026-10-04T16:57:28.085111+00:00",
+      "description": "MP4 Factory — render surfaces to video, honestly about tooling.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "privateclient-vault",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\privateclient-vault",
+      "registered_at": "2026-10-04T16:57:28.085610+00:00",
+      "description": "privateclient-vault — plugin entry point.",
+      "has_api": true
+    },
+    {
+      "name": "py-nl",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\py-nl",
+      "registered_at": "2026-10-04T16:57:28.086110+00:00",
+      "description": "Python Natural Language Interpreter — describe it, see the code, then run it.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "repo-forge",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\repo-forge",
+      "registered_at": "2026-10-04T16:57:28.086616+00:00",
+      "description": "repo-forge — plugin entry point.",
+      "has_api": true
+    },
+    {
+      "name": "sovereign-mesh",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\sovereign-mesh",
+      "registered_at": "2026-10-04T16:57:28.087611+00:00",
+      "has_api": true
+    },
+    {
+      "name": "sovereign-mesh-dashboard-manager",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\sovereign-mesh-dashboard-manager",
+      "registered_at": "2026-10-04T16:57:28.087611+00:00",
+      "description": "Sovereign Mesh Dashboard Manager — the mesh, from live probes.",
+      "has_tools": true,
+      "has_api": true
+    },
+    {
+      "name": "vlc-media-player",
+      "path": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\plugins\\vlc-media-player",
+      "registered_at": "2026-10-04T16:57:28.088631+00:00",
+      "description": "VLC Media Player — control a real player, or say it is not there.",
+      "has_tools": true,
+      "has_api": true
+    }
+  ],
+  "qr_results": [
+    {
+      "name": "ae-letterspace",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_ae-letterspace.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "ddeb32ef6c17c101"
+    },
+    {
+      "name": "funding-loops",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_funding-loops.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "3b09a1b1e58cc625"
+    },
+    {
+      "name": "glocal-dashboard",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_glocal-dashboard.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "29d366e459fbb0df"
+    },
+    {
+      "name": "glocal-funding",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_glocal-funding.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "12d46e4cb4d20cd4"
+    },
+    {
+      "name": "html-forge",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_html-forge.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "c173cbc74ff06737"
+    },
+    {
+      "name": "llm-store",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_llm-store.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "f192030e400cecf1"
+    },
+    {
+      "name": "local-scale",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_local-scale.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "2a5d325854e920cc"
+    },
+    {
+      "name": "media-agent",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_media-agent.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "4b33010c4f7676a3"
+    },
+    {
+      "name": "mp4-factory",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_mp4-factory.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "946594724945c975"
+    },
+    {
+      "name": "privateclient-vault",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_privateclient-vault.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "419a4c02e531d320"
+    },
+    {
+      "name": "py-nl",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_py-nl.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "04e211cddbf4820a"
+    },
+    {
+      "name": "repo-forge",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_repo-forge.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "215761794c132c37"
+    },
+    {
+      "name": "sovereign-mesh",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_sovereign-mesh.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "2947d35c93455182"
+    },
+    {
+      "name": "sovereign-mesh-dashboard-manager",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_sovereign-mesh-dashboard-manager.png",
+      "version": 8,
+      "size": [
+        440,
+        440
+      ],
+      "hash": "e8c40aed19971ccb"
+    },
+    {
+      "name": "vlc-media-player",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_vlc-media-player.png",
+      "version": 7,
+      "size": [
+        408,
+        408
+      ],
+      "hash": "2e1fed0bfdba8f0c"
+    },
+    {
+      "name": "ae-letterspace",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_ae-letterspace.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "1e549fe310832267"
+    },
+    {
+      "name": "funding-loops",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_funding-loops.png",
+      "version": 10,
+      "size": [
+        504,
+        504
+      ],
+      "hash": "31144a33352ae1dc"
+    },
+    {
+      "name": "glocal-dashboard",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_glocal-dashboard.png",
+      "version": 10,
+      "size": [
+        504,
+        504
+      ],
+      "hash": "de518736b98f0949"
+    },
+    {
+      "name": "glocal-funding",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_glocal-funding.png",
+      "version": 10,
+      "size": [
+        504,
+        504
+      ],
+      "hash": "bb77a7396ce1d314"
+    },
+    {
+      "name": "html-forge",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_html-forge.png",
+      "version": 8,
+      "size": [
+        440,
+        440
+      ],
+      "hash": "0b430b877596df92"
+    },
+    {
+      "name": "keeper",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_keeper.png",
+      "version": 8,
+      "size": [
+        440,
+        440
+      ],
+      "hash": "1b70cf8f3b504e10"
+    },
+    {
+      "name": "llm-store",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_llm-store.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "4981826cdf889ad9"
+    },
+    {
+      "name": "local-scale",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_local-scale.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "e7407718d990264e"
+    },
+    {
+      "name": "media-agent",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_media-agent.png",
+      "version": 8,
+      "size": [
+        440,
+        440
+      ],
+      "hash": "3b8b5794184a4a5b"
+    },
+    {
+      "name": "mp4-factory",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_mp4-factory.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "94999309f489d740"
+    },
+    {
+      "name": "privateclient-vault",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_privateclient-vault.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "d2874bf3dc04a1ce"
+    },
+    {
+      "name": "py-nl",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_py-nl.png",
+      "version": 9,
+      "size": [
+        472,
+        472
+      ],
+      "hash": "531ce96e5b16d24c"
+    },
+    {
+      "name": "repo-forge",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_repo-forge.png",
+      "version": 8,
+      "size": [
+        440,
+        440
+      ],
+      "hash": "1de939be6e481220"
+    },
+    {
+      "name": "sovereign-mesh",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_sovereign-mesh.png",
+      "version": 6,
+      "size": [
+        376,
+        376
+      ],
+      "hash": "3e7fc4d4134df5f2"
+    },
+    {
+      "name": "sovereign-mesh-dashboard-manager",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_sovereign-mesh-dashboard-manager.png",
+      "version": 11,
+      "size": [
+        536,
+        536
+      ],
+      "hash": "7a12e1650d61a456"
+    },
+    {
+      "name": "vlc-media-player",
+      "filepath": "C:\\æ\\qr-index\\hermes-desktop\\plugin_vlc-media-player.png",
+      "version": 10,
+      "size": [
+        504,
+        504
+      ],
+      "hash": "d6b2313e586fbbdf"
+    }
+  ],
+  "master_index": {
+    "filepath": "C:\\æ\\qr-index\\hermes-desktop\\hermes_desktop_index.png",
+    "chunks": 1,
+    "hash": "62da79ff0eb57b8d"
+  }
+}

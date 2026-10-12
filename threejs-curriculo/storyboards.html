@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOLLYWOOD'S GOLDEN AGE STORYBOARDS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; }
+  canvas { display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10;
+    font-family: 'JetBrains Mono', monospace; color: #D4AF37; }
+  .act { position: absolute; top: 70px; left: 0; right: 0; text-align: center;
+    font-size: 10px; letter-spacing: 5px; color: rgba(212,175,55,0.55); }
+  .title { position: absolute; top: 96px; left: 0; right: 0; text-align: center;
+    font-size: 30px; letter-spacing: 4px; font-weight: 700;
+    text-shadow: 0 0 30px rgba(212,175,55,0.5); line-height: 1.2; }
+  .meta { position: absolute; top: 178px; left: 0; right: 0; text-align: center;
+    font-size: 11px; letter-spacing: 2px; color: rgba(240,236,228,0.75); line-height: 1.8; }
+  .meta b { color: #D4AF37; }
+  .note { position: absolute; bottom: 150px; left: 0; right: 0; text-align: center;
+    font-size: 10px; letter-spacing: 1px; color: rgba(240,236,228,0.55);
+    padding: 0 60px; line-height: 1.7; }
+  .src { position: absolute; bottom: 78px; left: 0; right: 0; text-align: center;
+    font-size: 8px; letter-spacing: 2px; color: rgba(212,175,55,0.4); }
+  .brand { position: absolute; bottom: 42px; left: 0; right: 0; text-align: center;
+    font-size: 11px; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="act" id="act"></div>
+  <div class="title" id="title"></div>
+  <div class="meta" id="meta"></div>
+  <div class="note" id="note"></div>
+  <div class="src" id="src"></div>
+  <div class="brand">æ://</div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 720, H = 1280, FPS = 30;
+
+// ── SOURCE: davidnavas.com — Hollywood's Golden Age Storyboards (Part 1) ──
+const ACTS = [
+  {
+    act: 'ACT I',
+    title: 'MAN HUNT',
+    year: '1941',
+    dir: 'Fritz Lang',
+    artist: 'Wiard B. Ihnen',
+    note: 'Graphite pencil. Classic film noir — large parts of the page left in the dark. Thorndike rows for port, avoiding the Nazi searchlight that rakes the water.',
+    tags: ['chiaroscuro', 'expressionist', 'Rogue Male'],
+  },
+  {
+    act: 'ACT II',
+    title: 'THE MAGNIFICENT AMBERSONS',
+    year: '1942',
+    dir: 'Orson Welles',
+    artist: 'unattributed',
+    note: 'The Amberson mansion, built at RKO. Cut from 131 to 88 minutes without Welles\'s approval. The edited footage was destroyed — all that remains is the script and these boards.',
+    tags: ['ballroom', 'tracking shot', 'lost cut'],
+  },
+  {
+    act: 'ACT III',
+    title: 'THE BIG SLEEP',
+    year: '1946',
+    dir: 'Howard Hawks',
+    artist: 'Bill Herwig',
+    note: 'A former Disney animator\'s boards. Bogart as Marlowe, Bacall as Vivian. Rain-slick exteriors, claustrophobic interiors — art directed by Carl Jules Weyl.',
+    tags: ['film noir', 'Chandler', 'Faulkner'],
+  },
+];
+
+const GOLD = 0xD4AF37, WARM = 0xffd9a0, COLD = 0x7fb2d9;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.028);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+camera.position.set(0, 0, 10);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x1a1a22, 0.8));
+// noir key light — hard, from upper left (chiaroscuro)
+const key = new THREE.SpotLight(WARM, 6, 40, Math.PI / 5, 0.5, 1.2);
+key.position.set(-5, 8, 6); scene.add(key);
+const rim = new THREE.PointLight(COLD, 1.6, 30); rim.position.set(5, -2, 3); scene.add(rim);
+
+// ── STORYBOARD PANELS — graphite frames revealing in sequence ──
+const PANELS_PER_ACT = 4;
+const PANEL_W = 3.4, PANEL_H = 2.4;
+const panelGeo = new THREE.PlaneGeometry(PANEL_W, PANEL_H);
+const panelGroup = new THREE.Group();
+scene.add(panelGroup);
+
+function makeBoardTexture(act, idx) {
+  const c = document.createElement('canvas');
+  c.width = 680; c.height = 480;
+  const g = c.getContext('2d');
+  // paper-ish dark ground
+  g.fillStyle = '#0a0906'; g.fillRect(0, 0, 680, 480);
+  // storyboard border
+  g.strokeStyle = 'rgba(212,175,55,0.55)'; g.lineWidth = 2; g.strokeRect(10, 10, 660, 460);
+  // panel dividers (2x2 board)
+  g.strokeStyle = 'rgba(212,175,55,0.18)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(340,10); g.lineTo(340,470); g.moveTo(10,240); g.lineTo(670,240); g.stroke();
+  // sketched "drawing" — pencil strokes, deterministic per act/idx
+  g.strokeStyle = 'rgba(232,228,220,0.5)'; g.lineWidth = 1.4;
+  let seed = act.title.length * 37 + idx * 101;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  for (let s = 0; s < 90; s++) {
+    g.beginPath();
+    const x0 = 30 + rnd() * 620, y0 = 30 + rnd() * 420;
+    g.moveTo(x0, y0);
+    g.lineTo(x0 + (rnd() - 0.5) * 120, y0 + (rnd() - 0.5) * 90);
+    g.stroke();
+  }
+  // chiaroscuro shadow mass (lower-left dark)
+  const grad = g.createLinearGradient(0, 240, 0, 480);
+  grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+  g.fillStyle = grad; g.fillRect(10, 240, 660, 230);
+  // board number
+  g.fillStyle = 'rgba(212,175,55,0.7)'; g.font = 'bold 20px monospace';
+  g.fillText('BOARD ' + (idx + 1), 26, 448);
+  g.fillStyle = 'rgba(212,175,55,0.35)'; g.font = '16px monospace';
+  g.fillText(act.title + ' · ' + act.year, 430, 448);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+const panels = [];
+for (let a = 0; a < ACTS.length; a++) {
+  for (let p = 0; p < PANELS_PER_ACT; p++) {
+    const tex = makeBoardTexture(ACTS[a], p);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, side: THREE.DoubleSide });
+    const m = new THREE.Mesh(panelGeo, mat);
+    m.position.set(0, 0, -1 - p * 0.6);
+    panelGroup.add(m);
+    panels.push({ m, mat, act: a, panel: p });
+  }
+}
+
+// ── DUST / GRAIN PARTICLES — the projection booth ──
+const DN = 2500;
+const dGeo = new THREE.BufferGeometry();
+const dPos = new Float32Array(DN * 3);
+const dCol = new Float32Array(DN * 3);
+for (let i = 0; i < DN; i++) {
+  dPos[i*3]   = (Math.random() - 0.5) * 12;
+  dPos[i*3+1] = (Math.random() - 0.5) * 20;
+  dPos[i*3+2] = (Math.random() - 0.5) * 16;
+  const c = new THREE.Color().setHSL(0.09 + Math.random()*0.05, 0.5, 0.3 + Math.random()*0.35);
+  dCol[i*3] = c.r; dCol[i*3+1] = c.g; dCol[i*3+2] = c.b;
+}
+dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+dGeo.setAttribute('color', new THREE.BufferAttribute(dCol, 3));
+const dMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `uniform float uTime; varying vec3 vColor;
+    void main(){ vColor=color; vec3 p=position;
+      p.y = mod(p.y + uTime*0.25 + 10.0, 20.0) - 10.0;
+      vec4 mv=modelViewMatrix*vec4(p,1.0); gl_PointSize=1.8*(300.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `varying vec3 vColor;
+    void main(){ float d=length(gl_PointCoord-0.5); if(d>0.5)discard; gl_FragColor=vec4(vColor,(1.0-d*2.0)*0.45); }`,
+  vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+scene.add(new THREE.Points(dGeo, dMat));
+
+// ── PROJECTOR BEAM — the cone of light ──
+const beamGeo = new THREE.ConeGeometry(4.2, 14, 32, 1, true);
+const beamMat = new THREE.MeshBasicMaterial({ color: WARM, transparent: true, opacity: 0.04, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+const beam = new THREE.Mesh(beamGeo, beamMat);
+beam.rotation.x = Math.PI / 2; beam.position.set(0, 0, 5);
+scene.add(beam);
+
+// ── POST: bloom + film grade (grain, vignette, flicker) ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.75, 0.5, 0.85));
+const GradePass = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){ vec2 d=vUv-0.5; float r2=dot(d,d);
+      float ca=0.002+r2*0.005; vec3 col;
+      col.r=texture2D(tDiffuse,vUv+d*ca).r; col.g=texture2D(tDiffuse,vUv).g; col.b=texture2D(tDiffuse,vUv-d*ca).b;
+      col*=smoothstep(1.25,0.2,r2*2.4);
+      // film grain
+      float g = rand(vUv*uRes + fract(uTime)*97.0);
+      col += (g-0.5)*0.07;
+      // projector flicker
+      col *= 0.96 + 0.04*sin(uTime*38.0) + 0.02*rand(vec2(uTime,1.0));
+      // scanline
+      col *= 1.0-0.04*step(0.5,fract(vUv.y*uRes.y*0.5));
+      gl_FragColor=vec4(col,1.0); }`,
+};
+const gradePass = new ShaderPass(GradePass);
+composer.addPass(gradePass);
+composer.addPass(new OutputPass());
+
+// ── NARRATIVE TIMELINE ──
+const SEC_PER_ACT = 5.0;
+const TOTAL = ACTS.length * SEC_PER_ACT;
+const el = { act: document.getElementById('act'), title: document.getElementById('title'),
+             meta: document.getElementById('meta'), note: document.getElementById('note'),
+             src: document.getElementById('src') };
+
+function applyFrame(t) {
+  dMat.uniforms.uTime.value = t;
+  gradePass.uniforms.uTime.value = t;
+
+  const actIdx = Math.min(Math.floor(t / SEC_PER_ACT), ACTS.length - 1);
+  const local = (t % SEC_PER_ACT) / SEC_PER_ACT;      // 0..1 within act
+  const act = ACTS[actIdx];
+
+  // panels reveal in sequence within the act
+  panels.forEach((p) => {
+    if (p.act < actIdx) { p.mat.opacity = 0.10; p.m.position.z = -1 - p.panel * 0.6; p.m.position.y = 0; return; }
+    if (p.act > actIdx) { p.mat.opacity = 0; return; }
+    const threshold = p.panel / PANELS_PER_ACT;
+    const reveal = Math.max(0, Math.min(1, (local - threshold * 0.7) * 4));
+    p.mat.opacity = reveal * 0.9;
+    // panels drift slightly apart as they reveal (animatic feel)
+    p.m.position.y = (p.panel - 1.5) * 0.15 * reveal;
+    p.m.position.z = -1 - p.panel * 0.6 + reveal * 0.5;
+    p.m.rotation.z = (p.panel - 1.5) * 0.02 * reveal;
+  });
+
+  // text
+  el.act.textContent = act.act + ' · ' + act.year;
+  el.title.textContent = act.title;
+  el.meta.innerHTML = `DIR <b>${act.dir}</b> · BOARDS <b>${act.artist}</b>`;
+  el.note.textContent = act.note;
+  el.src.textContent = 'SOURCE · davidnavas.com — Hollywood\'s Golden Age Storyboards (Part 1)';
+  el.title.style.opacity = 0.35 + local * 0.65;
+  el.meta.style.opacity = 0.35 + local * 0.65;
+  el.note.style.opacity = Math.min(0.7, local * 2);
+
+  // camera: slow push, noir framing
+  camera.position.x = Math.sin(t * 0.15) * 0.4;
+  camera.position.y = 0.2 + Math.sin(t * 0.11) * 0.25;
+  camera.position.z = 10 - Math.sin(t * 0.08) * 0.8;
+  camera.lookAt(0, 0, -1.5);
+  beam.material.opacity = 0.03 + 0.015 * Math.sin(t * 3.0);
+}
+
+const clock = new THREE.Clock();
+let driven = false;
+function animate() {
+  requestAnimationFrame(animate);
+  if (driven) return;
+  applyFrame(clock.getElapsedTime());
+  composer.render();
+}
+animate();
+
+window.__renderFrame = (i, total) => { driven = true; applyFrame(i / FPS); composer.render(); return true; };
+window.__STORYBOARDS__ = { ready: true, acts: ACTS.length, deterministic: true };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/storyboards.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

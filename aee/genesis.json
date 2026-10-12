@@ -1,0 +1,24 @@
+{
+  "system": "\u00e6://",
+  "aee": {
+    "genesis_block": {
+      "hash": "genesis-aee-20261007",
+      "timestamp": "2026-10-07T21:45:00Z",
+      "description": "AEE genesis \u2014 first SPEC hash for agentic electronic engineering",
+      "spec": "6d2d6be292f6141ebca0b9f2bad8e2fc05e7854ac8294595eae18a55ad202d28",
+      "rtl": "7134e83192dd0b31f80b913ef3b2a10767d6a5551902724fbb94bf9e8e535822",
+      "synthesis": null,
+      "layout": null,
+      "receipt": "ae://receipt/genesis-aee-20261007",
+      "sim": "9a23751c04f66a89db8ae4730f0c3db852984d6baf0040069dae063a9312df9b"
+    },
+    "receipt_chain": [
+      {
+        "receipt": "ae://receipt/aee-spec-001-6d2d6be292f6141e",
+        "timestamp": "2026-10-08T08:35:38.953334+00:00",
+        "description": "SPEC-001 UART Transmitter \u2014 design phase complete"
+      }
+    ],
+    "status": "genesis_created"
+  }
+}

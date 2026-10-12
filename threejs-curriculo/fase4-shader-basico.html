@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 4 · Shader Foundations — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.88);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --bad: #f85149;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+  .panel h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25); font-family: inherit;
+  }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 9px 0 3px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-all; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: #f2cc60; }
+
+  #debug { top: 12px; left: 12px; width: 340px; padding: 12px 14px; }
+  #controls { top: 12px; right: 12px; width: 268px; padding: 12px 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+
+  .btn {
+    display: block; width: 100%; margin: 6px 0; padding: 7px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; text-align: left; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30363d; margin-right: 8px; vertical-align: middle; }
+  .btn.on .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+
+  .slider { margin: 7px 0; }
+  .slider label { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; }
+  .slider label b { color: var(--text); font-weight: 500; }
+  .slider input[type=range] { width: 100%; margin-top: 3px; accent-color: var(--accent); }
+
+  #shader { bottom: 12px; left: 12px; width: 640px; max-width: calc(100vw - 24px); padding: 10px 14px; }
+  #shader .head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  #shader h1 { margin: 0; padding: 0; border: 0; }
+  #shader .tabs { display: flex; gap: 6px; margin: 8px 0 6px; }
+  #shader .tab {
+    padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px;
+    background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.25); color: var(--dim);
+  }
+  #shader .tab.on { color: var(--text); border-color: var(--accent); background: rgba(88,166,255,.2); }
+  #shader pre {
+    max-height: 320px; overflow: auto; white-space: pre; font-size: 11px;
+    background: rgba(0,0,0,.35); border: 1px solid rgba(88,166,255,.15);
+    border-radius: 6px; padding: 8px 10px; color: #a9b6c4;
+  }
+  #shader pre .inc { color: #f2cc60; font-weight: 600; }
+  #shader pre .pp  { color: #ff7b72; }
+  #shader pre .cm  { color: #6e7681; font-style: italic; }
+  #shader.collapsed .tabs, #shader.collapsed pre { display: none; }
+
+  #legend { bottom: 12px; right: 12px; padding: 9px 14px; color: var(--dim); font-size: 11.5px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 680px; }
+  #error h2 { color: var(--bad); font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+
+  #glconsole {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    width: min(720px, calc(100vw - 24px)); max-height: 40vh; overflow: auto;
+    display: none; padding: 12px 14px; z-index: 20;
+    border-color: rgba(248, 81, 73, .6);
+  }
+  #glconsole h1 { color: var(--bad); border-color: rgba(248,81,73,.3); }
+  #glconsole pre { white-space: pre-wrap; font-size: 11px; color: #ffb4ae; }
+  #glconsole .close { float: right; cursor: pointer; color: var(--dim); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════ PANEL DE UNIFORMS / DEBUG ══════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Uniforms · Fase 4</h1>
+
+  <div class="group-title">Día 2 · Uniforms (CPU → GPU)</div>
+  <div class="row"><span class="k">uTime</span><span class="v hi" id="u-time">—</span></div>
+  <div class="row"><span class="k">uResolution</span><span class="v hi" id="u-res">—</span></div>
+  <div class="row"><span class="k">uMouse (uv 0..1)</span><span class="v hl" id="u-mouse">—</span></div>
+  <div class="row"><span class="k">uAmplitude</span><span class="v" id="u-amp">—</span></div>
+  <div class="row"><span class="k">uFreq</span><span class="v" id="u-freq">—</span></div>
+  <div class="row"><span class="k">uMouseStr</span><span class="v" id="u-mstr">—</span></div>
+
+  <div class="group-title">Día 3 · Attributes (geometry → vertex)</div>
+  <div class="row"><span class="k">position</span><span class="v" id="a-pos">—</span></div>
+  <div class="row"><span class="k">normal</span><span class="v" id="a-nrm">—</span></div>
+  <div class="row"><span class="k">uv</span><span class="v" id="a-uv">—</span></div>
+  <div class="row"><span class="k">aPhase <i>(custom)</i></span><span class="v hl" id="a-phase">—</span></div>
+
+  <div class="group-title">Día 7 · Debug / render</div>
+  <div class="row"><span class="k">three.js</span><span class="v hi" id="rev">—</span></div>
+  <div class="row"><span class="k">programas GL</span><span class="v" id="progs">—</span></div>
+  <div class="row"><span class="k">triangles</span><span class="v" id="tris">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v" id="calls">—</span></div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="fps">—</span></div>
+  <div class="row"><span class="k">compile status</span><span class="v hi" id="compile">—</span></div>
+</div>
+
+<!-- ══════════════ CONTROLES ══════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Controles</h1>
+
+  <button class="btn on" id="btn-animate"><span class="dot"></span>Animar uTime</button>
+  <button class="btn" id="btn-wire"><span class="dot"></span>Wireframe</button>
+  <button class="btn" id="btn-mouse"><span class="dot on"></span>Influencia del mouse</button>
+
+  <div class="slider">
+    <label>uAmplitude <b id="lb-amp">0.28</b></label>
+    <input type="range" id="sl-amp" min="0" max="0.9" step="0.01" value="0.28" />
+  </div>
+  <div class="slider">
+    <label>uFreq <b id="lb-freq">2.20</b></label>
+    <input type="range" id="sl-freq" min="0.5" max="6" step="0.05" value="2.2" />
+  </div>
+  <div class="slider">
+    <label>uMouseStr <b id="lb-mstr">1.00</b></label>
+    <input type="range" id="sl-mstr" min="0" max="2" step="0.01" value="1" />
+  </div>
+
+  <div class="group-title">Material (Día 1 ↔ 5)</div>
+  <button class="btn on" id="btn-full"><span class="dot on"></span>Shader completo (chunks)</button>
+  <button class="btn" id="btn-min"><span class="dot"></span>Shader mínimo (color plano)</button>
+
+  <div class="group-title">Día 6 · Chunks & clipping</div>
+  <button class="btn" id="btn-clip"><span class="dot"></span>Plano de corte global</button>
+  <button class="btn" id="btn-recompile">↻ Forzar recompilación</button>
+  <button class="btn" id="btn-palette">🎨 Cambiar paleta</button>
+</div>
+
+<!-- ══════════════ VISOR DE SHADERS ══════════════ -->
+<div id="shader" class="panel">
+  <div class="head" id="shader-head">
+    <h1>▤ Código GLSL — shader de la malla principal</h1>
+    <span style="color:var(--dim)">▾</span>
+  </div>
+  <div class="tabs">
+    <div class="tab on" data-src="vertex">vertexShader</div>
+    <div class="tab" data-src="fragment">fragmentShader</div>
+    <div class="tab" data-src="minimal">mínimo (Día 1)</div>
+  </div>
+  <pre id="src"></pre>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Mouse</b> ripple + glow en el shader
+</div>
+
+<!-- Consola de errores de shader (Día 7) -->
+<div id="glconsole" class="panel">
+  <span class="close" id="glclose">✕</span>
+  <h1>⚠ Error de compilación GLSL</h1>
+  <pre id="glmsg"></pre>
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/three.module.js</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase4-shader-basico.html</code></p>
+</div></div>
+
+<!-- ══════════════ IMPORT MAP (todo local, sin CDN) ══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─────────────────────────────────────────────────────────────
+// 0. Utilidades de UI
+// ─────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(d);
+
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message && /import|module|three/i.test(e.message)) fail(e); });
+
+// Diagnóstico global (lo lee el test headless)
+window.__FASE4__ = { ready: false, shaderErrors: 0, revision: THREE.REVISION, log: [] };
+
+// ─────────────────────────────────────────────────────────────
+// 1. Renderer · Scene · Cámara
+// ─────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+// Fog real: la niebla la aplican los propios shaders vía #include <fog_*>
+scene.fog = new THREE.Fog(0x0d1117, 7.5, 26);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(3.4, 2.4, 4.6);
+
+// ─────────────────────────────────────────────────────────────
+// 2. Uniforms compartidos  (Día 2)
+//    Mismo objeto de uniform en varios materiales ⇒ una sola
+//    escritura en CPU actualiza todos los shaders.
+// ─────────────────────────────────────────────────────────────
+const shared = {
+  uTime:       { value: 0 },
+  uResolution: { value: new THREE.Vector2(1, 1) },   // px del drawing buffer
+  uMouse:      { value: new THREE.Vector2(0.5, 0.5) }, // uv 0..1 (origen abajo-izq)
+  uMouseStr:   { value: 1.0 },
+};
+
+// Paletas conmutables (colores en espacio de trabajo lineal)
+const PALETTES = [
+  { A: '#1f6feb', B: '#3fb950', C: '#f2cc60' }, // azul / verde / ámbar
+  { A: '#a371f7', B: '#f778ba', C: '#79c0ff' }, // violeta / rosa / celeste
+  { A: '#f85149', B: '#d29922', C: '#3fb950' }, // rojo / ámbar / verde
+];
+let paletteIndex = 0;
+
+// ─────────────────────────────────────────────────────────────
+// 3. SHADER DEL VERTEX  (Días 1-3-4-6)
+//    · atributo custom  : aPhase
+//    · varyings         : vWorldPos, vWorldNormal, vLocalPos, vDisp, vPhase
+//    · chunks           : common, uv_*, normal_*, fog_*, clipping_planes_*
+// ─────────────────────────────────────────────────────────────
+const VERT = /* glsl */`
+// ── Uniforms (los del renderer son implícitos: modelMatrix,
+//    modelViewMatrix, projectionMatrix, normalMatrix, cameraPosition) ──
+uniform float uTime;
+uniform vec2  uResolution;
+uniform vec2  uMouse;
+uniform float uMouseStr;
+uniform float uAmplitude;
+uniform float uFreq;
+
+// ── Atributo CUSTOM (Día 3). position/normal/uv los inyecta el renderer ──
+attribute float aPhase;
+
+// ── Varyings interpoladas hacia el fragment shader (Día 4) ──
+varying vec3  vWorldPos;
+varying vec3  vWorldNormal;
+varying vec3  vLocalPos;
+varying float vDisp;
+varying float vPhase;
+
+// ── Chunks de Three.js (Día 6). Traen declaraciones y código estándar:
+//    <common>               -> PI, saturate(), pow2() ...
+//    <uv_pars_vertex>       -> varying vec2 vUv;  (bajo #ifdef USE_UV)
+//    <normal_pars_vertex>   -> varying vec3 vNormal;
+//    <fog_pars_vertex>      -> varying float vFogDepth;
+//    <clipping_planes_pars_vertex> -> varying vec3 vClipPosition;      ──
+#include <common>
+#include <uv_pars_vertex>
+#include <normal_pars_vertex>
+#include <fog_pars_vertex>
+#include <clipping_planes_pars_vertex>
+
+void main() {
+  // <uv_vertex> asigna vUv = uv  (requiere defines: { USE_UV: '' })
+  #include <uv_vertex>
+  // <beginnormal_vertex>  -> vec3 objectNormal = vec3( normal );
+  #include <beginnormal_vertex>
+  // <defaultnormal_vertex> -> vec3 transformedNormal = normalMatrix * objectNormal;
+  #include <defaultnormal_vertex>
+  // <begin_vertex>        -> vec3 transformed = vec3( position );
+  #include <begin_vertex>
+
+  // ── Día 3/2: deformación procedural de la POSICIÓN ──
+  float w1 = sin( transformed.x * uFreq        + uTime * 1.30 + aPhase );
+  float w2 = cos( transformed.y * uFreq * 0.80 - uTime * 1.10 + aPhase * 1.7 );
+  float w3 = sin( transformed.z * uFreq * 1.20 + uTime * 0.70 + aPhase * 0.5 );
+  float wave = ( w1 + w2 + w3 ) / 3.0;
+
+  // Ripple radial orientado por el mouse (uv 0..1 -> -1..1)
+  vec2  m      = ( uMouse - 0.5 ) * 2.0;
+  float ripple = sin( length( transformed.xy ) * 6.0 - uTime * 3.0 + dot( m, transformed.xy ) )
+               * 0.5 * uMouseStr;
+
+  float disp = ( wave * 0.75 + ripple * 0.25 ) * uAmplitude;
+  transformed += normal * disp;          // desplazamos a lo largo de la normal
+
+  // ── Salidas a varyings ──
+  vDisp     = disp;
+  vPhase    = aPhase;
+  vLocalPos = transformed;
+
+  // <project_vertex> -> declara mvPosition y escribe gl_Position
+  #include <project_vertex>
+  // <clipping_planes_vertex> -> vClipPosition = -mvPosition.xyz
+  #include <clipping_planes_vertex>
+
+  vWorldPos    = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;
+  vWorldNormal = normalize( mat3( modelMatrix ) * objectNormal );
+
+  // <normal_vertex> -> vNormal = normalize( transformedNormal );  (view space)
+  #include <normal_vertex>
+  // <fog_vertex>    -> vFogDepth = -mvPosition.z;
+  #include <fog_vertex>
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 4. SHADER DEL FRAGMENT  (Días 4-5-6)
+//    · interpolación de color a partir de las varyings
+//    · fresnel, difusa, glow del mouse (uResolution)
+//    · chunks: fog, clipping, tonemapping, colorspace
+// ─────────────────────────────────────────────────────────────
+const FRAG = /* glsl */`
+uniform float uTime;
+uniform vec2  uResolution;
+uniform vec2  uMouse;
+uniform float uMouseStr;
+uniform vec3  uColorA;
+uniform vec3  uColorB;
+uniform vec3  uColorC;
+
+varying vec3  vWorldPos;
+varying vec3  vWorldNormal;
+varying vec3  vLocalPos;
+varying float vDisp;
+varying float vPhase;
+
+// ── Chunks de Three.js ──
+//   <uv_pars_fragment>            -> varying vec2 vUv;
+//   <normal_pars_fragment>        -> varying vec3 vNormal;   (view space)
+//   <fog_pars_fragment>           -> fogColor / fogNear / fogFar
+//   <clipping_planes_pars_fragment> -> uniform vec4 clippingPlanes[]
+//   El renderer YA inyecta tonemapping_pars_fragment y
+//   colorspace_pars_fragment en el prefijo (no se incluyen aquí).   ──
+#include <common>
+#include <uv_pars_fragment>
+#include <normal_pars_fragment>
+#include <fog_pars_fragment>
+#include <clipping_planes_pars_fragment>
+
+void main() {
+  // <clipping_planes_fragment> descarta los fragmentos cortados
+  #include <clipping_planes_fragment>
+
+  // ── Día 4: color interpolado desde las varyings ──
+  vec3 col = mix( uColorA, uColorB, smoothstep( -0.30, 0.30, vDisp ) );
+  col = mix( col, uColorC, pow( clamp( abs( vDisp ) * 3.0, 0.0, 1.0 ), 1.5 ) );
+
+  // gradiente por UV (vUv declarado por <uv_pars_fragment>)
+  col *= 0.75 + 0.45 * vUv.y;
+
+  // bandas animadas en espacio local
+  col += 0.08 * sin( vLocalPos.y * 14.0 - uTime * 2.5 + vPhase );
+
+  // ── Día 5: iluminación propia (difusa desde la normal de mundo) ──
+  vec3  L    = normalize( vec3( 0.55, 0.90, 0.45 ) );
+  float diff = max( dot( normalize( vWorldNormal ), L ), 0.0 );
+  col *= 0.32 + 0.88 * diff;
+
+  // Fresnel usando la dirección de cámara (uniform cameraPosition)
+  vec3  viewDir = normalize( cameraPosition - vWorldPos );
+  float fres    = pow( 1.0 - max( dot( normalize( vWorldNormal ), viewDir ), 0.0 ), 2.5 );
+  col += fres * 0.55 * uColorC;
+
+  // ── Día 2: glow del mouse usando uResolution + gl_FragCoord ──
+  vec2  suv  = gl_FragCoord.xy / uResolution;     // 0..1 en px del buffer
+  float d    = distance( suv, uMouse );
+  float glow = smoothstep( 0.32, 0.0, d );
+  col += glow * uMouseStr * vec3( 0.22, 0.42, 0.80 );
+
+  gl_FragColor = vec4( col, 1.0 );
+
+  // ── Chunks de salida (en el orden estándar de Three.js) ──
+  #include <fog_fragment>          // mezcla con fogColor (espacio lineal)
+  #include <tonemapping_fragment>  // ACES Filmic
+  #include <colorspace_fragment>   // linear -> sRGB
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 5. SHADER MÍNIMO (Día 1) — sin chunks, color plano
+// ─────────────────────────────────────────────────────────────
+const VERT_MIN = /* glsl */`
+uniform float uTime;
+void main() {
+  vec3 p = position;
+  p += normal * sin( p.y * 3.0 + uTime ) * 0.06;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( p, 1.0 );
+}
+`;
+const FRAG_MIN = /* glsl */`
+uniform vec3 uColorA;
+void main() {
+  gl_FragColor = vec4( uColorA, 1.0 );
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 6. Geometría + atributo CUSTOM (Día 3)
+// ─────────────────────────────────────────────────────────────
+const heroGeo = new THREE.IcosahedronGeometry(1.5, 20); // ~11k triángulos: superficie densa
+
+const posAttr = heroGeo.attributes.position;
+const phases  = new Float32Array(posAttr.count);
+for (let i = 0; i < posAttr.count; i++) {
+  // fase determinista derivada de la posición → olas desincronizadas
+  phases[i] = posAttr.getX(i) * 0.70 + posAttr.getY(i) * 1.30 + posAttr.getZ(i) * 0.90;
+}
+heroGeo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+heroGeo.computeVertexNormals();
+
+// ─────────────────────────────────────────────────────────────
+// 7. ShaderMaterial principal (Día 5)
+//    IMPORTANTE: al usar <fog_*> hay que aportar los uniforms de
+//    niebla (UniformsLib.fog) porque el renderer los refresca.
+// ─────────────────────────────────────────────────────────────
+function makePaletteColors() {
+  const p = PALETTES[paletteIndex];
+  return {
+    uColorA: { value: new THREE.Color(p.A) },
+    uColorB: { value: new THREE.Color(p.B) },
+    uColorC: { value: new THREE.Color(p.C) },
+  };
+}
+
+const heroUniforms = Object.assign(
+  THREE.UniformsUtils.clone(THREE.UniformsLib.fog),  // fogColor, fogNear, fogFar
+  shared,                                            // uTime, uResolution, uMouse, uMouseStr
+  makePaletteColors(),
+  {
+    uAmplitude: { value: 0.28 },
+    uFreq:      { value: 2.20 },
+  }
+);
+
+const heroMaterial = new THREE.ShaderMaterial({
+  uniforms: heroUniforms,
+  vertexShader: VERT,
+  fragmentShader: FRAG,
+  fog: true,                       // activa #define USE_FOG en el prefijo
+  defines: { USE_UV: '' },         // activa varying vec2 vUv en los chunks uv_*
+  glslVersion: null,               // GLSL ES 1.00 (attribute/varying/gl_FragColor)
+});
+
+const heroMesh = new THREE.Mesh(heroGeo, heroMaterial);
+heroMesh.name = 'HeroIcosahedron';
+scene.add(heroMesh);
+
+// ─────────────────────────────────────────────────────────────
+// 8. Material MÍNIMO (Día 1) para conmutar
+// ─────────────────────────────────────────────────────────────
+const minimalUniforms = Object.assign({ uTime: shared.uTime }, makePaletteColors());
+const minimalMaterial = new THREE.ShaderMaterial({
+  uniforms: minimalUniforms,
+  vertexShader: VERT_MIN,
+  fragmentShader: FRAG_MIN,
+  fog: false,      // sin chunks de niebla ⇒ sin uniforms de niebla
+});
+// el mínimo solo usa uColorA; el resto sobra pero no molesta
+delete minimalUniforms.uColorB;
+delete minimalUniforms.uColorC;
+
+// ─────────────────────────────────────────────────────────────
+// 9. Fondo: esfera invertida (demuestra uResolution + uMouse en otro shader)
+// ─────────────────────────────────────────────────────────────
+const skyGeo = new THREE.SphereGeometry(70, 32, 16);
+const skyUniforms = Object.assign({}, shared, {
+  uTop: { value: new THREE.Color('#101826') },
+  uBot: { value: new THREE.Color('#05070c') },
+});
+const skyMaterial = new THREE.ShaderMaterial({
+  uniforms: skyUniforms,
+  fog: false,
+  side: THREE.BackSide,
+  depthWrite: false,
+  vertexShader: /* glsl */`
+    varying vec2 vUvSky;
+    void main() {
+      vUvSky = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    }
+  `,
+  fragmentShader: /* glsl */`
+    uniform vec2  uResolution;
+    uniform vec2  uMouse;
+    uniform vec3  uTop;
+    uniform vec3  uBot;
+    varying vec2  vUvSky;
+    void main() {
+      vec3 col = mix( uBot, uTop, vUvSky.y );
+      // vignette dependiente de la resolución (relación de aspecto)
+      float aspect = uResolution.x / uResolution.y;
+      vec2  p  = ( vUvSky - 0.5 ) * vec2( aspect, 1.0 );
+      float v  = smoothstep( 0.85, 0.15, length( p ) );
+      col *= 0.55 + 0.65 * v;
+      // leve halo que sigue al mouse
+      float g = smoothstep( 0.45, 0.0, distance( vUvSky, uMouse ) );
+      col += g * 0.06;
+      gl_FragColor = vec4( col, 1.0 );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }
+  `,
+});
+const skyMesh = new THREE.Mesh(skyGeo, skyMaterial);
+skyMesh.name = 'Sky';
+scene.add(skyMesh);
+
+// ─────────────────────────────────────────────────────────────
+// 10. OrbitControls
+// ─────────────────────────────────────────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 2.2;
+controls.maxDistance = 18;
+controls.target.set(0, 0, 0);
+controls.update();
+
+// ─────────────────────────────────────────────────────────────
+// 11. Mouse → uMouse (uv 0..1 con origen abajo-izquierda)
+// ─────────────────────────────────────────────────────────────
+renderer.domElement.addEventListener('pointermove', (e) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  shared.uMouse.value.x = (e.clientX - r.left) / r.width;
+  shared.uMouse.value.y = 1 - (e.clientY - r.top) / r.height;
+});
+
+// ─────────────────────────────────────────────────────────────
+// 12. Día 7 · Debugging de shaders
+// ─────────────────────────────────────────────────────────────
+function showShaderError(text) {
+  window.__FASE4__.shaderErrors++;
+  window.__FASE4__.log.push(text.slice(0, 400));
+  $('glmsg').textContent = text;
+  $('glconsole').style.display = 'block';
+  $('compile').textContent = 'ERROR';
+  $('compile').style.color = 'var(--bad)';
+  console.error('[Fase 4] GLSL:', text);
+}
+
+renderer.debug.checkShaderErrors = true;
+renderer.debug.onShaderError = (gl, program, vs, fs) => {
+  const parts = [];
+  const v = gl.getShaderInfoLog(vs);
+  const f = gl.getShaderInfoLog(fs);
+  const p = gl.getProgramInfoLog(program);
+  if (v) parts.push('── vertex shader ──\n' + v.trim());
+  if (f) parts.push('── fragment shader ──\n' + f.trim());
+  if (p) parts.push('── program ──\n' + p.trim());
+  showShaderError(parts.join('\n\n') || 'Error de shader sin log.');
+};
+
+$('glclose').addEventListener('click', () => { $('glconsole').style.display = 'none'; });
+
+// ─────────────────────────────────────────────────────────────
+// 13. Visor de código GLSL con resaltado de #include
+// ─────────────────────────────────────────────────────────────
+const SOURCES = { vertex: VERT, fragment: FRAG, minimal: VERT_MIN + '\n// ── fragment ──\n' + FRAG_MIN };
+
+function colorize(src) {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return src.split('\n').map((line) => {
+    const inc = line.match(/^(\s*)(#include\s*<)([A-Za-z0-9_]+)(>)(.*)$/);
+    if (inc) return esc(inc[1]) + '<span class="inc">' + esc(inc[2] + inc[3] + inc[4]) + '</span>' + esc(inc[5]);
+    if (/^\s*#\s*(ifdef|ifndef|if|else|elif|endif|define|pragma|version)/.test(line)) return '<span class="pp">' + esc(line) + '</span>';
+    if (/^\s*\/\//.test(line)) return '<span class="cm">' + esc(line) + '</span>';
+    return esc(line);
+  }).join('\n');
+}
+function showSource(key) {
+  $('src').innerHTML = colorize(SOURCES[key]);
+  document.querySelectorAll('#shader .tab').forEach((t) => t.classList.toggle('on', t.dataset.src === key));
+}
+document.querySelectorAll('#shader .tab').forEach((t) => t.addEventListener('click', () => showSource(t.dataset.src)));
+$('shader-head').addEventListener('click', () => $('shader').classList.toggle('collapsed'));
+showSource('vertex');
+
+// ─────────────────────────────────────────────────────────────
+// 14. Controles de UI
+// ─────────────────────────────────────────────────────────────
+const state = { animate: true, mouse: true, useFull: true, clip: false };
+const toggle = (btn, on) => btn.classList.toggle('on', !!on);
+
+$('btn-animate').addEventListener('click', () => { state.animate = !state.animate; toggle($('btn-animate'), state.animate); });
+$('btn-mouse').addEventListener('click', () => { state.mouse = !state.mouse; toggle($('btn-mouse'), state.mouse); });
+
+$('btn-wire').addEventListener('click', () => {
+  const m = heroMesh.material;
+  m.wireframe = !m.wireframe;
+  toggle($('btn-wire'), m.wireframe);
+});
+
+$('sl-amp').addEventListener('input', (e) => {
+  heroUniforms.uAmplitude.value = parseFloat(e.target.value);
+  $('lb-amp').textContent = parseFloat(e.target.value).toFixed(2);
+});
+$('sl-freq').addEventListener('input', (e) => {
+  heroUniforms.uFreq.value = parseFloat(e.target.value);
+  $('lb-freq').textContent = parseFloat(e.target.value).toFixed(2);
+});
+$('sl-mstr').addEventListener('input', (e) => {
+  shared.uMouseStr.value = parseFloat(e.target.value);
+  $('lb-mstr').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+function setFull(on) {
+  state.useFull = on;
+  heroMesh.material = on ? heroMaterial : minimalMaterial;
+  toggle($('btn-full'), on);
+  toggle($('btn-min'), !on);
+  showSource(on ? 'vertex' : 'minimal');
+  $('btn-wire').classList.toggle('on', !!heroMesh.material.wireframe);
+}
+$('btn-full').addEventListener('click', () => setFull(true));
+$('btn-min').addEventListener('click', () => setFull(false));
+
+$('btn-clip').addEventListener('click', () => {
+  state.clip = !state.clip;
+  renderer.clippingPlanes = state.clip
+    ? [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.15)]
+    : [];
+  toggle($('btn-clip'), state.clip);
+  heroMaterial.needsUpdate = true; // NUM_CLIPPING_PLANES cambia ⇒ recompila
+});
+
+$('btn-recompile').addEventListener('click', () => {
+  heroMaterial.needsUpdate = true;
+  skyMaterial.needsUpdate = true;
+  $('compile').textContent = 'recompilando…';
+});
+
+$('btn-palette').addEventListener('click', () => {
+  paletteIndex = (paletteIndex + 1) % PALETTES.length;
+  const p = PALETTES[paletteIndex];
+  heroUniforms.uColorA.value.set(p.A);
+  heroUniforms.uColorB.value.set(p.B);
+  heroUniforms.uColorC.value.set(p.C);
+  minimalUniforms.uColorA.value.set(p.A);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 15. Resize → uResolution en px reales (para gl_FragCoord)
+// ─────────────────────────────────────────────────────────────
+const _dbSize = new THREE.Vector2();
+function updateResolution() {
+  renderer.getDrawingBufferSize(_dbSize);
+  shared.uResolution.value.copy(_dbSize);
+}
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  updateResolution();
+}
+window.addEventListener('resize', onResize);
+
+// ─────────────────────────────────────────────────────────────
+// 16. Bucle de render + panel
+// ─────────────────────────────────────────────────────────────
+const timer = new THREE.Timer();   // r186: Clock está deprecado, usamos Timer
+timer.connect(document);
+let frames = 0, fps = 0, fpsClock = performance.now();
+let compiledOnce = false;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  timer.update();
+  const dt = timer.getDelta();
+  if (state.animate) shared.uTime.value += dt;
+  if (!state.mouse) shared.uMouse.value.lerp(new THREE.Vector2(0.5, 0.5), 0.05);
+
+  heroMesh.rotation.y += dt * 0.15;
+  controls.update();
+  renderer.render(scene, camera);
+
+  // Estado de compilación: refresca el rótulo cuando termina cualquier recompilación.
+  if (renderer.info.programs && renderer.info.programs.length > 0) {
+    const label = 'OK (' + renderer.info.programs.length + ' programas)';
+    if (window.__FASE4__.shaderErrors === 0) {
+      if ($('compile').textContent !== label) {
+        $('compile').textContent = label;
+        $('compile').style.color = 'var(--good)';
+      }
+      if (!compiledOnce) { compiledOnce = true; window.__FASE4__.ready = true; }
+    }
+  }
+
+  // ── Panel ──
+  const u = shared;
+  $('u-time').textContent = fmt(u.uTime.value, 2);
+  $('u-res').textContent  = Math.round(u.uResolution.value.x) + ' × ' + Math.round(u.uResolution.value.y);
+  $('u-mouse').textContent = fmt(u.uMouse.value.x, 3) + ', ' + fmt(u.uMouse.value.y, 3);
+  $('u-amp').textContent  = fmt(heroUniforms.uAmplitude.value, 2);
+  $('u-freq').textContent = fmt(heroUniforms.uFreq.value, 2);
+  $('u-mstr').textContent = fmt(u.uMouseStr.value, 2);
+
+  const g = heroGeo.attributes;
+  $('a-pos').textContent   = g.position.count.toLocaleString() + ' vec3';
+  $('a-nrm').textContent   = g.normal.count.toLocaleString() + ' vec3';
+  $('a-uv').textContent    = g.uv.count.toLocaleString() + ' vec2';
+  $('a-phase').textContent = g.aPhase.count.toLocaleString() + ' float';
+
+  $('rev').textContent   = 'r' + THREE.REVISION;
+  $('progs').textContent = (renderer.info.programs ? renderer.info.programs.length : 0);
+  $('tris').textContent  = renderer.info.render.triangles.toLocaleString();
+  $('calls').textContent = renderer.info.render.calls.toLocaleString();
+
+  frames++;
+  const now = performance.now();
+  if (now - fpsClock >= 500) {
+    fps = Math.round((frames * 1000) / (now - fpsClock));
+    frames = 0; fpsClock = now;
+    $('fps').textContent = fps;
+  }
+}
+
+onResize();
+animate();
+console.log('[Fase 4] listo — Three.js r' + THREE.REVISION + ' (vendor local, offline)');
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase4-shader-basico.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>æ:// Serie Demo — All Skills Local</title>
+<style>
+:root{
+  --gold:#D4AF37; --gold2:#F0D26A;
+  --void:#050505; --void2:#0A0A0A; --void3:#141414;
+  --line:#1f1a0a; --line2:#2a220a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--void); color:var(--gold);
+  font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.5;
+  margin:0;overflow:hidden;
+}
+header,footer{padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
+header .brand{font-family:'Orbitron',sans-serif;font-size:18px;letter-spacing:3px}
+header .tag{font-size:10px;color:var(--gold2);letter-spacing:2px;text-transform:uppercase}
+footer .meta{font-size:10px;color:var(--line2)}
+footer .receipt{background:var(--void2);padding:2px 8px;border:1px solid var(--line);border-radius:3px;font-size:10px;color:var(--gold2)}
+canvas{display:block;width:100vw;height:100vh}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">◈ æ:// SERIE DEMO</div>
+  <div class="tag">Séries · 23 semanas · Render local · RTX 3050</div>
+</header>
+
+<canvas id="c"></canvas>
+
+<footer>
+  <div><span class="meta">▸ W4–W12 · Shader → Pipeline → Data Flow</span></div>
+  <div class="receipt">receipt: SHA256 — væult chain · 8 links · RTX 3050 6GB · CUDA 13.3 · ffmpeg 7.1 NVENC</div>
+</footer>
+
+<script>
+// Demo series montage — 23 weeks of skills, rendered local
+// væult chain: vault → envelope → supervision → signing → pledge → kanban → push → transport
+// Hardware: RTX 3050 6GB · CUDA 13.3 · ffmpeg 7.1 NVENC
+// SITE INDEX: 233 surfaces · 14 namespaces · 184 pages
+
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  // Hardware
+  const hw = ['RTX 3050 6GB','CUDA 13.3','ffmpeg 7.1 NVENC','DRIVER 592.27'];
+  // The 8 væult chain links
+  const chain = ['vault','envelope','supervision','signing','pledge','kanban','push','transport'];
+  // Curriculum weeks rendered as vertical bars from W4 to W23
+  const weeks = ['W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22'];
+  // Aeps colour indexes
+  const aeps = ['yellow — æ://','blue — Protocol','green — Evidence'];
+  // Historical series
+  const hist = ['Hauge 1771–1824','Schweitzer 1875–1965','1517 Reformation'];
+
+  let w,h;
+  const resize = () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  };
+  window.addEventListener('resize',resize);
+  resize();
+
+  // draw a vertical progress bar (curriculum)
+  function bar(x,y,w,h,p){
+    ctx.fillStyle = 'rgba(212,175,55,0.12)';
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle = 'rgba(212,175,55,0.85)';
+    ctx.fillRect(x,y,w,h*p);
+    ctx.strokeStyle = 'rgba(212,175,55,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x,y,w,h);
+  }
+
+  // text with vertical centering and subtle glow
+  function txt(x,y,s,...lines){
+    ctx.font = s+'px "JetBrains Mono",monospace';
+    const lh = 1.4;
+    let cy = y;
+    for(const l of lines){
+      const tw = ctx.measureText(l).width;
+      ctx.shadowColor = 'rgba(240,210,106,0.25)';
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = 'rgba(240,210,106,0.85)';
+      ctx.fillText(l,x,y);
+      ctx.shadowBlur = 0;
+      cy += s*lh;
+    }
+  }
+
+  // draw a small square for each skill (23 weeks)
+  function weekGrid(x,y,sz,col){
+    for(let i=0;i<weeks.length;i++){
+      const xx = x + (i%(weeks.length/3))* (sz*2.2);
+      const yy = y + Math.floor(i/(weeks.length/3)) * (sz*2.2);
+      ctx.fillStyle = col;
+      ctx.fillRect(xx,yy,sz,sz);
+      ctx.strokeStyle='rgba(212,175,55,0.3)';
+      ctx.strokeRect(xx,yy,sz,sz);
+    }
+  }
+
+  let t = 0;
+  const loop = () => {
+    t += 0.03;
+    ctx.clearRect(0,0,w,h);
+
+    // ── render frame ──
+    window.__renderFrame = function(i, total) {
+      t = i / Math.max(1, total - 1);
+      drawScene(t);
+    };
+    window.__renderFrame(t * 100, 100);
+
+    requestAnimationFrame(loop);
+  };
+  const drawScene = (time) => {
+    ctx.clearRect(0,0,w,h);
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#050505');
+    grad.addColorStop(0.5,'#0A0A0A');
+    grad.addColorStop(1,'#050505');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
+
+    // background gradient (gold on void)
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#050505');
+    grad.addColorStop(0.5,'#0A0A0A');
+    grad.addColorStop(1,'#050505');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
+
+    // scanlines overlay
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    for(let y=0;y<h;y+=3){
+      ctx.fillRect(0,y,w,1);
+    }
+
+    // ── HEADER: væult chain ──
+    ctx.fillStyle = 'rgba(212,175,55,0.8)';
+    txt(28,60,16,
+      'VÆULT CHAIN  ·  8 LINKS',
+      'vault ▮ envelope ▮ gate ▮ authority ▮ contract ▮ dispatch ▮ publish ▮ delivery',
+      'rule: where a gate exists, pass through it. where none, say the check is missing'
+    );
+
+    // ── CURRICULUM BARS (W4–W23) ──
+    const by = 120, bh = 8, bw = 18, gap = 2, startX = 28;
+    ctx.fillStyle = 'rgba(240,210,106,0.25)';
+    for(let i=0;i<weeks.length;i++){
+      ctx.fillRect(startX + i*(bw+gap), by, bw, bh);
+    }
+    // draw week labels
+    ctx.font = '9px "JetBrains Mono",monospace';
+    ctx.fillStyle = 'rgba(240,210,106,0.5)';
+    weeks.forEach((wk,i)=>{
+      const xx = startX + i*(bw+gap) + bw/2 - 10;
+      ctx.fillText(wk,xx,by+bh+14);
+    });
+
+    // ── SKILLS MICRO-GRID ──
+    const gx = 28, gy = by + bh + 40, gw = 520, gh = 260;
+    ctx.fillStyle = 'rgba(212,175,55,0.1)';
+    ctx.fillRect(gx,gy,gw,gh);
+    ctx.strokeStyle='rgba(212,175,55,0.3)';
+    ctx.strokeRect(gx,gy,gw,gh);
+
+    // title
+    ctx.font = '10px "Orbitron",sans-serif';
+    ctx.fillStyle = 'rgba(240,210,106,0.8)';
+    ctx.fillText('SKILLS · composición', gx+12, gy+18);
+    // skill list
+    const skills = ['Shader Foundations','Pipeline Determinístico','Materials','XML/SVG Dataflow','Spreadsheets→Geometry','Video→Context→Agent','Chaos + Gate','Teologia Calendar','Hauge/Lutheran','Schweitzer Nobel','1517 Reformation'];
+    ctx.font = '10px "JetBrains Mono",monospace';
+    ctx.fillStyle = 'rgba(240,210,106,0.6)';
+    skills.forEach((s,i)=>{
+      ctx.fillText('▸ '+s, gx+16, gy+34 + i*16);
+    });
+
+    // ── HARDWARE BADGE ──
+    ctx.font = '9px "JetBrains Mono",monospace';
+    const hwY = gy + gh + 20;
+    aeps.forEach((a,i)=>{
+      const yy = hwY + i*26;
+      ctx.fillStyle = 'rgba(212,175,55,0.25)';
+      ctx.fillRect(gx, yy, gw, 18);
+      ctx.fillStyle = 'rgba(240,210,106,0.7)';
+      ctx.fillText(a, gx+8, yy+13);
+    });
+
+    // hardware specs
+    ctx.font = '9px "JetBrains Mono",monospace';
+    ctx.fillStyle = 'rgba(240,210,106,0.4)';
+    txt(gx, hwY+4*26+10, 9,
+      'RTX 3050 6GB · CUDA 13.3 · ffmpeg 7.1 NVENC · DRIVER 592.27',
+      'VLC 3.x: in_play only · SHA-256 receipts · QR badges'
+    );
+
+    // ── HISTORICAL SERIES ──
+    const hy = hwY + 4*26 + 40;
+    ctx.font = '10px "Orbitron",sans-serif';
+    ctx.fillStyle = 'rgba(240,210,106,0.85)';
+    txt(gx, hy, 11,
+      'HISTORICAL THESIS',
+      'W20 Hans Nielsen Hauge (1771–1824)',
+      'W21 Albert Schweitzer (1875–1965) · Nobel de la Paz 1952',
+      'W22 1517 Reformation / Vernacular Bibles'
+    );
+
+    // ── FOOTER: SITE INDEX ──
+    ctx.font = '9px "JetBrains Mono",monospace';
+    ctx.fillStyle = 'rgba(240,210,106,0.3)';
+    txt(gx, h-40, 9,
+      'SITE INDEX · 233 surfaces · 14 namespaces · 184 pages on github.io',
+      'Séries: 23 semanas · video local · zero cloud · zero dependencia externa'
+    );
+
+    requestAnimationFrame(loop);
+  };
+  loop();
+})();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/demo-series-montage.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

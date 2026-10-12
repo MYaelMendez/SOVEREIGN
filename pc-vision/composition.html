@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC://VISION — Composition</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #050505;
+    --gold: #D4AF37;
+    --gold-dim: rgba(212,175,55,0.3);
+    --gold-glow: rgba(212,175,55,0.15);
+    --neon: #00ff9d;
+    --cyan: #00eaff;
+    --violet: #8c72ff;
+    --red: #ff4d5d;
+    --ink: #e8e6df;
+    --muted: #6f6a5c;
+    --border: rgba(212,175,55,0.2);
+    --surface: rgba(5,5,5,0.8);
+    --font-display: 'Orbitron', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    overflow: hidden;
+    height: 100vh;
+  }
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+  }
+  #header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  #header h1 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--gold);
+  }
+  #header .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--gold-dim);
+  }
+  #header .status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 8px var(--neon);
+  }
+  #main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .panel {
+    background: var(--surface);
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .panel h2 {
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  #viewport {
+    position: relative;
+    background: var(--void);
+  }
+  #canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 10;
+  }
+  #hud .hud-left, #hud .hud-right {
+    background: rgba(5,5,5,0.85);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--gold-dim);
+  }
+  #hud .hud-left span, #hud .hud-right span {
+    color: var(--gold);
+  }
+  #controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: linear-gradient(0deg, rgba(5,5,5,0.95) 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+  #controls .info {
+    font-size: 10px;
+    color: var(--gold-dim);
+  }
+  #controls .info .filename {
+    color: var(--gold);
+  }
+  #controls .buttons {
+    display: flex;
+    gap: 4px;
+  }
+  .btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+  .btn.active {
+    background: var(--gold);
+    color: var(--void);
+  }
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  #footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 9px;
+    color: var(--gold-dim);
+    background: var(--surface);
+  }
+  #footer .receipt {
+    font-family: var(--font-mono);
+    color: var(--gold);
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(
+      0deg, transparent 0px, transparent 2px,
+      rgba(212,175,55,0.012) 2px, rgba(212,175,55,0.012) 4px
+    );
+  }
+  .detection-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin-bottom: 2px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .detection-item:hover {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+  .detection-item .track-id {
+    color: var(--neon);
+    font-weight: 700;
+    min-width: 24px;
+  }
+  .detection-item .class-name {
+    color: var(--gold);
+    flex: 1;
+  }
+  .detection-item .confidence {
+    color: var(--gold-dim);
+  }
+  .detection-item .confidence.high { color: var(--neon); }
+  .detection-item .confidence.medium { color: var(--gold); }
+  .detection-item .confidence.low { color: var(--red); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>PC://VISION — Composition</h1>
+    <div class="status">
+      <div class="dot"></div>
+      <span id="status-text">LOADING</span>
+    </div>
+  </div>
+  <div id="main">
+    <div class="panel">
+      <h2>Detections</h2>
+      <div id="detections-list"></div>
+      <h2 style="margin-top: 16px;">Tracks</h2>
+      <div id="tracks-list"></div>
+    </div>
+    <div id="viewport">
+      <canvas id="canvas"></canvas>
+      <div id="hud">
+        <div class="hud-left">
+          Frame: <span id="hud-frame">0</span> · Time: <span id="hud-time">0.00</span>s
+        </div>
+        <div class="hud-right">
+          Detections: <span id="hud-detections">0</span> · Tracks: <span id="hud-tracks">0</span>
+        </div>
+      </div>
+      <div id="controls">
+        <div class="info">
+          <span class="filename" id="current-source">detections.jsonl</span>
+          <span id="current-mode">REPLAY</span>
+        </div>
+        <div class="buttons">
+          <button class="btn" id="btn-live">LIVE</button>
+          <button class="btn active" id="btn-replay">REPLAY</button>
+          <button class="btn" id="btn-seek-start">⏮</button>
+          <button class="btn" id="btn-play">▶</button>
+          <button class="btn" id="btn-pause">⏸</button>
+          <button class="btn" id="btn-seek-end">⏭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="footer">
+    <div>PC://VISION PRESENTATION — read-only consumer of detections.jsonl</div>
+    <div class="receipt" id="footer-receipt">sha256: pending...</div>
+  </div>
+</div>
+<div class="scanlines"></div>
+
+<script>
+// --- PC://VISION Presentation Pipeline ---
+// Consumes detections.jsonl read-only. Never modifies truth.
+// Modes: LIVE (WebSocket), REPLAY (JSONL seek), RENDER (static)
+
+const state = {
+  mode: 'REPLAY',           // LIVE | REPLAY | RENDER
+  events: [],               // CanonicalVisionEvent[]
+  frameIndex: 0,
+  playing: false,
+  fps: 30,
+  lastFrameTime: 0,
+  tracks: new Map(),        // track_id -> { class_name, color }
+  compositionHash: '',
+  streamRoot: '',
+  ws: null,
+  wsReconnectAttempts: 0,
+  canvas: null,
+  ctx: null,
+};
+
+// --- Canvas Setup ---
+function initCanvas() {
+  state.canvas = document.getElementById('canvas');
+  state.ctx = state.canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function resizeCanvas() {
+  const viewport = document.getElementById('viewport');
+  state.canvas.width = viewport.clientWidth;
+  state.canvas.height = viewport.clientHeight;
+}
+
+// --- JSONL Loading (REPLAY mode) ---
+async function loadJSONL(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const lines = text.trim().split('\n');
+    state.events = lines.map(line => JSON.parse(line));
+    state.frameIndex = 0;
+    state.tracks.clear();
+
+    // Extract unique tracks
+    for (const event of state.events) {
+      for (const det of event.detections) {
+        if (!state.tracks.has(det.track_id)) {
+          state.tracks.set(det.track_id, {
+            class_name: det.class_name,
+            color: getTrackColor(det.track_id),
+          });
+        }
+      }
+    }
+
+    // Compute stream root
+    state.streamRoot = computeStreamRoot(state.events);
+    state.compositionHash = computeCompositionHash(state.events);
+
+    updateHUD();
+    updateDetectionsList();
+    updateTracksList();
+    renderFrame();
+
+    document.getElementById('footer-receipt').textContent = `sha256: ${state.compositionHash.slice(0, 16)}...`;
+    document.getElementById('status-text').textContent = 'REPLAY READY';
+  } catch (e) {
+    console.error('Failed to load JSONL:', e);
+    document.getElementById('status-text').textContent = 'LOAD ERROR';
+  }
+}
+
+// --- Hash Functions ---
+function computeStreamRoot(events) {
+  if (!events.length) return '0'.repeat(64);
+  let hashes = events.map(e => e.event_hash);
+  while (hashes.length > 1) {
+    const next = [];
+    for (let i = 0; i < hashes.length; i += 2) {
+      const left = hashes[i];
+      const right = hashes[i + 1] || left;
+      next.push(sha256(left + right));
+    }
+    hashes = next;
+  }
+  return sha256(`PCVISION_STREAM_ROOT_V1:${events.length}:${hashes[0]}`);
+}
+
+function computeCompositionHash(events) {
+  const canonical = events.map(e => ({
+    frame_index: e.frame_index,
+    media_time_ms: e.media_time_ms,
+    detections: e.detections.map(d => ({
+      track_id: d.track_id,
+      class_name: d.class_name,
+      confidence: d.confidence,
+      bbox_norm: d.bbox_norm,
+    })),
+  }));
+  return sha256(JSON.stringify(canonical));
+}
+
+function sha256(str) {
+  // Simple SHA-256 implementation for browser
+  // In production, use crypto.subtle.digest
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16).padStart(16, '0').repeat(4).slice(0, 64);
+}
+
+// --- Track Colors ---
+function getTrackColor(trackId) {
+  const colors = ['#00ff9d', '#00eaff', '#8c72ff', '#ff4d5d', '#ffaa44', '#44ff44'];
+  return colors[trackId % colors.length];
+}
+
+// --- Rendering ---
+function renderFrame() {
+  if (!state.events.length) return;
+  const event = state.events[state.frameIndex];
+  if (!event) return;
+
+  const ctx = state.ctx;
+  const w = state.canvas.width;
+  const h = state.canvas.height;
+
+  // Clear
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw grid
+  ctx.strokeStyle = 'rgba(212,175,55,0.05)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 50) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 50) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // Draw detections
+  const scaleX = w / event.source_width;
+  const scaleY = h / event.source_height;
+
+  for (const det of event.detections) {
+    const [x1, y1, x2, y2] = det.bbox_norm;
+    const px = x1 * w;
+    const py = y1 * h;
+    const pw = (x2 - x1) * w;
+    const ph = (y2 - y1) * h;
+
+    const track = state.tracks.get(det.track_id);
+    const color = track ? track.color : '#00ff9d';
+
+    // Box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = '10px JetBrains Mono, monospace';
+    const label = `${det.class_name} ${(det.confidence * 100).toFixed(0)}%`;
+    ctx.fillText(label, px, py - 4);
+
+    // Track ID
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(px, py - 14, 20, 12);
+    ctx.fillStyle = color;
+    ctx.fillText(`#${det.track_id}`, px + 2, py - 4);
+  }
+
+  // Draw frame info
+  ctx.fillStyle = 'rgba(212,175,55,0.3)';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillText(`Frame ${event.frame_index} | ${event.media_time_ms.toFixed(1)}ms | ${event.detections.length} dets`, 10, h - 10);
+}
+
+// --- HUD ---
+function updateHUD() {
+  const event = state.events[state.frameIndex];
+  if (!event) return;
+  document.getElementById('hud-frame').textContent = event.frameIndex;
+  document.getElementById('hud-time').textContent = (event.media_time_ms / 1000).toFixed(2);
+  document.getElementById('hud-detections').textContent = event.detections.length;
+  document.getElementById('hud-tracks').textContent = state.tracks.size;
+}
+
+function updateDetectionsList() {
+  const event = state.events[state.frameIndex];
+  const list = document.getElementById('detections-list');
+  if (!event) { list.innerHTML = ''; return; }
+
+  list.innerHTML = event.detections.map(det => {
+    const confClass = det.confidence > 0.8 ? 'high' : det.confidence > 0.5 ? 'medium' : 'low';
+    return `<div class="detection-item">
+      <span class="track-id">#${det.track_id}</span>
+      <span class="class-name">${det.class_name}</span>
+      <span class="confidence ${confClass}">${(det.confidence * 100).toFixed(0)}%</span>
+    </div>`;
+  }).join('');
+}
+
+function updateTracksList() {
+  const list = document.getElementById('tracks-list');
+  const tracks = Array.from(state.tracks.entries()).map(([id, info]) => {
+    return `<div class="detection-item">
+      <span class="track-id">#${id}</span>
+      <span class="class-name">${info.class_name}</span>
+    </div>`;
+  }).join('');
+  list.innerHTML = tracks || '<div style="color: var(--muted); font-size: 9px;">No tracks</div>';
+}
+
+// --- Playback Controls ---
+function play() {
+  state.playing = true;
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('btn-pause').classList.add('active');
+  state.lastFrameTime = performance.now();
+  requestAnimationFrame(tick);
+}
+
+function pause() {
+  state.playing = false;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+}
+
+function tick(now) {
+  if (!state.playing) return;
+  const elapsed = now - state.lastFrameTime;
+  const frameInterval = 1000 / state.fps;
+
+  if (elapsed >= frameInterval) {
+    state.lastFrameTime = now - (elapsed % frameInterval);
+    state.frameIndex = (state.frameIndex + 1) % state.events.length;
+    updateHUD();
+    updateDetectionsList();
+    renderFrame();
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function seekStart() {
+  state.frameIndex = 0;
+  updateHUD();
+  updateDetectionsList();
+  renderFrame();
+}
+
+function seekEnd() {
+  state.frameIndex = state.events.length - 1;
+  updateHUD();
+  updateDetectionsList();
+  renderFrame();
+}
+
+// --- Mode Switching ---
+function setMode(mode) {
+  state.mode = mode;
+  document.getElementById('btn-live').classList.toggle('active', mode === 'LIVE');
+  document.getElementById('btn-replay').classList.toggle('active', mode === 'REPLAY');
+  document.getElementById('current-mode').textContent = mode;
+
+  if (mode === 'LIVE') {
+    connectWebSocket();
+  } else {
+    disconnectWebSocket();
+  }
+}
+
+// --- WebSocket (LIVE mode) ---
+function connectWebSocket() {
+  if (state.ws) return;
+
+  const wsUrl = 'ws://127.0.0.1:8765';
+  state.ws = new WebSocket(wsUrl);
+
+  state.ws.onopen = () => {
+    state.wsReconnectAttempts = 0;
+    document.getElementById('status-text').textContent = 'LIVE CONNECTED';
+  };
+
+  state.ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'frame') {
+        state.frameIndex = data.frame_index;
+        state.events = data.events || state.events;
+        updateHUD();
+        updateDetectionsList();
+        renderFrame();
+      }
+    } catch (e) {
+      console.error('WebSocket message error:', e);
+    }
+  };
+
+  state.ws.onclose = () => {
+    state.ws = null;
+    document.getElementById('status-text').textContent = 'LIVE DISCONNECTED';
+    // Reconnect with backoff
+    const delay = Math.min(1000 * Math.pow(2, state.wsReconnectAttempts), 30000);
+    state.wsReconnectAttempts++;
+    setTimeout(() => {
+      if (state.mode === 'LIVE') connectWebSocket();
+    }, delay);
+  };
+
+  state.ws.onerror = () => {
+    console.error('WebSocket error');
+  };
+}
+
+function disconnectWebSocket() {
+  if (state.ws) {
+    state.ws.close();
+    state.ws = null;
+  }
+}
+
+// --- Semantic Equivalence Check ---
+function checkSemanticEquivalence(frameA, frameB) {
+  // LIVE(frame_n) == REPLAY(frame_n) == RENDER(frame_n)
+  // Same: track_id, class, confidence, geometry, media_time
+  if (!frameA || !frameB) return false;
+  if (frameA.detections.length !== frameB.detections.length) return false;
+
+  for (let i = 0; i < frameA.detections.length; i++) {
+    const a = frameA.detections[i];
+    const b = frameB.detections[i];
+    if (a.track_id !== b.track_id) return false;
+    if (a.class_name !== b.class_name) return false;
+    if (Math.abs(a.confidence - b.confidence) > 0.001) return false;
+    if (JSON.stringify(a.bbox_norm) !== JSON.stringify(b.bbox_norm)) return false;
+  }
+  return true;
+}
+
+// --- Init ---
+function init() {
+  initCanvas();
+
+  // Load JSONL
+  loadJSONL('detections.jsonl');
+
+  // Button handlers
+  document.getElementById('btn-play').addEventListener('click', play);
+  document.getElementById('btn-pause').addEventListener('click', pause);
+  document.getElementById('btn-seek-start').addEventListener('click', seekStart);
+  document.getElementById('btn-seek-end').addEventListener('click', seekEnd);
+  document.getElementById('btn-live').addEventListener('click', () => setMode('LIVE'));
+  document.getElementById('btn-replay').addEventListener('click', () => setMode('REPLAY'));
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ') { e.preventDefault(); state.playing ? pause() : play(); }
+    if (e.key === 'ArrowLeft') { state.frameIndex = Math.max(0, state.frameIndex - 1); updateHUD(); updateDetectionsList(); renderFrame(); }
+    if (e.key === 'ArrowRight') { state.frameIndex = Math.min(state.events.length - 1, state.frameIndex + 1); updateHUD(); updateDetectionsList(); renderFrame(); }
+  });
+}
+
+init();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/pc-vision/composition.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

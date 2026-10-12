@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/smalcalda",
+  "region": "es-LATAM",
+  "sha256": "52e28616d74c80cd7e3f44c1e8f67a4de2c2a99e7779afe6e43add3032da836a",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-12T20:29:00Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/smalcalda|es-LATAM|sha256:52e28616d74c80cd7e3f44c1e8f67a4de2c2a99e7779afe6e43add3032da836a|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "cv2 box=8 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-smalcalda.svg",
+  "html": "C:\\æ\\site\\teologia\\articulos-de-smalcalda.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

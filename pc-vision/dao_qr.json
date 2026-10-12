@@ -1,0 +1,20 @@
+{
+  "schema": "pc://contract/v1",
+  "contract_id": "d52e4e8c-c81a-45a8-b9f4-fce2035b8451",
+  "intent_hash": "26d0bb156a3234e473d7fc76996d0fba0111d72167643484b02794a0c714705c",
+  "threshold_required": 2,
+  "threshold_total": 3,
+  "signers": [
+    "dao_treasury",
+    "dao_governance",
+    "yael"
+  ],
+  "evidence": "dao://distributive-ai",
+  "expires_at": "2027-12-31T23:59:59",
+  "nonce": "234709ad-2273-413c-90a4-c23ed658cb55",
+  "issued_at": "2026-10-04T06:11:22",
+  "signatures": {
+    "dao_treasury": "c23670814d4d79a6060698bdf4f17343259df68685e59b027c20aa145fdae384",
+    "dao_governance": "732f3c9a8a04dadf6bc32b8cf5034d4a686dd48db4f61dcdcd1accd4388d8bcb"
+  }
+}

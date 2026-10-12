@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PC://CODE — Sovereign Agent</title>
+<style>
+  :root{
+    --void:#050505;--gold:#D4AF37;--gold2:#f0d487;--emerald:#00ff9d;
+    --cyan:#00eaff;--violet:#8c72ff;--orange:#ff9a4d;--red:#ff4d4d;
+    --ink:#e8e6df;--muted:#6f6a5c;--line:rgba(212,175,55,.22);
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:var(--ink);font-family:var(--mono);font-size:13px}
+  #app{display:flex;flex-direction:column;height:100%;padding:12px;gap:10px}
+  header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px}
+  header h1{font-size:16px;color:var(--gold);letter-spacing:.12em}
+  header .status{font-size:11px;color:var(--muted)}
+  header .status .live{color:var(--emerald)}
+  .controls{display:flex;gap:8px;align-items:center}
+  .controls input{flex:1;background:rgba(8,8,7,.85);border:1px solid var(--line);color:var(--ink);padding:6px 10px;font-family:var(--mono);font-size:12px;outline:none}
+  .controls input:focus{border-color:var(--gold)}
+  .controls button{background:rgba(212,175,55,.12);border:1px solid var(--gold);color:var(--gold);padding:6px 14px;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.08em;transition:all .2s}
+  .controls button:hover{background:rgba(212,175,55,.25);color:var(--gold2)}
+  .controls button:disabled{opacity:.4;cursor:not-allowed}
+  .main{flex:1;display:flex;gap:10px;overflow:hidden}
+  .panel{flex:1;overflow-y:auto;border:1px solid var(--line);background:rgba(8,8,7,.6);padding:10px}
+  .panel h2{font-size:11px;color:var(--muted);letter-spacing:.12em;margin-bottom:8px;text-transform:uppercase}
+  .state-track{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .state-node{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid transparent;font-size:11px;transition:all .3s}
+  .state-node.active{border-color:var(--gold);background:rgba(212,175,55,.08)}
+  .state-node.done{color:var(--emerald)}
+  .state-node.skipped{color:var(--muted);opacity:.5}
+  .state-node .dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted)}
+  .state-node.active .dot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 6px var(--gold)}
+  .state-node.done .dot{background:var(--emerald);border-color:var(--emerald)}
+  .state-node .name{width:120px;font-weight:600}
+  .state-node .cap{color:var(--muted);font-size:10px}
+  .state-node .effect{margin-left:auto;font-size:9px;padding:1px 5px;border:1px solid}
+  .effect.LOCAL{color:var(--cyan);border-color:var(--cyan)}
+  .effect.DURABLE{color:var(--orange);border-color:var(--orange)}
+  .effect.EXTERNAL{color:var(--red);border-color:var(--red)}
+  .log{display:flex;flex-direction:column;gap:4px}
+  .log-entry{font-size:10px;padding:4px 6px;border-left:2px solid var(--line);padding-left:8px}
+  .log-entry.success{border-color:var(--emerald)}
+  .log-entry.error{border-color:var(--red);color:var(--red)}
+  .log-entry.info{border-color:var(--cyan)}
+  .log-entry .meta{color:var(--muted);font-size:9px}
+  .log-entry .output{margin-top:2px;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;color:var(--ink)}
+  .receipts{display:flex;flex-direction:column;gap:4px}
+  .receipt{border:1px solid var(--line);padding:6px;font-size:10px}
+  .receipt .header{display:flex;justify-content:space-between;color:var(--gold);margin-bottom:4px}
+  .receipt .hash{font-size:9px;color:var(--muted);word-break:break-all}
+  .receipt .verified{color:var(--emerald)}
+  .empty{color:var(--muted);font-size:11px;text-align:center;padding:20px}
+  .progress-bar{width:100%;height:2px;background:var(--line);margin:8px 0}
+  .progress-bar .fill{height:100%;background:var(--gold);transition:width .3s}
+  .chain-status{padding:6px;border:1px solid var(--line);font-size:11px;margin-bottom:8px}
+  .chain-status.valid{border-color:var(--emerald);color:var(--emerald)}
+  .chain-status.invalid{border-color:var(--red);color:var(--red)}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--void)}
+  ::-webkit-scrollbar-thumb{background:var(--line)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>PC://CODE</h1>
+    <div class="status" id="status"><span class="idle">IDLE</span></div>
+  </header>
+  <div class="controls">
+    <input id="instruction" placeholder="inspect this workspace" value="inspect this workspace"/>
+    <button id="runBtn" onclick="run()">RUN</button>
+    <button id="resetBtn" onclick="reset()">RESET</button>
+  </div>
+  <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+  <div class="main">
+    <div class="panel" id="statePanel">
+      <h2>State Machine</h2>
+      <div class="state-track" id="stateTrack"></div>
+      <div class="chain-status" id="chainStatus">Chain: empty</div>
+      <h2>Receipts</h2>
+      <div class="receipts" id="receipts"></div>
+    </div>
+    <div class="panel" id="logPanel">
+      <h2>Execution Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+<script>
+  const STATES = ["IDLE","OBSERVE","PLAN","VALIDATE_PLAN","EXECUTE","DIAGNOSTICS","BUILD","TEST","REVIEW_DIFF","COMPLETE"];
+  const CAP_MAP = {
+    IDLE: "workspace_inspect",
+    OBSERVE: "workspace_inspect",
+    PLAN: "symbol_find",
+    VALIDATE_PLAN: "diagnostics_read",
+    EXECUTE: "symbol_references",
+    DIAGNOSTICS: "diagnostics_read",
+    BUILD: "build_run",
+    TEST: "test_run",
+    REVIEW_DIFF: "git_diff",
+    COMPLETE: "receipt_verify"
+  };
+
+  function renderStates(activeState, doneStates) {
+    const track = document.getElementById("stateTrack");
+    track.innerHTML = STATES.map(s => {
+      const cap = CAP_MAP[s] || "";
+      const effect = cap.includes("build") || cap.includes("test") ? "DURABLE" : "LOCAL";
+      const cls = s === activeState ? "active" : doneStates.has(s) ? "done" : "";
+      const dot = s === activeState ? "active" : doneStates.has(s) ? "done" : "";
+      return '<div class="state-node ' + cls + '">' +
+        '<span class="dot ' + dot + '"></span>' +
+        '<span class="name">' + s + '</span>' +
+        '<span class="cap">' + cap + '</span>' +
+        '<span class="effect ' + effect + '">' + effect + '</span>' +
+        '</div>';
+    }).join("");
+  }
+
+  function addLog(type, meta, output) {
+    const log = document.getElementById("log");
+    const entry = document.createElement("div");
+    entry.className = "log-entry " + type;
+    entry.innerHTML = '<div class="meta">' + meta + '</div>' +
+      (output ? '<div class="output">' + escapeHtml(output.slice(0, 2000)) + '</div>' : '');
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function updateProgress(current, total) {
+    document.getElementById("progressFill").style.width = (current / total * 100) + "%";
+  }
+
+  function setStatus(text, cls) {
+    document.getElementById("status").innerHTML = '<span class="' + (cls||'idle') + '">' + text + '</span>';
+  }
+
+  function run() {
+    const instr = document.getElementById("instruction").value || "inspect this workspace";
+    document.getElementById("log").innerHTML = '';
+    document.getElementById("receipts").innerHTML = '';
+    renderStates("IDLE", new Set());
+    updateProgress(0, STATES.length);
+    setStatus("RUNNING", "live");
+    // In standalone mode, simulate the agent loop
+    simulateLoop(instr);
+  }
+
+  function reset() {
+    document.getElementById("log").innerHTML = '';
+    document.getElementById("receipts").innerHTML = '';
+    document.getElementById("chainStatus").className = "chain-status";
+    document.getElementById("chainStatus").textContent = "Chain: empty";
+    renderStates("IDLE", new Set());
+    updateProgress(0, STATES.length);
+    setStatus("IDLE", "idle");
+  }
+
+  // Standalone simulation of the agent loop (no VS Code backend)
+  async function simulateLoop(instruction) {
+    const done = new Set();
+    let receiptIndex = 0;
+    let prevHash = "0".repeat(64);
+
+    for (let i = 0; i < STATES.length; i++) {
+      const state = STATES[i];
+      const cap = CAP_MAP[state];
+      const effect = cap.includes("build") || cap.includes("test") ? "DURABLE" : "LOCAL";
+
+      renderStates(state, done);
+      updateProgress(i + 1, STATES.length);
+      addLog("info", state + " → " + cap + " [" + effect + "]", "");
+
+      // Simulate capability execution
+      await new Promise(r => setTimeout(r, 200));
+
+      const output = simulateCapability(cap, instruction);
+      const success = !output.startsWith("ERROR");
+
+      // Generate receipt
+      const timestamp = Date.now();
+      const receiptData = JSON.stringify({
+        index: receiptIndex, timestamp, capability: cap, state, effect,
+        input: instruction.slice(0, 2000), output: output.slice(0, 2000), prevHash
+      });
+      const hash = await sha256(receiptData);
+
+      addLog(success ? "success" : "error",
+        state + " → " + cap + " [" + effect + "]", output);
+
+      const rc = document.getElementById("receipts");
+      const r = document.createElement("div");
+      r.className = "receipt";
+      r.innerHTML = '<div class="header"><span>#' + receiptIndex + ' ' + cap + '</span><span class="verified">✓</span></div>' +
+        '<div class="hash">' + hash.slice(0, 32) + '...</div>';
+      rc.appendChild(r);
+
+      done.add(state);
+      prevHash = hash;
+      receiptIndex++;
+    }
+
+    // Complete
+    setStatus("COMPLETE", "idle");
+    updateProgress(STATES.length, STATES.length);
+    const cs = document.getElementById("chainStatus");
+    cs.className = "chain-status valid";
+    cs.textContent = "Chain: VALID — " + receiptIndex + " receipts — last: " + prevHash.slice(0, 24) + "...";
+    addLog("success", "LOOP COMPLETE", "Total receipts: " + receiptIndex + "\nChain valid: true");
+  }
+
+  function simulateCapability(cap, instruction) {
+    switch (cap) {
+      case "workspace_inspect":
+        return JSON.stringify({ workspace: "C:/æ/pc-code", files: ["src/extension.ts","src/stateMachine.ts","src/capabilities.ts","src/receipts.ts","src/policy.ts","package.json","tsconfig.json"], stats: { totalFiles: 7, totalLines: 1200, languages: { ".ts": 5, ".json": 2 } } }, null, 2);
+      case "symbol_find":
+        return JSON.stringify([{ name: "activate", file: "src/extension.ts", line: 1, kind: "function" }, { name: "runAgentLoop", file: "src/extension.ts", line: 20, kind: "function" }, { name: "ReceiptChain", file: "src/receipts.ts", line: 10, kind: "class" }], null, 2);
+      case "symbol_references":
+        return JSON.stringify([{ file: "src/extension.ts", line: 5, text: "import { ReceiptChain } from './receipts.js'" }], null, 2);
+      case "diagnostics_read":
+        return JSON.stringify([{ file: "src/capabilities.ts", severity: "Warning", message: "Unused variable", line: 42 }], null, 2);
+      case "build_run":
+        return "tsc -p ./\nCompile successful. 0 errors.";
+      case "test_run":
+        return "npm test\nTest suite: 8 passed, 0 failed.";
+      case "git_diff":
+        return "diff --git a/src/extension.ts b/src/extension.ts\n+ import { ReceiptChain } from './receipts.js';\n+ const chain = new ReceiptChain();";
+      case "receipt_verify":
+        return JSON.stringify({ valid: true, totalReceipts: 10, lastHash: "a1b2c3d4...", receipts: [] }, null, 2);
+      default:
+        return "ERROR: Unknown capability: " + cap;
+    }
+  }
+
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  renderStates("IDLE", new Set());
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/pc-code/webview/pc-code.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "schema": "PC://GLOCAL_VISION_V1",
+  "scanned_at": "2026-10-06T09:26:45.462126+00:00",
+  "total_artifacts": 32,
+  "verdicts": {
+    "PASS": 23,
+    "WARN": 1,
+    "FAIL": 6,
+    "INFO": 2
+  },
+  "chain_length": 32,
+  "final_receipt": "b7b741a5156c45a89cbbcabd66a684e5b6eca97903e292f1bf02183a53bec7b6",
+  "genesis": "528973f23af870bc10ff6792181bba81",
+  "surfaces": [
+    "C:\\æ\\github-pages",
+    "C:\\æ\\threejs-curriculo\\out",
+    "C:\\æ\\github-pages\\aipodcast_me"
+  ]
+}

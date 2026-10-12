@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/enchiridion",
+  "region": "es-LATAM",
+  "sha256": "60cd01a210d6ef7b298b348329b1a99af052a1a5c0b9198d8f7d48b73d6305bf",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-10T17:59:45Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/enchiridion|es-LATAM|sha256:60cd01a210d6ef7b298b348329b1a99af052a1a5c0b9198d8f7d48b73d6305bf|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-enchiridion.svg",
+  "html": "C:\\æ\\site\\teologia\\enchiridion.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

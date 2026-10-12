@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 6 · Shaders Avanzados — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.86);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+
+  #debug { top: 12px; left: 12px; width: 340px; padding: 12px 14px; }
+  #debug h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+    font-family: inherit;
+  }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 9px 0 3px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-all; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: #f2cc60; }
+
+  #controls { top: 12px; right: 12px; width: 260px; padding: 12px 14px; }
+  #controls h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25); font-family: inherit;
+  }
+  .btn {
+    display: block; width: 100%; margin: 6px 0; padding: 7px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; text-align: left; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30363d; margin-right: 8px; vertical-align: middle; }
+  .btn.on .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+
+  #legend { bottom: 12px; left: 12px; padding: 9px 14px; color: var(--dim); font-size: 11.5px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 640px; }
+  #error h2 { color: #f85149; font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════ DEBUG PANEL ══════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Debug · Fase 6 — Shaders Avanzados</h1>
+
+  <div class="group-title">Modo activo</div>
+  <div class="row"><span class="k">modo</span><span class="v hi" id="dbg-mode">—</span></div>
+  <div class="row"><span class="k">descripción</span><span class="v" id="dbg-desc">—</span></div>
+
+  <div class="group-title">Renderer</div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="dbg-fps">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v" id="dbg-calls">—</span></div>
+  <div class="row"><span class="k">triangles</span><span class="v" id="dbg-tris">—</span></div>
+  <div class="row"><span class="k">pixel ratio</span><span class="v" id="dbg-pr">—</span></div>
+
+  <div class="group-title">Cámara</div>
+  <div class="row"><span class="k">position</span><span class="v" id="dbg-cam">—</span></div>
+  <div class="row"><span class="k">fov</span><span class="v" id="dbg-fov">—</span></div>
+
+  <div class="group-title">Modo específico</div>
+  <div class="row"><span class="k" id="dbg-spec-k1">—</span><span class="v" id="dbg-spec-v1">—</span></div>
+  <div class="row"><span class="k" id="dbg-spec-k2">—</span><span class="v" id="dbg-spec-v2">—</span></div>
+  <div class="row"><span class="k" id="dbg-spec-k3">—</span><span class="v" id="dbg-spec-v3">—</span></div>
+</div>
+
+<!-- ══════════════ CONTROLS PANEL ══════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Modos</h1>
+  <button class="btn on" data-mode="raymarching"><span class="dot"></span>Ray Marching SDF</button>
+  <button class="btn" data-mode="particles"><span class="dot"></span>GPU Particles (100k)</button>
+  <button class="btn" data-mode="fog"><span class="dot"></span>Volumetric Fog</button>
+  <button class="btn" data-mode="tessellation"><span class="dot"></span>Tessellation</button>
+  <button class="btn" data-mode="compute"><span class="dot"></span>Compute (Reaction-Diffusion)</button>
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(88,166,255,.25);">
+    <button class="btn" id="btn-reset" style="text-align:center;">↺ Reset cámara</button>
+  </div>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Click derecho</b> pan · <b>1-5</b> cambiar modo
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/three.module.js</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase6-shaders-avanzados.html</code></p>
+</div></div>
+
+<!-- ══════════════ IMPORT MAP (todo local, sin CDN) ══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const TAU = Math.PI * 2;
+const DEG = 180 / Math.PI;
+
+// ─────────────────────────────────────────────────────────────
+// 0. Utilidades de UI
+// ─────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(d);
+const vecStr = (v) => `${fmt(v.x)}, ${fmt(v.y)}, ${fmt(v.z)}`;
+
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message && /import|module|three/i.test(e.message)) fail(e); });
+
+// ─────────────────────────────────────────────────────────────
+// GLSL NOISE LIBRARY (compartida por todos los modos)
+// ─────────────────────────────────────────────────────────────
+const GLSL_NOISE = /* glsl */`
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);
+  const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));
+  vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);
+  vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);
+  vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;
+  vec3 x2=x0-i2+C.yyy;
+  vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(
+    i.z+vec4(0.0,i1.z,i2.z,1.0))
+    +i.y+vec4(0.0,i1.y,i2.y,1.0))
+    +i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857;
+  vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);
+  vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;
+  vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);
+  vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;
+  vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+  vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);
+  vec3 p1=vec3(a0.zw,h.y);
+  vec3 p2=vec3(a1.xy,h.z);
+  vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+
+float fbm(vec3 p){
+  float f=0.0,a=0.5;
+  for(int i=0;i<5;i++){f+=a*snoise(p);p*=2.0;a*=0.5;}
+  return f;
+}
+
+vec3 curlNoise(vec3 p){
+  const float e=0.1;
+  vec3 dx=vec3(e,0.0,0.0);
+  vec3 dy=vec3(0.0,e,0.0);
+  vec3 dz=vec3(0.0,0.0,e);
+  vec3 p_x0=vec3(snoise(p-dx),snoise(p-dx+vec3(100.0)),snoise(p-dx+vec3(200.0)));
+  vec3 p_x1=vec3(snoise(p+dx),snoise(p+dx+vec3(100.0)),snoise(p+dx+vec3(200.0)));
+  vec3 p_y0=vec3(snoise(p-dy),snoise(p-dy+vec3(100.0)),snoise(p-dy+vec3(200.0)));
+  vec3 p_y1=vec3(snoise(p+dy),snoise(p+dy+vec3(100.0)),snoise(p-dy+vec3(200.0)));
+  vec3 p_z0=vec3(snoise(p-dz),snoise(p-dz+vec3(100.0)),snoise(p-dz+vec3(200.0)));
+  vec3 p_z1=vec3(snoise(p+dz),snoise(p+dz+vec3(100.0)),snoise(p+dz+vec3(200.0)));
+  float x=p_y1.z-p_y0.z-(p_z1.y-p_z0.y);
+  float y=p_z1.x-p_z0.x-(p_x1.z-p_x0.z);
+  float z=p_x1.y-p_x0.y-(p_y1.x-p_y0.x);
+  return normalize(vec3(x,y,z)/(2.0*e));
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 1. Renderer · Scene · Cámaras
+// ─────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+// ─────────────────────────────────────────────────────────────
+// 2. Fullscreen triangle geometry (para ray marching y fog)
+// ─────────────────────────────────────────────────────────────
+const fsGeo = new THREE.BufferGeometry();
+fsGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+  -1, -1, 0,  3, -1, 0,  -1, 3, 0
+]), 3));
+fsGeo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([
+  0, 0,  2, 0,  0, 2
+]), 2));
+
+// ─────────────────────────────────────────────────────────────
+// 3. MODE DEFINITIONS
+// ─────────────────────────────────────────────────────────────
+
+// ═════════════════════════════════════════════════════════════
+// MODE 1: RAY MARCHING SDF
+// ═════════════════════════════════════════════════════════════
+const raymarchingMode = {
+  name: 'Ray Marching SDF',
+  desc: 'Esfera SDF + box + torus + capsule con smin, soft shadows, AO',
+
+  init(scene, camera) {
+    camera.position.set(0, 1.5, 5);
+    camera.lookAt(0, 0, 0);
+
+    this.camera = camera;
+    this.scene = scene;
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        uCamPos: { value: new THREE.Vector3(0, 1.5, 5) },
+        uCamRot: { value: new THREE.Matrix3() },
+      },
+      vertexShader: /* glsl */`
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }
+      `,
+      fragmentShader: /* glsl */`
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform vec3 uCamPos;
+        uniform mat3 uCamRot;
+        varying vec2 vUv;
+        ${GLSL_NOISE}
+
+        float sdSphere(vec3 p, float r){ return length(p)-r; }
+        float sdBox(vec3 p, vec3 b){
+          vec3 q=abs(p)-b;
+          return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);
+        }
+        float sdTorus(vec3 p, vec2 t){
+          vec2 q=vec2(length(p.xz)-t.x,p.y);
+          return length(q)-t.y;
+        }
+        float sdCapsule(vec3 p, vec3 a, vec3 b, float r){
+          vec3 pa=p-a, ba=b-a;
+          float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);
+          return length(pa-ba*h)-r;
+        }
+        float smin(float a,float b,float k){
+          float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);
+          return mix(b,a,h)-k*h*(1.0-h);
+        }
+
+        float map(vec3 p){
+          float d=sdSphere(p-vec3(sin(uTime*0.5)*0.5,0.0,0.0),1.0);
+          d=smin(d,sdBox(p-vec3(2.2,0.0,0.0),vec3(0.6)),0.3);
+          vec3 tp=p-vec3(-2.2,0.0,0.0);
+          tp.xz=mat2(cos(uTime*0.3),-sin(uTime*0.3),sin(uTime*0.3),cos(uTime*0.3))*tp.xz;
+          d=smin(d,sdTorus(tp,vec2(0.8,0.3)),0.3);
+          d=smin(d,sdCapsule(p,vec3(0.0,-1.5,0.0),vec3(0.0,1.5,0.0),0.3),0.2);
+          d=smin(d,p.y+1.5,0.1);
+          return d;
+        }
+
+        vec3 calcNormal(vec3 p){
+          vec2 e=vec2(0.001,0.0);
+          return normalize(vec3(
+            map(p+e.xyy)-map(p-e.xyy),
+            map(p+e.yxy)-map(p-e.yxy),
+            map(p+e.yyx)-map(p-e.yyx)
+          ));
+        }
+
+        float softShadow(vec3 ro,vec3 rd,float mint,float maxt,float k){
+          float res=1.0;
+          float t=mint;
+          for(int i=0;i<32;i++){
+            float h=map(ro+rd*t);
+            if(h<0.001)return 0.0;
+            res=min(res,k*h/t);
+            t+=clamp(h,0.02,0.2);
+            if(t>maxt)break;
+          }
+          return clamp(res,0.0,1.0);
+        }
+
+        float calcAO(vec3 p,vec3 n){
+          float occ=0.0;
+          float sca=1.0;
+          for(int i=0;i<5;i++){
+            float h=0.01+0.12*float(i);
+            float d=map(p+h*n);
+            occ+=(h-d)*sca;
+            sca*=0.95;
+          }
+          return clamp(1.0-3.0*occ,0.0,1.0);
+        }
+
+        float rayMarch(vec3 ro, vec3 rd){
+          float t=0.0;
+          for(int i=0;i<128;i++){
+            vec3 p=ro+rd*t;
+            float d=map(p);
+            if(d<0.0005)return t;
+            if(t>30.0)break;
+            t+=d;
+          }
+          return -1.0;
+        }
+
+        void main(){
+          vec2 uv=(gl_FragCoord.xy-0.5*uResolution)/uResolution.y;
+          vec3 ro=uCamPos;
+          vec3 rd=normalize(uCamRot*vec3(uv,1.8));
+
+          vec3 col=mix(vec3(0.02,0.02,0.05),vec3(0.05,0.05,0.12),uv.y+0.5);
+
+          float t=rayMarch(ro,rd);
+          if(t>0.0){
+            vec3 p=ro+rd*t;
+            vec3 n=calcNormal(p);
+
+            vec3 lightPos=vec3(3.0,5.0,-2.0);
+            vec3 lightDir=normalize(lightPos-p);
+            vec3 viewDir=-rd;
+            vec3 halfDir=normalize(lightDir+viewDir);
+
+            float diff=max(dot(n,lightDir),0.0);
+            float spec=pow(max(dot(n,halfDir),0.0),64.0);
+            float ao=calcAO(p,n);
+            float shadow=softShadow(p+n*0.01,lightDir,0.02,10.0,8.0);
+
+            vec3 matCol=vec3(0.7,0.3,0.2);
+            if(p.y<-1.4)matCol=vec3(0.2,0.2,0.25);
+
+            col=matCol*(0.05+diff*shadow*0.8)*ao;
+            col+=vec3(1.0,0.95,0.8)*spec*shadow*0.6*ao;
+
+            float fog=1.0-exp(-t*0.05);
+            col=mix(col,vec3(0.05,0.05,0.1),fog);
+          }
+
+          col=col/(1.0+col);
+          col=pow(col,vec3(1.0/2.2));
+          gl_FragColor=vec4(col,1.0);
+        }
+      `,
+    });
+
+    this.mesh = new THREE.Mesh(fsGeo, mat);
+    this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+    this.material = mat;
+  },
+
+  update(time, delta) {
+    this.material.uniforms.uTime.value = time;
+    // Update camera uniforms from OrbitControls
+    const cam = this.camera;
+    this.material.uniforms.uCamPos.value.copy(cam.position);
+    const rot = new THREE.Matrix3().setFromMatrix4(cam.matrixWorld);
+    this.material.uniforms.uCamRot.value.copy(rot);
+  },
+
+  getSpec() {
+    return [
+      ['pasos ray', '128'],
+      ['figuras SDF', '5 (esf/box/tor/caps/plane)'],
+      ['soft shadow', '32 pasos'],
+    ];
+  },
+
+  dispose() {
+    if (this.material) this.material.dispose();
+  }
+};
+
+// ═════════════════════════════════════════════════════════════
+// MODE 2: GPU PARTICLES (100k)
+// ═════════════════════════════════════════════════════════════
+const particlesMode = {
+  name: 'GPU Particles (100k)',
+  desc: '100,000 partículas animadas 100% en vertex shader con curl noise',
+
+  init(scene, camera) {
+    camera.position.set(0, 0, 8);
+    camera.lookAt(0, 0, 0);
+
+    this.camera = camera;
+    this.scene = scene;
+
+    const COUNT = 100000;
+    const positions = new Float32Array(COUNT * 3);
+    const seeds = new Float32Array(COUNT);
+    const sizes = new Float32Array(COUNT);
+
+    for (let i = 0; i < COUNT; i++) {
+      const r = Math.cbrt(Math.random()) * 3;
+      const theta = Math.random() * TAU;
+      const phi = Math.acos(2 * Math.random() - 1);
+      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+      seeds[i] = Math.random();
+      sizes[i] = 1.0 + Math.random() * 3.0;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: renderer.getPixelRatio() },
+      },
+      vertexShader: /* glsl */`
+        uniform float uTime;
+        uniform float uPixelRatio;
+        attribute float aSeed;
+        attribute float aSize;
+        varying float vAlpha;
+        varying float vSpeed;
+        ${GLSL_NOISE}
+
+        void main(){
+          vec3 pos = position;
+          float t = uTime * 0.3 + aSeed * 6.28318;
+
+          // Curl noise displacement
+          vec3 curl = curlNoise(pos * 0.8 + t * 0.2);
+          pos += curl * 0.8;
+
+          // Orbital swirl
+          float angle = t * 0.5 + length(pos) * 0.5;
+          float c = cos(angle), s = sin(angle);
+          pos.xz = mat2(c, -s, s, c) * pos.xz;
+
+          // Pulsation
+          pos *= 1.0 + 0.15 * sin(t * 2.0 + aSeed * 10.0);
+
+          vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+          gl_Position = projectionMatrix * mv;
+
+          gl_PointSize = aSize * uPixelRatio * (200.0 / -mv.z);
+
+          float dist = length(pos);
+          vAlpha = smoothstep(5.0, 2.0, dist) * (0.5 + 0.5 * sin(t * 3.0 + aSeed * 20.0));
+          vSpeed = length(curl);
+        }
+      `,
+      fragmentShader: /* glsl */`
+        varying float vAlpha;
+        varying float vSpeed;
+
+        void main(){
+          vec2 c = gl_PointCoord - 0.5;
+          float d = length(c);
+          if(d > 0.5) discard;
+
+          float glow = exp(-d * d * 8.0);
+
+          vec3 slow = vec3(0.2, 0.4, 0.9);
+          vec3 fast = vec3(0.9, 0.3, 0.1);
+          vec3 col = mix(slow, fast, clamp(vSpeed * 2.0, 0.0, 1.0));
+
+          gl_FragColor = vec4(col, glow * vAlpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    this.points = new THREE.Points(geo, mat);
+    this.points.frustumCulled = false;
+    scene.add(this.points);
+    this.material = mat;
+    this.geometry = geo;
+  },
+
+  update(time, delta) {
+    this.material.uniforms.uTime.value = time;
+  },
+
+  getSpec() {
+    return [
+      ['partículas', '100,000'],
+      ['animación', '100% vertex shader'],
+      ['blending', 'Aditivo'],
+    ];
+  },
+
+  dispose() {
+    if (this.geometry) this.geometry.dispose();
+    if (this.material) this.material.dispose();
+  }
+};
+
+// ═════════════════════════════════════════════════════════════
+// MODE 3: VOLUMETRIC FOG
+// ═════════════════════════════════════════════════════════════
+const fogMode = {
+  name: 'Volumetric Fog',
+  desc: 'Ray marching a través de volumen con densidad FBM + scattering',
+
+  init(scene, camera) {
+    camera.position.set(0, 1, 6);
+    camera.lookAt(0, 0, 0);
+
+    this.camera = camera;
+    this.scene = scene;
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        uCamPos: { value: new THREE.Vector3(0, 1, 6) },
+        uCamRot: { value: new THREE.Matrix3() },
+        uLightPos: { value: new THREE.Vector3(2, 3, -1) },
+      },
+      vertexShader: /* glsl */`
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }
+      `,
+      fragmentShader: /* glsl */`
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform vec3 uCamPos;
+        uniform mat3 uCamRot;
+        uniform vec3 uLightPos;
+        varying vec2 vUv;
+        ${GLSL_NOISE}
+
+        float fogDensity(vec3 p){
+          float bound = smoothstep(5.0, 2.0, length(p));
+          if(bound < 0.01) return 0.0;
+
+          float d = 0.0;
+          d += 0.4 * fbm(p * 0.3 + vec3(uTime*0.05, 0.0, uTime*0.03));
+          d += 0.2 * snoise(p * 0.8 + vec3(0.0, uTime*0.1, 0.0));
+          d = max(d, 0.0);
+
+          d *= smoothstep(-2.0, 0.5, p.y) * smoothstep(3.0, 1.0, p.y);
+          return d * bound;
+        }
+
+        vec4 rayMarchFog(vec3 ro, vec3 rd){
+          vec4 sum = vec4(0.0);
+          float t = 0.0;
+          float dt = 0.15;
+
+          for(int i = 0; i < 80; i++){
+            vec3 p = ro + rd * t;
+            float density = fogDensity(p);
+
+            if(density > 0.005){
+              vec3 toLight = uLightPos - p;
+              float lightDist = length(toLight);
+              vec3 lightDir = toLight / lightDist;
+
+              float shadow = 1.0;
+              float lt = 0.1;
+              for(int j = 0; j < 8; j++){
+                vec3 lp = p + lightDir * lt;
+                shadow *= exp(-fogDensity(lp) * 0.5);
+                lt += 0.3;
+                if(lt > lightDist) break;
+              }
+
+              float lightAtten = 1.0 / (1.0 + lightDist * lightDist * 0.05);
+              vec3 lightCol = vec3(1.0, 0.85, 0.6) * lightAtten * shadow;
+              vec3 ambient = vec3(0.05, 0.06, 0.1);
+
+              vec3 col = lightCol * density + ambient;
+              float alpha = density * dt * 2.0;
+
+              sum.rgb += col * alpha * (1.0 - sum.a);
+              sum.a += alpha * (1.0 - sum.a);
+
+              if(sum.a > 0.98) break;
+            }
+
+            t += dt;
+            if(t > 20.0) break;
+          }
+
+          return sum;
+        }
+
+        void main(){
+          vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+          vec3 ro = uCamPos;
+          vec3 rd = normalize(uCamRot * vec3(uv, 1.5));
+
+          vec3 col = mix(vec3(0.02,0.02,0.06), vec3(0.08,0.06,0.12), uv.y + 0.5);
+
+          vec4 fog = rayMarchFog(ro, rd);
+          col = mix(col, fog.rgb, fog.a);
+
+          col = col / (1.0 + col);
+          col = pow(col, vec3(1.0/2.2));
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    this.mesh = new THREE.Mesh(fsGeo, mat);
+    this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+    this.material = mat;
+  },
+
+  update(time, delta) {
+    this.material.uniforms.uTime.value = time;
+    const cam = this.camera;
+    this.material.uniforms.uCamPos.value.copy(cam.position);
+    const rot = new THREE.Matrix3().setFromMatrix4(cam.matrixWorld);
+    this.material.uniforms.uCamRot.value.copy(rot);
+  },
+
+  getSpec() {
+    return [
+      ['pasos march', '80'],
+      ['shadow steps', '8'],
+      ['density', 'FBM + snoise'],
+    ];
+  },
+
+  dispose() {
+    if (this.material) this.material.dispose();
+  }
+};
+
+// ═════════════════════════════════════════════════════════════
+// MODE 4: TESSELLATION
+// ═════════════════════════════════════════════════════════════
+const tessellationMode = {
+  name: 'Tessellation',
+  desc: 'Plane 256×256 con displacement FBM en vertex shader + normales recomputadas',
+
+  init(scene, camera) {
+    camera.position.set(0, 6, 10);
+    camera.lookAt(0, 0, 0);
+
+    this.camera = camera;
+    this.scene = scene;
+
+    const SEGMENTS = 256;
+    const geo = new THREE.PlaneGeometry(10, 10, SEGMENTS, SEGMENTS);
+    geo.rotateX(-Math.PI / 2);
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+      },
+      vertexShader: /* glsl */`
+        uniform float uTime;
+        varying vec3 vNormal;
+        varying vec3 vPos;
+        varying float vDisp;
+        ${GLSL_NOISE}
+
+        float terrainHeight(vec2 p){
+          float h = 0.0;
+          h += 0.5 * fbm(vec3(p * 0.3, uTime * 0.2));
+          h += 0.3 * snoise(vec3(p * 0.8, uTime * 0.3));
+          h += 0.15 * snoise(vec3(p * 2.0, uTime * 0.5));
+          float r = 1.0 - abs(snoise(vec3(p * 0.5, uTime * 0.15)));
+          h += 0.4 * r * r;
+          return h;
+        }
+
+        void main(){
+          vec3 pos = position;
+          float h = terrainHeight(pos.xz);
+          pos.y += h;
+          vDisp = h;
+
+          float eps = 0.05;
+          float hx = terrainHeight(pos.xz + vec2(eps, 0.0)) - h;
+          float hz = terrainHeight(pos.xz + vec2(0.0, eps)) - h;
+          vNormal = normalize(normalMatrix * vec3(-hx/eps, 1.0, -hz/eps));
+          vPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */`
+        varying vec3 vNormal;
+        varying vec3 vPos;
+        varying float vDisp;
+
+        void main(){
+          vec3 n = normalize(vNormal);
+          vec3 lightDir = normalize(vec3(0.5, 0.8, -0.3));
+          vec3 viewDir = normalize(cameraPosition - vPos);
+          vec3 halfDir = normalize(lightDir + viewDir);
+
+          float diff = max(dot(n, lightDir), 0.0);
+          float spec = pow(max(dot(n, halfDir), 0.0), 32.0);
+
+          vec3 low = vec3(0.1, 0.2, 0.4);
+          vec3 mid = vec3(0.2, 0.5, 0.3);
+          vec3 high = vec3(0.8, 0.7, 0.5);
+          vec3 col = mix(low, mid, smoothstep(-0.3, 0.3, vDisp));
+          col = mix(col, high, smoothstep(0.3, 0.8, vDisp));
+
+          col *= 0.1 + diff * 0.8;
+          col += vec3(1.0, 0.95, 0.8) * spec * 0.3;
+
+          float dist = length(vPos - cameraPosition);
+          float fog = 1.0 - exp(-dist * 0.04);
+          col = mix(col, vec3(0.05, 0.05, 0.1), fog);
+
+          col = col / (1.0 + col);
+          col = pow(col, vec3(1.0/2.2));
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    this.mesh = new THREE.Mesh(geo, mat);
+    scene.add(this.mesh);
+    this.material = mat;
+    this.geometry = geo;
+  },
+
+  update(time, delta) {
+    this.material.uniforms.uTime.value = time;
+  },
+
+  getSpec() {
+    return [
+      ['segmentos', '256 × 256'],
+      ['vértices', '66,049'],
+      ['displacement', 'FBM + ridge noise'],
+    ];
+  },
+
+  dispose() {
+    if (this.geometry) this.geometry.dispose();
+    if (this.material) this.material.dispose();
+  }
+};
+
+// ═════════════════════════════════════════════════════════════
+// MODE 5: COMPUTE (REACTION-DIFFUSION)
+// ═════════════════════════════════════════════════════════════
+const computeMode = {
+  name: 'Compute (Reaction-Diffusion)',
+  desc: 'Gray-Scott reaction-diffusion con ping-pong render targets (GPGPU)',
+
+  init(scene, camera) {
+    camera.position.set(0, 0, 3);
+    camera.lookAt(0, 0, 0);
+
+    this.camera = camera;
+    this.scene = scene;
+
+    const SIM_SIZE = 512;
+
+    // Check float texture support
+    const gl = renderer.getContext();
+    const hasFloat = renderer.capabilities.isWebGL2 ||
+      gl.getExtension('OES_texture_float');
+    const texType = hasFloat ? THREE.FloatType : THREE.HalfFloatType;
+
+    const createRT = () => new THREE.WebGLRenderTarget(SIM_SIZE, SIM_SIZE, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      format: THREE.RGFormat,
+      type: texType,
+      depthBuffer: false,
+      stencilBuffer: false,
+    });
+
+    this.rtA = createRT();
+    this.rtB = createRT();
+
+    // Init material
+    const initMat = new THREE.ShaderMaterial({
+      vertexShader: `void main(){ gl_Position = vec4(position,1.0); }`,
+      fragmentShader: /* glsl */`
+        void main(){
+          vec2 uv = gl_FragCoord.xy / vec2(${SIM_SIZE}.0);
+          float a = 1.0;
+          float b = 0.0;
+          if(length(uv - 0.5) < 0.05) b = 1.0;
+          if(length(uv - vec2(0.2,0.2)) < 0.03) b = 1.0;
+          if(length(uv - vec2(0.8,0.8)) < 0.03) b = 1.0;
+          if(length(uv - vec2(0.2,0.8)) < 0.03) b = 1.0;
+          if(length(uv - vec2(0.8,0.2)) < 0.03) b = 1.0;
+          gl_FragColor = vec4(a, b, 0.0, 1.0);
+        }
+      `,
+    });
+
+    // Sim material
+    this.simMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uPrev: { value: null },
+        uTexelSize: { value: new THREE.Vector2(1 / SIM_SIZE, 1 / SIM_SIZE) },
+        uDA: { value: 1.0 },
+        uDB: { value: 0.5 },
+        uFeed: { value: 0.055 },
+        uKill: { value: 0.062 },
+        uDt: { value: 1.0 },
+      },
+      vertexShader: `void main(){ gl_Position = vec4(position,1.0); }`,
+      fragmentShader: /* glsl */`
+        uniform sampler2D uPrev;
+        uniform vec2 uTexelSize;
+        uniform float uDA, uDB, uFeed, uKill, uDt;
+
+        vec2 laplacian(vec2 uv){
+          vec2 sum = vec2(0.0);
+          sum += texture2D(uPrev, uv + vec2(-uTexelSize.x, 0.0)).rg * 0.2;
+          sum += texture2D(uPrev, uv + vec2( uTexelSize.x, 0.0)).rg * 0.2;
+          sum += texture2D(uPrev, uv + vec2(0.0, -uTexelSize.y)).rg * 0.2;
+          sum += texture2D(uPrev, uv + vec2(0.0,  uTexelSize.y)).rg * 0.2;
+          sum += texture2D(uPrev, uv + vec2(-uTexelSize.x, -uTexelSize.y)).rg * 0.05;
+          sum += texture2D(uPrev, uv + vec2( uTexelSize.x, -uTexelSize.y)).rg * 0.05;
+          sum += texture2D(uPrev, uv + vec2(-uTexelSize.x,  uTexelSize.y)).rg * 0.05;
+          sum += texture2D(uPrev, uv + vec2( uTexelSize.x,  uTexelSize.y)).rg * 0.05;
+          sum += texture2D(uPrev, uv).rg * -1.0;
+          return sum;
+        }
+
+        void main(){
+          vec2 uv = gl_FragCoord.xy * uTexelSize;
+          vec2 state = texture2D(uPrev, uv).rg;
+          float a = state.r;
+          float b = state.g;
+
+          vec2 lap = laplacian(uv);
+
+          float reaction = a * b * b;
+          float da = uDA * lap.x - reaction + uFeed * (1.0 - a);
+          float db = uDB * lap.y + reaction - (uFeed + uKill) * b;
+
+          a += da * uDt;
+          b += db * uDt;
+
+          gl_FragColor = vec4(clamp(a, 0.0, 1.0), clamp(b, 0.0, 1.0), 0.0, 1.0);
+        }
+      `,
+    });
+
+    // Display material
+    this.displayMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uSim: { value: null },
+      },
+      vertexShader: /* glsl */`
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+      `,
+      fragmentShader: /* glsl */`
+        uniform sampler2D uSim;
+        varying vec2 vUv;
+        void main(){
+          vec2 state = texture2D(uSim, vUv).rg;
+          float b = state.g;
+
+          vec3 col = vec3(0.02, 0.02, 0.05);
+          col = mix(col, vec3(0.1, 0.3, 0.6), smoothstep(0.0, 0.15, b));
+          col = mix(col, vec3(0.2, 0.7, 0.4), smoothstep(0.15, 0.3, b));
+          col = mix(col, vec3(0.9, 0.8, 0.3), smoothstep(0.3, 0.45, b));
+          col = mix(col, vec3(1.0, 0.95, 0.9), smoothstep(0.45, 0.6, b));
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    // Sim scene (fullscreen quad)
+    this.simScene = new THREE.Scene();
+    this.simCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.simQuad = new THREE.Mesh(fsGeo, this.simMat);
+    this.simQuad.frustumCulled = false;
+    this.simScene.add(this.simQuad);
+
+    // Display scene
+    this.displayScene = new THREE.Scene();
+    this.displayQuad = new THREE.Mesh(fsGeo, this.displayMat);
+    this.displayQuad.frustumCulled = false;
+    this.displayScene.add(this.displayQuad);
+
+    // Initialize both RTs
+    const initQuad = new THREE.Mesh(fsGeo, initMat);
+    initQuad.frustumCulled = false;
+    const initScene = new THREE.Scene();
+    initScene.add(initQuad);
+
+    renderer.setRenderTarget(this.rtA);
+    renderer.render(initScene, this.simCamera);
+    renderer.setRenderTarget(this.rtB);
+    renderer.render(initScene, this.simCamera);
+    renderer.setRenderTarget(null);
+
+    initMat.dispose();
+  },
+
+  update(time, delta) {
+    // Run 8 sim steps per frame
+    for (let i = 0; i < 8; i++) {
+      this.simMat.uniforms.uPrev.value = this.rtA.texture;
+      renderer.setRenderTarget(this.rtB);
+      renderer.render(this.simScene, this.simCamera);
+      // Swap
+      const tmp = this.rtA;
+      this.rtA = this.rtB;
+      this.rtB = tmp;
+    }
+
+    // Display
+    this.displayMat.uniforms.uSim.value = this.rtA.texture;
+    renderer.setRenderTarget(null);
+    renderer.render(this.displayScene, this.camera);
+  },
+
+  getSpec() {
+    return [
+      ['modelo', 'Gray-Scott'],
+      ['resolución', '512 × 512'],
+      ['pasos/frame', '8'],
+    ];
+  },
+
+  dispose() {
+    if (this.rtA) this.rtA.dispose();
+    if (this.rtB) this.rtB.dispose();
+    if (this.simMat) this.simMat.dispose();
+    if (this.displayMat) this.displayMat.dispose();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// 4. MODE MANAGER
+// ─────────────────────────────────────────────────────────────
+const modes = {
+  raymarching: raymarchingMode,
+  particles: particlesMode,
+  fog: fogMode,
+  tessellation: tessellationMode,
+  compute: computeMode,
+};
+
+let currentModeName = 'raymarching';
+let currentMode = null;
+let currentScene = null;
+let currentCamera = null;
+let controls = null;
+
+function switchMode(name) {
+  if (!modes[name]) return;
+
+  // Cleanup previous
+  if (currentMode) currentMode.dispose();
+  if (controls) { controls.dispose(); controls = null; }
+
+  currentModeName = name;
+  currentMode = modes[name];
+
+  // Create fresh scene and camera
+  currentScene = new THREE.Scene();
+  currentScene.background = new THREE.Color(0x0d1117);
+  currentCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+
+  // Add OrbitControls
+  controls = new OrbitControls(currentCamera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+
+  // Init mode
+  currentMode.init(currentScene, currentCamera);
+
+  // Update UI
+  document.querySelectorAll('.btn[data-mode]').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.mode === name);
+  });
+  $('dbg-mode').textContent = currentMode.name;
+  $('dbg-desc').textContent = currentMode.desc;
+
+  updateSpecRows();
+}
+
+function updateSpecRows() {
+  const spec = currentMode.getSpec();
+  for (let i = 0; i < 3; i++) {
+    const kEl = $('dbg-spec-k' + (i + 1));
+    const vEl = $('dbg-spec-v' + (i + 1));
+    if (spec[i]) {
+      kEl.textContent = spec[i][0];
+      vEl.textContent = spec[i][1];
+    } else {
+      kEl.textContent = '—';
+      vEl.textContent = '—';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 5. UI EVENTS
+// ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.btn[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+});
+
+$('btn-reset').addEventListener('click', () => {
+  if (!currentCamera) return;
+  currentCamera.position.set(0, 1.5, 5);
+  currentCamera.lookAt(0, 0, 0);
+  if (controls) {
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+});
+
+// Keyboard shortcuts 1-5
+window.addEventListener('keydown', (e) => {
+  const keys = ['raymarching', 'particles', 'fog', 'tessellation', 'compute'];
+  const idx = parseInt(e.key) - 1;
+  if (idx >= 0 && idx < keys.length) switchMode(keys[idx]);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 6. RESIZE
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  if (currentCamera) {
+    currentCamera.aspect = w / h;
+    currentCamera.updateProjectionMatrix();
+  }
+  // Update resolution uniforms
+  if (currentMode && currentMode.material && currentMode.material.uniforms.uResolution) {
+    currentMode.material.uniforms.uResolution.value.set(w, h);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// 7. ANIMATION LOOP
+// ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+let lastFpsTime = 0;
+let fps = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const delta = clock.getDelta();
+  const time = clock.getElapsedTime();
+
+  // FPS counter
+  frameCount++;
+  if (time - lastFpsTime >= 0.5) {
+    fps = Math.round(frameCount / (time - lastFpsTime));
+    frameCount = 0;
+    lastFpsTime = time;
+    $('dbg-fps').textContent = fps;
+  }
+
+  // Update controls
+  if (controls) controls.update();
+
+  // Update current mode
+  if (currentMode && currentScene && currentCamera) {
+    currentMode.update(time, delta);
+
+    // For compute mode, rendering happens inside update()
+    if (currentModeName !== 'compute') {
+      renderer.setRenderTarget(null);
+      renderer.render(currentScene, currentCamera);
+    }
+
+    // Update debug info
+    $('dbg-calls').textContent = renderer.info.render.calls;
+    $('dbg-tris').textContent = renderer.info.render.triangles.toLocaleString();
+    $('dbg-pr').textContent = renderer.getPixelRatio().toFixed(1);
+    $('dbg-cam').textContent = vecStr(currentCamera.position);
+    $('dbg-fov').textContent = currentCamera.fov.toFixed(0) + '°';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 8. START
+// ─────────────────────────────────────────────────────────────
+switchMode('raymarching');
+animate();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase6-shaders-avanzados.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

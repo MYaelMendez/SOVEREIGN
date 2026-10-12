@@ -1,0 +1,20 @@
+{
+  "name": "cuda-mcp2-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.115 preview",
+    "check": "npx --yes hyperframes@0.8.115 check",
+    "render": "npx --yes hyperframes@0.8.115 render",
+    "publish": "npx --yes hyperframes@0.8.115 publish"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chrome-remote-interface": "^0.34.0"
+  }
+}

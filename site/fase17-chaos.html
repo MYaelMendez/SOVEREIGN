@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase17-chaos — Chaos Root + Pulse Gated</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff;--green:#4dff9e;--red:#ff5a5a}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:420px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud .loop{font-size:16px;letter-spacing:2px}
+#hud .st{opacity:0.45;transition:opacity .2s,color .2s,text-shadow .2s}
+#hud .st.on{opacity:1;color:#eafcff;text-shadow:0 0 16px rgba(0,234,255,0.9)}
+#hud .ar{color:var(--gold);opacity:0.6;margin:0 8px}
+#hud ul{list-style:none;margin-top:22px;font-size:14px;line-height:1.95}
+#hud li{opacity:0.72}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:var(--cyan)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="hud">
+  <h1>æ:// fase17-chaos</h1>
+  <div class="sub">Semana 17 · Chaos Root + Pulse Gated</div>
+  <div class="rule"></div>
+  <div class="loop">
+    <span class="st" data-st="0">root</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="1">pulse</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="2">gate</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="3">receive</span>
+  </div>
+  <ul>
+    <li>boxes &middot; <span class="v" id="bx">2123</span></li>
+    <li>cell-pulses &middot; <span class="v" id="cp">327</span></li>
+    <li>life-cells &middot; <span class="v" id="lc">3800</span></li>
+    <li>zoom &middot; <span class="v" id="zm">1.0x</span></li>
+  </ul>
+</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+var W=1920,H=1080,DURATION=15.0;
+var GOLD=0xD4AF37,CYAN=0x00eaff,GREEN=0x4dff9e,RED=0xff5a5a;
+var scene,camera,renderer,backdropMat;
+var boxes=[],pulses=[],lifeCells=[];
+
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x050505);
+  camera=new THREE.PerspectiveCamera(50,W/H,0.1,6000);
+  camera.position.set(0,100,400);
+  camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+  renderer.setPixelRatio(1);
+  renderer.setSize(W,H);
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=2.8;
+
+  backdropMat=new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0}},
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'varying vec2 vUv;uniform float uTime;void main(){vec2 p=vUv-0.5;float d=length(p*vec2(1.0,0.82));float core=smoothstep(0.82,0.0,d);float ring=smoothstep(0.05,0.0,abs(d-0.44));vec3 col=vec3(0.84,0.69,0.22)*core*1.8+vec3(0.0,0.92,1.0)*ring*1.2+vec3(0.84,0.69,0.22)*0.35;col*=1.2+0.3*sin(uTime*1.3);gl_FragColor=vec4(col,1.0);}'
+  });
+  var backdrop=new THREE.Mesh(new THREE.PlaneGeometry(2000,1200),backdropMat);
+  backdrop.position.set(0,0,-1100);
+  backdrop.renderOrder=-1;
+  scene.add(backdrop);
+
+  scene.add(new THREE.AmbientLight(0xffffff,1.8));
+  var key=new THREE.DirectionalLight(0xffffff,2.5);key.position.set(150,260,200);scene.add(key);
+  var rim=new THREE.PointLight(CYAN,3.0,3000);rim.position.set(-200,120,-150);scene.add(rim);
+
+  // Chaos Root: 2123 boxes
+  var boxGeo=new THREE.BoxGeometry(18,14,14);
+  for(var i=0;i<2123;i++){
+    var color=[GOLD,CYAN,GREEN,RED,(GOLD+CYAN)>>1][i%5];
+    var mat=new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.4,roughness:0.3,metalness:0.7});
+    var mesh=new THREE.Mesh(boxGeo,mat);
+    var x=(Math.random()-0.5)*600;
+    var y=(Math.random()-0.5)*400;
+    var z=(Math.random()-0.5)*400;
+    mesh.position.set(x,y,z);
+    mesh.rotation.set(Math.random()*6.28,Math.random()*6.28,Math.random()*6.28);
+    scene.add(mesh);
+    boxes.push({mesh:mesh,mat:mat,x:x,y:y,z:z,rotX:Math.random()*6.28,rotY:Math.random()*6.28,rotZ:Math.random()*6.28});
+  }
+
+  // Pulse Gated: 327 pulses, 2 cycles each in 90s
+  var pulseGeo=new THREE.SphereGeometry(2.5,12,12);
+  for(var i=0;i<327;i++){
+    var color=[GOLD,CYAN,GREEN,RED][i%4];
+    var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0});
+    var s=new THREE.Mesh(pulseGeo,mat);
+    var px=(Math.random()-0.5)*500,py=(Math.random()-0.5)*300,pz=(Math.random()-0.5)*300;
+    s.position.set(px,py,pz);
+    s.visible=false;
+    scene.add(s);
+    pulses.push({mesh:s,mat:mat,x:px,y:py,z:pz,t:0,speed:1.3+Math.random()*0.5,phase:i*0.7});
+  }
+
+  // Life grid: 3800 cells
+  var lifeMat=new THREE.MeshBasicMaterial({color:0x4dff9e,transparent:true,opacity:0.25});
+  var lcGeo=new THREE.BoxGeometry(4,4,4);
+  for(var i=0;i<3800;i++){
+    var x=(Math.random()-0.5)*560;
+    var y=(Math.random()-0.5)*300;
+    var z=(Math.random()-0.5)*300;
+    var mesh=new THREE.Mesh(lcGeo,lifeMat);
+    mesh.position.set(x,y,z);
+    scene.add(mesh);
+    lifeCells.push({mesh:mesh,x:x,y:y,z:z});
+  }
+}
+
+function renderAt(t){
+  backdropMat.uniforms.uTime.value=t;
+
+  // Boxes: chaos root — rotate + drift
+  for(var i=0;i<boxes.length;i++){
+    var b=boxes[i];
+    b.rotX+=0.003,b.rotY+=0.005,b.rotZ+=0.002;
+    b.mesh.rotation.set(b.rotX,b.rotY,b.rotZ);
+    b.mesh.position.x=b.x+Math.sin(t*0.15+b.phase)*8;
+    b.mesh.position.y=b.y+Math.cos(t*0.12+b.phase)*5;
+    b.mesh.position.z=b.z+Math.sin(t*0.18+b.phase)*6;
+    b.mat.emissiveIntensity=0.3+0.2*Math.sin(t*2+i*0.3);
+  }
+
+  // Pulse Gated: 327 pulses, 2 cycles each in 90s
+  for(var i=0;i<pulses.length;i++){
+    var p=pulses[i];
+    p.t=(t*p.speed+i*0.1)%1;
+    p.mesh.position.x=p.x+Math.sin(t*1.3+p.phase)*8;
+    p.mesh.position.y=p.y+Math.cos(t*1.1+p.phase)*6;
+    p.mesh.position.z=p.z+Math.sin(t*1.5+p.phase)*5;
+    if(p.t<0.5){
+      p.mesh.visible=true;
+      p.mat.opacity=Math.sin(p.t*Math.PI)*0.8;
+    } else {
+      p.mesh.visible=false;
+      p.mat.opacity=0;
+    }
+  }
+
+  // Life: 3800 cells
+  for(var i=0;i<lifeCells.length;i++){
+    var c=lifeCells[i];
+    c.mesh.position.x=c.x+Math.sin(t*0.05+c.phase)*1.5;
+    c.mesh.position.y=c.y+Math.cos(t*0.04+c.phase)*1.5;
+    c.mesh.position.z=c.z+Math.sin(t*0.06+c.phase)*1.5;
+    c.mesh.material.opacity=0.15+0.1*Math.sin(t*0.2+i*0.05);
+  }
+
+  // Zoom: 5x over 60s (camera pulls in)
+  var zoom=1.0+4.0*Math.min(1,t/(DURATION*0.9));
+  camera.position.set(0,100,400/zoom);
+  camera.lookAt(0,0,0);
+
+  // HUD
+  document.getElementById('bx').textContent=boxes.length;
+  document.getElementById('cp').textContent=pulses.length;
+  document.getElementById('lc').textContent=lifeCells.length;
+  document.getElementById('zm').textContent=(1.0+4.0*Math.min(1,t/(DURATION*0.9))).toFixed(1)+'x';
+
+  renderer.render(scene,camera);
+}
+
+window.__renderFrame=function(i,total){
+  if(!renderer)return;
+  var n=Math.max(1,(total||1)-1);
+  var t=(i/n)*DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent=i;
+  document.getElementById('tc').textContent=total;
+  document.getElementById('tt').textContent=t.toFixed(2);
+  return true;
+};
+
+init();
+window.__renderFrame(0,1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fase17-chaos.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

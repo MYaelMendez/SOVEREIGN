@@ -1,0 +1,16 @@
+ENV {"threeUrl":"http://127.0.0.1:8011/vendor/three.module.js","addonsBase":"http://127.0.0.1:8011/vendor/addons/","hc":12,"osc":"function","transferFn":"function"}
+TRANSFER_CONTROL {"ok":true}
+DONE {"t":1}
+ENV {"threeUrl":"http://127.0.0.1:8011/vendor/three.module.js","addonsBase":"http://127.0.0.1:8011/vendor/addons/","hc":12,"osc":"function","transferFn":"function"}
+TRANSFER_CONTROL {"ok":true}
+ERROR "TypeError: sn.noise2d is not a function\n    at self.onmessage (blob:http://127.0.0.1:8011/cb93902e-d20a-488b-90cc-77347ca9c0fe:19:97)"
+DONE {"t":1}
+ENV {"threeUrl":"http://127.0.0.1:8011/vendor/three.module.js","addonsBase":"http://127.0.0.1:8011/vendor/addons/","hc":12,"osc":"function","transferFn":"function"}
+TRANSFER_CONTROL {"ok":true}
+ERROR "TypeError: sn.noise2d is not a function\n    at self.onmessage (blob:http://127.0.0.1:8011/67d7eda6-0234-4d54-b564-ab9e4d901aff:19:97)"
+ENV {"threeUrl":"http://127.0.0.1:8011/vendor/three.module.js","addonsBase":"http://127.0.0.1:8011/vendor/addons/","hc":12,"osc":"function","transferFn":"function"}
+TRANSFER_CONTROL {"ok":true}
+WORKER {"importmapInWorker":false,"importmapErr":"Failed to resolve module specifier 'three'","absImport":true,"rev":"186","simplex":"function","raf":"function","oscInWorker":"function","noise3d":-0.016,"geoVerts":2401,"geoNormals":true,"geoIndexBytes":4,"rayHits":1,"rayDist":41.569,"mixerPos":[1,2,3],"dataTex":true}
+TRANSFER {"beforeLen":1024}
+TRANSFER_AFTER {"afterLen":0,"detached":true}
+RENDER {"glVer":"WebGL 2.0 (OpenGL ES 3.0 Chromium)","centerPixel":[0,0,0,255],"drawBuf":"300x200"}

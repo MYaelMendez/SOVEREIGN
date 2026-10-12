@@ -1,0 +1,19 @@
+{
+  "schema": "pc://contract/v1",
+  "contract_id": "c771e401-716a-4516-9ea6-11377426418c",
+  "intent_hash": "2de971e3916e269d337dc9959b9cc6b37f0e2fe2a1a5a42a288c016d1aefa563",
+  "threshold_required": 2,
+  "threshold_total": 2,
+  "signers": [
+    "daollc",
+    "yael"
+  ],
+  "evidence": "daollc://formation",
+  "expires_at": "2027-12-31T23:59:59",
+  "nonce": "7fef59c4-face-4777-b17d-5c9bf8f24bb4",
+  "issued_at": "2026-10-04T06:09:03",
+  "signatures": {
+    "daollc": "0b4ab6bc88d9d13dda24887fdd8d6e6e287fb9ecfc8fc9aade3506bdc11b8d82",
+    "yael": "1e1e39083e7d4b2bd57367287f753a3f2829e07921a665eeb41d568ce70616fb"
+  }
+}

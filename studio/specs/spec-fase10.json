@@ -1,0 +1,9 @@
+{
+  "title": "\u00e6:// fase10-post \u2014 Post-Processing Pipeline",
+  "text": "Semana 10 \u00b7 EffectComposer \u00b7 Bloom \u00b7 DOF \u00b7 Color Grading \u00b7 SSAO",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase10-postprocessing.html"
+}

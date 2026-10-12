@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase11-effects — Efectos Avanzados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#stage{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:1}
+#stage canvas{display:block;width:1920px;height:1080px}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.30) 0px,rgba(0,0,0,0.30) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:380px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud ul{list-style:none;font-size:15px;line-height:2.05}
+#hud li{opacity:0.5;transition:opacity .25s,color .25s,text-shadow .25s}
+#hud li.on{opacity:1;color:#ffe9a8;text-shadow:0 0 14px rgba(212,175,55,0.75)}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);
+  border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <h1>æ:// fase11-effects</h1>
+  <div class="sub">Week 11 — Efectos Avanzados</div>
+  <div class="rule"></div>
+  <ul id="fx">
+    <li data-fx="0">vertex displacement &middot; simplex noise</li>
+    <li data-fx="1">fresnel rim glow &middot; cyan</li>
+    <li data-fx="2">emissive pulse &middot; gold</li>
+    <li data-fx="3">orbital particle rings</li>
+    <li data-fx="4">periodic shockwave</li>
+  </ul>
+</div>
+
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+
+<div id="badge"
+  onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+  onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+  onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+  title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase11-effects.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1920, H = 1080, DURATION = 12.0;
+const GOLD = 0xD4AF37, CYAN = 0x00eaff;
+
+/* ---- 3D simplex noise (Ashima / webgl-noise) ---- */
+const NOISE = `
+vec3 mod289(vec3 x){return x - floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x - floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(i);
+  vec4 p = permute(permute(permute(
+        i.z + vec4(0.0, i1.z, i2.z, 1.0))
+      + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+      + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 0.142857142857;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);
+  vec4 x = x_ * ns.x + ns.yyyy;
+  vec4 y = y_ * ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 p0 = vec3(a0.xy, h.x);
+  vec3 p1 = vec3(a0.zw, h.y);
+  vec3 p2 = vec3(a1.xy, h.z);
+  vec3 p3 = vec3(a1.zw, h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+`;
+
+/* ---- renderer ---- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 400);
+camera.position.set(0, 0.5, 9.6);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+document.getElementById('stage').appendChild(renderer.domElement);
+
+const composer = new EffectComposer(renderer);
+composer.setSize(W, H);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.52, 0.60, 0.72);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ---- backdrop glow (keeps the void lit enough for the video gate) ---- */
+const backdropMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan; varying vec2 vUv;
+    void main(){
+      vec2 p = vUv - 0.5;
+      float d = length(p * vec2(1.0, 0.78));
+      float core = smoothstep(0.52, 0.0, d);
+      float ring = smoothstep(0.035, 0.0, abs(d - 0.42));
+      vec3 col = uGold * core * 0.16;
+      col += uCyan * ring * 0.13;
+      col += uGold * 0.010;
+      col *= 0.88 + 0.12 * sin(uTime * 1.4);
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(74, 44), backdropMat);
+backdrop.position.z = -16;
+scene.add(backdrop);
+
+/* ---- (a) vertex displacement + (b) fresnel + (c) emissive pulse ---- */
+const icoMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: NOISE + `
+    uniform float uTime;
+    varying vec3 vN;
+    varying vec3 vW;
+    varying float vDisp;
+    void main(){
+      vec3 n = normalize(normal);
+      float n1 = snoise(position * 0.90 + vec3(0.0, 0.0, uTime * 0.35));
+      float n2 = snoise(position * 2.10 + vec3(uTime * 0.22, 0.0, 0.0));
+      float disp = n1 * 0.42 + n2 * 0.15;
+      vDisp = disp;
+      vec3 p = position + n * disp;
+      vec4 wp = modelMatrix * vec4(p, 1.0);
+      vW = wp.xyz;
+      vN = normalize(mat3(modelMatrix) * n);
+      gl_Position = projectionMatrix * viewMatrix * wp;
+    }`,
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan;
+    varying vec3 vN; varying vec3 vW; varying float vDisp;
+    void main(){
+      vec3 V = normalize(cameraPosition - vW);
+      vec3 N = normalize(vN);
+      float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 2.6);
+      float diff = 0.32 + 0.68 * max(dot(N, normalize(vec3(0.5, 0.9, 0.7))), 0.0);
+      float pulse = 0.55 + 0.45 * sin(uTime * 2.4 + vDisp * 4.5);
+      vec3 col = uGold * diff * (0.85 + 0.95 * pulse);
+      col += uCyan * fres * 1.20;
+      col += uGold * max(vDisp, 0.0) * 0.85;
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const ico = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 5), icoMat);
+scene.add(ico);
+
+/* ---- round point sprite ---- */
+function dotTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0.0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.35, 'rgba(255,255,255,0.7)');
+  grd.addColorStop(1.0, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* ---- orbital particle ring system ---- */
+const COUNT = 2800;
+const posArr = new Float32Array(COUNT * 3);
+const colArr = new Float32Array(COUNT * 3);
+const pRad = new Float32Array(COUNT);
+const pAng = new Float32Array(COUNT);
+const pSpd = new Float32Array(COUNT);
+const pY = new Float32Array(COUNT);
+const cGold = new THREE.Color(GOLD), cCyan = new THREE.Color(CYAN);
+for (let i = 0; i < COUNT; i++) {
+  const ringIdx = i % 5;
+  pRad[i] = 3.2 + ringIdx * 0.85 + (Math.random() - 0.5) * 0.55;
+  pAng[i] = Math.random() * Math.PI * 2;
+  pSpd[i] = (0.16 + Math.random() * 0.24) * (ringIdx % 2 === 0 ? 1 : -1);
+  pY[i] = (Math.random() - 0.5) * 1.7;
+  const c = cGold.clone().lerp(cCyan, Math.random() * 0.7);
+  colArr[i * 3] = c.r; colArr[i * 3 + 1] = c.g; colArr[i * 3 + 2] = c.b;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+const pMat = new THREE.PointsMaterial({
+  size: 0.20, map: dotTexture(), vertexColors: true, transparent: true,
+  opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+});
+scene.add(new THREE.Points(pGeo, pMat));
+
+/* ---- periodic shockwave rings ---- */
+const swGeo = new THREE.RingGeometry(0.94, 1.0, 180);
+function shockMat(color) {
+  return new THREE.MeshBasicMaterial({
+    color: color, transparent: true, opacity: 0, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+}
+const swMat1 = shockMat(GOLD);
+const sw1 = new THREE.Mesh(swGeo, swMat1);
+sw1.rotation.x = -Math.PI / 2;
+scene.add(sw1);
+const swMat2 = shockMat(CYAN);
+const sw2 = new THREE.Mesh(swGeo, swMat2);
+sw2.rotation.set(-Math.PI / 2 + 0.62, 0.0, 0.45);
+scene.add(sw2);
+
+/* ---- HUD handles ---- */
+const fxItems = Array.prototype.slice.call(document.querySelectorAll('#fx li'));
+const elFc = document.getElementById('fc');
+const elTc = document.getElementById('tc');
+const elTt = document.getElementById('tt');
+
+/* ---- deterministic frame renderer ---- */
+function renderAt(t) {
+  icoMat.uniforms.uTime.value = t;
+  backdropMat.uniforms.uTime.value = t;
+
+  ico.rotation.y = t * 0.28;
+  ico.rotation.x = Math.sin(t * 0.22) * 0.35;
+
+  for (let i = 0; i < COUNT; i++) {
+    const a = pAng[i] + t * pSpd[i];
+    const r = pRad[i] + Math.sin(t * 0.9 + i * 0.35) * 0.12;
+    posArr[i * 3]     = Math.cos(a) * r;
+    posArr[i * 3 + 1] = pY[i] + Math.sin(t * 1.1 + i * 0.5) * 0.28;
+    posArr[i * 3 + 2] = Math.sin(a) * r;
+  }
+  pGeo.attributes.position.needsUpdate = true;
+
+  const period = 2.4;
+  const ph1 = (t / period) % 1;
+  sw1.scale.setScalar(0.6 + ph1 * 8.6);
+  swMat1.opacity = Math.max(0, 1 - ph1) * 0.85;
+  const ph2 = ((t + period * 0.5) / period) % 1;
+  sw2.scale.setScalar(0.6 + ph2 * 8.6);
+  swMat2.opacity = Math.max(0, 1 - ph2) * 0.60;
+
+  const fi = Math.floor((t * 1.6) % 5);
+  for (let k = 0; k < fxItems.length; k++) fxItems[k].classList.toggle('on', k === fi);
+
+  composer.render();
+}
+
+/* ---- external frame hook (drives æRTXrender / vidæo producer) ---- */
+let driven = false;
+window.__renderFrame = function (i, total) {
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  elFc.textContent = i;
+  elTc.textContent = total;
+  elTt.textContent = t.toFixed(2);
+  return true;
+};
+
+/* ---- live loop for standalone viewing ---- */
+function loop() {
+  requestAnimationFrame(loop);
+  if (driven) return;
+  renderAt((performance.now() / 1000) % DURATION);
+}
+loop();
+
+window.__renderFrame(0, 1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/fase11-effects.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

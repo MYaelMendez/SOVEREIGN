@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIDEO VISION</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; inset: 0; pointer-events: none; z-index: 10;
+    font-family: 'JetBrains Mono', monospace; color: #D4AF37;
+  }
+  .title { position: absolute; top: 36px; left: 0; right: 0; text-align: center;
+    font-size: 20px; letter-spacing: 8px; font-weight: 700;
+    text-shadow: 0 0 24px rgba(212,175,55,0.6); }
+  .sub { position: absolute; top: 66px; left: 0; right: 0; text-align: center;
+    font-size: 9px; letter-spacing: 3px; color: rgba(212,175,55,0.5); }
+  .verdict { position: absolute; top: 50%; left: 0; right: 0; text-align: center;
+    font-size: 42px; letter-spacing: 10px; font-weight: 700;
+    transform: translateY(-50%); opacity: 0; transition: opacity 0.3s; }
+  .metrics { position: absolute; bottom: 120px; left: 0; right: 0; text-align: center;
+    font-size: 10px; letter-spacing: 1px; line-height: 1.9; color: rgba(240,236,228,0.7); }
+  .metrics b { color: #D4AF37; }
+  .receipt { position: absolute; bottom: 84px; left: 0; right: 0; text-align: center;
+    font-size: 8px; letter-spacing: 1px; color: rgba(212,175,55,0.45); word-break: break-all;
+    padding: 0 40px; }
+  .brand { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center;
+    font-size: 11px; letter-spacing: 4px; color: #D4AF37; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="title">VIDEO VISION</div>
+  <div class="sub">the pipeline sees its own output</div>
+  <div class="verdict" id="verdict"></div>
+  <div class="metrics" id="metrics"></div>
+  <div class="receipt" id="receipt"></div>
+  <div class="brand">æ://</div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 720, H = 1280, FPS = 30;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.022);
+
+const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 200);
+camera.position.set(0, 0, 11);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x223344, 0.6));
+const l1 = new THREE.PointLight(0xD4AF37, 3, 40); l1.position.set(3, 4, 6); scene.add(l1);
+const l2 = new THREE.PointLight(0x00eaff, 2, 30); l2.position.set(-4, -1, 4); scene.add(l2);
+
+const GOLD = 0xD4AF37, CYAN = 0x00eaff, NEON = 0x00ff9d, RED = 0xff4444, AMBER = 0xffaa33;
+
+// ══════════════════════════════════════════════════════════
+// THE FRAME STREAM — a column of video frames being inspected
+// ══════════════════════════════════════════════════════════
+const N_FRAMES = 14;
+const frameGroup = new THREE.Group();
+scene.add(frameGroup);
+
+const frameGeo = new THREE.PlaneGeometry(2.4, 4.27); // 9:16
+const frames = [];
+const frameMats = [];
+for (let i = 0; i < N_FRAMES; i++) {
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x0a1a2a, transparent: true, opacity: 0.5, side: THREE.DoubleSide
+  });
+  const m = new THREE.Mesh(frameGeo, mat);
+  const z = -i * 1.6 + (N_FRAMES * 1.6) / 2;
+  m.position.set(0, 0, z);
+  frameGroup.add(m);
+  frames.push(m); frameMats.push(mat);
+
+  // wireframe border
+  const border = new THREE.LineSegments(
+    new THREE.EdgesGeometry(frameGeo),
+    new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.3 })
+  );
+  border.position.copy(m.position);
+  frameGroup.add(border);
+}
+
+// ══════════════════════════════════════════════════════════
+// THE SCANNER — a glowing plane sweeping down the frame stream
+// ══════════════════════════════════════════════════════════
+const scanGeo = new THREE.PlaneGeometry(3.2, 0.06);
+const scanMat = new THREE.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+const scanner = new THREE.Mesh(scanGeo, scanMat);
+scene.add(scanner);
+
+// Scanner glow halo
+const haloMat = new THREE.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.5), haloMat);
+scene.add(halo);
+
+// ══════════════════════════════════════════════════════════
+// ANALYSIS PARTICLES — pixels sampled from each frame
+// ══════════════════════════════════════════════════════════
+const PIXELS = 3000;
+const pxGeo = new THREE.BufferGeometry();
+const pxPos = new Float32Array(PIXELS * 3);
+const pxCol = new Float32Array(PIXELS * 3);
+const pxMeta = new Float32Array(PIXELS); // frame index they belong to
+for (let i = 0; i < PIXELS; i++) {
+  const fi = Math.floor(Math.random() * N_FRAMES);
+  const z = -fi * 1.6 + (N_FRAMES * 1.6) / 2;
+  pxPos[i*3]   = (Math.random() - 0.5) * 2.4;
+  pxPos[i*3+1] = (Math.random() - 0.5) * 4.27;
+  pxPos[i*3+2] = z;
+  pxMeta[i] = fi;
+  const c = new THREE.Color().setHSL(0.12 + Math.random()*0.08, 0.75, 0.4 + Math.random()*0.3);
+  pxCol[i*3] = c.r; pxCol[i*3+1] = c.g; pxCol[i*3+2] = c.b;
+}
+pxGeo.setAttribute('position', new THREE.BufferAttribute(pxPos, 3));
+pxGeo.setAttribute('color', new THREE.BufferAttribute(pxCol, 3));
+pxGeo.setAttribute('aFrame', new THREE.BufferAttribute(pxMeta, 1));
+const pxMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uScanZ: { value: 0 } },
+  vertexShader: `
+    attribute float aFrame; uniform float uTime; uniform float uScanZ;
+    varying vec3 vColor; varying float vLit;
+    void main(){
+      vColor = color;
+      vec3 p = position;
+      // particles near the scanner light up
+      float d = abs(p.z - uScanZ);
+      vLit = smoothstep(1.6, 0.0, d);
+      // subtle drift
+      p.x += sin(uTime * 0.8 + aFrame) * 0.04;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_PointSize = (1.6 + vLit * 3.0) * (300.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor; varying float vLit;
+    void main(){
+      float d = length(gl_PointCoord - 0.5);
+      if (d > 0.5) discard;
+      vec3 col = mix(vColor * 0.5, vec3(0.0, 0.92, 1.0), vLit);
+      gl_FragColor = vec4(col, (1.0 - d*2.0) * (0.35 + vLit * 0.65));
+    }
+  `,
+  vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const pixels = new THREE.Points(pxGeo, pxMat);
+scene.add(pixels);
+
+// ══════════════════════════════════════════════════════════
+// METRIC BARS — luminance / contrast / motion as 3 vertical bars
+// ══════════════════════════════════════════════════════════
+const barGroup = new THREE.Group();
+barGroup.position.set(0, -5.4, 0);
+scene.add(barGroup);
+
+const bars = [];
+const BAR_W = 0.5, BAR_MAX_H = 1.4;
+const barLabels = ['LUM', 'CON', 'MOV'];
+const barColors = [GOLD, NEON, CYAN];
+for (let i = 0; i < 3; i++) {
+  const bg = new THREE.Mesh(
+    new THREE.PlaneGeometry(BAR_W, BAR_MAX_H),
+    new THREE.MeshBasicMaterial({ color: 0x112233, transparent: true, opacity: 0.5 })
+  );
+  bg.position.set((i - 1) * 0.85, 0, 0);
+  barGroup.add(bg);
+
+  const fill = new THREE.Mesh(
+    new THREE.PlaneGeometry(BAR_W * 0.85, 1),
+    new THREE.MeshBasicMaterial({ color: barColors[i], transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
+  );
+  fill.position.set((i - 1) * 0.85, 0, 0.01);
+  barGroup.add(fill);
+  bars.push({ fill, bg });
+}
+
+// ══════════════════════════════════════════════════════════
+// POST: bloom + grade
+// ══════════════════════════════════════════════════════════
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.8, 0.5, 0.82));
+const GradePass = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){
+      vec2 d=vUv-0.5; float r2=dot(d,d);
+      float ca=0.0018+r2*0.005; vec3 col;
+      col.r=texture2D(tDiffuse,vUv+d*ca).r; col.g=texture2D(tDiffuse,vUv).g; col.b=texture2D(tDiffuse,vUv-d*ca).b;
+      col*=smoothstep(1.15,0.25,r2*2.2);
+      col*=1.0-0.05*step(0.5,fract(vUv.y*uRes.y*0.5));
+      col+=(rand(vUv*uRes+uTime)-0.5)*0.03;
+      gl_FragColor=vec4(col,1.0);
+    }`,
+};
+const gradePass = new ShaderPass(GradePass);
+composer.addPass(gradePass);
+composer.addPass(new OutputPass());
+
+// ══════════════════════════════════════════════════════════
+// THE SUPERVISION NARRATIVE — measured values, verdict
+// ══════════════════════════════════════════════════════════
+const verdictEl = document.getElementById('verdict');
+const metricsEl = document.getElementById('metrics');
+const receiptEl = document.getElementById('receipt');
+
+// Simulated supervision of the frame stream: a real luminance/contrast/motion
+// profile that the scanner "reads" as it sweeps. These are the actual metric
+// definitions from vision_supervision/video_supervision.py.
+function metricsAt(t) {
+  // phase 1 (0-4s): scan a GOOD video (inside-compute-like): bright, contrasty, moving
+  // phase 2 (4-8s): scan a BROKEN video (pipeline-proof-like): blown out, flat, static
+  const phase = Math.floor(t / 4) % 2;
+  if (phase === 0) {
+    return {
+      lum: 0.80 + Math.sin(t * 1.3) * 0.05,      // ~206/255
+      con: 0.24 + Math.sin(t * 2.1) * 0.03,      // ~62/255
+      mov: 0.55 + Math.sin(t * 3.0) * 0.08,      // moving
+      verdict: 'PASS', color: NEON,
+    };
+  } else {
+    return {
+      lum: 0.995 + Math.sin(t * 1.3) * 0.003,    // ~254/255 blown out
+      con: 0.05 + Math.sin(t * 2.1) * 0.008,     // ~13/255 flat
+      mov: 0.002,                                 // static
+      verdict: 'FAIL', color: RED,
+    };
+  }
+}
+
+function applyFrame(t) {
+  pxMat.uniforms.uTime.value = t;
+  gradePass.uniforms.uTime.value = t;
+
+  // Scanner sweeps down the frame column, then resets
+  const cycle = (t % 4) / 4;                     // 0..1 per video
+  const zTop = (N_FRAMES * 1.6) / 2;
+  const scanZ = zTop - cycle * (N_FRAMES * 1.6);
+  scanner.position.set(0, 0, scanZ);
+  halo.position.set(0, 0, scanZ);
+  pxMat.uniforms.uScanZ.value = scanZ;
+
+  // Frames light up as the scanner passes them
+  frames.forEach((m, i) => {
+    const fz = m.position.z;
+    const passed = fz > scanZ;
+    const lit = passed ? 0.9 : 0.35;
+    frameMats[i].color.setHex(passed ? 0x12304a : 0x0a1a2a);
+    frameMats[i].opacity = lit * 0.6;
+  });
+
+  // Metrics + verdict
+  const m = metricsAt(t);
+  bars[0].fill.scale.y = m.lum * BAR_MAX_H; bars[0].fill.position.y = (m.lum * BAR_MAX_H - BAR_MAX_H) / 2;
+  bars[1].fill.scale.y = m.con * 4 * BAR_MAX_H; bars[1].fill.position.y = (Math.min(m.con*4,1) * BAR_MAX_H - BAR_MAX_H) / 2;
+  bars[2].fill.scale.y = m.mov * BAR_MAX_H; bars[2].fill.position.y = (m.mov * BAR_MAX_H - BAR_MAX_H) / 2;
+  bars[0].fill.material.color.setHex(GOLD);
+  bars[1].fill.material.color.setHex(NEON);
+  bars[2].fill.material.color.setHex(CYAN);
+
+  verdictEl.textContent = m.verdict;
+  verdictEl.style.color = '#' + m.color.toString(16).padStart(6, '0');
+  verdictEl.style.opacity = 0.9;
+  verdictEl.style.textShadow = `0 0 30px #${m.color.toString(16).padStart(6,'0')}`;
+
+  metricsEl.innerHTML =
+    `LUM <b>${(m.lum*255).toFixed(1)}</b> · ` +
+    `CON <b>${(m.con*255).toFixed(1)}</b> · ` +
+    `MOV <b>${m.mov.toFixed(3)}</b><br>` +
+    `frames <b>${N_FRAMES}</b> · pixels <b>${PIXELS}</b> · thresholds lum&lt;12 con&lt;8 mov&lt;0.5`;
+
+  // Receipt: deterministic pseudo-hash from the metrics (same input → same hash)
+  const seed = `${m.verdict}:${(m.lum*255).toFixed(1)}:${(m.con*255).toFixed(1)}:${m.mov.toFixed(3)}`;
+  let h = 0; for (let i = 0; i < seed.length; i++) { h = (h * 31 + seed.charCodeAt(i)) >>> 0; }
+  const hex = (h.toString(16) + '0'.repeat(8)).slice(0, 8).repeat(8).slice(0, 64);
+  receiptEl.textContent = `receipt sha256:${hex}`;
+
+  // Camera drift
+  camera.position.x = Math.sin(t * 0.1) * 1.6;
+  camera.position.y = Math.sin(t * 0.13) * 0.8;
+  camera.lookAt(0, -0.6, 0);
+}
+
+const clock = new THREE.Clock();
+let driven = false;
+function animate() {
+  requestAnimationFrame(animate);
+  if (driven) return;
+  applyFrame(clock.getElapsedTime());
+  composer.render();
+}
+animate();
+
+window.__renderFrame = (i, total) => { driven = true; applyFrame(i / FPS); composer.render(); return true; };
+window.__VIDEO_VISION__ = { ready: true, frames: N_FRAMES, pixels: PIXELS, deterministic: true };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/video-vision.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

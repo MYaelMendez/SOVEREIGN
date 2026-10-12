@@ -1,0 +1,569 @@
+[
+  {
+    "date": "1er Domingo · Nov 29",
+    "name": "Comienzo del Año Eclesiástico",
+    "color": "morado",
+    "denomination": "lcms",
+    "season": "advent"
+  },
+  {
+    "date": "2do Domingo · Dic 6",
+    "name": "Juan el Bautista",
+    "color": "morado",
+    "denomination": "lcms",
+    "season": "advent"
+  },
+  {
+    "date": "3er Domingo · Dic 13",
+    "name": "Gaudete Sunday",
+    "color": "rosa",
+    "denomination": "lcms",
+    "season": "advent"
+  },
+  {
+    "date": "4to Domingo · Dic 20",
+    "name": "La Anunciación",
+    "color": "morado",
+    "denomination": "lcms",
+    "season": "advent"
+  },
+  {
+    "date": "Dic 25",
+    "name": "Natividad de Cristo",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 26",
+    "name": "San Esteban",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 28",
+    "name": "Los Santos Inocentes",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 1",
+    "name": "Circuncisión y Nombre de Jesús",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 6",
+    "name": "Epifanía del Señor",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "epiphany"
+  },
+  {
+    "date": "Ene 13",
+    "name": "Bautismo del Señor",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "epiphany"
+  },
+  {
+    "date": "Feb 2",
+    "name": "Presentación del Señor",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "epiphany"
+  },
+  {
+    "date": "Miércoles de Ceniza · Feb 18",
+    "name": "Inicio de Cuaresma",
+    "color": "morado",
+    "denomination": "lcms",
+    "season": "lent"
+  },
+  {
+    "date": "Domingo de Pasión · Mar 22",
+    "name": "Domingo de Ramos",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "lent"
+  },
+  {
+    "date": "Jueves Santo · Mar 26",
+    "name": "Institución de la Cena",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "lent"
+  },
+  {
+    "date": "Viernes Santo · Mar 27",
+    "name": "Crucifixión del Señor",
+    "color": "negro",
+    "denomination": "lcms",
+    "season": "lent"
+  },
+  {
+    "date": "Mar 29",
+    "name": "Resurrección del Señor",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "east"
+  },
+  {
+    "date": "Abril 12",
+    "name": "Domingo de Misericordia",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 17",
+    "name": "Ascensión del Señor",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 24",
+    "name": "Pentecostés",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "east"
+  },
+  {
+    "date": "Jun 11",
+    "name": "San Bernabé",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 24",
+    "name": "Nacimiento de Juan el Bautista",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 29",
+    "name": "San Pedro y San Pablo",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Ago 15",
+    "name": "Asunción de María",
+    "color": "verde",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Sep 14",
+    "name": "Santa Cruz",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Oct 31",
+    "name": "Reforma",
+    "color": "rojo",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 1",
+    "name": "Todos los Santos",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 22",
+    "name": "Cristo Rey",
+    "color": "blanco",
+    "denomination": "lcms",
+    "season": "ordinary"
+  },
+  {
+    "date": "1er Domingo · Nov 29",
+    "name": "Esperanza",
+    "color": "morado",
+    "denomination": "prca",
+    "season": "advent"
+  },
+  {
+    "date": "2do Domingo · Dic 6",
+    "name": "Paz",
+    "color": "morado",
+    "denomination": "prca",
+    "season": "advent"
+  },
+  {
+    "date": "3er Domingo · Dic 13",
+    "name": "Gozo",
+    "color": "morado",
+    "denomination": "prca",
+    "season": "advent"
+  },
+  {
+    "date": "4to Domingo · Dic 20",
+    "name": "Amor",
+    "color": "morado",
+    "denomination": "prca",
+    "season": "advent"
+  },
+  {
+    "date": "Dic 25",
+    "name": "Natividad de Cristo",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 26",
+    "name": "San Esteban",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 28",
+    "name": "Los Santos Inocentes",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 1",
+    "name": "Año Nuevo",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 6",
+    "name": "Epifanía del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "epiphany"
+  },
+  {
+    "date": "Ene 13",
+    "name": "Bautismo del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "epiphany"
+  },
+  {
+    "date": "Feb 2",
+    "name": "Presentación del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "epiphany"
+  },
+  {
+    "date": "Miércoles de Ceniza · Feb 18",
+    "name": "Inicio de Cuaresma",
+    "color": "morado",
+    "denomination": "prca",
+    "season": "lent"
+  },
+  {
+    "date": "Domingo de Pasión · Mar 22",
+    "name": "Domingo de Ramos",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "lent"
+  },
+  {
+    "date": "Jueves Santo · Mar 26",
+    "name": "Cena del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "lent"
+  },
+  {
+    "date": "Viernes Santo · Mar 27",
+    "name": "Crucifixión del Señor",
+    "color": "negro",
+    "denomination": "prca",
+    "season": "lent"
+  },
+  {
+    "date": "Mar 29",
+    "name": "Resurrección del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "east"
+  },
+  {
+    "date": "Abril 12",
+    "name": "Domingo de Misericordia",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 17",
+    "name": "Ascensión del Señor",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 24",
+    "name": "Pentecostés",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "east"
+  },
+  {
+    "date": "Jun 11",
+    "name": "San Bernabé",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 24",
+    "name": "Nacimiento de Juan el Bautista",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 29",
+    "name": "San Pedro y San Pablo",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Ago 15",
+    "name": "Asunción de María",
+    "color": "verde",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Sep 14",
+    "name": "Santa Cruz",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Oct 31",
+    "name": "Reforma",
+    "color": "rojo",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 1",
+    "name": "Todos los Santos",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 22",
+    "name": "Cristo Rey",
+    "color": "blanco",
+    "denomination": "prca",
+    "season": "ordinary"
+  },
+  {
+    "date": "1er Domingo · Nov 29",
+    "name": "Comienzo del Año Eclesiástico",
+    "color": "morado",
+    "denomination": "acna",
+    "season": "advent"
+  },
+  {
+    "date": "2do Domingo · Dic 6",
+    "name": "Juan el Bautista",
+    "color": "morado",
+    "denomination": "acna",
+    "season": "advent"
+  },
+  {
+    "date": "3er Domingo · Dic 13",
+    "name": "Gaudete Sunday",
+    "color": "rosa",
+    "denomination": "acna",
+    "season": "advent"
+  },
+  {
+    "date": "4to Domingo · Dic 20",
+    "name": "La Anunciación",
+    "color": "morado",
+    "denomination": "acna",
+    "season": "advent"
+  },
+  {
+    "date": "Dic 25",
+    "name": "Natividad de Cristo",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 26",
+    "name": "San Esteban",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "christmas"
+  },
+  {
+    "date": "Dic 28",
+    "name": "Los Santos Inocentes",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 1",
+    "name": "Circuncisión y Nombre de Jesús",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "christmas"
+  },
+  {
+    "date": "Ene 6",
+    "name": "Epifanía del Señor",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "epiphany"
+  },
+  {
+    "date": "Ene 13",
+    "name": "Bautismo del Señor",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "epiphany"
+  },
+  {
+    "date": "Feb 2",
+    "name": "Presentación del Señor",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "epiphany"
+  },
+  {
+    "date": "Miércoles de Ceniza · Feb 18",
+    "name": "Inicio de Cuaresma",
+    "color": "morado",
+    "denomination": "acna",
+    "season": "lent"
+  },
+  {
+    "date": "Domingo de Pasión · Mar 22",
+    "name": "Domingo de Ramos",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "lent"
+  },
+  {
+    "date": "Jueves Santo · Mar 26",
+    "name": "Institución de la Cena",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "lent"
+  },
+  {
+    "date": "Viernes Santo · Mar 27",
+    "name": "Crucifixión del Señor",
+    "color": "negro",
+    "denomination": "acna",
+    "season": "lent"
+  },
+  {
+    "date": "Mar 29",
+    "name": "Resurrección del Señor",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "east"
+  },
+  {
+    "date": "Abril 12",
+    "name": "Domingo de Misericordia",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 17",
+    "name": "Ascensión del Señor",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "east"
+  },
+  {
+    "date": "Mayo 24",
+    "name": "Pentecostés",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "east"
+  },
+  {
+    "date": "Jun 11",
+    "name": "San Bernabé",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 24",
+    "name": "Nacimiento de Juan el Bautista",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Jun 29",
+    "name": "San Pedro y San Pablo",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Ago 15",
+    "name": "Asunción de María",
+    "color": "verde",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Sep 14",
+    "name": "Santa Cruz",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Oct 31",
+    "name": "Reforma",
+    "color": "rojo",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 1",
+    "name": "Todos los Santos",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "ordinary"
+  },
+  {
+    "date": "Nov 22",
+    "name": "Cristo Rey",
+    "color": "blanco",
+    "denomination": "acna",
+    "season": "ordinary"
+  }
+]

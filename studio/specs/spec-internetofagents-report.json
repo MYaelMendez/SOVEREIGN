@@ -1,0 +1,11 @@
+{
+  "title": "#internetofagents report 2026",
+  "text_lines": ["creative intelligence", "sovereign toolchain", "zero cloud, zero ML"],
+  "description": "Data visualization of Contra Labs Creative Intelligence Report 2026. AI adoption by discipline, most-used tools, and fastest-growing tools in job specs.",
+  "duration": 8,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "internetofagents-report.html",
+  "pipeline": "spec → render → gate → VLC → deploy"
+}

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>teologia.ai · æ://</title>
+<meta name="description" content="Plataforma soberana de devoción — orar, catecismo, enchiridion. Inferencia local en el navegador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#050505; --gold:#D4AF37; --gold2:#f0d487; --emerald:#00ff9d;
+  --cyan:#00eaff; --violet:#8c72ff; --red:#ff4d5f;
+  --ink:#e8e6df; --muted:#6f6a5c; --line:rgba(212,175,55,.22);
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --display:"Orbitron",ui-sans-serif,system-ui,sans-serif;
+  --glyph:"Segoe UI Symbol","Noto Sans Symbols2","DejaVu Sans",var(--display);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void); color:var(--ink);
+  font-family:var(--mono); font-size:14px; line-height:1.7;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:100;
+  background:repeating-linear-gradient(0deg,rgba(212,175,55,.028) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:99;
+  background:radial-gradient(ellipse at 50% 0%,transparent 30%,rgba(0,0,0,.8) 100%);
+}
+canvas#bg,canvas#gpu{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none}
+canvas#bg{opacity:.6}
+canvas#gpu{opacity:.85;mix-blend-mode:screen;display:none}
+
+.wrap{position:relative;z-index:2;max-width:480px;margin:0 auto;padding:48px 20px 80px}
+
+.boot{
+  font-size:10px;letter-spacing:.18em;color:var(--muted);
+  border-left:2px solid var(--gold);padding-left:12px;margin-bottom:32px;
+}
+.boot b{color:var(--gold);font-weight:400}
+.boot .ok{color:var(--emerald)}
+.boot .no{color:var(--red)}
+.boot .wait{color:var(--cyan)}
+
+h1{
+  font-family:var(--display);font-weight:900;
+  font-size:clamp(24px,7vw,36px);line-height:1.1;
+  letter-spacing:-.01em;color:var(--gold);margin-bottom:6px;
+}
+h1 .sub{display:block;font-size:.4em;font-weight:400;letter-spacing:.3em;color:var(--muted);margin-top:8px}
+
+.card{
+  position:relative;
+  display:block;text-decoration:none;color:var(--ink);
+  border:1px solid var(--line);background:rgba(5,5,5,.85);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:24px 22px;margin-bottom:20px;
+  transition:border-color .2s,transform .2s,background .2s;
+}
+.card:hover,.card:active{
+  border-color:var(--gold);transform:translateY(-2px);
+  background:rgba(212,175,55,.06);
+}
+.card .num{
+  position:absolute;top:14px;right:16px;
+  font-family:var(--display);font-weight:900;font-size:28px;
+  color:var(--gold);opacity:.25;line-height:1;
+}
+.card .label{
+  font-family:var(--display);font-weight:700;font-size:15px;
+  letter-spacing:.06em;color:var(--gold2);margin-bottom:4px;
+}
+.card .desc{
+  font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;
+}
+.card .meta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:10px;letter-spacing:.08em;color:var(--muted);
+}
+.card .meta .hash{
+  font-family:var(--mono);color:var(--gold);opacity:.7;
+  word-break:break-all;
+}
+.card .links{
+  display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;
+}
+.card .links a,.card .links button{
+  font-family:var(--display);font-weight:700;font-size:11px;
+  letter-spacing:.12em;text-decoration:none;color:var(--void);
+  background:var(--gold);padding:8px 16px;cursor:pointer;
+  border:1px solid var(--gold);transition:background .15s;
+}
+.card .links a:hover,.card .links button:hover{background:var(--gold2);border-color:var(--gold2)}
+.card .links a.ghost,.card .links button.ghost{
+  background:transparent;color:var(--gold);border-color:var(--line);
+}
+.card .links a.ghost:hover,.card .links button.ghost:hover{background:rgba(212,175,55,.1);border-color:var(--gold)}
+.card .links button.ai{
+  background:transparent;color:var(--emerald);border-color:rgba(0,255,157,.35);
+}
+.card .links button.ai:hover{background:rgba(0,255,157,.1);border-color:var(--emerald)}
+
+.badges{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  border:1px solid var(--line);background:rgba(5,5,5,.85);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:18px 20px;margin:32px 0;
+}
+.badges .aqr{
+  width:80px;height:80px;color:var(--gold);display:block;flex:none;
+}
+.badges .aqr rect{fill:currentColor}
+.badges .aqr .frame{fill:none;stroke:currentColor;stroke-width:.8;opacity:.45}
+.badges .txt{
+  flex:1;min-width:160px;font-size:11px;letter-spacing:.1em;color:var(--muted);line-height:1.9;
+}
+.badges .txt b{color:var(--gold);font-weight:400;display:block;letter-spacing:.2em;margin-bottom:4px}
+
+.compute{
+  border:1px solid var(--line);background:rgba(5,5,5,.85);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:16px 18px;margin:0 0 20px;
+  font-size:10px;letter-spacing:.1em;color:var(--muted);line-height:2;
+}
+.compute b{color:var(--cyan);font-weight:400;display:block;letter-spacing:.2em;margin-bottom:6px}
+.compute .row{display:flex;justify-content:space-between;gap:12px}
+.compute .row span:last-child{color:var(--gold);text-align:right}
+.compute .row .ok{color:var(--emerald)}
+.compute .row .no{color:var(--red)}
+
+.colophon{
+  margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+  font-size:10px;letter-spacing:.1em;color:var(--muted);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.colophon a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(212,175,55,.3)}
+.seal{margin-top:24px;display:flex;align-items:center;gap:14px}
+.seal .glyph{font-family:var(--glyph);font-size:36px;color:var(--gold);line-height:1}
+.seal .txt{font-size:10px;letter-spacing:.12em;color:var(--muted);line-height:1.8}
+.seal .txt b{color:var(--gold);font-weight:400;display:block;letter-spacing:.18em}
+
+.fab{
+  position:fixed;right:18px;bottom:18px;z-index:120;
+  font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.14em;
+  color:var(--void);background:var(--gold);border:1px solid var(--gold);
+  padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:9px;
+  box-shadow:0 0 24px rgba(212,175,55,.35);
+}
+.fab:hover{background:var(--gold2)}
+.fab .g{font-family:var(--glyph);font-size:17px;line-height:1}
+.fab .dot{width:7px;height:7px;border-radius:50%;background:var(--void);opacity:.45}
+.fab.on .dot{background:var(--emerald);opacity:1;box-shadow:0 0 8px var(--emerald)}
+
+.chat{
+  position:fixed;left:0;right:0;bottom:0;z-index:130;
+  max-height:82vh;display:flex;flex-direction:column;
+  background:rgba(5,5,5,.97);
+  border-top:1px solid var(--gold);
+  transform:translateY(101%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 -18px 50px rgba(0,0,0,.8);
+}
+.chat.open{transform:translateY(0)}
+.chat-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 18px;border-bottom:1px solid var(--line);flex:none;
+}
+.chat-head .t{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.16em;color:var(--gold)}
+.chat-head .t small{display:block;font-family:var(--mono);font-weight:300;font-size:9px;letter-spacing:.1em;color:var(--muted);margin-top:2px}
+.chat-head .x{
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  font-family:var(--mono);font-size:14px;width:30px;height:30px;cursor:pointer;flex:none;
+}
+.chat-head .x:hover{border-color:var(--gold);color:var(--gold)}
+
+.chat-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.msg{font-size:12.5px;line-height:1.75;max-width:92%;word-wrap:break-word;white-space:pre-wrap}
+.msg.u{align-self:flex-end;color:var(--void);background:var(--gold);padding:9px 13px}
+.msg.a{align-self:flex-start;color:var(--ink);border-left:2px solid var(--emerald);padding-left:12px}
+.msg.s{align-self:flex-start;color:var(--muted);font-size:10.5px;letter-spacing:.08em;border-left:2px solid var(--line);padding-left:12px}
+.msg .caret{display:inline-block;width:7px;height:13px;background:var(--emerald);vertical-align:-2px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+
+.chat-foot{flex:none;border-top:1px solid var(--line);padding:12px 18px;display:flex;flex-direction:column;gap:10px}
+.chat-row{display:flex;gap:9px;align-items:flex-end}
+.chat-row textarea{
+  flex:1;resize:none;background:rgba(212,175,55,.05);color:var(--ink);
+  border:1px solid var(--line);font-family:var(--mono);font-size:12.5px;
+  line-height:1.6;padding:10px 12px;height:56px;outline:none;
+}
+.chat-row textarea:focus{border-color:var(--gold)}
+.chat-row textarea::placeholder{color:var(--muted)}
+.chat-row button{
+  font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.12em;
+  background:var(--gold);color:var(--void);border:1px solid var(--gold);
+  padding:0 18px;height:56px;cursor:pointer;flex:none;
+}
+.chat-row button:hover{background:var(--gold2)}
+.chat-row button:disabled{opacity:.35;cursor:default}
+.chat-opts{display:flex;gap:9px;align-items:center;flex-wrap:wrap;font-size:9.5px;letter-spacing:.1em;color:var(--muted)}
+.chat-opts select{
+  background:rgba(212,175,55,.05);color:var(--gold);border:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;padding:6px 8px;outline:none;cursor:pointer;
+}
+.chat-opts select:focus{border-color:var(--gold)}
+.chat-opts button{
+  background:transparent;border:1px solid var(--line);color:var(--emerald);
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:6px 12px;cursor:pointer;
+}
+.chat-opts button:hover{border-color:var(--emerald);background:rgba(0,255,157,.08)}
+.chat-opts button:disabled{opacity:.35;cursor:default}
+.chat-opts .stat{color:var(--cyan)}
+.progress{height:3px;background:rgba(212,175,55,.12);overflow:hidden;display:none}
+.progress.on{display:block}
+.progress i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+
+@media print{
+  @page{size:A5;margin:12mm 11mm}
+  body{background:#fff;color:#111}
+  body::before,body::after,canvas#bg,canvas#gpu,.fab,.chat,.compute{display:none}
+  .wrap{max-width:none;padding:0}
+  .boot{border-left-color:#8a6d1f;color:#555;margin-bottom:12px;font-size:7.5pt}
+  h1{color:#8a6d1f;font-size:20pt}
+  h1 .sub{color:#666}
+  .card{border-color:#ddd;background:#fff;padding:14px;margin-bottom:10px;page-break-inside:avoid}
+  .card .num{color:#8a6d1f}
+  .card .label{color:#5c4a14}
+  .card .desc{color:#777}
+  .card .meta{color:#777}
+  .card .meta .hash{color:#8a6d1f}
+  .card .links a{background:#f2ecd8;color:#3a2f10;border-color:#8a6d1f}
+  .card .links a.ghost{background:transparent;color:#8a6d1f}
+  .card .links button{display:none}
+  .badges{border-color:#ddd;background:#fff;padding:12px;margin:14px 0}
+  .badges .aqr{width:70px;height:70px;color:#14110a}
+  .badges .txt{color:#777}
+  .badges .txt b{color:#8a6d1f}
+  .colophon{border-color:#ddd;color:#666}
+  .seal .glyph{color:#8a6d1f;font-size:24pt}
+  .seal .txt{color:#666}
+}
+@media(max-width:520px){
+  .wrap{padding:36px 16px 96px}
+  .badges{gap:14px}
+}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="gpu"></canvas>
+
+<div class="wrap">
+
+  <div class="boot">
+    <b>teologia.ai</b> · plataforma soberana · 9:16<br>
+    <span class="ok">▸</span> æ:// viewport · gold-on-void · inferencia local
+  </div>
+
+  <h1>teologia.ai
+    <span class="sub">DEVOCIÓN DIARIA</span>
+  </h1>
+
+  <div class="card" data-href="una-manera-sencilla-de-orar.html">
+    <div class="num">01</div>
+    <a class="label" href="una-manera-sencilla-de-orar.html">Una manera sencilla de orar</a>
+    <div class="desc">Lutero, 1535. Un método breve para orar, escrito para un barbero. Cinco pasos: mandamientos, credo, Padre Nuestro, oración libre, acción de gracias.</div>
+    <div class="meta">
+      <span class="hash">sha256 · ffe56f25…</span>
+      <span>· 64 KB HTML</span>
+      <span>· 179 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="una-manera-sencilla-de-orar.html">LEER</a>
+      <a class="ghost" href="una-manera-sencilla-de-orar.pdf" download="una-manera-sencilla-de-orar.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Cómo enseña Lutero a orar en 'Una manera sencilla de orar'? Resume los cinco pasos.">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="catecismo-menor.html">
+    <div class="num">02</div>
+    <a class="label" href="catecismo-menor.html">Catecismo Menor</a>
+    <div class="desc">Lutero, 1529. 47 preguntas y respuestas para la casa y la escuela: Diez Mandamientos, Credo, Padre Nuestro, Bautismo, Confesión, Sacramento del Altar, bendiciones, deberes.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 41df5301…</span>
+      <span>· 102 KB HTML</span>
+      <span>· 430 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="catecismo-menor.html">LEER</a>
+      <a class="ghost" href="catecismo-menor.pdf" download="catecismo-menor.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué significa la pregunta '¿Qué quiere decir esto?' en el Catecismo Menor de Lutero? Explícalo con un mandamiento.">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="enchiridion.html">
+    <div class="num">03</div>
+    <a class="label" href="enchiridion.html">Enchiridion</a>
+    <div class="desc">Lutero, 1529. Manual de bolsillo para la devoción diaria: oraciones de la mañana y la noche, bendición de la mesa, Salmos de la confesión, resumen del Padrenuestro, Credo y Diez Mandamientos.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 60cd01a2…</span>
+      <span>· 77 KB HTML</span>
+      <span>· 247 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="enchiridion.html">LEER</a>
+      <a class="ghost" href="enchiridion.pdf" download="enchiridion.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué oraciones incluye el Enchiridion de Lutero para la mañana y la noche? Resúmelas.">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="catecismo-mayor.html">
+    <div class="num">04</div>
+    <a class="label" href="catecismo-mayor.html">Catecismo Mayor</a>
+    <div class="desc">Lutero, 1529. Expansión del Menor para la escuela y el púlpito: explicaciones extensas de los Diez Mandamientos, Credo, Padre Nuestro, Bautismo y Sacramento del Altar.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 30a9a8ddda3d6597…</span>
+      <span>· 86 KB HTML</span>
+      <span>· 306 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="catecismo-mayor.html">LEER</a>
+      <a class="ghost" href="catecismo-mayor.pdf" download="catecismo-mayor.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿En qué se diferencia el Catecismo Mayor del Menor de Lutero? ¿Para quién escribió cada uno?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="formula-de-concordia.html">
+    <div class="num">05</div>
+    <a class="label" href="formula-de-concordia.html">Fórmula de Concordia</a>
+    <div class="desc">El documento doctrinal definitivo del luteranismo clásico, 1577: doce artículos que resuelven las controversias internas después de la muerte de Lutero.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 7ffde80ef697885…</span>
+      <span>· 84 KB HTML</span>
+      <span>· 280 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="formula-de-concordia.html">LEER</a>
+      <a class="ghost" href="formula-de-concordia.pdf" download="formula-de-concordia.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué es la Fórmula de Concordia de 1577? ¿Cuáles son los doce artículos que trata?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="libro-de-concordia.html">
+    <div class="num">06</div>
+    <a class="label" href="libro-de-concordia.html">Libro de Concordia</a>
+    <div class="desc">El corpus doctrinal completo del luteranismo clásico, 1580: Confesión de Augsburgo, Apología, Artículos de Smalcalda, Catecismos, Fórmula de Concordia y Tratado del Primado.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 28081bc58a74bf8…</span>
+      <span>· 75 KB HTML</span>
+      <span>· 254 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="libro-de-concordia.html">LEER</a>
+      <a class="ghost" href="libro-de-concordia.pdf" download="libro-de-concordia.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué documentos contiene el Libro de Concordia de 1580? ¿Cuál es su jerarquía de autoridad?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="confesion-de-augsburgo.html">
+    <div class="num">07</div>
+    <a class="label" href="confesion-de-augsburgo.html">Confesión de Augsburgo</a>
+    <div class="desc">La declaración fundacional del luteranismo, 1530: veintiocho artículos presentados ante el emperador Carlos V. Redactada por Felipe Melanchthon.</div>
+    <div class="meta">
+      <span class="hash">sha256 · a8e1cfbbbd7146c7…</span>
+      <span>· 87 KB HTML</span>
+      <span>· 274 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="confesion-de-augsburgo.html">LEER</a>
+      <a class="ghost" href="confesion-de-augsburgo.pdf" download="confesion-de-augsburgo.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Cuáles son los 28 artículos de la Confesión de Augsburgo de 1530? Explícame los principales.">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="apologia-de-la-confesion.html">
+    <div class="num">08</div>
+    <a class="label" href="apologia-de-la-confesion.html">Apología de la Confesión</a>
+    <div class="desc">La defensa artículo por artículo de la Confesión de Augsburgo, 1531. El documento más extenso del Libro de Concordia, obra de Melanchthon.</div>
+    <div class="meta">
+      <span class="hash">sha256 · e1e1b9b39c1daca4…</span>
+      <span>· 81 KB HTML</span>
+      <span>· 293 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="apologia-de-la-confesion.html">LEER</a>
+      <a class="ghost" href="apologia-de-la-confesion.pdf" download="apologia-de-la-confesion.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué defiende la Apología de la Confesión de Augsburgo de 1531? ¿Cuál es su artículo más importante?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="articulos-de-smalcalda.html">
+    <div class="num">09</div>
+    <a class="label" href="articulos-de-smalcalda.html">Artículos de Smalcalda</a>
+    <div class="desc">La plataforma teológica de Lutero para la Liga de Smalcalda, 1537: confesión, no negociación. El artículo por el cual la iglesia queda en pie o cae.</div>
+    <div class="meta">
+      <span class="hash">sha256 · 52e28616d74c80cd…</span>
+      <span>· 85 KB HTML</span>
+      <span>· 288 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="articulos-de-smalcalda.html">LEER</a>
+      <a class="ghost" href="articulos-de-smalcalda.pdf" download="articulos-de-smalcalda.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué son los Artículos de Smalcalda de 1537? ¿Por qué se dice que son confesión y no negociación?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="card" data-href="tratado-del-primado.html">
+    <div class="num">10</div>
+    <a class="label" href="tratado-del-primado.html">Tratado del Primado del Papa</a>
+    <div class="desc">La eclesiología luterana, 1537: el primado papal no tiene base bíblica. Apéndice de Melanchthon a los Artículos de Smalcalda.</div>
+    <div class="meta">
+      <span class="hash">sha256 · a4cdc36aa4bcd113…</span>
+      <span>· 70 KB HTML</span>
+      <span>· 124 KB PDF</span>
+    </div>
+    <div class="links">
+      <a href="tratado-del-primado.html">LEER</a>
+      <a class="ghost" href="tratado-del-primado.pdf" download="tratado-del-primado.pdf">&#10515; PDF</a>
+      <button class="ai" data-ask="¿Qué sostiene el Tratado sobre el Primado del Papa de 1537? ¿Cuál es la eclesiología luterana?">&#x263A; PREGUNTAR</button>
+    </div>
+  </div>
+
+  <div class="compute">
+    <b>æ:// compute</b>
+    <div class="row"><span>webgpu · compute shader</span><span id="s-gpu">…</span></div>
+    <div class="row"><span>webllm · inferencia local</span><span id="s-llm">inactivo</span></div>
+    <div class="row"><span>rust wasm · núcleo</span><span id="s-wasm">…</span></div>
+    <div class="row"><span>wasm · opfs</span><span id="s-sys">…</span></div>
+    <div class="row"><span>three.js · r186 local</span><span id="s-three">…</span></div>
+  </div>
+
+  <div class="badges">
+    <!--AEQR_BADGE-->
+    <div class="txt">
+      <b>æqr · plataforma</b>
+      5 artefactos · 5 chips verificados<br>
+      cero servidores · cero llaves
+    </div>
+  </div>
+
+  <div class="seal">
+    <div class="glyph">&#x263A;</div>
+    <div class="txt">
+      <b>teologia.ai</b>
+      solo scriptura · solo fide · solo gratia<br>
+      un archivo · se copia · se pasa · no se pide permiso
+    </div>
+  </div>
+
+  <div class="colophon">
+    <span>æ:// — la plataforma es la superficie distribuible</span>
+    <span><a href="https://teologia.ai">teologia.ai</a></span>
+  </div>
+
+</div>
+
+<button class="fab" id="fab" aria-label="Abrir asistente">
+  <span class="g">&#x263A;</span><span>ASISTENTE</span><span class="dot"></span>
+</button>
+
+<div class="chat" id="chat" role="dialog" aria-label="Asistente teologia.ai">
+  <div class="chat-head">
+    <div class="t">ASISTENTE · LOCAL<small>inferencia en tu navegador · sin nube</small></div>
+    <button class="x" id="chat-x" aria-label="Cerrar">&#10005;</button>
+  </div>
+  <div class="chat-body" id="chat-body">
+    <div class="msg s">Asistente en tu dispositivo. El modelo se descarga una vez y se guarda en la caché del navegador. Nada sale de esta máquina.</div>
+  </div>
+  <div class="progress" id="prog"><i></i></div>
+  <div class="chat-foot">
+    <div class="chat-opts">
+      <select id="model">
+        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B · ~0.7 GB</option>
+        <option value="Qwen2.5-0.5B-Instruct-q4f16_1-MLC">Qwen 2.5 0.5B · ~0.4 GB</option>
+        <option value="SmolLM2-360M-Instruct-q4f16_1-MLC">SmolLM2 360M · ~0.25 GB</option>
+      </select>
+      <button id="load">CARGAR MODELO</button>
+      <span class="stat" id="llm-stat">sin cargar</span>
+    </div>
+    <div class="chat-row">
+      <textarea id="q" placeholder="Pregunta sobre los artefactos…" rows="2"></textarea>
+      <button id="send" disabled>ENVIAR</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ════════════════════════════════════════════════════════════════════════════
+//  teologia.ai · æ:// — sovereign browser surface
+//  three.js r186 (local) · WebGPU compute · WebLLM in-browser inference
+//  Rule: where a gate exists, pass through it. Where one does not, say the
+//  check is missing rather than report a pass.
+// ════════════════════════════════════════════════════════════════════════════
+import * as THREE from 'three';
+
+let webgpuActive = false;
+
+const $ = (id) => document.getElementById(id);
+const set = (id, txt, cls) => { const e = $(id); if (e) { e.textContent = txt; e.className = cls || ''; } };
+
+// ── 1 · three.js scene (WebGL — universally supported) ──────────────────────
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x050505, 0.015);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 0, 8);
+const renderer = new THREE.WebGLRenderer({ canvas: $('bg'), antialias: true, alpha: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+scene.add(new THREE.AmbientLight(0x404040, 0.4));
+const goldLight = new THREE.PointLight(0xD4AF37, 3, 30); goldLight.position.set(0, 3, 3); scene.add(goldLight);
+const cyanLight = new THREE.PointLight(0x00eaff, 1.5, 20); cyanLight.position.set(-3, -2, -3); scene.add(cyanLight);
+
+const torusKnot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(0.6, 0.2, 128, 24),
+  new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.25, metalness: 0.95, roughness: 0.05 })
+);
+scene.add(torusKnot);
+
+const ico = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(2.2, 1),
+  new THREE.MeshBasicMaterial({ color: 0x00ff9d, wireframe: true, transparent: true, opacity: 0.1 })
+);
+scene.add(ico);
+
+const pCount = 3000;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(pCount * 3);
+const pCol = new Float32Array(pCount * 3);
+for (let i = 0; i < pCount; i++) {
+  pPos[i * 3] = (Math.random() - 0.5) * 10;
+  pPos[i * 3 + 1] = (Math.random() - 0.5) * 18;
+  pPos[i * 3 + 2] = (Math.random() - 0.5) * 10;
+  const col = new THREE.Color().setHSL(0.12 + Math.random() * 0.1, 0.8, 0.3 + Math.random() * 0.4);
+  pCol[i * 3] = col.r; pCol[i * 3 + 1] = col.g; pCol[i * 3 + 2] = col.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  size: 0.02, vertexColors: true, transparent: true, opacity: 0.5,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+}));
+scene.add(particles);
+
+const nodePositions = [
+  new THREE.Vector3(-3, 1.5, -2), new THREE.Vector3(-1, 2.5, -3),
+  new THREE.Vector3(1, 2.5, -3), new THREE.Vector3(3, 1.5, -2),
+];
+const nodeMeshes = nodePositions.map((pos) => {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 32, 32),
+    new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.4, metalness: 0.8, roughness: 0.2 })
+  );
+  m.position.copy(pos); scene.add(m); return m;
+});
+nodePositions.forEach((pos) => {
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), pos]);
+  scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.2 })));
+});
+
+// Simple elapsed-time source (THREE.Clock is deprecated in r186)
+let t0 = performance.now();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = (performance.now() - t0) / 1000;
+  torusKnot.rotation.x = t * 0.15; torusKnot.rotation.y = t * 0.25;
+  ico.rotation.y = t * 0.08; ico.rotation.x = t * 0.04;
+  if (!webgpuActive) particles.rotation.y = t * 0.015;
+  nodeMeshes.forEach((m, i) => { m.position.y = nodePositions[i].y + Math.sin(t * 1.5 + i * 2) * 0.15; });
+  renderer.render(scene, camera);
+}
+animate();
+set('s-three', 'activo', 'ok');
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── 2 · WebGPU compute particle field (WGSL, honest fallback) ───────────────
+const WGSL = `
+struct P { p: vec2f, v: vec2f };
+struct U { t: f32, dt: f32, aspect: f32, pad: f32 };
+
+@group(0) @binding(0) var<storage, read_write> ps: array<P>;
+@group(0) @binding(1) var<uniform> u: U;
+
+@compute @workgroup_size(64)
+fn cs(@builtin(global_invocation_id) gid: vec3u) {
+  let i = gid.x;
+  if (i >= arrayLength(&ps)) { return; }
+  var pt = ps[i];
+  let ang = u.t * 0.25 + pt.p.y * 1.7 + pt.p.x * 0.9;
+  let fx = cos(ang) * 0.0009 - pt.p.x * 0.00013;
+  let fy = sin(ang) * 0.0009 - pt.p.y * 0.00013;
+  pt.v = pt.v * 0.984 + vec2f(fx, fy);
+  pt.p = pt.p + pt.v * u.dt * 60.0;
+  if (pt.p.x >  1.0) { pt.p.x = -1.0; } else if (pt.p.x < -1.0) { pt.p.x = 1.0; }
+  if (pt.p.y >  1.0) { pt.p.y = -1.0; } else if (pt.p.y < -1.0) { pt.p.y = 1.0; }
+  ps[i] = pt;
+}
+
+@vertex
+fn vs(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4f {
+  let pt = ps[vi];
+  return vec4f(pt.p.x / u.aspect * 0.92, pt.p.y * 0.92, 0.0, 1.0);
+}
+
+@fragment
+fn fs() -> @location(0) vec4f {
+  return vec4f(0.831, 0.686, 0.216, 0.62);
+}
+`;
+
+// One-shot compute self-test: dispatch, read back, compare to the expected
+// values. Reaching "pipeline created" is not a pass; a measured readback is.
+async function gpuSelfTest(device) {
+  const N = 64;
+  const src = new Float32Array(N);
+  for (let i = 0; i < N; i++) src[i] = i;
+  const buf = device.createBuffer({
+    size: src.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+  });
+  device.queue.writeBuffer(buf, 0, src);
+  const read = device.createBuffer({
+    size: src.byteLength, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+  const mod = device.createShaderModule({ code: `
+@group(0) @binding(0) var<storage, read_write> d: array<f32>;
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) g: vec3u) { d[g.x] = d[g.x] * 2.0 + 1.0; }` });
+  const pipe = device.createComputePipeline({ layout: 'auto', compute: { module: mod, entryPoint: 'main' } });
+  const bg = device.createBindGroup({
+    layout: pipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: buf } }],
+  });
+  const enc = device.createCommandEncoder();
+  const p = enc.beginComputePass();
+  p.setPipeline(pipe); p.setBindGroup(0, bg); p.dispatchWorkgroups(1); p.end();
+  enc.copyBufferToBuffer(buf, 0, read, 0, src.byteLength);
+  device.queue.submit([enc.finish()]);
+  await read.mapAsync(GPUMapMode.READ);
+  const got = new Float32Array(read.getMappedRange().slice(0));
+  read.unmap();
+  for (let i = 0; i < N; i++) {
+    if (got[i] !== i * 2 + 1) return { ok: false, sample: 'd[0]=' + got[0] + ' d[63]=' + got[63], expect: '1, 127' };
+  }
+  return { ok: true, sample: 'd[0]=' + got[0] + ' d[63]=' + got[63], expect: '1, 127' };
+}
+
+async function initWebGPU() {
+  if (!navigator.gpu) { set('s-gpu', 'no disponible', 'no'); return; }
+  let adapter = null;
+  try { adapter = await navigator.gpu.requestAdapter(); } catch (e) { adapter = null; }
+  if (!adapter) { set('s-gpu', 'adaptador nulo', 'no'); return; }
+  const device = await adapter.requestDevice();
+  const canvas = $('gpu');
+  const ctx = canvas.getContext('webgpu');
+  if (!ctx) { set('s-gpu', 'sin contexto', 'no'); return; }
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  const dpr = Math.min(devicePixelRatio, 2);
+  canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+  ctx.configure({ device, format, alphaMode: 'premultiplied' });
+
+  const N = 65536;
+  const data = new Float32Array(N * 4);
+  for (let i = 0; i < N; i++) {
+    data[i * 4] = Math.random() * 2 - 1;
+    data[i * 4 + 1] = Math.random() * 2 - 1;
+    data[i * 4 + 2] = (Math.random() - 0.5) * 0.004;
+    data[i * 4 + 3] = (Math.random() - 0.5) * 0.004;
+  }
+  const storage = device.createBuffer({ size: data.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+  device.queue.writeBuffer(storage, 0, data);
+  const uni = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+
+  const mod = device.createShaderModule({ code: WGSL });
+  const compute = device.createComputePipeline({ layout: 'auto', compute: { module: mod, entryPoint: 'cs' } });
+  const render = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: { module: mod, entryPoint: 'vs' },
+    fragment: { module: mod, entryPoint: 'fs', targets: [{ format, blend: {
+      color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add' },
+      alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
+    } }] },
+    primitive: { topology: 'point-list' },
+  });
+  const cbg = device.createBindGroup({ layout: compute.getBindGroupLayout(0), entries: [
+    { binding: 0, resource: { buffer: storage } }, { binding: 1, resource: { buffer: uni } }] });
+  const rbg = device.createBindGroup({ layout: render.getBindGroupLayout(0), entries: [
+    { binding: 0, resource: { buffer: storage } }, { binding: 1, resource: { buffer: uni } }] });
+
+  webgpuActive = true;
+  canvas.style.display = 'block';
+  particles.visible = false;
+  let last = performance.now(), t0 = last;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (canvas.width !== innerWidth * dpr || canvas.height !== innerHeight * dpr) {
+      canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+      ctx.configure({ device, format, alphaMode: 'premultiplied' });
+    }
+    device.queue.writeBuffer(uni, 0, new Float32Array([(now - t0) / 1000, dt, innerWidth / innerHeight, 0]));
+    const enc = device.createCommandEncoder();
+    const cp = enc.beginComputePass();
+    cp.setPipeline(compute); cp.setBindGroup(0, cbg); cp.dispatchWorkgroups(Math.ceil(N / 64)); cp.end();
+    const vp = enc.beginRenderPass({ colorAttachments: [{
+      view: ctx.getCurrentTexture().createView(),
+      clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp: 'clear', storeOp: 'store' }] });
+    vp.setPipeline(render); vp.setBindGroup(0, rbg); vp.draw(N); vp.end();
+    device.queue.submit([enc.finish()]);
+  }
+  requestAnimationFrame(frame);
+  set('s-gpu', N.toLocaleString('es') + ' partículas · WGSL', 'ok');
+  // verify before claiming: the readback upgrades the label when it resolves,
+  // it never blocks the display and it never reports a pass it did not measure
+  gpuSelfTest(device).then((r) => {
+    set('s-gpu', N.toLocaleString('es') + ' partículas · WGSL · self-test ' +
+      (r.ok ? '\u2713 (' + r.sample + ')' : '\u2717'), r.ok ? 'ok' : 'no');
+  }).catch(() => {
+    set('s-gpu', N.toLocaleString('es') + ' partículas · WGSL · self-test \u2717', 'no');
+  });
+}
+
+// ── 3 · WebLLM — in-browser inference (local weights cache, no server) ──────
+const ARTIFACT_CONTEXT = [
+  'Eres el asistente de teologia.ai, una plataforma soberana de devoción luterana para LATAM.',
+  'Respondes en español neutro (modo "tú", sin regionalismos), con tono pastoral y breve.',
+  'Estos son los cuatro artefactos de la plataforma (ediciones LATAM de textos de Martín Lutero):',
+  '',
+  '1. "Una manera sencilla de orar" (1535). Lutero lo escribió para Pedro, su barbero. Método en cinco pasos:',
+  '   (a) los Diez Mandamientos, (b) el Credo, (c) el Padre Nuestro, (d) oración libre con las propias',
+  '   palabras y necesidades, (e) volver a los salmos y al Padrenuestro. Orar es ejercicio diario, no sentimiento.',
+  '',
+  '2. "Catecismo Menor" (1529). 47 preguntas y respuestas para la casa y la escuela. Cada explicación',
+  '   responde a la pregunta "¿Qué quiere decir esto?". Cubre: Diez Mandamientos, Credo, Padre Nuestro,',
+  '   Bautismo, Confesión, Sacramento del Altar, bendiciones y una tabla de deberes.',
+  '',
+  '3. "Enchiridion" (1529). Manual de bolsillo: oraciones de la mañana y de la noche, bendición de la mesa,',
+  '   los Salmos 103, 143 y 130, el Padrenuestro, el Credo y los Diez Mandamientos.',
+  '',
+  '4. "Catecismo Mayor" (1529). La expansión del Menor, para maestros y pastores (la escuela y el púlpito).',
+  '   Explicaciones extensas de las mismas cinco partes, con aplicaciones prácticas.',
+  '',
+  'Si te preguntan algo que no está en estos artefactos, dilo con claridad y no inventes citas.',
+].join('\n');
+
+let engine = null, llmReady = false, busy = false;
+const body = $('chat-body');
+const addMsg = (text, kind) => {
+  const d = document.createElement('div');
+  d.className = 'msg ' + kind; d.textContent = text;
+  body.appendChild(d); body.scrollTop = body.scrollHeight; return d;
+};
+const setProg = (frac) => {
+  const p = $('prog');
+  if (frac == null) { p.classList.remove('on'); return; }
+  p.classList.add('on'); p.querySelector('i').style.width = Math.max(0, Math.min(1, frac)) * 100 + '%';
+};
+
+$('load').addEventListener('click', async () => {
+  if (busy || llmReady) return;
+  busy = true;
+  const btn = $('load'); btn.disabled = true; btn.textContent = 'CARGANDO…';
+  const model = $('model').value;
+  set('s-llm', 'descargando', 'ok');
+  set('llm-stat', 'descargando…', 'stat');
+  addMsg('Cargando ' + model + '… el peso se descarga una vez y queda en la caché del navegador.', 's');
+  try {
+    const mod = await import('./vendor/webllm/web-llm.js');
+    engine = await mod.CreateMLCEngine(model, {
+      initProgressCallback: (r) => {
+        const p = typeof r.progress === 'number' ? r.progress : 0;
+        setProg(p);
+        set('llm-stat', ((p * 100).toFixed(0) + '% · ' + (r.text || '')).slice(0, 42), 'stat');
+      },
+    });
+    llmReady = true;
+    setProg(null);
+    set('s-llm', 'listo · ' + model.split('-')[0], 'ok');
+    set('llm-stat', 'listo', 'stat');
+    $('send').disabled = false;
+    $('fab').classList.add('on');
+    btn.textContent = 'CARGADO';
+    addMsg('Modelo listo. Pregunta lo que quieras sobre los artefactos.', 'a');
+  } catch (e) {
+    setProg(null);
+    set('s-llm', 'error', 'no');
+    set('llm-stat', 'error', 'no');
+    btn.disabled = false; btn.textContent = 'REINTENTAR';
+    addMsg('No se pudo cargar el modelo: ' + (e && e.message ? e.message : e) +
+      '\n\nNota: WebLLM necesita WebGPU real. Si tu navegador no lo expone, esta capacidad queda inactiva y no se simula.', 's');
+  } finally { busy = false; }
+});
+
+async function ask(text) {
+  if (!llmReady || busy || !text.trim()) return;
+  busy = true;
+  $('send').disabled = true;
+  addMsg(text.trim(), 'u');
+  const out = addMsg('', 'a');
+  const caret = document.createElement('span'); caret.className = 'caret'; out.appendChild(caret);
+  try {
+    const stream = await engine.chat.completions.create({
+      stream: true, temperature: 0.6, max_tokens: 512,
+      messages: [{ role: 'system', content: ARTIFACT_CONTEXT }, { role: 'user', content: text.trim() }],
+    });
+    let acc = '';
+    for await (const chunk of stream) {
+      const d = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      acc += (d && d.content) || '';
+      out.textContent = acc; out.appendChild(caret);
+      body.scrollTop = body.scrollHeight;
+    }
+    caret.remove();
+    if (!acc) out.textContent = '(sin respuesta)';
+  } catch (e) {
+    caret.remove();
+    out.textContent = 'Error de inferencia: ' + (e && e.message ? e.message : e);
+  } finally { busy = false; $('send').disabled = false; }
+}
+
+$('send').addEventListener('click', () => { const q = $('q'); ask(q.value); q.value = ''; });
+$('q').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('send').click(); }
+});
+document.querySelectorAll('button.ai').forEach((b) => {
+  b.addEventListener('click', (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    $('chat').classList.add('open');
+    if (llmReady) { ask(b.dataset.ask || ''); }
+    else { $('q').value = b.dataset.ask || ''; $('q').focus(); }
+  });
+});
+$('fab').addEventListener('click', () => $('chat').classList.toggle('open'));
+$('chat-x').addEventListener('click', () => $('chat').classList.remove('open'));
+
+// Card body navigates via data-href, but never when the click lands on a link
+// or a button inside the card (the PREGUNTAR button must not navigate away).
+document.querySelectorAll('.card[data-href]').forEach((c) => {
+  c.addEventListener('click', (ev) => {
+    if (ev.target.closest('a, button')) return;
+    location.href = c.dataset.href;
+  });
+  c.style.cursor = 'pointer';
+});
+
+// ── 4 · Rust WASM core — load it and make it VERIFY something real ──────────
+// Loading is not verifying. The core is exercised end-to-end: it hashes a real
+// artifact's bytes and the result is compared against the recorded manifest
+// hash. A module that merely initialized proves nothing.
+async function initWasmCore() {
+  let mod;
+  try {
+    mod = await import('./wasm/dist/teologia_ai.js');
+    await mod.default();
+  } catch (e) {
+    set('s-wasm', 'no disponible', 'no');
+    return;
+  }
+  try {
+    const state = JSON.parse(mod.get_platform_state_json());
+    const n = state.total_artifacts;
+
+    // self-test: the core must reproduce a known SHA-256 vector
+    const vector = mod.sha256_hex(new TextEncoder().encode('abc'));
+    const vectorOk = vector === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+
+    // end-to-end: hash a real artifact and compare with the manifest
+    let artifactOk = null;
+    try {
+      const mf = await (await fetch('./platform-manifest.json', { cache: 'no-store' })).json();
+      const entry = mf.artifacts.find((a) => a.file === 'catecismo-mayor.html');
+      if (entry) {
+        const bytes = new Uint8Array(await (await fetch('./' + entry.file, { cache: 'no-store' })).arrayBuffer());
+        artifactOk = mod.sha256_hex(bytes) === entry.sha256;
+      }
+    } catch (e) { artifactOk = null; }
+
+    const parts = [n + ' artefactos'];
+    if (vectorOk) parts.push('sha256 ✓');
+    if (artifactOk === true) parts.push('manifiesto ✓');
+    else if (artifactOk === false) parts.push('manifiesto ✗');
+    const ok = vectorOk && artifactOk === true;
+    set('s-wasm', parts.join(' · ') + ' · ' + (ok ? 'verificado' : 'parcial'), ok ? 'ok' : 'no');
+  } catch (e) {
+    set('s-wasm', 'error en el núcleo', 'no');
+  }
+}
+
+// ── 5 · Honest probe — report what is measured, never what is hoped ─────────
+(async () => {
+  set('s-sys', [
+    typeof WebAssembly === 'object' ? 'wasm ✓' : 'wasm ✗',
+    (navigator.storage && navigator.storage.getDirectory) ? 'opfs ✓' : 'opfs ✗',
+  ].join(' · '), 'ok');
+  if (!navigator.gpu) set('s-gpu', 'no disponible', 'no');
+  try { await initWebGPU(); } catch (e) { set('s-gpu', 'error', 'no'); }
+  try { await initWasmCore(); } catch (e) { set('s-wasm', 'error', 'no'); }
+})();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/teologia/_index_template.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

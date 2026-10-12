@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@yaelmendez #zeitgeist</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; }
+  canvas { display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-family: 'JetBrains Mono', monospace; color: #D4AF37; }
+  .head { position: absolute; top: 34px; left: 0; right: 0; text-align: center; }
+  .handle { font-size: 15px; letter-spacing: 4px; font-weight: 700; text-shadow: 0 0 20px rgba(212,175,55,0.6); }
+  .tag { font-size: 26px; letter-spacing: 10px; margin-top: 4px; font-weight: 700; color: #00eaff; text-shadow: 0 0 26px rgba(0,234,255,0.6); }
+  .count { position: absolute; bottom: 84px; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: 3px; color: rgba(212,175,55,0.5); }
+  .brand { position: absolute; bottom: 44px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="head">
+    <div class="handle">@yaelmendez</div>
+    <div class="tag">#zeitgeist</div>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="brand">æ://</div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 720, H = 1280, FPS = 30;
+
+// ── REAL DATA — @yaelmendez #zeitgeist posts (from X via mirror) ──
+const POSTS = [
+  { date: 'SEP 29', text: 'Nous Research · Teknium · OpenAI', likes: 119, kind: 'agents' },
+  { date: 'SEP 29', text: 'AMD first $1T company led by a female CEO', likes: 0, kind: 'compute' },
+  { date: 'SEP 29', text: 'World Labs joins AMD — Fei-Fei Li', likes: 0, kind: 'compute' },
+  { date: 'SEP 10', text: 'Unhinged 😆 — Duolingo', likes: 13, kind: 'culture' },
+  { date: 'AUG 04', text: 'MoE and MoA is 2026 zeitgeist', likes: 50, kind: 'arch' },
+  { date: 'JUL 08', text: '@openclaw · @SpaceXAI', likes: 181, kind: 'agents' },
+  { date: 'JUN 18', text: 'roboflow/supervision', likes: 29, kind: 'vision' },
+  { date: 'JUN 16', text: '🧿 #ZEITGEIST', likes: 17, kind: 'culture' },
+  { date: 'JUN 14', text: 'Replying to @Acyn', likes: 0, kind: 'culture' },
+];
+const KIND_COLOR = { agents: 0x00eaff, compute: 0x00ff9d, arch: 0xffaa33, vision: 0xd4af37, culture: 0xa739de };
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 200);
+camera.position.set(0, 0, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x223344, 0.7));
+const l1 = new THREE.PointLight(0xD4AF37, 3, 40); l1.position.set(3, 4, 8); scene.add(l1);
+const l2 = new THREE.PointLight(0x00eaff, 2, 30); l2.position.set(-4, -2, 6); scene.add(l2);
+
+// ── THE SPINE — a vertical timeline the cards travel along ──
+const spineMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.25 });
+const spine = new THREE.Mesh(new THREE.BoxGeometry(0.04, 40, 0.04), spineMat);
+scene.add(spine);
+
+// ── POST CARDS — glowing panels in 3D space ──
+const cardGroup = new THREE.Group();
+scene.add(cardGroup);
+
+const CARD_W = 3.2, CARD_H = 1.4;
+const cardGeo = new THREE.PlaneGeometry(CARD_W, CARD_H);
+const cards = [];
+const N = POSTS.length;
+
+// create a canvas-texture per card (date + text + likes)
+function makeCardTexture(post, colorHex) {
+  const c = document.createElement('canvas');
+  c.width = 640; c.height = 280;
+  const g = c.getContext('2d');
+  const hex = '#' + colorHex.toString(16).padStart(6, '0');
+  // bg
+  g.fillStyle = '#070a0f'; g.fillRect(0, 0, 640, 280);
+  // border
+  g.strokeStyle = hex; g.lineWidth = 3; g.strokeRect(6, 6, 628, 268);
+  // left accent bar
+  g.fillStyle = hex; g.fillRect(6, 6, 10, 268);
+  // date
+  g.fillStyle = hex; g.font = 'bold 30px monospace'; g.fillText(post.date, 34, 56);
+  // text (wrap)
+  g.fillStyle = '#e8e4dc'; g.font = '30px monospace';
+  const words = post.text.split(' ');
+  let line = '', y = 116;
+  for (const w of words) {
+    const test = line + w + ' ';
+    if (g.measureText(test).width > 560) { g.fillText(line, 34, y); line = w + ' '; y += 42; }
+    else line = test;
+  }
+  g.fillText(line, 34, y);
+  // likes
+  if (post.likes > 0) {
+    g.fillStyle = hex; g.font = 'bold 26px monospace';
+    g.fillText('♥ ' + post.likes, 34, 250);
+  }
+  g.fillStyle = 'rgba(212,175,55,0.4)'; g.font = '22px monospace';
+  g.fillText('#zeitgeist', 480, 250);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+for (let i = 0; i < N; i++) {
+  const post = POSTS[i];
+  const col = KIND_COLOR[post.kind] || 0xD4AF37;
+  const tex = makeCardTexture(post, col);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
+  const m = new THREE.Mesh(cardGeo, mat);
+  const z = -i * 3.0;
+  m.position.set(0, 0, z);
+  cardGroup.add(m);
+  cards.push({ m, mat, col, post, z });
+}
+
+// ── HASH PARTICLES — the zeitgeist field ──
+const PN = 4000;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(PN * 3);
+const pCol = new Float32Array(PN * 3);
+for (let i = 0; i < PN; i++) {
+  pPos[i*3]   = (Math.random() - 0.5) * 14;
+  pPos[i*3+1] = (Math.random() - 0.5) * 26;
+  pPos[i*3+2] = (Math.random() - 0.5) * 44;
+  const c = new THREE.Color().setHSL(0.11 + Math.random()*0.08, 0.7, 0.35 + Math.random()*0.3);
+  pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const pMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `uniform float uTime; varying vec3 vColor;
+    void main(){ vColor=color; vec3 p=position;
+      p.y = mod(p.y + uTime*0.6 + 13.0, 26.0) - 13.0;
+      vec4 mv=modelViewMatrix*vec4(p,1.0); gl_PointSize=2.2*(300.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `varying vec3 vColor;
+    void main(){ float d=length(gl_PointCoord-0.5); if(d>0.5)discard; gl_FragColor=vec4(vColor,(1.0-d*2.0)*0.5); }`,
+  vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// ── POST: bloom + grade ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.7, 0.5, 0.85));
+const GradePass = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){ vec2 d=vUv-0.5; float r2=dot(d,d);
+      float ca=0.0016+r2*0.004; vec3 col;
+      col.r=texture2D(tDiffuse,vUv+d*ca).r; col.g=texture2D(tDiffuse,vUv).g; col.b=texture2D(tDiffuse,vUv-d*ca).b;
+      col*=smoothstep(1.15,0.28,r2*2.2);
+      col*=1.0-0.05*step(0.5,fract(vUv.y*uRes.y*0.5));
+      col+=(rand(vUv*uRes+uTime)-0.5)*0.03;
+      gl_FragColor=vec4(col,1.0); }`,
+};
+const gradePass = new ShaderPass(GradePass);
+composer.addPass(gradePass);
+composer.addPass(new OutputPass());
+
+// ── ANIMATION — cards flow toward camera along the spine ──
+const countEl = document.getElementById('count');
+const TOTAL_DUR = N * 1.5;   // 1.5s per post
+function applyFrame(t) {
+  pMat.uniforms.uTime.value = t;
+  gradePass.uniforms.uTime.value = t;
+
+  // travel: cards move +z toward camera; the whole group advances
+  const travel = (t / TOTAL_DUR) * (N * 3.0);
+  cardGroup.position.z = travel;
+
+  // each card glows when it crosses the focal plane (z≈0)
+  cards.forEach((c, i) => {
+    const worldZ = c.z + travel;
+    const focus = Math.max(0, 1 - Math.abs(worldZ) / 3.5);
+    c.mat.opacity = 0.35 + focus * 0.65;
+    c.mat.color.setRGB(0.6 + focus*0.4, 0.6 + focus*0.4, 0.6 + focus*0.4);
+    c.m.scale.setScalar(0.92 + focus * 0.14);
+  });
+
+  // which post is in focus
+  let idx = 0;
+  cards.forEach((c, i) => { const wz = c.z + travel; if (wz < 0) idx = i; });
+  const cur = POSTS[Math.min(idx, N-1)];
+  countEl.textContent = `post ${Math.min(idx+1, N)}/${N} · ${cur.date} · ${cur.kind.toUpperCase()} · ${cur.likes} ♥`;
+
+  // gentle camera drift
+  camera.position.x = Math.sin(t * 0.2) * 0.5;
+  camera.position.y = Math.sin(t * 0.17) * 0.3;
+  camera.lookAt(0, 0, -1.5);
+  spine.rotation.y = t * 0.1;
+}
+
+const clock = new THREE.Clock();
+let driven = false;
+function animate() {
+  requestAnimationFrame(animate);
+  if (driven) return;
+  applyFrame(clock.getElapsedTime());
+  composer.render();
+}
+animate();
+
+window.__renderFrame = (i, total) => { driven = true; applyFrame(i / FPS); composer.render(); return true; };
+window.__ZEITGEIST__ = { ready: true, posts: N, deterministic: true };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/zeitgeist.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "spec": {
+    "prompt": "cyber torusknot chromatic wide shot particles",
+    "prompt_hash": "6bf2f47b643e",
+    "mood": "cyber",
+    "camera": {
+      "fov": 75,
+      "pos": [
+        8,
+        5,
+        10
+      ]
+    },
+    "objects": [
+      {
+        "type": "torus",
+        "color": "#D4AF37",
+        "metalness": 0.95,
+        "roughness": 0.05,
+        "args": [
+          1,
+          0.4,
+          16,
+          100
+        ]
+      }
+    ],
+    "effects": [
+      "chromatic"
+    ],
+    "particles": true,
+    "background": "#050505",
+    "duration": 6.0,
+    "fps": 30,
+    "colors": {
+      "primary": "#ff0066",
+      "secondary": "#050505",
+      "accent": "#00eaff"
+    }
+  },
+  "mode": "animation",
+  "files": [
+    {
+      "file": "storyboard_animation.html",
+      "frames": 5,
+      "duration": 6.0
+    }
+  ],
+  "prompt_hash": "6bf2f47b643e",
+  "mood": "cyber"
+}

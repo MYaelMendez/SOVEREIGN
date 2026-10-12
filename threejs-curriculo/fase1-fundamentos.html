@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 1 · Fundamentos de Rendering — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.86);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+
+  #debug { top: 12px; left: 12px; width: 330px; padding: 12px 14px; }
+  #debug h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+    font-family: inherit;
+  }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 9px 0 3px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-all; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: #f2cc60; }
+
+  #controls { top: 12px; right: 12px; width: 250px; padding: 12px 14px; }
+  #controls h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25); font-family: inherit;
+  }
+  .btn {
+    display: block; width: 100%; margin: 6px 0; padding: 7px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; text-align: left; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30363d; margin-right: 8px; vertical-align: middle; }
+  .btn.on .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+
+  #legend { bottom: 12px; left: 12px; padding: 9px 14px; color: var(--dim); font-size: 11.5px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 640px; }
+  #error h2 { color: #f85149; font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════ DEBUG PANEL ══════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Debug · Fase 1</h1>
+
+  <div class="group-title">Camera · transform (world)</div>
+  <div class="row"><span class="k">position xyz</span><span class="v hi" id="cam-pos">—</span></div>
+  <div class="row"><span class="k">rotation xyz°</span><span class="v hi" id="cam-rot">—</span></div>
+  <div class="row"><span class="k">quaternion</span><span class="v" id="cam-quat">—</span></div>
+  <div class="row"><span class="k">projection</span><span class="v" id="cam-proj">—</span></div>
+  <div class="row"><span class="k">frustum fov/near/far</span><span class="v" id="cam-frustum">—</span></div>
+  <div class="row"><span class="k">dist → target</span><span class="v" id="cam-dist">—</span></div>
+
+  <div class="group-title">Hover · picking + spaces</div>
+  <div class="row"><span class="k">object</span><span class="v hl" id="hover-name">ninguno</span></div>
+  <div class="row"><span class="k">local pos</span><span class="v" id="hover-local">—</span></div>
+  <div class="row"><span class="k">world pos</span><span class="v" id="hover-world">—</span></div>
+  <div class="row"><span class="k">world quat</span><span class="v" id="hover-quat">—</span></div>
+  <div class="row"><span class="k">depth (tree)</span><span class="v" id="hover-depth">—</span></div>
+
+  <div class="group-title">Scene</div>
+  <div class="row"><span class="k">cubos / nodos</span><span class="v" id="scene-count">—</span></div>
+  <div class="row"><span class="k">triangles</span><span class="v" id="scene-tris">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v" id="scene-calls">—</span></div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="scene-fps">—</span></div>
+</div>
+
+<!-- ══════════════ CONTROLS PANEL ══════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Controles</h1>
+  <button class="btn on" id="btn-rotate"><span class="dot"></span>Animar jerarquía</button>
+  <button class="btn" id="btn-wire"><span class="dot"></span>Wireframe</button>
+  <button class="btn" id="btn-grid"><span class="dot"></span>Grid + Ejes</button>
+  <button class="btn" id="btn-axes-only"><span class="dot"></span>AxesHelper</button>
+  <button class="btn" id="btn-helpers"><span class="dot"></span>Frustum / normales</button>
+  <button class="btn" id="btn-proj"><span class="dot"></span>Cámara: Perspectiva</button>
+  <button class="btn" id="btn-reset">↺ Reset cámara</button>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Click derecho</b> pan · <b>Hover</b> resaltar cubo
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/three.module.js</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase1-fundamentos.html</code></p>
+</div></div>
+
+<!-- ══════════════ IMPORT MAP (todo local, sin CDN) ══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const TAU = Math.PI * 2;
+const DEG = 180 / Math.PI;
+
+// ─────────────────────────────────────────────────────────────
+// 0. Utilidades de UI
+// ─────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(d);
+const vecStr = (v) => `${fmt(v.x)}, ${fmt(v.y)}, ${fmt(v.z)}`;
+const quatStr = (q) => `${fmt(q.x, 2)} ${fmt(q.y, 2)} ${fmt(q.z, 2)} ${fmt(q.w, 2)}`;
+
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message && /import|module|three/i.test(e.message)) fail(e); });
+
+// ─────────────────────────────────────────────────────────────
+// 1. Renderer · Scene · Cámaras  (Semana 1, días 1-3)
+// ─────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.Fog(0x0d1117, 38, 90);
+
+// Cámara perspectiva (la principal) y ortográfica (bonus día 3).
+const perspCam = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+perspCam.position.set(16, 13, 20);
+perspCam.lookAt(0, 3, 0);
+
+const ORTHO_FRUSTUM = 16;
+const aspect = () => window.innerWidth / window.innerHeight;
+const orthoCam = new THREE.OrthographicCamera(
+  -ORTHO_FRUSTUM * aspect(), ORTHO_FRUSTUM * aspect(),
+   ORTHO_FRUSTUM, -ORTHO_FRUSTUM, 0.1, 500
+);
+orthoCam.position.copy(perspCam.position);
+orthoCam.lookAt(0, 3, 0);
+
+let camera = perspCam;
+let usingPerspective = true;
+
+// ─────────────────────────────────────────────────────────────
+// 2. Luces
+// ─────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const hemi = new THREE.HemisphereLight(0x8fb4ff, 0x1a2030, 0.7);
+scene.add(hemi);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+keyLight.position.set(12, 20, 14);
+scene.add(keyLight);
+
+const rimLight = new THREE.DirectionalLight(0x58a6ff, 1.4);
+rimLight.position.set(-14, 8, -12);
+scene.add(rimLight);
+
+// ─────────────────────────────────────────────────────────────
+// 3. Helpers: ejes, grid
+// ─────────────────────────────────────────────────────────────
+const helpersRoot = new THREE.Group();
+helpersRoot.name = 'Helpers';
+scene.add(helpersRoot);
+
+const axes = new THREE.AxesHelper(9);
+axes.name = 'AxesHelper';
+helpersRoot.add(axes);
+
+const grid = new THREE.GridHelper(40, 40, 0x1f6feb, 0x21262d);
+grid.position.y = -0.001;
+grid.material.transparent = true;
+grid.material.opacity = 0.65;
+helpersRoot.add(grid);
+
+// ─────────────────────────────────────────────────────────────
+// 4. SCENE GRAPH: 50 cubos en jerarquía  (Semana 1, día 1)
+//    scene → root → 5 ramas → cadena anidada de 10 cubos
+//    Cada cubo es hijo del anterior ⇒ las transforms se COMPONEN.
+// ─────────────────────────────────────────────────────────────
+const root = new THREE.Group();
+root.name = 'Root';
+scene.add(root);
+
+const CUBE_SIZE = 1;
+const CUBES_PER_ARM = 10;
+const ARMS = 5;                       // 5 × 10 = 50 cubos
+const boxGeom = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+
+const cubes = [];                     // todos los Mesh, para raycasting
+const arms = [];                      // grupos de rama, para animación
+
+const BASE_COLOR = new THREE.Color();
+const HOVER_COLOR = new THREE.Color(0xf2cc60);
+
+let index = 0;
+for (let a = 0; a < ARMS; a++) {
+  const arm = new THREE.Group();
+  arm.name = `Arm_${a}`;
+  arm.rotation.y = (a / ARMS) * TAU;   // cada rama gira respecto de la raíz
+  arm.position.y = 0.6;
+  root.add(arm);
+  arms.push(arm);
+
+  let parent = arm;                    // el "padre móvil": el cubo anterior
+  for (let i = 0; i < CUBES_PER_ARM; i++) {
+    const hue = index / (ARMS * CUBES_PER_ARM);
+    const mat = new THREE.MeshStandardMaterial({
+      color: BASE_COLOR.clone().setHSL(hue, 0.62, 0.55),
+      roughness: 0.35,
+      metalness: 0.35,
+      emissive: new THREE.Color(0x000000),
+    });
+
+    const cube = new THREE.Mesh(boxGeom, mat);
+    cube.name = `Cube_${a}_${i}`;
+    // Posición LOCAL respecto del padre (no del mundo):
+    cube.position.set(0, 0.16, 1.55);
+    // Rotación LOCAL que se acumula a lo largo de la cadena:
+    cube.rotation.set(0, 0.34, 0.06);
+    // Escala LOCAL decreciente: demuestra herencia de escala:
+    cube.scale.setScalar(1 - i * 0.055);
+
+    cube.userData = {
+      baseColor: mat.color.clone(),
+      arm: a,
+      level: i,
+      globalIndex: index,
+    };
+
+    parent.add(cube);                  // ← anidamiento real del scene graph
+    cubes.push(cube);
+    parent = cube;                     // el siguiente cubo cuelga de este
+    index++;
+  }
+}
+
+console.log(`[Fase 1] scene graph construido: ${cubes.length} cubos en ${ARMS} ramas.`);
+
+// ─────────────────────────────────────────────────────────────
+// 5. OrbitControls  (Semana 1, día 3)
+// ─────────────────────────────────────────────────────────────
+let controls;
+function makeControls(cam) {
+  const c = new OrbitControls(cam, renderer.domElement);
+  c.enableDamping = true;
+  c.dampingFactor = 0.06;
+  c.rotateSpeed = 0.85;
+  c.zoomSpeed = 0.9;
+  c.minDistance = 4;
+  c.maxDistance = 90;
+  c.maxPolarAngle = Math.PI * 0.495;   // no atravesar el piso
+  c.target.set(0, 3, 0);
+  c.update();
+  return c;
+}
+controls = makeControls(camera);
+
+// ─────────────────────────────────────────────────────────────
+// 6. Raycaster + picking con highlight  (Semana 1, día 4)
+// ─────────────────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(-10, -10);   // fuera de pantalla al inicio
+let pointerInside = false;
+let hovered = null;
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  pointerInside = true;
+});
+renderer.domElement.addEventListener('pointerleave', () => { pointerInside = false; });
+
+function clearHover() {
+  if (!hovered) return;
+  hovered.material.color.copy(hovered.userData.baseColor);
+  hovered.material.emissive.setHex(0x000000);
+  hovered = null;
+  $('hover-name').textContent = 'ninguno';
+  $('hover-name').className = 'v hl';
+  ['hover-local', 'hover-world', 'hover-quat', 'hover-depth'].forEach((id) => { $(id).textContent = '—'; });
+}
+
+function applyHover(mesh) {
+  hovered = mesh;
+  mesh.material.color.copy(HOVER_COLOR);
+  mesh.material.emissive.setHex(0x3a2d00);
+  $('hover-name').textContent = mesh.name;
+  $('hover-name').className = 'v hl';
+}
+
+// ─────────────────────────────────────────────────────────────
+// 7. Espacios de coordenadas: local vs mundo  (Semana 1, día 5)
+// ─────────────────────────────────────────────────────────────
+const _wp = new THREE.Vector3();
+const _wq = new THREE.Quaternion();
+const _ws = new THREE.Vector3();
+
+function updateSpacePanel(mesh) {
+  mesh.getWorldPosition(_wp);
+  mesh.getWorldQuaternion(_wq);
+  mesh.getWorldScale(_ws);
+
+  $('hover-local').textContent = vecStr(mesh.position);
+  $('hover-world').textContent = vecStr(_wp);
+  $('hover-quat').textContent = quatStr(_wq);
+
+  // Profundidad en el árbol: cuántos padres tiene hasta la escena.
+  let depth = 0, p = mesh.parent;
+  while (p) { depth++; p = p.parent; }
+  $('hover-depth').textContent = `${depth} (Root→Arm_${mesh.userData.arm}→…)`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 8. Toggles de UI
+// ─────────────────────────────────────────────────────────────
+const state = { animate: true, wire: false, showGrid: true, showAxes: true, showDebugHelpers: false };
+
+function toggleBtn(btn, on) { btn.classList.toggle('on', !!on); }
+
+const btnRotate = $('btn-rotate');
+btnRotate.addEventListener('click', () => { state.animate = !state.animate; toggleBtn(btnRotate, state.animate); });
+
+const btnWire = $('btn-wire');
+btnWire.addEventListener('click', () => {
+  state.wire = !state.wire;
+  toggleBtn(btnWire, state.wire);
+  for (const c of cubes) c.material.wireframe = state.wire;
+});
+
+const btnGrid = $('btn-grid');
+btnGrid.addEventListener('click', () => { state.showGrid = !state.showGrid; grid.visible = state.showGrid; toggleBtn(btnGrid, state.showGrid); });
+
+const btnAxesOnly = $('btn-axes-only');
+btnAxesOnly.addEventListener('click', () => { state.showAxes = !state.showAxes; axes.visible = state.showAxes; toggleBtn(btnAxesOnly, state.showAxes); });
+
+// Frustum / normales: CameraHelper + VertexNormalsHelper-free (usamos CameraHelper y normales manuales)
+const camHelper = new THREE.CameraHelper(perspCam);
+camHelper.visible = false;
+scene.add(camHelper);
+const dirHelper = new THREE.DirectionalLightHelper(keyLight, 4);
+dirHelper.visible = false;
+scene.add(dirHelper);
+
+const btnHelpers = $('btn-helpers');
+btnHelpers.addEventListener('click', () => {
+  state.showDebugHelpers = !state.showDebugHelpers;
+  camHelper.visible = state.showDebugHelpers;
+  dirHelper.visible = state.showDebugHelpers;
+  camHelper.update();
+  toggleBtn(btnHelpers, state.showDebugHelpers);
+});
+
+const btnProj = $('btn-proj');
+btnProj.addEventListener('click', () => {
+  usingPerspective = !usingPerspective;
+  controls.dispose();
+  camera = usingPerspective ? perspCam : orthoCam;
+  controls = makeControls(camera);
+  camHelper.camera = camera;
+  camHelper.update();
+  btnProj.innerHTML = `<span class="dot on"></span>Cámara: ${usingPerspective ? 'Perspectiva' : 'Ortográfica'}`;
+});
+
+const btnReset = $('btn-reset');
+btnReset.addEventListener('click', () => {
+  camera.position.set(16, 13, 20);
+  camera.lookAt(0, 3, 0);
+  controls.target.set(0, 3, 0);
+  controls.update();
+});
+
+// ─────────────────────────────────────────────────────────────
+// 9. Resize
+// ─────────────────────────────────────────────────────────────
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  perspCam.aspect = w / h;
+  perspCam.updateProjectionMatrix();
+  orthoCam.left = -ORTHO_FRUSTUM * (w / h);
+  orthoCam.right = ORTHO_FRUSTUM * (w / h);
+  orthoCam.top = ORTHO_FRUSTUM;
+  orthoCam.bottom = -ORTHO_FRUSTUM;
+  orthoCam.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  camHelper.update();
+}
+window.addEventListener('resize', onResize);
+
+// ─────────────────────────────────────────────────────────────
+// 10. Bucle de render + actualización del panel
+// ─────────────────────────────────────────────────────────────
+let frames = 0, fps = 0, fpsClock = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const t = performance.now() * 0.001;
+
+  // Animación de la jerarquía: rotar ramas y oscilar la raíz.
+  if (state.animate) {
+    arms.forEach((arm, i) => {
+      arm.rotation.y = (i / ARMS) * TAU + t * 0.25;
+      arm.rotation.z = Math.sin(t * 0.5 + i) * 0.18;
+    });
+    root.position.y = Math.sin(t * 0.8) * 0.35;
+  }
+
+  // ── Picking cada frame (50 objetos: trivial) ──
+  if (pointerInside) {
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(cubes, false);
+    const next = hits.length ? hits[0].object : null;
+    if (next !== hovered) { clearHover(); if (next) applyHover(next); }
+  } else if (hovered) {
+    clearHover();
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  // ── Panel de debug ──
+  if (hovered) updateSpacePanel(hovered);
+
+  $('cam-pos').textContent = vecStr(camera.position);
+  $('cam-rot').textContent = `${fmt(camera.rotation.x * DEG, 1)}°, ${fmt(camera.rotation.y * DEG, 1)}°, ${fmt(camera.rotation.z * DEG, 1)}°`;
+  $('cam-quat').textContent = quatStr(camera.quaternion);
+  $('cam-dist').textContent = fmt(camera.position.distanceTo(controls.target));
+
+  if (usingPerspective) {
+    $('cam-proj').textContent = 'perspectiva';
+    $('cam-frustum').textContent = `${perspCam.fov}° / ${perspCam.near} / ${perspCam.far}`;
+  } else {
+    $('cam-proj').textContent = 'ortográfica';
+    $('cam-frustum').textContent = `±${ORTHO_FRUSTUM} / ${orthoCam.near} / ${orthoCam.far}`;
+  }
+
+  const info = renderer.info.render;
+  $('scene-count').textContent = `${cubes.length} cubos · ${countNodes(scene)} nodos`;
+  $('scene-tris').textContent = info.triangles.toLocaleString();
+  $('scene-calls').textContent = info.calls.toLocaleString();
+
+  frames++;
+  const now = performance.now();
+  if (now - fpsClock >= 500) {
+    fps = Math.round((frames * 1000) / (now - fpsClock));
+    frames = 0; fpsClock = now;
+    $('scene-fps').textContent = fps;
+  }
+
+  if (state.showDebugHelpers) { camHelper.update(); dirHelper.update(); }
+}
+
+function countNodes(o) {
+  let n = 1;
+  for (const c of o.children) n += countNodes(c);
+  return n;
+}
+
+// Hook de inspección (debug local / agentic): expone el estado vivo de la escena.
+// Permite verificar la escena desde consola o desde un agente sin acoplarse al DOM.
+window.__FASE1__ = {
+  revision: THREE.REVISION,
+  THREE, scene, renderer, root, arms, cubes, raycaster, state,
+  get camera() { return camera; },
+  get controls() { return controls; },
+  get hovered() { return hovered; },
+  countNodes,
+  // Devuelve el cubo bajo coordenadas NDC (nx, ny ∈ [-1,1]) o null.
+  pickAt(nx, ny) {
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const hits = raycaster.intersectObjects(cubes, false);
+    return hits.length ? { name: hits[0].object.name, distance: +hits[0].distance.toFixed(3) } : null;
+  },
+};
+
+// Arranque
+onResize();
+animate();
+console.log('[Fase 1] listo — Three.js r' + THREE.REVISION + ' (vendor local, offline)');
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase1-fundamentos.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

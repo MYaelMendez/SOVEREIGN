@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase21-schweitzer — Albert Schweitzer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff;--green:#4dff9e}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:420px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud .loop{font-size:16px;letter-spacing:2px}
+#hud .st{opacity:0.45;transition:opacity .2s,color .2s,text-shadow .2s}
+#hud .st.on{opacity:1;color:#eafcff;text-shadow:0 0 16px rgba(0,234,255,0.9)}
+#hud .ar{color:var(--gold);opacity:0.6;margin:0 8px}
+#hud ul{list-style:none;margin-top:22px;font-size:14px;line-height:1.95}
+#hud li{opacity:0.72}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:var(--cyan)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#lamp{position:fixed;bottom:200px;right:260px;width:420px;height:520px;z-index:30;pointer-events:none}
+#lamp img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="hud">
+  <h1>æ:// fase21-schweitzer</h1>
+  <div class="sub">Semana 21 · Albert Schweitzer</div>
+  <div class="rule"></div>
+  <div class="loop">
+    <span class="st" data-st="0">theologian</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="1">organist</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="2">medicine</span><span class="ar">&rarr;</span>
+    <span class="st" data-st="3">reverence for life</span>
+  </div>
+  <ul>
+    <li>born 1875 Alsatia</li>
+    <li>theologian · organist</li>
+    <li>Hôpital Albert Schweitzer</li>
+    <li>Nobel Peace Prize 1952</li>
+  </ul>
+</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="lamp"><img src="https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=https://myaelmendez.github.io/verify.html?url=https%3A%2F%2Fmyaelmendez.github.io%2Faipodcast_me%2Ffase21-schweitzer.html&color=D4AF37&bgcolor=050505" alt="æQR"></div>
+<div id="badge" onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')" title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase21-schweitzer.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+var W=1920,H=1080,DURATION=15.0;
+var GOLD=0xD4AF37,CYAN=0x00eaff,GREEN=0x4dff9e;
+var scene,camera,renderer,backdropMat;
+var nodes=[],signals=[];
+
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x050505);
+  camera=new THREE.PerspectiveCamera(50,W/H,0.1,6000);
+  camera.position.set(0,100,420);
+  camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+  renderer.setPixelRatio(1);
+  renderer.setSize(W,H);
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=2.6;
+
+  backdropMat=new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0}},
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'varying vec2 vUv;uniform float uTime;void main(){vec2 p=vUv-0.5;float d=length(p*vec2(1.0,0.82));float core=smoothstep(0.82,0.0,d);float ring=smoothstep(0.05,0.0,abs(d-0.44));vec3 col=vec3(0.84,0.69,0.22)*core*1.8+vec3(0.0,0.92,1.0)*ring*1.2+vec3(0.84,0.69,0.22)*0.35;col*=1.2+0.3*sin(uTime*1.3);gl_FragColor=vec4(col,1.0);}'
+  });
+  var backdrop=new THREE.Mesh(new THREE.PlaneGeometry(2000,1200),backdropMat);
+  backdrop.position.set(0,0,-800);
+  backdrop.renderOrder=-1;
+  scene.add(backdrop);
+
+  scene.add(new THREE.AmbientLight(0xffffff,1.4));
+  var key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(120,260,180);scene.add(key);
+  var rim=new THREE.PointLight(CYAN,2.6,3000);rim.position.set(-180,120,-120);scene.add(rim);
+
+  // owl as personified awake center
+  var owl_geo=new THREE.SphereGeometry(20,16,16);
+  var owl=new THREE.Mesh(owl_geo,new THREE.MeshStandardMaterial({color:0xD4AF37,emissive:0xD4AF37,emissiveIntensity:0.5,roughness:0.1,metalness:0.6}));
+  owl.position.set(-120,0,-120);
+  owl.rotation.y=Math.PI*0.3;
+  scene.add(owl);
+
+  // books (monograph wall)
+  var bar_geos=new THREE.BoxGeometry(30,100,30);
+  for(var i=0;i<14;i++){
+    var color=[GOLD,CYAN,GREEN][i%3];
+    var mat=new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.5,roughness:0.2,metalness:0.8});
+    var mesh=new THREE.Mesh(bar_geos,mat);
+    mesh.position.set(-160+i*26,0,-60);
+    mesh.rotation.y=Math.PI*0.15;
+    scene.add(mesh);
+  }
+
+  // signal pulses
+  var pulseGeo=new THREE.SphereGeometry(3,10,10);
+  for(var i=0;i<24;i++){
+    var color=[GOLD,CYAN,GREEN][i%3];
+    var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0});
+    var s=new THREE.Mesh(pulseGeo,mat);
+    s.visible=false;
+    var px=-200+Math.random()*400,py=-80+Math.random()*200,pz=-80+Math.random()*200;
+    s.position.set(px,py,pz);
+    scene.add(s);
+    signals.push({mesh:s,mat:mat,edgeIdx:i%nodes.length,t:0,speed:0.15+Math.random()*0.2,visible:false});
+  }
+
+  // stars around
+  var phi=Math.PI*(3-Math.sqrt(5)),iota=0;
+  for(var j=0;j<30;j++){
+    for(var i=0;i<3;i++){
+      var y=(i/3)*2-1;
+      var r=Math.sqrt(1-y*y);
+      var x=Math.cos(i*phi)*r, z=Math.sin(i*phi)*r;
+      var color=[GOLD,CYAN,GREEN][j%3];
+      var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:j%2===0?0.25:0.15});
+      var sphere=new THREE.Mesh(new THREE.SphereGeometry(2,8,8),mat);
+      sphere.position.set(x*28,y*32,z*24);
+      scene.add(sphere);
+      nodes.push({mesh:sphere,mat:mat,color:color,j:j});
+    }
+  }
+}
+
+function renderAt(t){
+  backdropMat.uniforms.uTime.value=t;
+
+  var phase=Math.floor(t/DURATION*4)%4;
+  var stepEls=document.querySelectorAll('#hud .st');
+  for(var k=0;k<stepEls.length;k++)stepEls[k].classList.toggle('on',k===phase);
+
+  for(var i=0;i<nodes.length;i++){
+    var n=nodes[i];
+    if(n.isAgent){
+      n.mesh.position.y=18+Math.sin(t*1.5+n.phase)*4;
+      n.mesh.rotation.y=t*0.5+n.phase;
+      n.mat.emissiveIntensity=0.7+0.3*Math.sin(t*2+n.phase);
+    } else if(n.type){
+      n.mesh.position.y=-20+Math.sin(t*0.8+n.phase)*8;
+      n.mat.emissiveIntensity=0.3+0.2*Math.sin(t*2+n.phase*0.7);
+    }
+  }
+
+  var ang=0.3+Math.sin(t*0.4)*0.6;
+  camera.position.set(Math.cos(ang)*420,100+Math.sin(t*0.6)*20,Math.sin(ang)*420);
+  camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+}
+
+window.__renderFrame=function(i,total){
+  if(!renderer)return;
+  var n=Math.max(1,(total||1)-1);
+  var t=(i/n)*DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent=i;
+  document.getElementById('tc').textContent=total;
+  document.getElementById('tt').textContent=t.toFixed(2);
+  return true;
+};
+
+init();
+window.__renderFrame(0,1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/fase21-schweitzer.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

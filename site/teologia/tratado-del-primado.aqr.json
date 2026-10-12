@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/tratado",
+  "region": "es-LATAM",
+  "sha256": "a4cdc36aa4bcd1134341dbfbf2fca89b00abb338684c17e6b4019f45393d7ceb",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-12T20:23:37Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/tratado|es-LATAM|sha256:a4cdc36aa4bcd1134341dbfbf2fca89b00abb338684c17e6b4019f45393d7ceb|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "pyzbar box=10 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-tratado.svg",
+  "html": "C:\\æ\\site\\teologia\\tratado-del-primado.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

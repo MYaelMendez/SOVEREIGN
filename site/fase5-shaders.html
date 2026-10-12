@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>æ:// fase5-shaders — Intermediate Shaders</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#050505;color:#D4AF37;font-family:'JetBrains Mono','Consolas',monospace}
+#root{position:relative;width:100%;height:100%}
+.scanlines{position:absolute;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.20) 3px,rgba(0,0,0,.20) 4px)}
+#hud{position:absolute;top:0;left:0;right:0;padding:15px 40px;z-index:10}
+#hud h1{font-size:20px;font-weight:700;letter-spacing:.15em}
+#stats{position:absolute;top:15px;right:40px;font-size:10px;text-align:right}
+#stats div{margin:2px 0}
+</style>
+</head>
+<body>
+<div id="root" data-width="1920" data-height="1080">
+<div id="hud"><h1>æ:// fase5-shaders</h1>
+<div id="stats"><div id="panel">Technique: noise</div></div>
+</div>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div class="scanlines"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+var W=1920,H=1080,scene,camera,renderer,currentTechnique=0;
+var materials=[],currentMesh;
+var noiseVert='varying vec2 vUv;uniform float uTime;void main(){vUv=uv;vec3 pos=position;pos.z+=sin(pos.x*3.0+uTime)*0.5;pos.z+=cos(pos.y*3.0+uTime*0.7)*0.3;gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.0);}';
+var noiseFrag='varying vec2 vUv;uniform float uTime;uniform vec3 uColor1;uniform vec3 uColor2;vec2 hash(vec2 p){return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);}float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);float n=i.x+i.y*5.0;float a=hash(i).x;float b=hash(i+vec2(1,0)).x;float c=hash(i+vec2(0,1)).x;float d=hash(i+vec2(1,1)).x;return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}float fbm(vec2 p){float total=0.0;float amp=0.5;for(int i=0;i<5;i++){total+=noise(p)*amp;p*=2.0;amp*=0.5;}return total;}void main(){float n=fbm(vUv*8.0+uTime*0.5);vec3 col=mix(uColor1,uColor2,n);gl_FragColor=vec4(col,1.0);}';
+var uvFrag='varying vec2 vUv;uniform float uTime;uniform vec3 uColor1;uniform vec3 uColor2;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);float n=i.x+i.y*5.0;float a=hash(i);float b=hash(i+vec2(1,0));float c=hash(i+vec2(0,1));float d=hash(i+vec2(1,1));return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}float fbm(vec2 p){float total=0.0;float amp=0.5;for(int i=0;i<4;i++){total+=noise(p)*amp;p*=2.0;amp*=0.5;}return total;}void main(){vec2 uv=vUv;float d=length(uv-0.5);float wave=sin(d*20.0-uTime*3.0)*0.03;uv.x+=wave*cos(uTime+uv.y*5.0);uv.y+=wave*sin(uTime+uv.x*5.0);float n=fbm(uv*6.0);vec3 col=mix(uColor1,uColor2,n*0.7+0.3);col+=vec3(0.0,0.02,0.05)*d;gl_FragColor=vec4(col,1.0);}';
+var sdfVert='varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
+var sdfFrag='varying vec2 vUv;uniform float uTime;uniform vec3 uColor1;uniform vec3 uColor2;float sdCircle(vec2 p,float r){return length(p)-r;}float sdBox(vec2 p,vec2 b){vec2 q=abs(p)-b;return length(max(q,0.0))+min(max(q.x,q.y),0.0);}float opUnion(float a,float b){return min(a,b);}float opSub(float a,float b){return max(a,-b);}void main(){vec2 p=(vUv*2.0-1.0)*vec2(1.777,1.0);float d1=sdCircle(p-vec2(sin(uTime)*0.2,0),0.3);float d2=sdBox(p-vec2(cos(uTime*0.7)*0.2,0),vec2(0.2,0.2));float d=opSub(opUnion(d1,d2),sdCircle(p+vec2(sin(uTime*0.5)*0.2,0),0.25));float t=smoothstep(0.0,0.01,abs(d)-0.03);vec3 col=mix(uColor2,uColor1,t);col+=vec3(1.0,0.9,0.7)*(1.0-t)*0.3;gl_FragColor=vec4(col,1.0);}';
+var phongVert='varying vec3 vNormal;varying vec3 vWorldPos;uniform float uTime;void main(){vNormal=normalize(normalMatrix*normal);vWorldPos=(modelMatrix*vec4(position,1.0)).xyz;vec3 pos=position;pos.y+=sin(uTime+position.x*2.0)*0.3;pos.z+=cos(uTime+position.y*2.0)*0.2;gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.0);}';
+var phongFrag='varying vec3 vNormal;varying vec3 vWorldPos;uniform float uTime;uniform vec3 uColor1;uniform vec3 uColor2;void main(){vec3 normal=normalize(vNormal);vec3 lightDir=normalize(vec3(0.5,0.8,0.5));vec3 viewDir=normalize(cameraPosition-vWorldPos);float diff=max(dot(normal,lightDir),0.0);vec3 reflectDir=reflect(-lightDir,normal);float spec=pow(max(dot(viewDir,reflectDir),0.0),64.0);float fresnel=pow(1.0-dot(normal,viewDir),3.0);vec3 color=mix(uColor1,uColor2,diff);color+=vec3(1.0,0.95,0.8)*spec*0.5;color+=vec3(0.0,0.1,0.2)*fresnel;gl_FragColor=vec4(color,1.0);}';
+function init(){
+scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0f1a);
+camera=new THREE.PerspectiveCamera(50,W/H,0.1,200);camera.position.set(0,0,8);camera.lookAt(0,0,0);
+renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true});renderer.setSize(W,H);renderer.setPixelRatio(1);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=2.2;
+scene.add(new THREE.AmbientLight(0xffffff,1.8));
+var dirLight=new THREE.DirectionalLight(0xD4AF37,2.5);dirLight.position.set(10,20,15);scene.add(dirLight);
+var pointLight=new THREE.PointLight(0x00eaff,1.5,100);pointLight.position.set(-10,-5,10);scene.add(pointLight);
+var gold=new THREE.Color(0xD4AF37),cyan=new THREE.Color(0x00eaff);
+materials[0]=new THREE.ShaderMaterial({vertexShader:noiseVert,fragmentShader:noiseFrag,uniforms:{uTime:{value:0},uColor1:{value:gold},uColor2:{value:cyan}},side:THREE.DoubleSide});
+materials[1]=new THREE.ShaderMaterial({vertexShader:noiseVert,fragmentShader:uvFrag,uniforms:{uTime:{value:0},uColor1:{value:gold},uColor2:{value:cyan}},side:THREE.DoubleSide});
+materials[2]=new THREE.ShaderMaterial({vertexShader:sdfVert,fragmentShader:sdfFrag,uniforms:{uTime:{value:0},uColor1:{value:gold},uColor2:{value:cyan}},side:THREE.DoubleSide});
+materials[3]=new THREE.ShaderMaterial({vertexShader:phongVert,fragmentShader:phongFrag,uniforms:{uTime:{value:0},uColor1:{value:gold},uColor2:{value:cyan}},side:THREE.DoubleSide});
+materials[4]=materials[3];
+var geo=new THREE.PlaneGeometry(8,8,128,128);currentMesh=new THREE.Mesh(geo,materials[0]);scene.add(currentMesh);
+document.getElementById('panel').textContent='Technique: Noise FBM';
+}
+window.__renderFrame=function(i,total){
+if(!renderer)return;
+var p=i/Math.max(1,total-1);
+var t=p*10;
+var techIdx=Math.floor(p*5);if(techIdx>4)techIdx=4;
+currentTechnique=techIdx;
+currentMesh.material=materials[techIdx];
+currentMesh.material.uniforms.uTime.value=t;
+renderer.render(scene,camera);
+};
+init();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fase5-shaders.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

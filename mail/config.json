@@ -1,0 +1,13 @@
+{
+  "imap_host": "imap.example.com",
+  "imap_port": 993,
+  "smtp_host": "smtp.example.com",
+  "smtp_port": 587,
+  "email": "agent@vscoder.local",
+  "display_name": "VSCODER Agent",
+  "imap_user": "",
+  "imap_password": "",
+  "smtp_user": "",
+  "smtp_password": "",
+  "enabled": false
+}

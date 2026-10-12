@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>worker probe</title></head><body>
+<canvas id="c" width="320" height="240" style="border:1px solid #444"></canvas>
+<pre id="out" style="color:#0f0;font:12px monospace"></pre>
+<script type="module">
+const out = document.getElementById('out');
+const log = (s)=>{ out.textContent += s+'\n'; console.log('[probe] '+s); };
+const threeUrl = new URL('vendor/three.module.js', document.baseURI).href;
+log('threeUrl=' + threeUrl);
+const src = `
+self.onmessage = async (e) => {
+  try {
+    const THREE = await import(e.data.threeUrl);
+    self.postMessage({type:'imported', rev: THREE.REVISION, hasGeo: !!THREE.BufferGeometry, hasRenderer: !!THREE.WebGLRenderer, hasSimplex: !!THREE.REVISION});
+    const canvas = e.data.canvas;
+    if (canvas) {
+      const r = new THREE.WebGLRenderer({canvas, antialias:true});
+      r.setSize(canvas.width, canvas.height, false);
+      const scene = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(50, canvas.width/canvas.height, 0.1, 100);
+      cam.position.z = 4;
+      scene.add(new THREE.Mesh(new THREE.TorusKnotGeometry(1,0.35,64,16), new THREE.MeshNormalMaterial()));
+      r.render(scene, cam);
+      const gl = r.getContext();
+      self.postMessage({type:'rendered', version: gl.getParameter(gl.VERSION), drawing: gl.drawingBufferWidth+'x'+gl.drawingBufferHeight});
+    }
+  } catch(err) {
+    self.postMessage({type:'error', msg: String((err && err.stack) || err)});
+  }
+};
+`;
+const blob = new Blob([src], {type:'application/javascript'});
+const url = URL.createObjectURL(blob);
+const w = new Worker(url, {type:'module'});
+const canvas = document.getElementById('c');
+let off;
+try { off = canvas.transferControlToOffscreen(); log('transferControlToOffscreen OK'); }
+catch(e){ log('transferControlToOffscreen FAILED: '+e); }
+w.onmessage = (e)=>{ log('MSG: '+JSON.stringify(e.data)); };
+w.onerror = (e)=>{ log('WORKER ERROR: '+e.message); };
+w.postMessage({threeUrl, canvas: off}, off ? [off] : []);
+setTimeout(()=>log('done-waiting'), 3000);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/test-worker.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body></html>

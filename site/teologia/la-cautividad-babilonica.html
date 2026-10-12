@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Cautividad Babilónica · teologia.ai</title>
+<meta name="description" content="La Cautividad Babilónica de la Iglesia (1520): Lutero contra el sistema sacramental romano. Edición LATAM, modo tú.">
+<style>
+:root{
+  --void:#050505; --gold:#D4AF37; --gold2:#f0d487; --emerald:#00ff9d;
+  --cyan:#00eaff; --violet:#8c72ff; --red:#ff4d5f;
+  --ink:#e8e6df; --muted:#6f6a5c; --line:rgba(212,175,55,.22);
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --display:"Orbitron",sans-serif;
+  --glyph:"Segoe UI Symbol","Noto Sans Symbols2","DejaVu Sans",var(--display);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void); color:var(--ink);
+  font-family:var(--mono); font-size:15px; line-height:1.75;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:100;
+  background:repeating-linear-gradient(0deg,rgba(212,175,55,.028) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:99;
+  background:radial-gradient(ellipse at 50% 0%,transparent 35%,rgba(0,0,0,.75) 100%);
+}
+
+.wrap{position:relative;z-index:2;max-width:780px;margin:0 auto;padding:72px 28px 120px}
+
+.boot{
+  font-size:11px;letter-spacing:.18em;color:var(--muted);
+  border-left:2px solid var(--gold);padding-left:14px;margin-bottom:40px;
+}
+.boot b{color:var(--gold);font-weight:400}
+.boot .ok{color:var(--emerald)}
+
+h1{
+  font-family:var(--display);font-weight:900;
+  font-size:clamp(28px,5.8vw,50px);line-height:1.06;
+  letter-spacing:-.01em;color:var(--gold);margin-bottom:18px;
+}
+h1 .sub{display:block;font-size:.42em;font-weight:400;letter-spacing:.28em;color:var(--muted);margin-top:14px}
+.byline{
+  font-size:12px;color:var(--muted);letter-spacing:.12em;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:12px 0;margin-bottom:34px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.byline em{color:var(--gold2);font-style:normal}
+
+/* ---- æqr badge row ---- */
+.badgerow{
+  display:flex;align-items:center;gap:26px;flex-wrap:wrap;
+  border:1px solid var(--line);background:rgba(212,175,55,.035);
+  padding:20px 22px;margin-bottom:52px;
+}
+.aqrbox{flex:none;display:flex;flex-direction:column;align-items:center;gap:9px}
+.aqr{width:152px;height:152px;color:var(--gold);display:block}
+.aqr rect{fill:currentColor}
+.aqr .frame{fill:none;stroke:currentColor;stroke-width:.8;opacity:.45}
+.aqrcap{font-size:9px;letter-spacing:.24em;color:var(--muted);text-align:center}
+.aqrcap b{color:var(--gold);font-weight:400}
+.dlcol{flex:1;min-width:210px;display:flex;flex-direction:column;gap:13px}
+.dl{
+  display:inline-block;font-family:var(--display);font-weight:700;font-size:13px;
+  letter-spacing:.14em;text-decoration:none;color:var(--void);
+  background:var(--gold);padding:14px 22px;text-align:center;
+  border:1px solid var(--gold);transition:background .15s,border-color .15s;
+}
+.dl:hover{background:var(--gold2);border-color:var(--gold2)}
+.hashline{font-size:10px;letter-spacing:.06em;color:var(--muted);line-height:1.95;word-break:break-all}
+.hashline b{color:var(--gold2);font-weight:400}
+
+.dedic{
+  background:rgba(212,175,55,.04);border:1px solid var(--line);
+  padding:22px 24px;margin-bottom:52px;font-size:14px;color:#cfc9ba;
+}
+.dedic b{color:var(--gold);font-weight:400}
+
+/* ---- sections ---- */
+.part{
+  margin-bottom:56px;
+  border-top:1px solid var(--line);
+  padding-top:36px;
+}
+.part-head{
+  display:flex;align-items:baseline;gap:18px;margin-bottom:28px;flex-wrap:wrap;
+}
+.part-num{
+  font-family:var(--display);font-weight:900;font-size:32px;
+  color:var(--gold);opacity:.85;line-height:1;flex:none;
+}
+.part-title{
+  font-family:var(--display);font-weight:700;font-size:19px;
+  letter-spacing:.05em;color:var(--gold2);
+}
+.part-sub{
+  font-size:11px;letter-spacing:.16em;color:var(--muted);margin-top:4px;
+}
+
+/* ---- Q&A blocks ---- */
+.qa{
+  margin-bottom:26px;
+  padding-left:20px;
+  border-left:1px solid rgba(212,175,55,.15);
+}
+.qa:last-child{margin-bottom:0}
+.q{
+  font-size:15px;color:var(--gold2);margin-bottom:8px;font-weight:400;
+}
+.q .qnum{
+  font-family:var(--display);font-weight:700;font-size:12px;
+  color:var(--gold);opacity:.7;margin-right:10px;letter-spacing:.08em;
+}
+.a{
+  font-size:14px;color:#d6d1c4;line-height:1.8;
+}
+.a b{color:var(--gold2);font-weight:400}
+.a i{color:var(--muted)}
+.a .scripture{
+  display:block;margin-top:8px;font-size:12px;color:var(--muted);
+  font-style:italic;padding-left:14px;border-left:1px solid rgba(212,175,55,.2);
+}
+
+/* ---- article labels ---- */
+.label{
+  font-family:var(--display);font-weight:700;font-size:13px;
+  letter-spacing:.1em;color:var(--gold);margin-bottom:6px;
+}
+.label small{
+  display:block;font-family:var(--mono);font-weight:300;font-size:10px;
+  letter-spacing:.14em;color:var(--muted);margin-top:3px;
+}
+
+/* ---- colophon ---- */
+.colophon{
+  margin-top:66px;padding-top:26px;border-top:1px solid var(--line);
+  font-size:11px;letter-spacing:.1em;color:var(--muted);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.colophon a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(212,175,55,.3)}
+.colophon a:hover{border-bottom-color:var(--gold)}
+.seal{margin-top:38px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.seal .glyph{font-family:var(--glyph);font-size:46px;color:var(--gold);line-height:1}
+.seal .txt{font-size:11px;letter-spacing:.14em;color:var(--muted);line-height:1.9}
+.seal .txt b{color:var(--gold);font-weight:400;display:block;letter-spacing:.2em}
+
+/* ---- print ---- */
+@media print{
+  @page{size:A4;margin:15mm 14mm}
+  body{background:#fff;color:#111;font-size:10pt;line-height:1.6}
+  body::before,body::after,canvas#mesh,.dlcol .hashline{display:none}
+  .wrap{max-width:none;padding:0}
+  .boot{border-left-color:#8a6d1f;color:#555;margin-bottom:14px;font-size:8pt}
+  .boot b{color:#8a6d1f}
+  h1{color:#8a6d1f;font-size:22pt;margin-bottom:8px}
+  h1 .sub{color:#666}
+  .byline{border-color:#ccc;color:#555;margin-bottom:12px;padding:8px 0}
+  .byline em{color:#5c4a14}
+  .badgerow{border-color:#ccc;background:none;padding:11px 12px;margin-bottom:14px;gap:16px;page-break-inside:avoid}
+  .aqr{width:100px;height:100px;color:#14110a}
+  .aqrcap{color:#555}
+  .aqrcap b{color:#5c4a14}
+  .dl{background:#f2ecd8;color:#3a2f10;border-color:#8a6d1f;font-size:9pt;padding:9px 14px}
+  .dedic{background:#faf7ee;border-color:#ddd;color:#333;margin-bottom:14px;padding:12px 14px;font-size:9pt}
+  .dedic b{color:#8a6d1f}
+  .part{border-color:#ddd;padding-top:18px;margin-bottom:22px;page-break-inside:avoid}
+  .part-num{color:#8a6d1f;font-size:22pt}
+  .part-title{color:#5c4a14;font-size:13pt}
+  .part-sub{color:#777}
+  .qa{padding-left:14px;border-left-color:#ddd;margin-bottom:14px;page-break-inside:avoid}
+  .q{color:#5c4a14;font-size:10pt}
+  .q .qnum{color:#8a6d1f}
+  .a{color:#222;font-size:9.5pt}
+  .a b{color:#5c4a14}
+  .a i{color:#777}
+  .a .scripture{color:#777;font-size:8.5pt}
+  .label{color:#8a6d1f;font-size:10pt}
+  .label small{color:#777}
+  .colophon{border-color:#ddd;color:#666;margin-top:18px;padding-top:10pt;font-size:8pt}
+  .colophon a{color:#8a6d1f;border-bottom:none}
+  .seal{margin-top:12px}
+  .seal .glyph{color:#8a6d1f;font-size:26pt}
+  .seal .txt{color:#666}
+  .seal .txt b{color:#8a6d1f}
+}
+@media(max-width:520px){
+  .wrap{padding:48px 20px 80px}
+  .part-num{font-size:24px}
+  .part-title{font-size:16px}
+  .badgerow{gap:18px}
+  .aqr{width:126px;height:126px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="boot">
+    <b>teologia.ai</b> · cautividad babilónica 1520 · edición LATAM<br>
+    <span class="ok">▸</span> un archivo · sin servidor · sin llave · <span id="probe">sondeando…</span>
+  </div>
+
+  <h1>La Cautividad Babilónica de la Iglesia
+    <span class="sub">LA TEOLOGÍA SACRAMENTAL</span>
+  </h1>
+
+  <div class="byline">
+    <span>por <em>Martín Lutero</em></span>
+    <span>Wittenberg · <em>1520</em></span>
+    <span>edición <em>LATAM</em> · modo tú</span>
+  </div>
+
+  <!--badgerow:start-->
+  <div class="badgerow">
+    <div class="aqrbox">
+      <!--AEQR_BADGE-->
+      <div class="aqrcap"><b>æqr</b> · escanea para verificar</div>
+    </div>
+    <div class="dlcol">
+      <a class="dl" href="la-cautividad-babilonica.pdf" download="la-cautividad-babilonica.pdf">&#10515;&nbsp; DESCARGAR PDF</a>
+      <div class="hashline">
+        <b>sha256</b> · <span id="hash">__AEQR_HASH__</span><br>
+        <b>issuer</b> · ☺://cc &nbsp;·&nbsp; <b>v</b> · 1
+      </div>
+    </div>
+  </div>
+  <!--badgerow:end-->
+
+  <div class="dedic">
+    <b>Nota del impresor.</b> La Cautividad Babilónica de la Iglesia (1520) es una
+    de las tres grandes reformas de Lutero. En ella, Lutero examina los siete
+    sacramentos de la Iglesia romana y concluye que solo dos —el bautismo y la
+    eucaristía— son sacramentos verdaderos, porque solo ellos reúnen institución
+    divina, signo visible y promesa de gracia. Los otros cinco no son sacramentos
+    en el sentido estricto. Lutero denuncia tres «cautividades»: la retención del
+    cáliz laico, la transustanciación y el sacrificio de la misa.
+    <br><br>
+    La obra se publicó en septiembre de 1520, en latín (De captivitate Babylonica
+    ecclesiae), y profundizó la ruptura con Roma al atacar el sistema sacramental
+    que sostenía el poder papal. Esta edición neutraliza regionalismos (modo «tú»,
+    LATAM amplio) y mantiene el resto intacto. El æqr verifica el texto exacto de
+    esta edición.
+  </div>
+
+  <!--SACRAMENTOS-->
+  <section class="part" id="sacramentos">
+    <div class="part-head">
+      <div class="part-num">I</div>
+      <div>
+        <div class="part-title">Los Sacramentos</div>
+        <div class="part-sub">SIETE EXAMINADOS, DOS VERDADEROS</div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">1</span>¿Es el bautismo un sacramento verdadero?</div>
+      <div class="a">Sí. El bautismo es un sacramento verdadero porque reúne las tres
+      cosas que Lutero exige: <b>institución divina</b> (Cristo lo mandó: «id, haced
+      discípulos, bautizándolos»), <b>signo visible</b> (el agua) y <b>promesa de
+      gracia</b> (el perdón de los pecados y la salvación). Por eso Lutero lo conserva
+      como uno de los dos sacramentos que la Iglesia no pudo destruir del todo, aunque
+      la cautividad lo haya envuelto en supersticiones
+      <span class="scripture">Mt. 28:19; Ro. 6:3-4; Ef. 1:7</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">2</span>¿Es la eucaristía un sacramento verdadero?</div>
+      <div class="a">Sí, pero es <b>la cautividad del pan y el vino</b>. La eucaristía
+      tiene institución divina (la última cena), signo visible (pan y vino) y promesa
+      de gracia (el cuerpo y la sangre de Cristo «derramados por vosotros para el
+      perdón de los pecados»). Lutero defiende la presencia real del cuerpo y la sangre
+      de Cristo en el sacramento, pero rechaza que la Iglesia la haya convertido en un
+      sacrificio y en un objeto de adoración aparte de la Palabra
+      <span class="scripture">Mt. 26:26-28; 1 Co. 11:23-26</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">3</span>¿Es la penitencia un sacramento?</div>
+      <div class="a">En sentido estricto, <b>no</b> es un sacramento como el bautismo y
+      la eucaristía. La penitencia tiene la promesa de gracia (el perdón), pero le falta
+      un signo visible instituido por Dios del mismo modo. Lutero la trata como un
+      <b>tercer sacramento</b> en sentido derivado: es la vuelta al bautismo, la
+      absolución que la Iglesia administra por las llaves. La cautividad convirtió la
+      penitencia en un tribunal de conciencia y en una fuente de ingresos (las
+      indulgencias) <span class="scripture">Mt. 16:19; Jn. 20:23</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">4</span>¿Es la confirmación un sacramento?</div>
+      <div class="a"><b>No.</b> La confirmación no tiene institución divina como sacramento
+      ni un signo visible unido a una promesa de gracia. Es un <b>rito eclesiástico</b>
+      de origen humano, útil como exhortación y oración, pero no un sacramento. Lutero
+      la coloca entre las «cosas libres» que la Iglesia puede ordenar, no entre los
+      sacramentos <span class="scripture">Hch. 8:14-17</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">5</span>¿Es el matrimonio un sacramento?</div>
+      <div class="a"><b>No</b> en el sentido estricto. El matrimonio es anterior al pecado
+      y a la Iglesia: existió en el paraíso y existe entre todas las naciones. Cristo no
+      lo instituyó como sacramento ni le dio un signo visible de gracia. Es un <b>estado
+      santo y civil</b>, bendecido por Dios, pero no un sacramento. La cautividad lo
+      sometió al control eclesiástico y a la doctrina de los votos
+      <span class="scripture">Gn. 2:24; Mt. 19:4-6</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">6</span>¿Es el orden sacerdotal un sacramento?</div>
+      <div class="a"><b>No.</b> El orden no es un sacramento sino un <b>ministerio</b>
+      (un oficio) para predicar el evangelio y administrar los sacramentos. Lutero insiste
+      en que todos los cristianos son sacerdotes por el bautismo (el sacerdocio universal)
+      y que el ministerio es una función delegada, no un carácter indeleble. La cautividad
+      convirtió el ministerio en un poder jerárquico sobre la conciencia
+      <span class="scripture">1 P. 2:9; Ap. 1:6</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">7</span>¿Es la extremaunción un sacramento?</div>
+      <div class="a"><b>No.</b> La extremaunción no tiene institución divina como sacramento.
+      El pasaje de Santiago 5:14-15 habla de oración por los enfermos y unción con aceite,
+      pero no la instituye como sacramento con signo y promesa. Lutero la reduce a un
+      <b>rito de consuelo</b> y oración, no a un sacramento. La cautividad la convirtió
+      en el «último sacramento» y en un negocio de la Iglesia
+      <span class="scripture">Stg. 5:14-15</span>.</div>
+    </div>
+  </section>
+
+  <!--CAUTIVIDAD-->
+  <section class="part" id="cautividad">
+    <div class="part-head">
+      <div class="part-num">II</div>
+      <div>
+        <div class="part-title">La Cautividad</div>
+        <div class="part-sub">TRES CAUTIVERIOS DE LA IGLESIA</div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">1</span>¿Qué es la cautividad de la comunión?</div>
+      <div class="a">Es la primera cautividad: la Iglesia <b>retuvo el cáliz</b> laico y
+      dio a los laicos solo el pan, violando el mandato de Cristo: «<b>bebed de él
+      todos</b>» (Mt. 26:27). Lutero argumenta que la comunión en las dos especies es de
+      institución divina y que la Iglesia no tiene autoridad para quitarla. La cautividad
+      del cáliz simboliza la tiranía eclesiástica sobre los fieles
+      <span class="scripture">Mt. 26:27; 1 Co. 11:25</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">2</span>¿Qué es la cautividad de la transustanciación?</div>
+      <div class="a">Es la segunda cautividad: la Iglesia enseñó que la <b>sustancia</b>
+      del pan y el vino se convierte en el cuerpo y la sangre de Cristo, quedando solo
+      las <b>apariencias</b> (transustanciación). Lutero rechaza esta explicación como una
+      <b>invención filosófica</b> (aristotélica) que la Escritura no exige. Defiende la
+      presencia real del cuerpo y la sangre de Cristo «en, con y bajo» las especies, sin
+      necesidad de explicar el modo con categorías filosóficas
+      <span class="scripture">Mt. 26:26; 1 Co. 11:24</span>.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">3</span>¿Qué es la cautividad del sacrificio de la misa?</div>
+      <div class="a">Es la tercera y principal cautividad: la Iglesia enseñó que la misa es
+      un <b>sacrificio</b> propiciatorio que el sacerdote ofrece a Dios por los vivos y
+      los muertos. Lutero rechaza esto: la misa no es un sacrificio que el hombre ofrece,
+      sino un <b>testamento y don</b> que Dios ofrece y el hombre recibe por la fe. La misa
+      es acción de gracias y memorial, no un nuevo sacrificio. Esta cautividad es la raíz
+      de todas las demás <span class="scripture">Heb. 9:26-28; 1 Co. 11:24-25</span>.</div>
+    </div>
+  </section>
+
+  <!--HISTORIA-->
+  <section class="part" id="historia">
+    <div class="part-head">
+      <div class="part-num">III</div>
+      <div>
+        <div class="part-title">Historia</div>
+        <div class="part-sub">1520 · LA RUPTURA · WORMS 1521</div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">1</span>¿Cuándo y cómo se publicó la Cautividad Babilónica?</div>
+      <div class="a">La Cautividad Babilónica de la Iglesia se publicó en <b>1520</b>, en
+      septiembre, en Wittenberg. Es una de las tres grandes reformas de ese año, junto
+      con <b>A la nobleza cristiana de la nación alemana</b> y <b>La libertad del
+      cristiano</b>. Escrita en latín (De captivitate Babylonica ecclesiae), se dirigió a
+      los teólogos y a la corte papal, y profundizó la ruptura con Roma al atacar el
+      sistema sacramental que sostenía el poder papal.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">2</span>¿Cómo profundizó la ruptura con Roma?</div>
+      <div class="a">La Cautividad atacó el <b>sistema sacramental</b> que era el
+      fundamento del poder eclesiástico: las indulgencias, el sacrificio de la misa, el
+      purgatorio y la jerarquía. Al reducir los sacramentos a dos y al negar el sacrificio
+      de la misa, Lutero socavó la autoridad del sacerdocio y del papa. La obra fue
+      condenada por la bula <b>Exsurge Domine</b> (1521) y Lutero fue excomulgado.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">3</span>¿Qué ocurrió en la Dieta de Worms?</div>
+      <div class="a">En <b>1521</b>, Lutero fue convocado ante la Dieta de Worms, presidida
+      por el emperador Carlos V. Se le pidió que se retractara de sus escritos. Lutero pidió
+      un día para reflexionar y al día siguiente declaró que no podía retractarse a menos
+      que se le convenciera con la Escritura o la razón: «<b>Estoy aquí, no puedo hacer
+      otra cosa; que Dios me ayude. Amén</b>». Fue declarado proscrito y hereje.</div>
+    </div>
+  </section>
+
+  <!--LEGADO-->
+  <section class="part" id="legado">
+    <div class="part-head">
+      <div class="part-num">IV</div>
+      <div>
+        <div class="part-title">Legado</div>
+        <div class="part-sub">SACRAMENTOS PURIFICADOS, PALABRA LIBERADA</div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">1</span>¿Cuál es el legado sacramental de la Cautividad?</div>
+      <div class="a">La reducción de los sacramentos a <b>dos</b> (bautismo y eucaristía)
+      marcó la teología sacramental protestante. Lutero no eliminó los sacramentos, sino
+      que los <b>purificó</b> de las adiciones humanas y los devolvió a la Palabra y a la
+      fe. La eucaristía dejó de ser un sacrificio para ser un don recibido por la fe, y el
+      bautismo dejó de ser un rito mágico para ser una promesa de Dios.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q"><span class="qnum">2</span>¿Cuál es el legado teológico de la Cautividad?</div>
+      <div class="a">La Cautividad sentó las bases de la <b>libertad cristiana</b> y del
+      <b>sacerdocio universal</b>: si los sacramentos son dones de Dios recibidos por la
+      fe, no son instrumentos de poder eclesiástico. La Palabra de Dios, no la jerarquía,
+      es la autoridad suprema. Este legado configuró el culto protestante, la predicación
+      y la identidad de las iglesias reformadas.</div>
+    </div>
+  </section>
+
+  <div class="dedic" style="margin-top:60px">
+    <b>La Cautividad en síntesis.</b> Tres cautividades, una sola libertad. La
+    Cautividad Babilónica no es solo una polémica contra Roma, sino una <b>teología de
+    la gracia</b> que devuelve los sacramentos a la Palabra y a la fe. Lutero no destruyó
+    los sacramentos: los liberó de la tiranía eclesiástica y los devolvió a su origen
+    divino. Junto con A la nobleza cristiana y La libertad del cristiano, configura el
+    corpus reformador de 1520.
+  </div>
+
+  <div class="seal">
+    <div class="glyph">&#x263A;</div>
+    <div class="txt">
+      <b>teologia.ai</b>
+      sola scriptura · sola fide · sola gratia<br>
+      un archivo · se copia · se pasa · no se pide permiso
+    </div>
+  </div>
+
+  <div class="colophon">
+    <span>æ:// — la plataforma es la superficie distribuible</span>
+    <span><a href="index.html">← Volver a teologia.ai</a></span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var p = document.getElementById('probe');
+  if (navigator.gpu) {
+    p.textContent = 'webgpu ✓';
+    p.style.color = '#00ff9d';
+  } else {
+    p.textContent = 'webgpu ✗';
+    p.style.color = '#ff4d5f';
+  }
+})();
+</script>
+
+</body>
+</html>

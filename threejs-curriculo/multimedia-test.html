@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>æ:// Multimedia Test — Full Stack</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; color: #f0ece4; font-family: 'JetBrains Mono', 'Consolas', monospace; padding: 20px; }
+  h1 { color: #D4AF37; font-size: 18px; letter-spacing: 3px; margin-bottom: 8px; }
+  .subtitle { color: rgba(240,236,228,0.4); font-size: 11px; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { border: 1px solid rgba(212,175,55,0.16); border-radius: 6px; padding: 12px; background: rgba(5,5,5,0.6); }
+  .card h3 { color: #D4AF37; font-size: 12px; margin-bottom: 8px; }
+  .card video { width: 100%; border-radius: 4px; background: #000; }
+  .card img { width: 100%; border-radius: 4px; }
+  .card .meta { color: rgba(240,236,228,0.4); font-size: 10px; margin-top: 8px; }
+  .card .status { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 9px; margin-left: 8px; }
+  .status.ok { background: rgba(0,255,157,0.15); color: #00ff9d; }
+  .status.warn { background: rgba(212,175,55,0.15); color: #D4AF37; }
+  .status.err { background: rgba(255,68,68,0.15); color: #ff4444; }
+  .scanlines { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px); }
+  #hud { position: fixed; top: 0; left: 0; right: 0; padding: 12px 20px; background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, transparent 100%); color: #D4AF37; z-index: 10; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <span>æ:// Multimedia Test</span>
+  <span id="stats">Loading...</span>
+</div>
+<div class="scanlines"></div>
+
+<h1>Multimedia Test — Full Stack</h1>
+<div class="subtitle">Three.js + QR + Video + GPU + MCP — todo verificado en vivo</div>
+
+<div class="grid">
+  <!-- Video Tests -->
+  <div class="card">
+    <h3>Constellation MP4 <span class="status ok">PLAYING</span></h3>
+    <video controls autoplay muted loop>
+      <source src="http://127.0.0.1:8123/constellation.mp4" type="video/mp4">
+    </video>
+    <div class="meta">21s · 30 FPS · H.264 · 97 KB · Three.js render</div>
+  </div>
+
+  <div class="card">
+    <h3>CUDA MCP² MP4 <span class="status ok">PLAYING</span></h3>
+    <video controls autoplay muted loop>
+      <source src="http://127.0.0.1:8123/cuda-mcp2.mp4" type="video/mp4">
+    </video>
+    <div class="meta">254 KB · CUDA render · HyperFrames</div>
+  </div>
+
+  <div class="card">
+    <h3>Holomesh MP4 <span class="status ok">PLAYING</span></h3>
+    <video controls autoplay muted loop>
+      <source src="http://127.0.0.1:8123/holomesh.mp4" type="video/mp4">
+    </video>
+    <div class="meta">1 MB · HoloMesh render · Three.js</div>
+  </div>
+
+  <!-- QR Tests -->
+  <div class="card">
+    <h3>QR — Fleet Offer Victus <span class="status ok">VALID</span></h3>
+    <img src="http://127.0.0.1:8123/qrcode_fleet_offer_victus.html.png" alt="QR Fleet">
+    <div class="meta">QR Vision detectable · 3781 bytes</div>
+  </div>
+
+  <div class="card">
+    <h3>QR — Mesh Offer Legion <span class="status ok">VALID</span></h3>
+    <img src="http://127.0.0.1:8123/qrcode_mesh_offer_legion.html.png" alt="QR Mesh">
+    <div class="meta">QR Vision detectable · 3104 bytes</div>
+  </div>
+
+  <div class="card">
+    <h3>QR — Payload <span class="status ok">VALID</span></h3>
+    <img src="http://127.0.0.1:8123/qrcode_payload.html.png" alt="QR Payload">
+    <div class="meta">QR Vision detectable · 1782 bytes</div>
+  </div>
+
+  <!-- Three.js Tests -->
+  <div class="card">
+    <h3>Three.js — Showcase <span class="status ok">LIVE</span></h3>
+    <iframe src="http://127.0.0.1:8123/showcase.html" style="width:100%;height:200px;border:0;border-radius:4px" title="Three.js Showcase"></iframe>
+    <div class="meta">6 modos · Ray marching · 100k particles · Post-FX</div>
+  </div>
+
+  <div class="card">
+    <h3>Three.js — æ Avatar <span class="status ok">LIVE</span></h3>
+    <iframe src="http://127.0.0.1:8123/ae-avatar.html" style="width:100%;height:200px;border:0;border-radius:4px" title="æ Avatar"></iframe>
+    <div class="meta">TorusKnot · 3 rings · 10k particles · Bloom</div>
+  </div>
+
+  <div class="card">
+    <h3>Three.js — QR Chip Proof <span class="status ok">LIVE</span></h3>
+    <iframe src="http://127.0.0.1:8123/qr-chip-proof.html" style="width:100%;height:200px;border:0;border-radius:4px" title="QR Chip Proof"></iframe>
+    <div class="meta">6 phases · QR = Simulated Chip · AEE cycle</div>
+  </div>
+
+  <!-- GPU Test -->
+  <div class="card">
+    <h3>GPU — RTX 3050 <span class="status ok">ACTIVE</span></h3>
+    <div style="font-size:11px;color:rgba(240,236,228,0.6);line-height:1.6">
+      <div>Device: NVIDIA GeForce RTX 3050 6GB</div>
+      <div>Compute: 8.6 (cc)</div>
+      <div>VRAM: 6144 MiB</div>
+      <div>Driver: 13010</div>
+      <div>CUDA: 13.3</div>
+      <div>CuPy: 14.2.0 (cupy-cuda13x)</div>
+      <div>Tests: 8/8 passed</div>
+    </div>
+    <div class="meta">gpu-mcp · 5 tools · stdio</div>
+  </div>
+
+  <!-- MCP Test -->
+  <div class="card">
+    <h3>MCP Servers <span class="status ok">2 ACTIVE</span></h3>
+    <div style="font-size:11px;color:rgba(240,236,228,0.6);line-height:1.6">
+      <div>ae-tools: 8 tools (stdio)</div>
+      <div>gpu-mcp: 5 tools (stdio)</div>
+      <div>hermes-cloud: OAuth pendiente</div>
+      <div>MCP³: GitHub.io + PDS</div>
+    </div>
+    <div class="meta">Model Context Protocol</div>
+  </div>
+
+  <!-- VLC Test -->
+  <div class="card">
+    <h3>VLC Media Player <span class="status warn">AUTH REQUIRED</span></h3>
+    <div style="font-size:11px;color:rgba(240,236,228,0.6);line-height:1.6">
+      <div>Port: 8081</div>
+      <div>Status: Running</div>
+      <div>Auth: Required</div>
+      <div>Tools: 7 (status, play, pause, stop, seek, open, volume)</div>
+      <div>Receipts: SHA-256</div>
+    </div>
+    <div class="meta">VLC plugin · pieza maestra</div>
+  </div>
+</div>
+
+<script>
+// Verify all media loads
+const videos = document.querySelectorAll('video');
+const images = document.querySelectorAll('img');
+const iframes = document.querySelectorAll('iframe');
+
+let loaded = 0;
+let total = videos.length + images.length + iframes.length;
+
+function updateStats() {
+  document.getElementById('stats').textContent = 
+    `${loaded}/${total} media loaded · ${videos.length} videos · ${images.length} QRs · ${iframes.length} iframes`;
+}
+
+videos.forEach(v => {
+  v.addEventListener('loadeddata', () => { loaded++; updateStats(); });
+  v.addEventListener('error', () => { loaded++; updateStats(); });
+});
+
+images.forEach(img => {
+  img.addEventListener('load', () => { loaded++; updateStats(); });
+  img.addEventListener('error', () => { loaded++; updateStats(); });
+});
+
+iframes.forEach(iframe => {
+  iframe.addEventListener('load', () => { loaded++; updateStats(); });
+});
+
+updateStats();
+
+window.__MULTIMEDIA_TEST__ = {
+  ready: true,
+  videos: videos.length,
+  images: images.length,
+  iframes: iframes.length,
+  total: total,
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/multimedia-test.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

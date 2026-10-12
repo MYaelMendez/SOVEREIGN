@@ -1,0 +1,159 @@
+{
+  "schema": "cri://release/v1",
+  "index": "Consumer Redline Index",
+  "version": "CRI_V1",
+  "as_of": "2026-10-04",
+  "cri_score": 50.0,
+  "coverage": 100.0,
+  "freshness": 100.0,
+  "status": "VALID",
+  "components": {
+    "ESSENTIALS": {
+      "score": 50.0,
+      "indicators": {
+        "cpi.all_items": 50.0
+      },
+      "weight": 0.14
+    },
+    "DEBT": {
+      "score": 50.0,
+      "indicators": {
+        "debt_service_ratio": 50.0
+      },
+      "weight": 0.14
+    },
+    "CREDIT": {
+      "score": 50.0,
+      "indicators": {
+        "credit_utilization": 50.0
+      },
+      "weight": 0.14
+    },
+    "SAVINGS": {
+      "score": 50.0,
+      "indicators": {
+        "savings.personal_rate": 50.0
+      },
+      "weight": 0.14
+    },
+    "INCOME": {
+      "score": 50.0,
+      "indicators": {
+        "real_disposable_income": 50.0
+      },
+      "weight": 0.14
+    },
+    "LABOR": {
+      "score": 50.0,
+      "indicators": {
+        "unemployment_rate": 50.0
+      },
+      "weight": 0.14
+    },
+    "LIQUIDITY": {
+      "score": 50.0,
+      "indicators": {
+        "liquidty_headroom": 50.0
+      },
+      "weight": 0.14
+    }
+  },
+  "observations": [
+    {
+      "indicator_id": "cpi.all_items",
+      "value": 3.5,
+      "observation_date": "2026-10-01",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "BLS",
+      "payload_hash": "8ef419ab1507ff0c",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "unemployment_rate",
+      "value": 4.3,
+      "observation_date": "2026-10-01",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "BLS",
+      "payload_hash": "59af234bfed350f3",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "savings.personal_rate",
+      "value": 3.2,
+      "observation_date": "2026-09-30",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "BEA",
+      "payload_hash": "bdc10e2d6424ee63",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "debt_service_ratio",
+      "value": 10.2,
+      "observation_date": "2026-09-30",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "FRED",
+      "payload_hash": "9ed0ba5668a434db",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "credit_utilization",
+      "value": 80.0,
+      "observation_date": "2026-09-01",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "FRED",
+      "payload_hash": "6279124eb268d5be",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "real_disposable_income",
+      "value": 1.8,
+      "observation_date": "2026-09-30",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "BEA",
+      "payload_hash": "a74b15675e0a4077",
+      "producer_hash": ""
+    },
+    {
+      "indicator_id": "liquidty_headroom",
+      "value": 11.0,
+      "observation_date": "2026-09-01",
+      "release_date": "",
+      "retrieved_at": "",
+      "unit": "",
+      "frequency": "",
+      "vintage": 1,
+      "source_reference": "FRED",
+      "payload_hash": "2c7d06205abac7db",
+      "producer_hash": ""
+    }
+  ],
+  "formula_version": "cri-formula-v1",
+  "weights_version": "cri-weights-v1",
+  "calculation_hash": "b21fa917f5e3b7ed",
+  "previous_release_hash": "f260d6046a6e7a0d",
+  "release_hash": "ffd9a6afc26ad0d7"
+}

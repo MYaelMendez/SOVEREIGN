@@ -1,0 +1,9 @@
+{
+  "title": "æ:// fase5-shaders — Intermediate Shaders",
+  "text": "Semana 5 · Noise FBM · UV Distortion · SDF · Phong+Fresnel · Normal Mapping",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase5-shaders.html"
+}

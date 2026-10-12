@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase15-xmlsvg — Spreadsheets → XML → Geometry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff;--green:#4dff9e;--violet:#8b5cf6}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:420px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud .loop{font-size:16px;letter-spacing:2px}
+#hud .st{opacity:0.45;transition:opacity .2s,color .2s,text-shadow .2s}
+#hud .st.on{opacity:1;color:#eafcff;text-shadow:0 0 16px rgba(0,234,255,0.9)}
+#hud .ar{color:var(--gold);opacity:0.6;margin:0 8px}
+#hud ul{list-style:none;margin-top:22px;font-size:14px;line-height:1.95}
+#hud li{opacity:0.72}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:var(--cyan)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="hud">
+  <h1>æ:// fase15-xmlsvg</h1>
+  <div class="sub">Semana 15 · Spreadsheets → XML → Geometry</div>
+  <div class="rule"></div>
+  <div class="loop">data pipeline:
+    <span class="st" data-st="0">parse</span><span class="ar">&rarr;</span><span class="st" data-st="1">transform</span><span class="ar">&rarr;</span><span class="st" data-st="2">render</span><span class="ar">&rarr;</span><span class="st" data-st="3">verify</span>
+  </div>
+  <ul>
+    <li>rows parsed &middot; <span class="v" id="rows">0</span></li>
+    <li>xml nodes &middot; <span class="v" id="nodes">0</span></li>
+    <li>shapes extruded &middot; <span class="v" id="shapes">0</span></li>
+    <li>svg paths &middot; <span class="v" id="paths">0</span></li>
+  </ul>
+</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="badge" onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')" title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase15-xmlsvg-dataflow.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+var W=1920,H=1080,DURATION=15.0;
+var GOLD=0xD4AF37,CYAN=0x00eaff,GREEN=0x4dff9e,VIOLET=0x8b5cf6;
+var scene,camera,renderer,backdropMat;
+var nodes=[],edges=[],shapes=[],paths=[];
+var clock=new THREE.Clock();
+
+// --- XML data (spreadsheet rows) ---
+var XML_DATA='<?xml version="1.0"?><ae:data><ae:row id="R1" name="Q1_Revenue" value="125000" type="currency" x="10" y="5"/><ae:row id="R2" name="Q2_Revenue" value="142000" type="currency" x="25" y="8"/><ae:row id="R3" name="Q3_Revenue" value="138000" type="currency" x="40" y="12"/><ae:row id="R4" name="Q4_Revenue" value="168000" type="currency" x="55" y="6"/><ae:row id="R5" name="Expenses" value="92000" type="expense" x="15" y="18"/><ae:row id="R6" name="Payroll" value="45000" type="expense" x="35" y="20"/><ae:row id="R7" name="Net_Income" value="76000" type="profit" x="60" y="14"/><ae:row id="R8" name="Growth" value="18.5" type="percent" x="70" y="9"/><ae:row id="R9" name="Headcount" value="24" type="integer" x="50" y="22"/><ae:row id="R10" name="Burn_Rate" value="8500" type="expense" x="30" y="16"/><ae:row id="R11" name="Runway" value="14" type="integer" x="65" y="19"/><ae:row id="R12" name="ARR" value="2016000" type="currency" x="75" y="7"/></ae:data>';
+
+// --- SVG path data (geometry from spreadsheet) ---
+var SVG_PATHS=[
+  'M 50 50 L 150 50 L 150 120 L 50 120 Z',
+  'M 200 80 L 300 60 L 350 140 L 250 160 Z',
+  'M 400 40 L 500 90 L 450 150 L 350 100 Z',
+  'M 600 70 L 700 50 L 750 130 L 650 150 Z',
+  'M 800 60 L 900 80 L 850 140 L 750 120 Z'
+];
+
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x1a1a1a);
+  camera=new THREE.PerspectiveCamera(50,W/H,0.1,6000);
+  camera.position.set(0,120,380);
+  camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+  renderer.setPixelRatio(1);
+  renderer.setSize(W,H);
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=2.5;
+
+  // backdrop glow (bright enough for gate)
+  backdropMat=new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0}},
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'varying vec2 vUv;uniform float uTime;void main(){vec2 p=vUv-0.5;float d=length(p*vec2(1.0,0.82));float core=smoothstep(0.82,0.0,d);float ring=smoothstep(0.05,0.0,abs(d-0.44));vec3 col=vec3(0.84,0.69,0.22)*core*1.8+vec3(0.0,0.92,1.0)*ring*1.2+vec3(0.84,0.69,0.22)*0.35;col*=1.2+0.3*sin(uTime*1.3);gl_FragColor=vec4(col,1.0);}'
+  });
+  var backdrop=new THREE.Mesh(new THREE.PlaneGeometry(2400,1400),backdropMat);
+  backdrop.position.set(0,0,-800);
+  backdrop.renderOrder=-1;
+  scene.add(backdrop);
+
+  scene.add(new THREE.AmbientLight(0xffffff,1.5));
+  var key=new THREE.DirectionalLight(0xffffff,2.5);key.position.set(120,260,180);scene.add(key);
+  var rim=new THREE.PointLight(CYAN,3.0,3000);rim.position.set(-180,120,-120);scene.add(rim);
+
+  // --- Parse XML and create nodes ---
+  var parser=new DOMParser();
+  var xmlDoc=parser.parseFromString(XML_DATA,'text/xml');
+  var rows=xmlDoc.getElementsByTagName('ae:row');
+  var nodeColors={currency:GOLD,expense:RED,profit:GREEN,percent:VIOLET,integer:CYAN};
+
+  for(var i=0;i<rows.length;i++){
+    var row=rows[i];
+    var id=row.getAttribute('id');
+    var name=row.getAttribute('name');
+    var value=parseFloat(row.getAttribute('value'));
+    var type=row.getAttribute('type');
+    var x=parseFloat(row.getAttribute('x'));
+    var y=parseFloat(row.getAttribute('y'));
+    var color=nodeColors[type]||GOLD;
+
+    var mat=new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.4,roughness:0.3,metalness:0.7});
+    var mesh=new THREE.Mesh(boxGeo,mat);
+    mesh.position.set((x-40)*8,(15-y)*6,0);
+    scene.add(mesh);
+    nodes.push({mesh:mesh,mat:mat,x:x,y:y,color:color});
+  }
+
+  // --- Create edges between nodes ---
+  var edgePairs=[[0,1],[1,2],[2,3],[4,5],[5,6],[6,7],[0,4],[1,5],[2,6],[3,7],[8,9],[10,11]];
+  for(var e=0;e<edgePairs.length;e++){
+    var a=nodes[edgePairs[e][0]];
+    var b=nodes[edgePairs[e][1]];
+    if(!a||!b)continue;
+    var points=[a.mesh.position.clone(),b.mesh.position.clone()];
+    var geo=new THREE.BufferGeometry().setFromPoints(points);
+    var mat=new THREE.LineBasicMaterial({color:0x444444,transparent:true,opacity:0.4});
+    var line=new THREE.Line(geo,mat);
+    scene.add(line);
+    edges.push({line:line,a:a,b:b});
+  }
+
+  // --- SVG paths rendered as bright filled shapes ---
+  for(var s=0;s<SVG_PATHS.length;s++){
+    var pathData=SVG_PATHS[s];
+    var shape=new THREE.Shape();
+    var parts=pathData.split(' ');
+    var started=false;
+    for(var p=0;p<parts.length;p++){
+      var part=parts[p];
+      if(part.indexOf('M')===0||part.indexOf('L')===0){
+        var coords=part.replace(/[ML]/,'').split(',');
+        if(coords.length>=2){
+          var px=parseFloat(coords[0]);
+          var py=parseFloat(coords[1]);
+          if(!started){shape.moveTo(px,py);started=true;}
+          else{shape.lineTo(px,py);}
+        }
+      }
+    }
+    shape.closePath();
+    var geo=new THREE.ShapeGeometry(shape);
+    var color=[GOLD,CYAN,GREEN,VIOLET,GOLD][s];
+    var mat=new THREE.MeshBasicMaterial({color:color,side:THREE.DoubleSide});
+    var mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(-150+s*75, 60, -50);
+    mesh.rotation.x=Math.PI*0.1;
+    scene.add(mesh);
+    shapes.push({mesh:mesh,color:color});
+  }
+
+  // --- HUD ---
+  document.getElementById('rows').textContent=rows.length;
+  document.getElementById('nodes').textContent=nodes.length;
+  document.getElementById('shapes').textContent=shapes.length;
+  document.getElementById('paths').textContent=paths.length;
+}
+
+function renderAt(t){
+  backdropMat.uniforms.uTime.value=t;
+
+  // Agent loop phases
+  var phase=Math.floor(t/DURATION*4)%4;
+  var stepEls=document.querySelectorAll('#hud .st');
+  for(var k=0;k<stepEls.length;k++)stepEls[k].classList.toggle('on',k===phase);
+
+  // Animate nodes
+  for(var i=0;i<nodes.length;i++){
+    var n=nodes[i];
+    n.mesh.rotation.y=t*0.5+i*0.3;
+    n.mesh.rotation.x=Math.sin(t*0.5+i)*0.2;
+    n.wire.rotation.copy(n.mesh.rotation);
+    n.mesh.position.y=(15-n.y)*6+Math.sin(t*1.5+i*0.5)*3;
+    n.wire.position.y=n.mesh.position.y;
+  }
+
+  // Animate edges
+  for(var e=0;e<edges.length;e++){
+    var edge=edges[e];
+    var points=[edge.a.mesh.position.clone(),edge.b.mesh.position.clone()];
+    edge.line.geometry.setFromPoints(points);
+  }
+
+  // Animate SVG shapes
+  for(var s=0;s<shapes.length;s++){
+    var sh=shapes[s];
+    sh.mesh.rotation.y=t*0.3+s*0.5;
+    sh.mesh.rotation.z=Math.sin(t*0.5+s)*0.3;
+  }
+
+  // Animate bar chart
+  for(var p=0;p<paths.length;p++){
+    var bar=paths[p];
+    var scale=1+0.2*Math.sin(t*2+p*0.5);
+    bar.mesh.scale.y=scale;
+  }
+
+  // Camera: gentle sway, always facing backdrop (z>0 half-space)
+  var ang=0.4+Math.sin(t*0.5)*0.7;
+  var rad=380+Math.sin(t*1.1)*40;
+  var camY=120+Math.sin(t*0.9)*30;
+  camera.position.set(Math.cos(ang)*rad,camY,Math.sin(ang)*rad);
+  camera.lookAt(0,0,0);
+
+  renderer.render(scene,camera);
+}
+
+window.__renderFrame=function(i,total){
+  if(!renderer)return;
+  var n=Math.max(1,(total||1)-1);
+  var t=(i/n)*DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent=i;
+  document.getElementById('tc').textContent=total;
+  document.getElementById('tt').textContent=t.toFixed(2);
+  return true;
+};
+
+init();
+window.__renderFrame(0,1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fase15-xmlsvg-dataflow.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

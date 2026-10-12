@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>æ:// Teleprompter</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; overflow: hidden; font-family: 'JetBrains Mono', 'Consolas', monospace; }
+  #teleprompter {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  #text-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    mask-image: linear-gradient(transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(transparent 0%, black 15%, black 85%, transparent 100%);
+  }
+  #text {
+    font-size: 28px;
+    line-height: 1.8;
+    color: #f0ece4;
+    text-align: center;
+    white-space: pre-wrap;
+    max-width: 900px;
+    transition: transform 0.1s linear;
+  }
+  #text .highlight { color: #D4AF37; font-weight: 700; }
+  #text .dim { color: rgba(240,236,228,0.3); }
+  #controls {
+    padding: 12px 20px;
+    background: linear-gradient(0deg, rgba(5,5,5,0.95) 0%, transparent 100%);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    z-index: 10;
+  }
+  .ctrl-group { display: flex; align-items: center; gap: 6px; }
+  .ctrl-btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .ctrl-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .ctrl-btn.active { background: #D4AF37; color: #050505; }
+  .ctrl-label { color: rgba(240,236,228,0.4); font-size: 10px; min-width: 50px; }
+  .ctrl-value { color: #D4AF37; font-size: 11px; min-width: 30px; text-align: center; }
+  #hud {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, transparent 100%);
+    color: #D4AF37;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 2px;
+    pointer-events: none;
+  }
+  #hud .title { font-weight: 700; }
+  #hud .status { color: rgba(212,175,55,0.5); }
+  .scanlines {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px);
+  }
+  #mirror-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 4;
+    background: repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(212,175,55,0.03) 4px, rgba(212,175,55,0.03) 5px);
+    display: none;
+  }
+  #mirror-overlay.active { display: block; }
+  #edit-panel {
+    position: fixed;
+    bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    width: 80%; max-width: 800px;
+    background: rgba(5,5,5,0.95);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 6px;
+    padding: 12px;
+    display: none;
+    z-index: 20;
+  }
+  #edit-panel.open { display: block; }
+  #edit-textarea {
+    width: 100%;
+    height: 200px;
+    background: #0a0a0a;
+    border: 1px solid rgba(212,175,55,0.2);
+    color: #f0ece4;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px;
+    resize: vertical;
+    outline: none;
+  }
+  #edit-textarea:focus { border-color: #D4AF37; }
+  #edit-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <span class="title">æ:// Teleprompter</span>
+  <span class="status" id="status">READY</span>
+</div>
+<div class="scanlines"></div>
+<div id="mirror-overlay"></div>
+
+<div id="teleprompter">
+  <div id="text-container">
+    <div id="text"></div>
+  </div>
+</div>
+
+<div id="controls">
+  <div class="ctrl-group">
+    <button class="ctrl-btn" id="btn-play">▶ Play</button>
+    <button class="ctrl-btn" id="btn-pause">⏸ Pause</button>
+    <button class="ctrl-btn" id="btn-reset">↺ Reset</button>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Speed</span>
+    <button class="ctrl-btn" id="btn-slower">−</button>
+    <span class="ctrl-value" id="speed-val">1.0×</span>
+    <button class="ctrl-btn" id="btn-faster">+</button>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Font</span>
+    <button class="ctrl-btn" id="btn-font-smaller">A−</button>
+    <span class="ctrl-value" id="font-val">28px</span>
+    <button class="ctrl-btn" id="btn-font-larger">A+</button>
+  </div>
+  <div class="ctrl-group">
+    <button class="ctrl-btn" id="btn-mirror">Mirror</button>
+    <button class="ctrl-btn" id="btn-fullscreen">Fullscreen</button>
+    <button class="ctrl-btn" id="btn-edit">Edit</button>
+  </div>
+</div>
+
+<div id="edit-panel">
+  <textarea id="edit-textarea" placeholder="Paste your script here..."></textarea>
+  <div id="edit-actions">
+    <button class="ctrl-btn" id="btn-edit-cancel">Cancel</button>
+    <button class="ctrl-btn" id="btn-edit-apply">Apply</button>
+  </div>
+</div>
+
+<script>
+const DEFAULT_TEXT = `æ:// — Attention is all you need.
+
+The language is compute.
+The chassis is always a language.
+The surface is an addressable route.
+
+Sovereign. Local. Alive.
+
+We build agentic electronic engineering.
+We generate Three.js with GPU.
+We verify with QR Vision.
+We encode with ffmpeg.
+We prove with receipts.
+
+The droplet is the private client corpus.
+The QR is the simulated chip.
+The vault is multilayered, multipermission.
+
+MCP³ — GitHub.io as MCP server, PDS for social.
+Monæco — the editor surface.
+Vidæo — agentic video engineering.
+
+Hermes Desktop = VSCODER://
+VS Code = IDE
+VSCODER = Control Protocol
+PC:// = Constitution
+
+>_ æ:// — start a business.
+>_ æ:// — the seam is the work.
+>_ æ:// — open sourceware.`;
+
+const textEl = document.getElementById('text');
+const container = document.getElementById('text-container');
+const statusEl = document.getElementById('status');
+const editPanel = document.getElementById('edit-panel');
+const editTextarea = document.getElementById('edit-textarea');
+
+let playing = false;
+let speed = 1.0;
+let fontSize = 28;
+let scrollY = 0;
+let mirror = false;
+let lastTime = 0;
+let rafId = null;
+let currentText = DEFAULT_TEXT;
+
+function renderText() {
+  textEl.style.fontSize = fontSize + 'px';
+  textEl.style.transform = mirror ? `translateY(${-scrollY}px) scaleX(-1)` : `translateY(${-scrollY}px)`;
+}
+
+function updateStatus() {
+  const state = playing ? 'PLAYING' : 'PAUSED';
+  statusEl.textContent = `${state} · ${speed.toFixed(1)}× · ${fontSize}px${mirror ? ' · MIRROR' : ''}`;
+}
+
+function tick(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (playing) {
+    scrollY += speed * 60 * dt;
+    renderText();
+    const maxScroll = textEl.scrollHeight - container.clientHeight;
+    if (scrollY >= maxScroll) {
+      playing = false;
+      updateStatus();
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true;
+  lastTime = 0;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+  updateStatus();
+}
+
+function pause() {
+  playing = false;
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('btn-pause').classList.add('active');
+  updateStatus();
+}
+
+function reset() {
+  scrollY = 0;
+  renderText();
+  pause();
+}
+
+function setSpeed(val) {
+  speed = Math.max(0.1, Math.min(5.0, val));
+  document.getElementById('speed-val').textContent = speed.toFixed(1) + '×';
+  updateStatus();
+}
+
+function setFontSize(val) {
+  fontSize = Math.max(14, Math.min(64, val));
+  document.getElementById('font-val').textContent = fontSize + 'px';
+  renderText();
+  updateStatus();
+}
+
+function toggleMirror() {
+  mirror = !mirror;
+  document.getElementById('mirror-overlay').classList.toggle('active', mirror);
+  document.getElementById('btn-mirror').classList.toggle('active', mirror);
+  renderText();
+  updateStatus();
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function openEditor() {
+  editTextarea.value = currentText;
+  editPanel.classList.add('open');
+  editTextarea.focus();
+}
+
+function closeEditor() {
+  editPanel.classList.remove('open');
+}
+
+function applyEditor() {
+  currentText = editTextarea.value;
+  textEl.textContent = currentText;
+  scrollY = 0;
+  renderText();
+  closeEditor();
+}
+
+// Event listeners
+document.getElementById('btn-play').addEventListener('click', play);
+document.getElementById('btn-pause').addEventListener('click', pause);
+document.getElementById('btn-reset').addEventListener('click', reset);
+document.getElementById('btn-slower').addEventListener('click', () => setSpeed(speed - 0.2));
+document.getElementById('btn-faster').addEventListener('click', () => setSpeed(speed + 0.2));
+document.getElementById('btn-font-smaller').addEventListener('click', () => setFontSize(fontSize - 2));
+document.getElementById('btn-font-larger').addEventListener('click', () => setFontSize(fontSize + 2));
+document.getElementById('btn-mirror').addEventListener('click', toggleMirror);
+document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+document.getElementById('btn-edit').addEventListener('click', openEditor);
+document.getElementById('btn-edit-cancel').addEventListener('click', closeEditor);
+document.getElementById('btn-edit-apply').addEventListener('click', applyEditor);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case ' ':
+      e.preventDefault();
+      playing ? pause() : play();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      setSpeed(speed + 0.2);
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      setSpeed(speed - 0.2);
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      scrollY = Math.max(0, scrollY - 100);
+      renderText();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      scrollY += 100;
+      renderText();
+      break;
+    case 'm': case 'M':
+      toggleMirror();
+      break;
+    case 'f': case 'F':
+      toggleFullscreen();
+      break;
+    case 'r': case 'R':
+      reset();
+      break;
+    case 'e': case 'E':
+      editPanel.classList.contains('open') ? closeEditor() : openEditor();
+      break;
+    case '+': case '=':
+      setFontSize(fontSize + 2);
+      break;
+    case '-':
+      setFontSize(fontSize - 2);
+      break;
+    case 'Escape':
+      closeEditor();
+      break;
+  }
+});
+
+// Initialize
+textEl.textContent = currentText;
+renderText();
+updateStatus();
+rafId = requestAnimationFrame(tick);
+
+window.__TELEPROMPTER__ = {
+  ready: true,
+  sampleLines: currentText.split('\n').length,
+  controls: ['play', 'pause', 'reset', 'speed', 'font', 'mirror', 'fullscreen', 'edit'],
+  shortcuts: ['Space', 'ArrowUp/Down', 'ArrowLeft/Right', 'M', 'F', 'R', 'E', '+/-', 'Escape'],
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/teleprompter.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

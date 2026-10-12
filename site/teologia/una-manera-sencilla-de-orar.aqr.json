@@ -1,0 +1,15 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/una-manera-sencilla-de-orar",
+  "sha256": "ffe56f251ed713fd444fe1e515a3942898703dad7f6c83e063c71592ffb4efc5",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-10T02:40:09Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/una-manera-sencilla-de-orar|sha256:ffe56f251ed713fd444fe1e515a3942898703dad7f6c83e063c71592ffb4efc5|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge.svg",
+  "html": "C:\\æ\\site\\teologia\\una-manera-sencilla-de-orar.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

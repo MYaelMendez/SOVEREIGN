@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>codæ:// Universal Code Mode · Reference Lab</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;background:#070d16;color:#edf4ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#13334d,transparent 40%),#070d16}main{max-width:960px;margin:auto;padding:30px 18px 80px}h1{font-size:clamp(2.2rem,8vw,5rem);margin:10px 0;color:#e9bb69}h2{font-size:1.1rem}p{color:#a8bbcb;line-height:1.6}a{color:#70dbec}.eyebrow{color:#75dbe8;letter-spacing:.18em;font-size:.75rem}.panel{border:1px solid #31506a;background:#0b1828d9;border-radius:18px;padding:18px;margin:18px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}label{display:block;color:#acc7d6;font-size:.8rem;margin-bottom:7px}select,textarea,button{font:inherit}select,textarea{width:100%;background:#07111e;border:1px solid #476277;border-radius:10px;color:#fff;padding:12px}textarea{min-height:100px;resize:vertical}button{border:0;border-radius:10px;padding:12px 18px;background:#e9bb69;color:#09131d;font-weight:750;cursor:pointer}button.secondary{background:#173448;color:#c9f6ff;border:1px solid #3e7585}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050b13;border:1px solid #29455c;padding:14px;border-radius:12px;font-size:.8rem;line-height:1.5}.pill{display:inline-block;border:1px solid #527080;border-radius:50px;padding:6px 10px;font-size:.72rem;color:#a8e6f1;margin:4px}.note{border-left:3px solid #e9bb69;padding-left:12px}.footer{font-size:.8rem}</style>
+<main>
+<div class="eyebrow">æææ:// · OPENSOURCEWARE · HUMAN://ROOT</div>
+<h1>&gt;_codæ://</h1><p><b>Universal Code Mode · Interoperability Lab v0.1</b><br>One execution contract. Two interchangeable simulated model adapters. No automatic authority transfer.</p>
+<span class="pill">DISCOVER</span><span class="pill">COMPOSE</span><span class="pill">AUTHORIZE</span><span class="pill">EXECUTE</span><span class="pill">WITNESS</span>
+<div class="panel"><h2>1 · Human intent</h2><label for="intent">Task</label><textarea id="intent">Prepare a partner-site meeting: discover available capabilities, create a reviewable agenda, and preserve a witness receipt.</textarea>
+<div class="grid"><div><label for="provider">Model adapter (simulation)</label><select id="provider"><option value="alpha">Provider A · mock LLM</option><option value="beta">Provider B · mock LLM</option></select></div><div><label for="cap">Capability</label><select id="cap"><option value="meeting.agenda">meeting.agenda · local proposal</option><option value="site.outline">site.outline · local proposal</option></select></div></div>
+<div class="actions"><button id="compose">Discover + compose</button><button id="approve" class="secondary" disabled>Human approve</button><button id="execute" disabled>Execute locally</button><button id="reset" class="secondary">Reset</button></div></div>
+<div class="grid"><section class="panel"><h2>2 · Portable plan (AHTML-style JSON)</h2><pre id="plan">Awaiting proposal.</pre></section><section class="panel"><h2>3 · Witness receipt</h2><pre id="receipt">No execution witnessed.</pre><button id="download" class="secondary" disabled>Export receipt JSON</button></section></div>
+<div class="panel"><h2>Protocol boundary</h2><p class="note"><b>This is a browser-only reference lab.</b> Both provider adapters are deterministic mocks, not live LLM integrations. Execution creates a local text artifact; it does not contact Cloudflare, doola, GitHub, or any external service. Approval is a local demonstration, not authenticated identity or a cryptographic grant.</p><p>Next milestone: bind two real model providers through a server-side adapter, add Cloudflare Workers Code Mode sandboxing, authenticated principal grants, and signed receipts. Never place API secrets in this page.</p><p><a href="/chain/">Chain Composer</a> · <a href="/kanban/">Human KÆNBÆN</a> · <a href="/">Home</a></p></div>
+<p class="footer">INVARIANT:// Context may propagate; authority does not. · Many agents. One principal.</p>
+</main>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id);let plan=null,grant=false,receipt=null;
+const registry=Object.freeze({'meeting.agenda':{scope:'local',output:'agenda'},'site.outline':{scope:'local',output:'outline'}});
+const adapters={alpha:(intent,cap)=>({model:'provider-a/mock',intent,capability:cap,steps:['discover','compose','review','produce-local-artifact']}),beta:(intent,cap)=>({model:'provider-b/mock',intent,capability:cap,steps:['discover','compose','review','produce-local-artifact']})};
+function render(){ $('plan').textContent=plan?JSON.stringify(plan,null,2):'Awaiting proposal.';$('receipt').textContent=receipt?JSON.stringify(receipt,null,2):'No execution witnessed.';$('approve').disabled=!plan||grant;$('execute').disabled=!plan||!grant||!!receipt;$('download').disabled=!receipt;}
+$('compose').onclick=()=>{const intent=$('intent').value.trim(),cap=$('cap').value;if(!intent){alert('Enter an intent.');return}grant=false;receipt=null;const p=adapters[$('provider').value](intent,cap);plan={protocol:'codae/0.1',principal:'human/local-demo',provider:p.model,intent:p.intent,capability:p.capability,scope:registry[cap].scope,steps:p.steps,authority:'not-granted',execution:'proposal-only'};render()};
+$('approve').onclick=()=>{if(!plan)return;grant=confirm('Approve ONE local, reversible text-artifact generation? This is a demonstration, not authenticated consent.');if(grant)plan.authority='local-demo-granted';render()};
+$('execute').onclick=()=>{if(!plan||!grant||receipt)return;const artifact=plan.capability==='meeting.agenda'?['Meeting preparation','Objective: '+plan.intent,'1. Context and desired outcomes','2. Questions and constraints','3. Partner requirements','4. Human decisions and next steps'].join('\n'):['Partner-site outline','Intent: '+plan.intent,'Hero / human intent','Capabilities / trust boundaries','Human review gate','Partner handoff (proposal only)'].join('\n');receipt={protocol:'codae-witness/0.1',status:'local-completed',provider:plan.provider,capability:plan.capability,principal:plan.principal,authority:'local-demo-granted',executedAt:new Date().toISOString(),artifact,externalSideEffects:false,verifiedBy:'browser-demo-only'};render()};
+$('reset').onclick=()=>{plan=null;grant=false;receipt=null;render()};
+$('download').onclick=()=>{if(!receipt)return;const blob=new Blob([JSON.stringify(receipt,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='codae-witness.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};render()})();
+</script><!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/codae/index.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</html>

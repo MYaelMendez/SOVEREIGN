@@ -1,0 +1,2306 @@
+{
+ "nodes": {
+  "code-mode": {
+   "dir": "code-mode",
+   "cat": "single",
+   "refs": [],
+   "lines": 119,
+   "chars": 5400
+  },
+  "computer-use": {
+   "dir": "autonomous-ai-agents/computer-use",
+   "cat": "autonomous-ai-agents",
+   "refs": [],
+   "lines": 357,
+   "chars": 17954
+  },
+  "cri-index": {
+   "dir": "cri-index",
+   "cat": "single",
+   "refs": [],
+   "lines": 140,
+   "chars": 3386
+  },
+  "cuda": {
+   "dir": "mlops/cuda",
+   "cat": "mlops",
+   "refs": [
+    "host-bridge.md"
+   ],
+   "lines": 199,
+   "chars": 10117
+  },
+  "dogfood": {
+   "dir": "dogfood",
+   "cat": "single",
+   "refs": [
+    "issue-taxonomy.md"
+   ],
+   "lines": 163,
+   "chars": 6327
+  },
+  "hermes-desktop-plugins": {
+   "dir": "hermes-desktop-plugins",
+   "cat": "single",
+   "refs": [],
+   "lines": 314,
+   "chars": 18199
+  },
+  "hermes-native": {
+   "dir": "hermes-native",
+   "cat": "single",
+   "refs": [
+    "llm-bench-rig-design-notes.md",
+    "victus-capability-map.md"
+   ],
+   "lines": 53,
+   "chars": 2814
+  },
+  "hermes-operator-grammar": {
+   "dir": "hermes/hermes-operator-grammar",
+   "cat": "hermes",
+   "refs": [
+    "bounded-private-client-mesh.md",
+    "commandprompt-home-entrypoint.md",
+    "glocal-naming-ladder.md",
+    "monaco-export-and-qr-mesh.md",
+    "omniverse-scheme-playbook.md",
+    "qc64-basic-chassis.md",
+    "qrcode-headless-primitive.md",
+    "scheme-primitives-playbook.md",
+    "session-hardening.md",
+    "sovereign-viewport-shell.md",
+    "virtual-mcp-mesh.md",
+    "vlc-fleet-superagent-runtime-safety.md",
+    "vscode-compute-surface.md",
+    "wrapper-launch-windows.md"
+   ],
+   "lines": 5,
+   "chars": 1049
+  },
+  "hyperframes": {
+   "dir": "hyperframes",
+   "cat": "single",
+   "refs": [
+    "brief-contract.md",
+    "brief-format.md",
+    "capability-menu.md",
+    "frame-worker-core.md",
+    "intent-interview.md",
+    "pitch-round.md",
+    "plugin-installation.md",
+    "production-loop.md",
+    "review-loop.md",
+    "route-briefs.md",
+    "routes",
+    "script-format.md",
+    "skill-lifecycle.md",
+    "storyboard-format.md",
+    "subagent-dispatch.md",
+    "workflow-catalog.md"
+   ],
+   "lines": 144,
+   "chars": 18354
+  },
+  "hyperframes-animation": {
+   "dir": "hyperframes-animation",
+   "cat": "single",
+   "refs": [
+    "motion-blur.md"
+   ],
+   "lines": 89,
+   "chars": 8361
+  },
+  "hyperframes-audio": {
+   "dir": "hyperframes-audio",
+   "cat": "single",
+   "refs": [
+    "attributes.md",
+    "diagnosis.md",
+    "fx-registry.md",
+    "presets.md"
+   ],
+   "lines": 479,
+   "chars": 25684
+  },
+  "hyperframes-cli": {
+   "dir": "hyperframes-cli",
+   "cat": "single",
+   "refs": [
+    "beats.md",
+    "cloud.md",
+    "cloudrun.md",
+    "compare-and-batch.md",
+    "doctor-browser.md",
+    "init-and-scaffold.md",
+    "lambda.md",
+    "lint-validate-inspect.md",
+    "preview-render.md",
+    "upgrade-info-misc.md"
+   ],
+   "lines": 189,
+   "chars": 22197
+  },
+  "hyperframes-core": {
+   "dir": "hyperframes-core",
+   "cat": "single",
+   "refs": [
+    "composition-patterns.md",
+    "creator-editing-recipes.md",
+    "data-attributes.md",
+    "determinism-rules.md",
+    "full-screen-motion.md",
+    "minimal-composition.md",
+    "sub-compositions.md",
+    "tailwind.md",
+    "tracks-and-clips.md",
+    "variables-and-media.md"
+   ],
+   "lines": 101,
+   "chars": 12601
+  },
+  "hyperframes-creative": {
+   "dir": "hyperframes-creative",
+   "cat": "single",
+   "refs": [
+    "audio-reactive.md",
+    "beat-direction.md",
+    "composition-patterns.md",
+    "data-in-motion.md",
+    "design-adherence.md",
+    "design-picker.md",
+    "design-spec.md",
+    "house-style.md",
+    "motion-principles.md",
+    "narration.md",
+    "prompt-expansion.md",
+    "story-spine.md",
+    "storyboard-recipe.md",
+    "typography.md",
+    "video-composition.md",
+    "visual-styles.md"
+   ],
+   "lines": 74,
+   "chars": 6561
+  },
+  "hyperframes-keyframes": {
+   "dir": "hyperframes-keyframes",
+   "cat": "single",
+   "refs": [
+    "keyframe-patterns.md"
+   ],
+   "lines": 265,
+   "chars": 16143
+  },
+  "hyperframes-registry": {
+   "dir": "hyperframes-registry",
+   "cat": "single",
+   "refs": [
+    "component-quality-bar.md",
+    "contributing.md",
+    "demo-html-pattern.md",
+    "discovery.md",
+    "install-locations.md",
+    "placeholder-material.md",
+    "templates.md",
+    "wiring-blocks.md",
+    "wiring-components.md"
+   ],
+   "lines": 148,
+   "chars": 9839
+  },
+  "hyperframes-studio": {
+   "dir": "hyperframes-studio",
+   "cat": "single",
+   "refs": [],
+   "lines": 141,
+   "chars": 12034
+  },
+  "keeper": {
+   "dir": "keeper",
+   "cat": "single",
+   "refs": [],
+   "lines": 138,
+   "chars": 6315
+  },
+  "llama-cpp-gpu": {
+   "dir": "llama-cpp-gpu",
+   "cat": "single",
+   "refs": [],
+   "lines": 143,
+   "chars": 4117
+  },
+  "mail-agent": {
+   "dir": "mail-agent",
+   "cat": "single",
+   "refs": [],
+   "lines": 111,
+   "chars": 3009
+  },
+  "measurement-index": {
+   "dir": "measurement-index",
+   "cat": "single",
+   "refs": [],
+   "lines": 203,
+   "chars": 5887
+  },
+  "media-use": {
+   "dir": "media-use",
+   "cat": "single",
+   "refs": [
+    "audio.md",
+    "grading.md",
+    "media-treatment-recipes.md",
+    "media-treatments.md",
+    "memory.md",
+    "meta.md",
+    "operations.md",
+    "resolve.md",
+    "setup-providers.md",
+    "telemetry-dashboard.md"
+   ],
+   "lines": 99,
+   "chars": 8159
+  },
+  "pc-qr-api": {
+   "dir": "pc-qr-api",
+   "cat": "single",
+   "refs": [],
+   "lines": 194,
+   "chars": 4711
+  },
+  "qr-as-skill": {
+   "dir": "qr-as-skill",
+   "cat": "single",
+   "refs": [],
+   "lines": 129,
+   "chars": 3770
+  },
+  "sovereign-cuda-bridge": {
+   "dir": "sovereign-cuda-bridge",
+   "cat": "single",
+   "refs": [
+    "droplet-tunnel-debugging.md",
+    "glocal-cuda-blueprint.md",
+    "glocal-cuda-bridge.md",
+    "hermetic-dispatcher-test.md"
+   ],
+   "lines": 315,
+   "chars": 20238
+  },
+  "yuanbao": {
+   "dir": "yuanbao",
+   "cat": "single",
+   "refs": [],
+   "lines": 109,
+   "chars": 3665
+  },
+  "æ": {
+   "dir": "æ",
+   "cat": "single",
+   "refs": [
+    "assured-viewport-pattern.md",
+    "mesh-identity.md",
+    "scalar-supremacy.md"
+   ],
+   "lines": 136,
+   "chars": 5222
+  },
+  "blocked-page-recovery": {
+   "dir": "web/blocked-page-recovery",
+   "cat": "web",
+   "refs": [],
+   "lines": 138,
+   "chars": 5139
+  },
+  "ae-as-skill": {
+   "dir": "sovereign/ae-as-skill",
+   "cat": "sovereign",
+   "refs": [],
+   "lines": 301,
+   "chars": 8072
+  },
+  "deploy-surfaces": {
+   "dir": "sovereign/deploy-surfaces",
+   "cat": "sovereign",
+   "refs": [],
+   "lines": 195,
+   "chars": 11664
+  },
+  "glocal-mesh": {
+   "dir": "sovereign/glocal-mesh",
+   "cat": "sovereign",
+   "refs": [
+    "discovery-layer.md",
+    "droplet-pds-sync.md",
+    "generated-status-reports.md",
+    "glocal-mesh-contract.md",
+    "memory-substrate.md"
+   ],
+   "lines": 103,
+   "chars": 18310
+  },
+  "pc-inference": {
+   "dir": "sovereign/pc-inference",
+   "cat": "sovereign",
+   "refs": [],
+   "lines": 170,
+   "chars": 4029
+  },
+  "rtx-telemetry": {
+   "dir": "sovereign/rtx-telemetry",
+   "cat": "sovereign",
+   "refs": [
+    "endpoint.json"
+   ],
+   "lines": 221,
+   "chars": 10576
+  },
+  "sovereign-resource-absorption": {
+   "dir": "sovereign/sovereign-resource-absorption",
+   "cat": "sovereign",
+   "refs": [],
+   "lines": 87,
+   "chars": 4842
+  },
+  "agentic-chassis-surface": {
+   "dir": "software-development/agentic-chassis-surface",
+   "cat": "software-development",
+   "refs": [
+    "code-mode-compose.md",
+    "cortex-sqlite-store.md",
+    "droplet-pds-sync.md",
+    "github-pages-ingest.md",
+    "live-co-webmastering.md",
+    "mesh-pairing-scheme.md",
+    "mod-code-mode.md",
+    "spreadsheet-grid.md"
+   ],
+   "lines": 498,
+   "chars": 37914
+  },
+  "browser-agent-loop": {
+   "dir": "software-development/browser-agent-loop",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 178,
+   "chars": 8334
+  },
+  "code-review": {
+   "dir": "software-development/code-review",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 82,
+   "chars": 2211
+  },
+  "codebase-inspection": {
+   "dir": "software-development/codebase-inspection",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 117,
+   "chars": 3584
+  },
+  "cuda-victus-dev": {
+   "dir": "software-development/cuda-victus-dev",
+   "cat": "software-development",
+   "refs": [
+    "cuda-victus-recipe.md",
+    "rtx3050-benchmarks-small-models.md"
+   ],
+   "lines": 177,
+   "chars": 12502
+  },
+  "github": {
+   "dir": "software-development/github",
+   "cat": "software-development",
+   "refs": [
+    "auth.md",
+    "ci-troubleshooting.md",
+    "code-review.md",
+    "conventional-commits.md",
+    "github-api-cheatsheet.md",
+    "issue-to-pr.md",
+    "issues.md",
+    "pr-workflow.md",
+    "repo-management.md",
+    "review-output-template.md"
+   ],
+   "lines": 57,
+   "chars": 2440
+  },
+  "github-pages-deploy": {
+   "dir": "software-development/github-pages-deploy",
+   "cat": "software-development",
+   "refs": [
+    "bake-status-at-deploy.md",
+    "detection-pitfalls.md",
+    "social-cards-and-seo.md"
+   ],
+   "lines": 422,
+   "chars": 24705
+  },
+  "glocal-host-loop": {
+   "dir": "software-development/glocal-host-loop",
+   "cat": "software-development",
+   "refs": [
+    "mcp-stdlib-server.md",
+    "rust-path-shadow.md",
+    "vscode-mcp-packaging.md"
+   ],
+   "lines": 103,
+   "chars": 6334
+  },
+  "hermes-agent-skill-authoring": {
+   "dir": "software-development/hermes-agent-skill-authoring",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 215,
+   "chars": 14453
+  },
+  "hermes-runtime-state": {
+   "dir": "software-development/hermes-runtime-state",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 117,
+   "chars": 4738
+  },
+  "hermes-surface-development": {
+   "dir": "software-development/hermes-surface-development",
+   "cat": "software-development",
+   "refs": [
+    "aether-dollar-bug.md",
+    "apps-reachy-vlc-play-refresh.md",
+    "cuda-vlc-streaming-pattern.md",
+    "desktop-plugin-pattern.md",
+    "device-mesh-bootstrap.md",
+    "glocal-cloud-computer.md",
+    "glocal-mesh-pattern.md",
+    "live-data-pattern.md",
+    "mcp-mesh-pattern.md",
+    "omniverse-surface-pattern.md",
+    "omniverse-viewport-spec.md",
+    "scalar-supremacy.md",
+    "secrets-broker-pattern.md",
+    "verify-before-affirm.md",
+    "victus-superagent-computer-use.md",
+    "viewport-prompt.md",
+    "windows-desktop-vs-installer.md"
+   ],
+   "lines": 465,
+   "chars": 44187
+  },
+  "hermes-vscode-incubator": {
+   "dir": "software-development/hermes-vscode-incubator",
+   "cat": "software-development",
+   "refs": [
+    "dao-glocal-viewport-surface.md",
+    "llm-bench-rig-integration.md",
+    "secret-source-plugin.md",
+    "upstream-native-computer-use.md"
+   ],
+   "lines": 404,
+   "chars": 21467
+  },
+  "inspecting-hermes-desktop-dom": {
+   "dir": "software-development/inspecting-hermes-desktop-dom",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 160,
+   "chars": 6228
+  },
+  "interpreter-dispatch-debugging": {
+   "dir": "software-development/interpreter-dispatch-debugging",
+   "cat": "software-development",
+   "refs": [
+    "interpreter-dispatch-debugging.md"
+   ],
+   "lines": 161,
+   "chars": 7587
+  },
+  "local-agent-runtime": {
+   "dir": "software-development/local-agent-runtime",
+   "cat": "software-development",
+   "refs": [
+    "local-llm-vram-sizing.md",
+    "offline-gpu-agent.md",
+    "rustup-wasm32-pitfall.md",
+    "wasm-agent-instance.md"
+   ],
+   "lines": 157,
+   "chars": 9950
+  },
+  "local-first-operator-surfaces": {
+   "dir": "software-development/local-first-operator-surfaces",
+   "cat": "software-development",
+   "refs": [
+    "subagent-handshake.md",
+    "viewport-computer.md",
+    "windows-local-launch.md"
+   ],
+   "lines": 343,
+   "chars": 15514
+  },
+  "native-vision-from-first-principles": {
+   "dir": "software-development/native-vision-from-first-principles",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 104,
+   "chars": 4286
+  },
+  "node-inspect-debugger": {
+   "dir": "software-development/node-inspect-debugger",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 320,
+   "chars": 11045
+  },
+  "plan": {
+   "dir": "software-development/plan",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 58,
+   "chars": 2067
+  },
+  "python-debugpy": {
+   "dir": "software-development/python-debugpy",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 391,
+   "chars": 14964
+  },
+  "requesting-code-review": {
+   "dir": "software-development/requesting-code-review",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 270,
+   "chars": 6139
+  },
+  "resource-absorb-and-rename": {
+   "dir": "software-development/resource-absorb-and-rename",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 136,
+   "chars": 7143
+  },
+  "simplify-code": {
+   "dir": "software-development/simplify-code",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 271,
+   "chars": 14604
+  },
+  "sovereign-atproto-network": {
+   "dir": "software-development/sovereign-atproto-network",
+   "cat": "software-development",
+   "refs": [
+    "atproto-pds.md",
+    "atproto-reality-map.md",
+    "bsky-dm-bus.md",
+    "did-web-cortex.md",
+    "droplet-pds-sync.md"
+   ],
+   "lines": 230,
+   "chars": 14955
+  },
+  "sovereign-fork-commit": {
+   "dir": "software-development/sovereign-fork-commit",
+   "cat": "software-development",
+   "refs": [
+    "git-conflict-resolution.md",
+    "test-path-reconciliation.md"
+   ],
+   "lines": 47,
+   "chars": 7389
+  },
+  "sovereign-git-ops": {
+   "dir": "software-development/sovereign-git-ops",
+   "cat": "software-development",
+   "refs": [
+    "sovereign-repo-map-and-commits.md"
+   ],
+   "lines": 101,
+   "chars": 5347
+  },
+  "sovereign-local-agent": {
+   "dir": "software-development/sovereign-local-agent",
+   "cat": "software-development",
+   "refs": [
+    "bsky-dm-agent-bus.md",
+    "conductor-scheme.md",
+    "secret-source-contract.md",
+    "vps-backbone.md"
+   ],
+   "lines": 104,
+   "chars": 8972
+  },
+  "sovereign-mcp-surface": {
+   "dir": "software-development/sovereign-mcp-surface",
+   "cat": "software-development",
+   "refs": [
+    "extract-to-standalone-repo.md",
+    "vscode-mcp-registration.md"
+   ],
+   "lines": 157,
+   "chars": 9275
+  },
+  "sovereign-vscode-surface-dev": {
+   "dir": "software-development/sovereign-vscode-surface-dev",
+   "cat": "software-development",
+   "refs": [
+    "ae-gold-on-void-theme.md",
+    "gold-shell-design-system.md",
+    "host-bridge-pattern.md",
+    "stub-kill-verification.md"
+   ],
+   "lines": 460,
+   "chars": 29284
+  },
+  "spike": {
+   "dir": "software-development/spike",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 198,
+   "chars": 8608
+  },
+  "subagent-driven-development": {
+   "dir": "software-development/subagent-driven-development",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 355,
+   "chars": 10906
+  },
+  "systematic-debugging": {
+   "dir": "software-development/systematic-debugging",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 412,
+   "chars": 14015
+  },
+  "test-driven-development": {
+   "dir": "software-development/test-driven-development",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 363,
+   "chars": 10252
+  },
+  "vscode-as-skill": {
+   "dir": "software-development/vscode-as-skill",
+   "cat": "software-development",
+   "refs": [
+    "local-html-bundle-resolver.md",
+    "ts-template-literal-pitfalls.md",
+    "vscode-installer-reference.md",
+    "vscode-integration-runbook.md",
+    "webllm-wiring-runbook.md"
+   ],
+   "lines": 449,
+   "chars": 23325
+  },
+  "vscode-installer-and-vsix-packaging": {
+   "dir": "software-development/vscode-installer-and-vsix-packaging",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 71,
+   "chars": 4661
+  },
+  "writing-plans": {
+   "dir": "software-development/writing-plans",
+   "cat": "software-development",
+   "refs": [],
+   "lines": 297,
+   "chars": 7291
+  },
+  "xitter": {
+   "dir": "social-media/xitter",
+   "cat": "social-media",
+   "refs": [],
+   "lines": 203,
+   "chars": 6130
+  },
+  "xurl": {
+   "dir": "social-media/xurl",
+   "cat": "social-media",
+   "refs": [],
+   "lines": 437,
+   "chars": 16293
+  },
+  "openhue": {
+   "dir": "smart-home/openhue",
+   "cat": "smart-home",
+   "refs": [],
+   "lines": 110,
+   "chars": 2711
+  },
+  "glocal-secrets": {
+   "dir": "security/glocal-secrets",
+   "cat": "security",
+   "refs": [
+    "droplet-takeover.md",
+    "github-io-blueprint.md",
+    "glocal-gpu-bridge.md"
+   ],
+   "lines": 222,
+   "chars": 13063
+  },
+  "local-secret-source": {
+   "dir": "security/local-secret-source",
+   "cat": "security",
+   "refs": [
+    "aether-cache-bust.md",
+    "consumer-contract.md"
+   ],
+   "lines": 87,
+   "chars": 4898
+  },
+  "arxiv": {
+   "dir": "research/arxiv",
+   "cat": "research",
+   "refs": [],
+   "lines": 282,
+   "chars": 10198
+  },
+  "blogwatcher": {
+   "dir": "research/blogwatcher",
+   "cat": "research",
+   "refs": [],
+   "lines": 57,
+   "chars": 1239
+  },
+  "competitor-news-monitor": {
+   "dir": "research/competitor-news-monitor",
+   "cat": "research",
+   "refs": [],
+   "lines": 89,
+   "chars": 4611
+  },
+  "domain-intel": {
+   "dir": "research/domain-intel",
+   "cat": "research",
+   "refs": [],
+   "lines": 97,
+   "chars": 4483
+  },
+  "duckduckgo-search": {
+   "dir": "research/duckduckgo-search",
+   "cat": "research",
+   "refs": [],
+   "lines": 189,
+   "chars": 5678
+  },
+  "grounded-citations": {
+   "dir": "research/grounded-citations",
+   "cat": "research",
+   "refs": [
+    "citation-formats.md",
+    "grounding-rationale.md"
+   ],
+   "lines": 258,
+   "chars": 12586
+  },
+  "llm-wiki": {
+   "dir": "research/llm-wiki",
+   "cat": "research",
+   "refs": [],
+   "lines": 508,
+   "chars": 19895
+  },
+  "ml-paper-writing": {
+   "dir": "research/ml-paper-writing",
+   "cat": "research",
+   "refs": [
+    "checklists.md",
+    "citation-workflow.md",
+    "reviewer-guidelines.md",
+    "sources.md",
+    "writing-guide.md"
+   ],
+   "lines": 941,
+   "chars": 35364
+  },
+  "parallel-cli": {
+   "dir": "research/parallel-cli",
+   "cat": "research",
+   "refs": [],
+   "lines": 391,
+   "chars": 10883
+  },
+  "polymarket": {
+   "dir": "research/polymarket",
+   "cat": "research",
+   "refs": [
+    "api-endpoints.md"
+   ],
+   "lines": 78,
+   "chars": 2967
+  },
+  "research-paper-writing": {
+   "dir": "research/research-paper-writing",
+   "cat": "research",
+   "refs": [
+    "autoreason-methodology.md",
+    "checklists.md",
+    "citation-workflow.md",
+    "experiment-patterns.md",
+    "human-evaluation.md",
+    "paper-types.md",
+    "reviewer-guidelines.md",
+    "sources.md",
+    "writing-guide.md"
+   ],
+   "lines": 2378,
+   "chars": 102734
+  },
+  "airtable": {
+   "dir": "productivity/airtable",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 230,
+   "chars": 11268
+  },
+  "box": {
+   "dir": "productivity/box",
+   "cat": "productivity",
+   "refs": [
+    "bulk-operations.md",
+    "cli-guide.md",
+    "content-workflows.md",
+    "hubs.md",
+    "oauth-setup.md",
+    "rest-api.md",
+    "sdk-development.md",
+    "search-and-ai.md",
+    "troubleshooting.md",
+    "webhooks-and-events.md"
+   ],
+   "lines": 118,
+   "chars": 11693
+  },
+  "document-to-action-items": {
+   "dir": "productivity/document-to-action-items",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 82,
+   "chars": 3904
+  },
+  "docx": {
+   "dir": "productivity/docx",
+   "cat": "productivity",
+   "refs": [
+    "revisions-and-comments.md"
+   ],
+   "lines": 197,
+   "chars": 10379
+  },
+  "google-workspace": {
+   "dir": "productivity/google-workspace",
+   "cat": "productivity",
+   "refs": [
+    "daily-brief.md",
+    "gmail-search-syntax.md"
+   ],
+   "lines": 344,
+   "chars": 14167
+  },
+  "linear": {
+   "dir": "productivity/linear",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 298,
+   "chars": 11312
+  },
+  "maps": {
+   "dir": "productivity/maps",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 196,
+   "chars": 6657
+  },
+  "meeting-action-items": {
+   "dir": "productivity/meeting-action-items",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 88,
+   "chars": 3800
+  },
+  "nano-pdf": {
+   "dir": "productivity/nano-pdf",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 53,
+   "chars": 1407
+  },
+  "notion": {
+   "dir": "productivity/notion",
+   "cat": "productivity",
+   "refs": [
+    "block-types.md"
+   ],
+   "lines": 450,
+   "chars": 14564
+  },
+  "ocr-and-documents": {
+   "dir": "productivity/ocr-and-documents",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 172,
+   "chars": 5339
+  },
+  "pdf": {
+   "dir": "productivity/pdf",
+   "cat": "productivity",
+   "refs": [
+    "forms.md",
+    "nano-pdf-editing.md",
+    "ocr-extraction.md"
+   ],
+   "lines": 126,
+   "chars": 12455
+  },
+  "petdex": {
+   "dir": "productivity/petdex",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 90,
+   "chars": 3509
+  },
+  "powerpoint": {
+   "dir": "productivity/powerpoint",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 221,
+   "chars": 10755
+  },
+  "product-price-monitor": {
+   "dir": "productivity/product-price-monitor",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 80,
+   "chars": 4394
+  },
+  "qr": {
+   "dir": "productivity/qr",
+   "cat": "productivity",
+   "refs": [
+    "qr-mech-lang-primitive.md"
+   ],
+   "lines": 57,
+   "chars": 2423
+  },
+  "teams-meeting-pipeline": {
+   "dir": "productivity/teams-meeting-pipeline",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 123,
+   "chars": 7180
+  },
+  "weekly-review-planning": {
+   "dir": "productivity/weekly-review-planning",
+   "cat": "productivity",
+   "refs": [],
+   "lines": 82,
+   "chars": 3973
+  },
+  "xlsx": {
+   "dir": "productivity/xlsx",
+   "cat": "productivity",
+   "refs": [
+    "restructuring.md"
+   ],
+   "lines": 197,
+   "chars": 9649
+  },
+  "obsidian": {
+   "dir": "note-taking/obsidian",
+   "cat": "note-taking",
+   "refs": [],
+   "lines": 69,
+   "chars": 3092
+  },
+  "huggingface-hub": {
+   "dir": "mlops/huggingface-hub",
+   "cat": "mlops",
+   "refs": [],
+   "lines": 82,
+   "chars": 3670
+  },
+  "sovereign-local-loop": {
+   "dir": "mlops/sovereign-local-loop",
+   "cat": "mlops",
+   "refs": [
+    "rust-wasm-build-gotcha.md",
+    "stdlib-mcp-server.md"
+   ],
+   "lines": 107,
+   "chars": 6566
+  },
+  "chroma": {
+   "dir": "mlops/vector-databases/chroma",
+   "cat": "mlops",
+   "refs": [
+    "integration.md"
+   ],
+   "lines": 410,
+   "chars": 9188
+  },
+  "faiss": {
+   "dir": "mlops/vector-databases/faiss",
+   "cat": "mlops",
+   "refs": [
+    "index_types.md"
+   ],
+   "lines": 225,
+   "chars": 5068
+  },
+  "pinecone": {
+   "dir": "mlops/vector-databases/pinecone",
+   "cat": "mlops",
+   "refs": [
+    "deployment.md"
+   ],
+   "lines": 362,
+   "chars": 7852
+  },
+  "qdrant-vector-search": {
+   "dir": "mlops/vector-databases/qdrant",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 497,
+   "chars": 13468
+  },
+  "huggingface-accelerate": {
+   "dir": "mlops/training/accelerate",
+   "cat": "mlops",
+   "refs": [
+    "custom-plugins.md",
+    "megatron-integration.md",
+    "performance.md"
+   ],
+   "lines": 336,
+   "chars": 8359
+  },
+  "axolotl": {
+   "dir": "mlops/training/axolotl",
+   "cat": "mlops",
+   "refs": [
+    "api.md",
+    "dataset-formats.md",
+    "index.md",
+    "other.md"
+   ],
+   "lines": 162,
+   "chars": 4812
+  },
+  "optimizing-attention-flash": {
+   "dir": "mlops/training/flash-attention",
+   "cat": "mlops",
+   "refs": [
+    "benchmarks.md",
+    "transformers-integration.md"
+   ],
+   "lines": 371,
+   "chars": 10214
+  },
+  "grpo-rl-training": {
+   "dir": "mlops/training/grpo-rl-training",
+   "cat": "mlops",
+   "refs": [],
+   "lines": 576,
+   "chars": 17209
+  },
+  "hermes-atropos-environments": {
+   "dir": "mlops/training/hermes-atropos-environments",
+   "cat": "mlops",
+   "refs": [
+    "agentresult-fields.md",
+    "atropos-base-env.md",
+    "usage-patterns.md"
+   ],
+   "lines": 303,
+   "chars": 13332
+  },
+  "peft-fine-tuning": {
+   "dir": "mlops/training/peft",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 435,
+   "chars": 12235
+  },
+  "pytorch-fsdp": {
+   "dir": "mlops/training/pytorch-fsdp",
+   "cat": "mlops",
+   "refs": [
+    "index.md",
+    "other.md"
+   ],
+   "lines": 130,
+   "chars": 159244
+  },
+  "pytorch-lightning": {
+   "dir": "mlops/training/pytorch-lightning",
+   "cat": "mlops",
+   "refs": [
+    "callbacks.md",
+    "distributed.md",
+    "hyperparameter-tuning.md"
+   ],
+   "lines": 350,
+   "chars": 9141
+  },
+  "simpo-training": {
+   "dir": "mlops/training/simpo",
+   "cat": "mlops",
+   "refs": [
+    "datasets.md",
+    "hyperparameters.md",
+    "loss-functions.md"
+   ],
+   "lines": 223,
+   "chars": 5938
+  },
+  "slime-rl-training": {
+   "dir": "mlops/training/slime",
+   "cat": "mlops",
+   "refs": [
+    "api-reference.md",
+    "troubleshooting.md"
+   ],
+   "lines": 468,
+   "chars": 11095
+  },
+  "distributed-llm-pretraining-torchtitan": {
+   "dir": "mlops/training/torchtitan",
+   "cat": "mlops",
+   "refs": [
+    "checkpoint.md",
+    "custom-models.md",
+    "float8.md",
+    "fsdp.md"
+   ],
+   "lines": 362,
+   "chars": 8952
+  },
+  "fine-tuning-with-trl": {
+   "dir": "mlops/training/trl-fine-tuning",
+   "cat": "mlops",
+   "refs": [
+    "dpo-variants.md",
+    "online-rl.md",
+    "reward-modeling.md",
+    "sft-training.md"
+   ],
+   "lines": 459,
+   "chars": 11472
+  },
+  "unsloth": {
+   "dir": "mlops/training/unsloth",
+   "cat": "mlops",
+   "refs": [
+    "index.md",
+    "llms-full.md",
+    "llms-txt.md",
+    "llms.md"
+   ],
+   "lines": 101,
+   "chars": 3272
+  },
+  "dspy": {
+   "dir": "mlops/research/dspy",
+   "cat": "mlops",
+   "refs": [
+    "examples.md",
+    "modules.md",
+    "optimizers.md"
+   ],
+   "lines": 594,
+   "chars": 15308
+  },
+  "audiocraft-audio-generation": {
+   "dir": "mlops/models/audiocraft",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 569,
+   "chars": 15383
+  },
+  "clip": {
+   "dir": "mlops/models/clip",
+   "cat": "mlops",
+   "refs": [
+    "applications.md"
+   ],
+   "lines": 257,
+   "chars": 6901
+  },
+  "llava": {
+   "dir": "mlops/models/llava",
+   "cat": "mlops",
+   "refs": [
+    "training.md"
+   ],
+   "lines": 308,
+   "chars": 7853
+  },
+  "segment-anything-model": {
+   "dir": "mlops/models/segment-anything",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 507,
+   "chars": 13093
+  },
+  "stable-diffusion-image-generation": {
+   "dir": "mlops/models/stable-diffusion",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 523,
+   "chars": 12962
+  },
+  "whisper": {
+   "dir": "mlops/models/whisper",
+   "cat": "mlops",
+   "refs": [
+    "languages.md"
+   ],
+   "lines": 321,
+   "chars": 7459
+  },
+  "gguf-quantization": {
+   "dir": "mlops/inference/gguf",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 431,
+   "chars": 10345
+  },
+  "guidance": {
+   "dir": "mlops/inference/guidance",
+   "cat": "mlops",
+   "refs": [
+    "backends.md",
+    "constraints.md",
+    "examples.md"
+   ],
+   "lines": 576,
+   "chars": 14462
+  },
+  "instructor": {
+   "dir": "mlops/inference/instructor",
+   "cat": "mlops",
+   "refs": [
+    "examples.md",
+    "providers.md",
+    "validation.md"
+   ],
+   "lines": 744,
+   "chars": 16798
+  },
+  "llama-cpp": {
+   "dir": "mlops/inference/llama-cpp",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "hub-discovery.md",
+    "optimization.md",
+    "quantization.md",
+    "server.md",
+    "troubleshooting.md"
+   ],
+   "lines": 250,
+   "chars": 8870
+  },
+  "obliteratus": {
+   "dir": "mlops/inference/obliteratus",
+   "cat": "mlops",
+   "refs": [
+    "analysis-modules.md",
+    "methods-guide.md"
+   ],
+   "lines": 331,
+   "chars": 15268
+  },
+  "outlines": {
+   "dir": "mlops/inference/outlines",
+   "cat": "mlops",
+   "refs": [
+    "backends.md",
+    "examples.md",
+    "json_generation.md"
+   ],
+   "lines": 656,
+   "chars": 15894
+  },
+  "tensorrt-llm": {
+   "dir": "mlops/inference/tensorrt-llm",
+   "cat": "mlops",
+   "refs": [
+    "multi-gpu.md",
+    "optimization.md",
+    "serving.md"
+   ],
+   "lines": 191,
+   "chars": 5059
+  },
+  "serving-llms-vllm": {
+   "dir": "mlops/inference/vllm",
+   "cat": "mlops",
+   "refs": [
+    "optimization.md",
+    "quantization.md",
+    "server-deployment.md",
+    "troubleshooting.md"
+   ],
+   "lines": 373,
+   "chars": 9071
+  },
+  "huggingface-tokenizers": {
+   "dir": "mlops/evaluation/huggingface-tokenizers",
+   "cat": "mlops",
+   "refs": [
+    "algorithms.md",
+    "integration.md",
+    "pipeline.md",
+    "training.md"
+   ],
+   "lines": 520,
+   "chars": 13668
+  },
+  "evaluating-llms-harness": {
+   "dir": "mlops/evaluation/lm-evaluation-harness",
+   "cat": "mlops",
+   "refs": [
+    "api-evaluation.md",
+    "benchmark-guide.md",
+    "custom-tasks.md",
+    "distributed-eval.md"
+   ],
+   "lines": 499,
+   "chars": 12019
+  },
+  "nemo-curator": {
+   "dir": "mlops/evaluation/nemo-curator",
+   "cat": "mlops",
+   "refs": [
+    "deduplication.md",
+    "filtering.md"
+   ],
+   "lines": 387,
+   "chars": 9344
+  },
+  "sparse-autoencoder-training": {
+   "dir": "mlops/evaluation/saelens",
+   "cat": "mlops",
+   "refs": [
+    "README.md",
+    "api.md",
+    "tutorials.md"
+   ],
+   "lines": 390,
+   "chars": 12754
+  },
+  "weights-and-biases": {
+   "dir": "mlops/evaluation/weights-and-biases",
+   "cat": "mlops",
+   "refs": [
+    "artifacts.md",
+    "integrations.md",
+    "sweeps.md"
+   ],
+   "lines": 595,
+   "chars": 12391
+  },
+  "lambda-labs-gpu-cloud": {
+   "dir": "mlops/cloud/lambda-labs",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 549,
+   "chars": 12148
+  },
+  "modal-serverless-gpu": {
+   "dir": "mlops/cloud/modal",
+   "cat": "mlops",
+   "refs": [
+    "advanced-usage.md",
+    "troubleshooting.md"
+   ],
+   "lines": 345,
+   "chars": 8578
+  },
+  "agentic-html": {
+   "dir": "media/agentic-html",
+   "cat": "media",
+   "refs": [],
+   "lines": 59,
+   "chars": 1589
+  },
+  "gif-search": {
+   "dir": "media/gif-search",
+   "cat": "media",
+   "refs": [],
+   "lines": 92,
+   "chars": 2718
+  },
+  "heartmula": {
+   "dir": "media/heartmula",
+   "cat": "media",
+   "refs": [],
+   "lines": 172,
+   "chars": 6400
+  },
+  "songsee": {
+   "dir": "media/songsee",
+   "cat": "media",
+   "refs": [],
+   "lines": 84,
+   "chars": 2336
+  },
+  "youtube-content": {
+   "dir": "media/youtube-content",
+   "cat": "media",
+   "refs": [
+    "output-formats.md"
+   ],
+   "lines": 97,
+   "chars": 4363
+  },
+  "mcporter": {
+   "dir": "mcp/mcporter",
+   "cat": "mcp",
+   "refs": [],
+   "lines": 123,
+   "chars": 3148
+  },
+  "native-mcp": {
+   "dir": "mcp/native-mcp",
+   "cat": "mcp",
+   "refs": [],
+   "lines": 357,
+   "chars": 12534
+  },
+  "local-secret-source-bridge": {
+   "dir": "local-secret-source/local-secret-source-bridge",
+   "cat": "local-secret-source",
+   "refs": [
+    "bluesky-fleet.md",
+    "local-surface-system.md",
+    "milestone-origin-packaging.md",
+    "session-local-secret-bridge.md"
+   ],
+   "lines": 176,
+   "chars": 9300
+  },
+  "find-nearby": {
+   "dir": "leisure/find-nearby",
+   "cat": "leisure",
+   "refs": [],
+   "lines": 70,
+   "chars": 3076
+  },
+  "inference-sh-cli": {
+   "dir": "inference-sh/cli",
+   "cat": "inference-sh",
+   "refs": [
+    "app-discovery.md",
+    "authentication.md",
+    "cli-reference.md",
+    "running-apps.md"
+   ],
+   "lines": 156,
+   "chars": 4634
+  },
+  "hermes-conductor-mesh": {
+   "dir": "hermes/hermes-conductor-mesh",
+   "cat": "hermes",
+   "refs": [
+    "conductor-pitfalls-learned.md",
+    "cuda-mcp2-deploy.md"
+   ],
+   "lines": 172,
+   "chars": 10524
+  },
+  "github-auth": {
+   "dir": "github/github-auth",
+   "cat": "github",
+   "refs": [],
+   "lines": 248,
+   "chars": 7566
+  },
+  "github-code-review": {
+   "dir": "github/github-code-review",
+   "cat": "github",
+   "refs": [
+    "review-output-template.md"
+   ],
+   "lines": 482,
+   "chars": 13531
+  },
+  "github-issues": {
+   "dir": "github/github-issues",
+   "cat": "github",
+   "refs": [],
+   "lines": 371,
+   "chars": 9311
+  },
+  "github-pr-workflow": {
+   "dir": "github/github-pr-workflow",
+   "cat": "github",
+   "refs": [
+    "ci-troubleshooting.md",
+    "conventional-commits.md"
+   ],
+   "lines": 368,
+   "chars": 10011
+  },
+  "github-repo-management": {
+   "dir": "github/github-repo-management",
+   "cat": "github",
+   "refs": [
+    "github-api-cheatsheet.md"
+   ],
+   "lines": 517,
+   "chars": 13723
+  },
+  "minecraft-modpack-server": {
+   "dir": "gaming/minecraft-modpack-server",
+   "cat": "gaming",
+   "refs": [],
+   "lines": 187,
+   "chars": 6626
+  },
+  "pokemon-player": {
+   "dir": "gaming/pokemon-player",
+   "cat": "gaming",
+   "refs": [],
+   "lines": 216,
+   "chars": 8730
+  },
+  "email-inbox-triage": {
+   "dir": "email/email-inbox-triage",
+   "cat": "email",
+   "refs": [],
+   "lines": 98,
+   "chars": 5435
+  },
+  "himalaya": {
+   "dir": "email/himalaya",
+   "cat": "email",
+   "refs": [
+    "configuration.md",
+    "message-composition.md"
+   ],
+   "lines": 305,
+   "chars": 7254
+  },
+  "hermes-agent-setup": {
+   "dir": "dogfood/hermes-agent-setup",
+   "cat": "dogfood",
+   "refs": [],
+   "lines": 301,
+   "chars": 9480
+  },
+  "hermes-local-dev-bridge": {
+   "dir": "dogfood/hermes-local-dev-bridge",
+   "cat": "dogfood",
+   "refs": [
+    "vscode-remote-use-blueprint.md"
+   ],
+   "lines": 166,
+   "chars": 7194
+  },
+  "sdlc-review": {
+   "dir": "devops/sdlc-review",
+   "cat": "devops",
+   "refs": [],
+   "lines": 182,
+   "chars": 9065
+  },
+  "windows-gui-automation": {
+   "dir": "desktop/windows-gui-automation",
+   "cat": "desktop",
+   "refs": [
+    "onedrive-desktop-reorg-data-loss.md",
+    "windows-cua-0x0-capture.md"
+   ],
+   "lines": 274,
+   "chars": 12107
+  },
+  "jupyter-live-kernel": {
+   "dir": "data-science/jupyter-live-kernel",
+   "cat": "data-science",
+   "refs": [],
+   "lines": 168,
+   "chars": 5273
+  },
+  "architecture-diagram": {
+   "dir": "creative/architecture-diagram",
+   "cat": "creative",
+   "refs": [],
+   "lines": 149,
+   "chars": 5818
+  },
+  "ascii-art": {
+   "dir": "creative/ascii-art",
+   "cat": "creative",
+   "refs": [],
+   "lines": 323,
+   "chars": 10388
+  },
+  "ascii-video": {
+   "dir": "creative/ascii-video",
+   "cat": "creative",
+   "refs": [
+    "architecture.md",
+    "composition.md",
+    "effects.md",
+    "inputs.md",
+    "optimization.md",
+    "scenes.md",
+    "shaders.md",
+    "troubleshooting.md"
+   ],
+   "lines": 249,
+   "chars": 14891
+  },
+  "baoyu-infographic": {
+   "dir": "creative/baoyu-infographic",
+   "cat": "creative",
+   "refs": [
+    "analysis-framework.md",
+    "base-prompt.md",
+    "layouts",
+    "structured-content-template.md",
+    "styles"
+   ],
+   "lines": 238,
+   "chars": 10337
+  },
+  "claude-design": {
+   "dir": "creative/claude-design",
+   "cat": "creative",
+   "refs": [],
+   "lines": 666,
+   "chars": 26660
+  },
+  "comfyui": {
+   "dir": "creative/comfyui",
+   "cat": "creative",
+   "refs": [
+    "official-cli.md",
+    "rest-api.md",
+    "template-integrity.md",
+    "workflow-format.md"
+   ],
+   "lines": 613,
+   "chars": 23693
+  },
+  "design-md": {
+   "dir": "creative/design-md",
+   "cat": "creative",
+   "refs": [],
+   "lines": 221,
+   "chars": 8435
+  },
+  "excalidraw": {
+   "dir": "creative/excalidraw",
+   "cat": "creative",
+   "refs": [
+    "colors.md",
+    "dark-mode.md",
+    "examples.md"
+   ],
+   "lines": 200,
+   "chars": 7278
+  },
+  "html-as-skill": {
+   "dir": "creative/html-as-skill",
+   "cat": "creative",
+   "refs": [
+    "agentic-html-patterns.md",
+    "conductor-grammar.md",
+    "html-as-repo.md",
+    "html-vscode-webview-join.md",
+    "local-html-hub.md",
+    "local-html-system.md",
+    "soft-repo.md",
+    "threejs-webgpu-surfaces.md",
+    "vscode-media-viewport.md"
+   ],
+   "lines": 362,
+   "chars": 22505
+  },
+  "humanizer": {
+   "dir": "creative/humanizer",
+   "cat": "creative",
+   "refs": [],
+   "lines": 648,
+   "chars": 34415
+  },
+  "manim-video": {
+   "dir": "creative/manim-video",
+   "cat": "creative",
+   "refs": [
+    "animation-design-thinking.md",
+    "animations.md",
+    "brand-intro.md",
+    "camera-and-3d.md",
+    "decorations.md",
+    "equations.md",
+    "graphs-and-data.md",
+    "mobjects.md",
+    "omniverse-3d-brand.md",
+    "paper-explainer.md",
+    "production-quality.md",
+    "rendering.md",
+    "scene-planning.md",
+    "troubleshooting.md",
+    "updaters-and-trackers.md",
+    "visual-design.md"
+   ],
+   "lines": 317,
+   "chars": 18549
+  },
+  "p5js": {
+   "dir": "creative/p5js",
+   "cat": "creative",
+   "refs": [
+    "animation.md",
+    "color-systems.md",
+    "core-api.md",
+    "export-pipeline.md",
+    "interaction.md",
+    "shapes-and-geometry.md",
+    "troubleshooting.md",
+    "typography.md",
+    "visual-effects.md",
+    "webgl-and-3d.md"
+   ],
+   "lines": 559,
+   "chars": 27369
+  },
+  "popular-web-designs": {
+   "dir": "creative/popular-web-designs",
+   "cat": "creative",
+   "refs": [],
+   "lines": 214,
+   "chars": 9716
+  },
+  "pretext": {
+   "dir": "creative/pretext",
+   "cat": "creative",
+   "refs": [
+    "patterns.md"
+   ],
+   "lines": 221,
+   "chars": 14084
+  },
+  "sketch": {
+   "dir": "creative/sketch",
+   "cat": "creative",
+   "refs": [],
+   "lines": 219,
+   "chars": 9183
+  },
+  "songwriting-and-ai-music": {
+   "dir": "creative/songwriting-and-ai-music",
+   "cat": "creative",
+   "refs": [],
+   "lines": 309,
+   "chars": 10907
+  },
+  "sovereign-browser-surface": {
+   "dir": "creative/sovereign-browser-surface",
+   "cat": "creative",
+   "refs": [],
+   "lines": 219,
+   "chars": 9007
+  },
+  "spanish-rae": {
+   "dir": "creative/spanish-rae",
+   "cat": "creative",
+   "refs": [],
+   "lines": 94,
+   "chars": 3616
+  },
+  "touchdesigner-mcp": {
+   "dir": "creative/touchdesigner-mcp",
+   "cat": "creative",
+   "refs": [
+    "3d-scene.md",
+    "animation.md",
+    "audio-reactive.md",
+    "dat-scripting.md",
+    "external-data.md",
+    "geometry-comp.md",
+    "glsl.md",
+    "layout-compositor.md",
+    "mcp-tools.md",
+    "midi-osc.md",
+    "network-patterns.md",
+    "operator-tips.md",
+    "operators.md",
+    "panel-ui.md",
+    "particles.md",
+    "pitfalls.md",
+    "postfx.md",
+    "projection-mapping.md",
+    "python-api.md",
+    "replicator.md",
+    "troubleshooting.md"
+   ],
+   "lines": 357,
+   "chars": 15371
+  },
+  "agentic-entrepreneurship": {
+   "dir": "business/agentic-entrepreneurship",
+   "cat": "business",
+   "refs": [
+    "ae-hermes-tool-implementation.md",
+    "ae-mcp-server.md",
+    "agentic-typography.md",
+    "api-key-security-pattern.md",
+    "blueprint-is-dao.md",
+    "blueprints-as-discovery-category.md",
+    "boot-sequence-pattern.md",
+    "breakouts-phase.md",
+    "cinematic-html-video.md",
+    "cloudflare-dns-management.md",
+    "cmdk-memory-graph.md",
+    "contest-pitch-structure.md",
+    "contest-submission-checklist.md",
+    "contest-variable-mapping.md",
+    "current-stack-assets.md",
+    "daollc-domain-stack.md",
+    "deployment-github-pages.md",
+    "elevenlabs-tts-direct.md",
+    "emoji-universal-language.md",
+    "glocal-dao-surface-registry.md",
+    "hermes-operator-grammar.md",
+    "hermes-skills-hub-integration.md",
+    "hostinger-api-forwarding.md",
+    "hostinger-redirects.md",
+    "html-as-repo.md",
+    "live-api-verification.md",
+    "live-checkout-creation.md",
+    "living-enterprise-state-machine.md",
+    "manim-elevenlabs-pipeline.md",
+    "manim-reachy-video.md",
+    "naics-api-integration.md",
+    "naics-blueprint.md",
+    "nous-research-theme.md",
+    "nvidia-live-api.md",
+    "omniverse-250000-simulator.md",
+    "partnerstack-api.md",
+    "reachy-daollc-operator-protocol.md",
+    "reachy-face-pattern.md",
+    "referral-funded-adoption.md",
+    "session-2026-06-30-blueprint-stack.md",
+    "session-2026-06-30-economic-infrastructure.md",
+    "sovaereign-github-app.md",
+    "vlc-primitive.md",
+    "vscode-incubator-session-2026-07-01.md",
+    "vscode-remote-use-fallback.md"
+   ],
+   "lines": 1367,
+   "chars": 64913
+  },
+  "domain-codemode": {
+   "dir": "business/domain-codemode",
+   "cat": "business",
+   "refs": [],
+   "lines": 126,
+   "chars": 3992
+  },
+  "domains-to-github-pages": {
+   "dir": "business/domains-to-github-pages",
+   "cat": "business",
+   "refs": [
+    "domain-portfolio-tracker.md"
+   ],
+   "lines": 234,
+   "chars": 12360
+  },
+  "reachy-clerk": {
+   "dir": "business/reachy-clerk",
+   "cat": "business",
+   "refs": [
+    "cinematic-html-video.md",
+    "hermes-reachy-hf-space-scaffold.md"
+   ],
+   "lines": 285,
+   "chars": 11353
+  },
+  "agentic-interpreter": {
+   "dir": "autonomous-ai-agents/agentic-interpreter",
+   "cat": "autonomous-ai-agents",
+   "refs": [
+    "windows-cua-driver-scheduled-task-fix.md"
+   ],
+   "lines": 219,
+   "chars": 11906
+  },
+  "claude-code": {
+   "dir": "autonomous-ai-agents/claude-code",
+   "cat": "autonomous-ai-agents",
+   "refs": [],
+   "lines": 755,
+   "chars": 35034
+  },
+  "codex": {
+   "dir": "autonomous-ai-agents/codex",
+   "cat": "autonomous-ai-agents",
+   "refs": [],
+   "lines": 152,
+   "chars": 5834
+  },
+  "hermes-agent": {
+   "dir": "autonomous-ai-agents/hermes-agent",
+   "cat": "autonomous-ai-agents",
+   "refs": [
+    "background-systems.md",
+    "cli-reference.md",
+    "configuration.md",
+    "contributor-guide.md",
+    "delegate-task-concurrency-diagnosis.md",
+    "desktop-plugins.md",
+    "native-mcp.md",
+    "petdex.md",
+    "portal-auth-for-third-party-apps.md",
+    "project-context-files.md",
+    "providers-and-models.md",
+    "security-privacy.md",
+    "slash-commands.md",
+    "themes.md",
+    "troubleshooting.md",
+    "tui-widgets.md",
+    "webhooks.md",
+    "windows-quirks.md"
+   ],
+   "lines": 214,
+   "chars": 13104
+  },
+  "opencode": {
+   "dir": "autonomous-ai-agents/opencode",
+   "cat": "autonomous-ai-agents",
+   "refs": [],
+   "lines": 220,
+   "chars": 7289
+  },
+  "apple-notes": {
+   "dir": "apple/apple-notes",
+   "cat": "apple",
+   "refs": [],
+   "lines": 95,
+   "chars": 2380
+  },
+  "apple-reminders": {
+   "dir": "apple/apple-reminders",
+   "cat": "apple",
+   "refs": [],
+   "lines": 131,
+   "chars": 3598
+  },
+  "findmy": {
+   "dir": "apple/findmy",
+   "cat": "apple",
+   "refs": [],
+   "lines": 132,
+   "chars": 3811
+  },
+  "imessage": {
+   "dir": "apple/imessage",
+   "cat": "apple",
+   "refs": [],
+   "lines": 103,
+   "chars": 2424
+  },
+  "agentic-language-chassis": {
+   "dir": "agentic/agentic-language-chassis",
+   "cat": "agentic",
+   "refs": [
+    "agentic-grid-recipe.md",
+    "agentic-xtml-proof.md",
+    "chassis-fit.md",
+    "conductor-scheme-recipe.md",
+    "ledger-reference.md",
+    "scheme-recipe-file-computer.md",
+    "scheme-recipe-robot-desktop.md"
+   ],
+   "lines": 353,
+   "chars": 24881
+  }
+ },
+ "edges": {
+  "code-mode|sovereign-browser-surface": 2,
+  "code-mode|sovereign-local-loop": 2,
+  "code-mode|glocal-mesh": 2,
+  "cuda|sovereign-vscode-surface-dev": 8,
+  "cuda|hermes-operator-grammar": 6,
+  "cuda|optimizing-attention-flash": 7,
+  "cuda|hermes-surface-development": 4,
+  "cuda|lambda-labs-gpu-cloud": 2,
+  "cuda|modal-serverless-gpu": 2,
+  "cuda|local-agent-runtime": 2,
+  "hyperframes-animation|hyperframes-core": 5,
+  "hyperframes-animation|hyperframes-creative": 3,
+  "hyperframes-animation|hyperframes-cli": 1,
+  "hyperframes-core|hyperframes-creative": 3,
+  "hyperframes-core|media-use": 1,
+  "hyperframes-cli|hyperframes-core": 2,
+  "hyperframes-core|hyperframes-registry": 1,
+  "hyperframes-animation|hyperframes-keyframes": 1,
+  "hyperframes-cli|hyperframes-keyframes": 1,
+  "deploy-surfaces|keeper": 2,
+  "hermes-desktop-plugins|keeper": 2,
+  "glocal-mesh|keeper": 3,
+  "llama-cpp-gpu|pc-qr-api": 2,
+  "ae-as-skill|llama-cpp-gpu": 2,
+  "keeper|measurement-index": 2,
+  "html-as-skill|measurement-index": 2,
+  "measurement-index|qr-as-skill": 2,
+  "code-mode|measurement-index": 2,
+  "hermes-agent-skill-authoring|pc-qr-api": 2,
+  "keeper|qr-as-skill": 2,
+  "html-as-skill|qr-as-skill": 2,
+  "qr-as-skill|sovereign-local-loop": 2,
+  "code-mode|qr-as-skill": 2,
+  "hermes-operator-grammar|sovereign-cuda-bridge": 2,
+  "glocal-secrets|sovereign-cuda-bridge": 7,
+  "cuda|sovereign-cuda-bridge": 2,
+  "agentic-language-chassis|sovereign-cuda-bridge": 2,
+  "blocked-page-recovery|grounded-citations": 2,
+  "deploy-surfaces|github-pages-deploy": 4,
+  "deploy-surfaces|rtx-telemetry": 4,
+  "deploy-surfaces|sovereign-mcp-surface": 2,
+  "deploy-surfaces|glocal-mesh": 3,
+  "glocal-mesh|hermes-agent": 1,
+  "llama-cpp-gpu|pc-inference": 3,
+  "pc-inference|pc-qr-api": 3,
+  "ae-as-skill|pc-inference": 3,
+  "cuda-victus-dev|rtx-telemetry": 3,
+  "rtx-telemetry|sovereign-cuda-bridge": 2,
+  "rtx-telemetry|sovereign-mcp-surface": 4,
+  "glocal-mesh|rtx-telemetry": 4,
+  "github-pages-deploy|sovereign-resource-absorption": 3,
+  "deploy-surfaces|sovereign-resource-absorption": 2,
+  "agentic-chassis-surface|sovereign-resource-absorption": 2,
+  "browser-agent-loop|llama-cpp": 3,
+  "browser-agent-loop|html-as-skill": 3,
+  "browser-agent-loop|sovereign-local-agent": 2,
+  "browser-agent-loop|sovereign-local-loop": 6,
+  "codebase-inspection|github": 4,
+  "cuda-victus-dev|hermes-conductor-mesh": 1,
+  "cuda-victus-dev|hermes-surface-development": 3,
+  "github|requesting-code-review": 2,
+  "github-pages-deploy|html-as-skill": 2,
+  "hermes-agent-skill-authoring|requesting-code-review": 2,
+  "hermes-runtime-state|hermes-vscode-incubator": 2,
+  "hermes-runtime-state|hermes-surface-development": 2,
+  "hermes-surface-development|sovereign-atproto-network": 1,
+  "inspecting-hermes-desktop-dom|node-inspect-debugger": 3,
+  "dogfood|inspecting-hermes-desktop-dom": 2,
+  "inspecting-hermes-desktop-dom|systematic-debugging": 2,
+  "interpreter-dispatch-debugging|test-driven-development": 2,
+  "interpreter-dispatch-debugging|systematic-debugging": 4,
+  "agentic-language-chassis|interpreter-dispatch-debugging": 2,
+  "hermes-native|local-agent-runtime": 1,
+  "local-agent-runtime|vscode-as-skill": 1,
+  "local-agent-runtime|sovereign-vscode-surface-dev": 1,
+  "claude-design|local-first-operator-surfaces": 1,
+  "hermes-agent|local-first-operator-surfaces": 1,
+  "native-vision-from-first-principles|ocr-and-documents": 2,
+  "node-inspect-debugger|python-debugpy": 5,
+  "node-inspect-debugger|systematic-debugging": 2,
+  "plan|writing-plans": 2,
+  "plan|subagent-driven-development": 2,
+  "python-debugpy|systematic-debugging": 2,
+  "requesting-code-review|test-driven-development": 2,
+  "requesting-code-review|writing-plans": 4,
+  "requesting-code-review|subagent-driven-development": 4,
+  "github-pages-deploy|resource-absorb-and-rename": 4,
+  "html-as-skill|resource-absorb-and-rename": 3,
+  "resource-absorb-and-rename|sovereign-fork-commit": 2,
+  "simplify-code|test-driven-development": 2,
+  "requesting-code-review|simplify-code": 4,
+  "simplify-code|subagent-driven-development": 1,
+  "sovereign-atproto-network|sovereign-local-agent": 1,
+  "local-agent-runtime|sovereign-local-agent": 2,
+  "hermes-agent|sovereign-vscode-surface-dev": 2,
+  "sovereign-vscode-surface-dev|windows-gui-automation": 2,
+  "spike|subagent-driven-development": 2,
+  "sketch|spike": 4,
+  "plan|spike": 1,
+  "subagent-driven-development|test-driven-development": 4,
+  "subagent-driven-development|writing-plans": 5,
+  "systematic-debugging|test-driven-development": 5,
+  "subagent-driven-development|systematic-debugging": 2,
+  "hermes-vscode-incubator|vscode-as-skill": 2,
+  "html-as-skill|vscode-as-skill": 4,
+  "local-first-operator-surfaces|vscode-as-skill": 2,
+  "hermes-surface-development|vscode-as-skill": 2,
+  "hermes-agent|vscode-as-skill": 1,
+  "test-driven-development|writing-plans": 3,
+  "xitter|xurl": 1,
+  "glocal-secrets|local-secret-source-bridge": 2,
+  "arxiv|ocr-and-documents": 4,
+  "blogwatcher|competitor-news-monitor": 8,
+  "arxiv|duckduckgo-search": 2,
+  "blogwatcher|grounded-citations": 4,
+  "grounded-citations|pdf": 2,
+  "arxiv|grounded-citations": 3,
+  "grounded-citations|youtube-content": 3,
+  "grounded-citations|xurl": 1,
+  "llm-wiki|obsidian": 2,
+  "arxiv|llm-wiki": 2,
+  "duckduckgo-search|parallel-cli": 2,
+  "mcporter|parallel-cli": 2,
+  "research-paper-writing|subagent-driven-development": 2,
+  "plan|research-paper-writing": 2,
+  "arxiv|research-paper-writing": 3,
+  "ml-paper-writing|research-paper-writing": 4,
+  "box|google-workspace": 2,
+  "document-to-action-items|pdf": 7,
+  "document-to-action-items|notion": 3,
+  "document-to-action-items|docx": 4,
+  "document-to-action-items|xlsx": 1,
+  "docx|pdf": 4,
+  "docx|powerpoint": 4,
+  "docx|xlsx": 4,
+  "google-workspace|himalaya": 3,
+  "find-nearby|maps": 1,
+  "meeting-action-items|notion": 3,
+  "google-workspace|meeting-action-items": 2,
+  "meeting-action-items|teams-meeting-pipeline": 4,
+  "github-issues|meeting-action-items": 1,
+  "ocr-and-documents|powerpoint": 4,
+  "pdf|powerpoint": 4,
+  "pdf|xlsx": 4,
+  "powerpoint|xlsx": 4,
+  "maps|product-price-monitor": 2,
+  "obsidian|weekly-review-planning": 3,
+  "airtable|weekly-review-planning": 2,
+  "email-inbox-triage|weekly-review-planning": 4,
+  "notion|weekly-review-planning": 3,
+  "google-workspace|weekly-review-planning": 4,
+  "fine-tuning-with-trl|hermes-atropos-environments": 2,
+  "grpo-rl-training|hermes-atropos-environments": 2,
+  "axolotl|hermes-atropos-environments": 2,
+  "huggingface-tokenizers|obliteratus": 2,
+  "gguf-quantization|obliteratus": 2,
+  "obliteratus|tensorrt-llm": 2,
+  "audiocraft-audio-generation|heartmula": 2,
+  "chroma|songsee": 1,
+  "mcporter|native-mcp": 4,
+  "github|native-mcp": 1,
+  "github-auth|github-issues": 5,
+  "github-auth|github-code-review": 5,
+  "github-auth|github-repo-management": 5,
+  "github-auth|github-pr-workflow": 5,
+  "github-code-review|github-pr-workflow": 4,
+  "github-issues|github-pr-workflow": 2,
+  "github-issues|github-repo-management": 2,
+  "github-pr-workflow|github-repo-management": 2,
+  "email-inbox-triage|himalaya": 4,
+  "email-inbox-triage|google-workspace": 4,
+  "hermes-agent-setup|hermes-local-dev-bridge": 2,
+  "hermes-local-dev-bridge|windows-gui-automation": 2,
+  "hermes-agent|hermes-local-dev-bridge": 1,
+  "architecture-diagram|excalidraw": 3,
+  "ascii-art|excalidraw": 2,
+  "architecture-diagram|claude-design": 2,
+  "claude-design|design-md": 10,
+  "claude-design|popular-web-designs": 8,
+  "claude-design|excalidraw": 2,
+  "comfyui|stable-diffusion-image-generation": 4,
+  "architecture-diagram|design-md": 2,
+  "design-md|popular-web-designs": 4,
+  "design-md|excalidraw": 2,
+  "html-as-skill|local-first-operator-surfaces": 2,
+  "hermes-surface-development|html-as-skill": 2,
+  "hermes-vscode-incubator|html-as-skill": 2,
+  "domain-codemode|html-as-skill": 5,
+  "html-as-skill|reachy-clerk": 4,
+  "agentic-entrepreneurship|html-as-skill": 5,
+  "domains-to-github-pages|html-as-skill": 1,
+  "humanizer|songwriting-and-ai-music": 2,
+  "ascii-video|p5js": 2,
+  "manim-video|p5js": 2,
+  "excalidraw|p5js": 2,
+  "architecture-diagram|pretext": 2,
+  "claude-design|pretext": 2,
+  "excalidraw|pretext": 2,
+  "p5js|pretext": 3,
+  "ascii-art|pretext": 1,
+  "ascii-video|pretext": 1,
+  "claude-design|sketch": 4,
+  "popular-web-designs|sketch": 2,
+  "excalidraw|sketch": 3,
+  "architecture-diagram|sketch": 1,
+  "computer-use|sovereign-browser-surface": 1,
+  "ascii-video|touchdesigner-mcp": 2,
+  "manim-video|touchdesigner-mcp": 2,
+  "hyperframes|touchdesigner-mcp": 2,
+  "native-mcp|touchdesigner-mcp": 2,
+  "agentic-entrepreneurship|manim-video": 2,
+  "agentic-entrepreneurship|domain-codemode": 6,
+  "agentic-entrepreneurship|domains-to-github-pages": 3,
+  "agentic-entrepreneurship|reachy-clerk": 4,
+  "agentic-entrepreneurship|claude-design": 2,
+  "agentic-entrepreneurship|agentic-language-chassis": 3,
+  "domain-codemode|reachy-clerk": 2,
+  "huggingface-hub|reachy-clerk": 2,
+  "claude-code|hermes-agent": 4,
+  "claude-code|opencode": 4,
+  "claude-code|codex": 4,
+  "claude-code|plan": 1,
+  "codex|hermes-agent": 4,
+  "hermes-agent|opencode": 4,
+  "codex|opencode": 2,
+  "apple-notes|obsidian": 4,
+  "agentic-language-chassis|html-as-skill": 2,
+  "agentic-language-chassis|domain-codemode": 2,
+  "agentic-language-chassis|hermes-surface-development": 2,
+  "hyperframes-creative|touchdesigner-mcp": 1,
+  "hyperframes-creative|p5js": 1,
+  "hermes-surface-development|æ": 1,
+  "agentic-chassis-surface|glocal-mesh": 1,
+  "glocal-mesh|sovereign-atproto-network": 1,
+  "agentic-chassis-surface|sovereign-atproto-network": 1,
+  "github|github-pr-workflow": 1,
+  "github|github-repo-management": 1,
+  "github|github-code-review": 1,
+  "box|comfyui": 1,
+  "chroma|huggingface-tokenizers": 1,
+  "axolotl|sparse-autoencoder-training": 1,
+  "axolotl|pytorch-fsdp": 1,
+  "axolotl|unsloth": 1,
+  "pytorch-fsdp|unsloth": 1,
+  "huggingface-tokenizers|llava": 1,
+  "guidance|outlines": 1,
+  "llama-cpp|tensorrt-llm": 1,
+  "llama-cpp|serving-llms-vllm": 1,
+  "ascii-video|llama-cpp": 1,
+  "serving-llms-vllm|tensorrt-llm": 1,
+  "ascii-video|tensorrt-llm": 1,
+  "ascii-video|serving-llms-vllm": 1,
+  "hermes-agent|inference-sh-cli": 1,
+  "hermes-agent|himalaya": 1,
+  "p5js|touchdesigner-mcp": 1
+ }
+}

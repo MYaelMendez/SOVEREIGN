@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase13-agentic — Agentic Electronic Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff;--green:#4dff9e;--red:#ff5a5a}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#stage{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:1}
+#stage canvas{display:block;width:1920px;height:1080px}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.62) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:420px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud .loop{font-size:16px;letter-spacing:2px}
+#hud .st{opacity:0.45;transition:opacity .2s,color .2s,text-shadow .2s}
+#hud .st.on{opacity:1;color:#eafcff;text-shadow:0 0 16px rgba(0,234,255,0.9)}
+#hud .ar{color:var(--gold);opacity:0.6;margin:0 8px}
+#hud ul{list-style:none;margin-top:22px;font-size:14px;line-height:1.95}
+#hud li{opacity:0.72}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:var(--cyan)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);
+  border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="hud">
+  <h1>æ:// fase13-agentic</h1>
+  <div class="sub">Semana 13 · Agentic Electronic Engineering</div>
+  <div class="rule"></div>
+  <div class="loop">agent loop:
+    <span class="st" data-st="0">perceive</span><span class="ar">→</span><span class="st" data-st="1">plan</span><span class="ar">→</span><span class="st" data-st="2">route</span><span class="ar">→</span><span class="st" data-st="3">verify</span>
+  </div>
+  <ul>
+    <li>agents · <span class="v">6</span></li>
+    <li>traces routed · <span class="v" id="tr">0</span> / <span class="v">24</span></li>
+    <li>signals active · <span class="v" id="sg">0</span></li>
+    <li>verify pass · <span class="v" id="vp">0</span> / <span class="v">6</span></li>
+  </ul>
+</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> · t <span class="g" id="tt">0.00</span>s</div>
+<div id="badge"
+  onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 22px rgba(212,175,55,0.45)'"
+  onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+  onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+  title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase13-agentic-electronics.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+const W = 1920, H = 1080, DURATION = 15.0;
+const GOLD = 0xD4AF37, CYAN = 0x00eaff, GREEN = 0x4dff9e, RED = 0xff5a5a;
+
+/* ---- renderer / scene / camera ---- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 6000);
+camera.position.set(0, 180, 420);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2.2;
+document.getElementById('stage').appendChild(renderer.domElement);
+
+/* ---- backdrop glow (luminance floor for gate) ---- */
+const backdropMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan; varying vec2 vUv;
+    void main(){
+      vec2 p = vUv - 0.5;
+      float d = length(p * vec2(1.0, 0.82));
+      float core = smoothstep(0.82, 0.0, d);
+      float ring = smoothstep(0.05, 0.0, abs(d - 0.44));
+      vec3 col = uGold * core * 1.8;
+      col += uCyan * ring * 1.2;
+      col += uGold * 0.35;
+      col *= 1.2 + 0.3 * sin(uTime * 1.3);
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(2000, 1200), backdropMat);
+backdrop.position.set(0, 0, -800);
+backdrop.renderOrder = -1;
+scene.add(backdrop);
+
+/* ---- lights ---- */
+scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(120, 260, 180);
+scene.add(key);
+const rim = new THREE.PointLight(CYAN, 2.5, 3000);
+rim.position.set(-180, 120, -120);
+scene.add(rim);
+
+/* ---- PCB board ---- */
+const boardMat = new THREE.MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.6, metalness: 0.2 });
+const board = new THREE.Mesh(new THREE.BoxGeometry(360, 2, 240), boardMat);
+board.position.y = -2;
+scene.add(board);
+
+/* ---- grid on PCB ---- */
+const gridMat = new THREE.MeshBasicMaterial({ color: 0x1a3a1a, transparent: true, opacity: 0.3 });
+for (let i = -4; i <= 4; i++) {
+  const line = new THREE.Mesh(new THREE.BoxGeometry(360, 0.1, 0.5), gridMat);
+  line.position.set(0, -0.5, i * 24);
+  scene.add(line);
+}
+for (let j = -5; j <= 5; j++) {
+  const line = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 240), gridMat);
+  line.position.set(j * 32, -0.5, 0);
+  scene.add(line);
+}
+
+/* ---- traces (PCB routing) ---- */
+const traces = [];
+const TRACE_COLORS = [GOLD, CYAN, GREEN, 0xff66cc, 0xffb347, 0x66ddff];
+for (let i = 0; i < 24; i++) {
+  const x1 = (Math.random() - 0.5) * 300;
+  const z1 = (Math.random() - 0.5) * 200;
+  const x2 = (Math.random() - 0.5) * 300;
+  const z2 = (Math.random() - 0.5) * 200;
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2 + (Math.random() - 0.5) * 40;
+
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(x1, 0.5, z1),
+    new THREE.Vector3(cx, 0.5, cz),
+    new THREE.Vector3(x2, 0.5, z2)
+  ]);
+
+  const geo = new THREE.TubeGeometry(curve, 20, 0.8, 6, false);
+  const color = TRACE_COLORS[i % TRACE_COLORS.length];
+  const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.visible = false;
+  scene.add(mesh);
+
+  // trace endpoints (pads)
+  const padGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.5, 12);
+  const pad1 = new THREE.Mesh(padGeo, mat);
+  pad1.position.set(x1, 0.5, z1);
+  const pad2 = new THREE.Mesh(padGeo, mat);
+  pad2.position.set(x2, 0.5, z2);
+  pad1.visible = false;
+  pad2.visible = false;
+  scene.add(pad1);
+  scene.add(pad2);
+
+  traces.push({ mesh, pad1, pad2, curve, color, mat, progress: 0, visible: false });
+}
+
+/* ---- signal pulses on traces ---- */
+const pulses = [];
+const pulseGeo = new THREE.SphereGeometry(1.5, 8, 8);
+for (let i = 0; i < 18; i++) {
+  const mat = new THREE.MeshBasicMaterial({ color: TRACE_COLORS[i % TRACE_COLORS.length], transparent: true, opacity: 0 });
+  const sphere = new THREE.Mesh(pulseGeo, mat);
+  sphere.visible = false;
+  scene.add(sphere);
+  pulses.push({ mesh: sphere, traceIdx: i % 24, t: 0, speed: 0.15 + Math.random() * 0.2, visible: false });
+}
+
+/* ---- components (chips) ---- */
+const components = [];
+const CHIP_POSITIONS = [
+  { x: -120, z: -60 }, { x: 0, z: -60 }, { x: 120, z: -60 },
+  { x: -120, z: 60 }, { x: 0, z: 60 }, { x: 120, z: 60 }
+];
+for (let i = 0; i < 6; i++) {
+  const w = 20 + Math.random() * 15;
+  const d = 20 + Math.random() * 15;
+  const h = 6 + Math.random() * 4;
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x111111, roughness: 0.3, metalness: 0.8,
+    emissive: 0x0a0a0a, emissiveIntensity: 0.5
+  });
+  const chip = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  chip.position.set(CHIP_POSITIONS[i].x, h / 2, CHIP_POSITIONS[i].z);
+  scene.add(chip);
+
+  // chip pins
+  const pinMat = new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.2, metalness: 0.9 });
+  for (let p = 0; p < 4; p++) {
+    const pin = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 3), pinMat);
+    pin.position.set(CHIP_POSITIONS[i].x + (p - 1.5) * 4, 0.5, CHIP_POSITIONS[i].z + d / 2 + 1);
+    scene.add(pin);
+  }
+  components.push({ mesh: chip, mat });
+}
+
+/* ---- agent nodes (floating markers) ---- */
+const agentNodes = [];
+const agentGeo = new THREE.OctahedronGeometry(3, 0);
+for (let i = 0; i < 6; i++) {
+  const mat = new THREE.MeshStandardMaterial({
+    color: TRACE_COLORS[i], emissive: TRACE_COLORS[i], emissiveIntensity: 0.8,
+    roughness: 0.2, metalness: 0.5, transparent: true, opacity: 0.85
+  });
+  const node = new THREE.Mesh(agentGeo, mat);
+  const angle = (i / 6) * Math.PI * 2;
+  node.position.set(Math.cos(angle) * 180, 15 + Math.random() * 10, Math.sin(angle) * 120);
+  scene.add(node);
+  agentNodes.push({ mesh: node, baseY: node.position.y, phase: i * 0.5 });
+}
+
+/* ---- HUD handles ---- */
+const elFc = document.getElementById('fc');
+const elTc = document.getElementById('tc');
+const elTt = document.getElementById('tt');
+const elTr = document.getElementById('tr');
+const elSg = document.getElementById('sg');
+const elVp = document.getElementById('vp');
+const stepEls = Array.prototype.slice.call(document.querySelectorAll('#hud .st'));
+
+/* ---- deterministic frame renderer ---- */
+function renderAt(t) {
+  backdropMat.uniforms.uTime.value = t;
+
+  // Agent loop: 4 phases over DURATION
+  const phase = Math.floor(t / DURATION * 4) % 4;
+  for (let k = 0; k < stepEls.length; k++) stepEls[k].classList.toggle('on', k === phase);
+
+  // Trace routing: traces appear progressively
+  const routeProgress = Math.min(1, t / (DURATION * 0.7));
+  const tracesVisible = Math.floor(routeProgress * 24);
+  let activeSignals = 0;
+  for (let i = 0; i < 24; i++) {
+    const tr = traces[i];
+    if (i < tracesVisible) {
+      tr.visible = true;
+      tr.mesh.visible = true;
+      tr.pad1.visible = true;
+      tr.pad2.visible = true;
+      // Animate trace glow
+      tr.mat.emissiveIntensity = 0.4 + 0.4 * Math.sin(t * 3 + i * 0.7);
+    }
+  }
+  elTr.textContent = tracesVisible;
+
+  // Signal pulses on visible traces
+  for (let i = 0; i < pulses.length; i++) {
+    const p = pulses[i];
+    if (traces[p.traceIdx].visible) {
+      p.visible = true;
+      p.t = (t * p.speed + i * 0.13) % 1;
+      const pos = traces[p.traceIdx].curve.getPoint(p.t);
+      p.mesh.position.copy(pos);
+      p.mesh.material.opacity = Math.sin(p.t * Math.PI) * 0.9;
+      activeSignals = i + 1;
+    }
+  }
+  elSg.textContent = activeSignals;
+
+  // Verify pass: agents complete verification
+  const verifyProgress = Math.max(0, Math.min(1, (t - DURATION * 0.4) / (DURATION * 0.5)));
+  const verifyPass = Math.floor(verifyProgress * 6);
+  elVp.textContent = verifyPass;
+
+  // Agent nodes float + pulse
+  for (let i = 0; i < agentNodes.length; i++) {
+    const a = agentNodes[i];
+    a.mesh.position.y = a.baseY + Math.sin(t * 1.5 + a.phase) * 4;
+    a.mesh.rotation.y = t * 0.5 + i;
+    a.mesh.rotation.x = Math.sin(t * 0.3 + i) * 0.2;
+  }
+
+  // Components pulse
+  for (let i = 0; i < components.length; i++) {
+    const c = components[i];
+    c.mat.emissiveIntensity = 0.3 + 0.3 * Math.sin(t * 2 + i * 0.8);
+  }
+
+  // Camera: gentle sway, always in z>0 half-space (backdrop at z=-800 stays visible)
+  const ang = 0.6 + Math.sin(t * 0.5) * 0.4;
+  const rad = 420 + Math.sin(t * 1.1) * 50;
+  const camY = 180 + Math.sin(t * 0.9) * 40;
+  camera.position.set(Math.cos(ang) * rad, camY, Math.sin(ang) * rad);
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+
+/* ---- external frame hook ---- */
+let driven = false;
+window.__renderFrame = function (i, total) {
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  elFc.textContent = i;
+  elTc.textContent = total;
+  elTt.textContent = t.toFixed(2);
+  return true;
+};
+
+/* ---- live loop ---- */
+function loop() {
+  requestAnimationFrame(loop);
+  if (driven) return;
+  renderAt((performance.now() / 1000) % DURATION);
+}
+loop();
+
+window.__renderFrame(0, 1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/fase13-agentic-electronics.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

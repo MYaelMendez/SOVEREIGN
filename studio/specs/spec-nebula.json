@@ -1,0 +1,9 @@
+{
+  "title": "æ:// Nebula",
+  "text": "10K Particles · Custom GLSL Shader · Additive Blending",
+  "duration": 8,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "nebula.html"
+}

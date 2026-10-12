@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>æææ:// TOWER — sovereign mesh sync</title>
+<style>
+  :root {
+    --void: #050505; --gold: #D4AF37; --gold-dim: rgba(212,175,55,0.3);
+    --gold-glow: rgba(212,175,55,0.15); --ink: #e8e6df; --muted: #6f6a5c;
+    --neon: #00ff9d; --cyan: #00eaff; --violet: #8c72ff; --red: #ff4d5f;
+    --border: rgba(212,175,55,0.2);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--void); overflow: hidden; color: var(--ink);
+         font-family: 'JetBrains Mono', 'Consolas', monospace; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0; padding: 14px 22px; z-index: 10;
+    background: linear-gradient(180deg, rgba(5,5,5,0.96) 0%, transparent 100%);
+    display: flex; justify-content: space-between; align-items: center; pointer-events: none;
+  }
+  #hud h1 { font-size: 13px; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  #hud .sub { font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-top: 3px; }
+  #hud .stats { font-size: 10px; color: rgba(212,175,55,0.6); text-align: right; letter-spacing: 1px; }
+  #panel {
+    position: fixed; top: 64px; right: 14px; z-index: 10; width: 280px;
+    border: 1px solid var(--border); background: rgba(5,5,5,0.88);
+    backdrop-filter: blur(8px); border-radius: 4px; padding: 12px;
+    max-height: calc(100vh - 90px); overflow-y: auto;
+  }
+  #panel h3 { color: var(--gold); font-size: 10px; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
+  .ring-item {
+    padding: 6px 8px; margin: 2px 0; border-radius: 3px; cursor: pointer;
+    font-size: 10px; color: rgba(232,230,223,0.55); transition: all .2s;
+    border: 1px solid transparent; display: flex; justify-content: space-between;
+  }
+  .ring-item:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .ring-item.active { background: rgba(212,175,55,0.1); border-color: var(--gold); color: var(--gold); }
+  .ring-item .n { font-weight: 700; }
+  .ring-item .c { color: var(--muted); font-size: 9px; }
+  #inspect { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 9px; }
+  #inspect .k { color: var(--muted); }
+  #inspect .v { color: var(--neon); word-break: break-all; }
+  #inspect .scope { display:inline-block; padding:1px 6px; border-radius:2px; font-size:8px; letter-spacing:1px; }
+  .scope.public { background: rgba(0,255,157,0.15); color: var(--neon); }
+  .scope.local  { background: rgba(140,114,255,0.15); color: var(--violet); }
+  .scope.hybrid { background: rgba(0,234,255,0.15); color: var(--cyan); }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px,
+      rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px);
+  }
+  #status {
+    position: fixed; bottom: 12px; left: 14px; z-index: 10; font-size: 9px;
+    letter-spacing: 2px; color: var(--neon); border: 1px solid rgba(0,255,157,0.3);
+    padding: 4px 10px; border-radius: 3px; background: rgba(5,5,5,0.8);
+  }
+  #qrbox {
+    position: fixed; bottom: 12px; right: 14px; z-index: 10; background: rgba(5,5,5,0.9);
+    border: 1px solid var(--border); border-radius: 4px; padding: 8px; display: none;
+  }
+  #qrbox canvas { display: block; }
+  /* ── VAULT section (panel) ── */
+  #vault-section button {
+    width: 100%; padding: 8px; background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.3); color: var(--gold); border-radius: 4px;
+    cursor: pointer; font-size: 10px; font-family: inherit; transition: all .2s;
+  }
+  #vault-section button:hover { background: rgba(212,175,55,0.2); }
+  /* ── GATE modal — mirrors live vault-layers.html ── */
+  #gate { position: fixed; inset: 0; z-index: 100; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(5,5,5,0.94); backdrop-filter: blur(10px); }
+  #gate .card { background: #0a0a0a; border: 1px solid var(--gold-dim);
+    border-radius: 8px; padding: 32px; width: 360px; text-align: center; }
+  #gate h2 { color: var(--gold); font-size: 13px; letter-spacing: 3px;
+    margin-bottom: 16px; text-transform: uppercase; }
+  #gate input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border); color: var(--ink); font-family: inherit;
+    font-size: 12px; border-radius: 4px; outline: none; margin-bottom: 12px; }
+  #gate button { width: 100%; padding: 10px; background: rgba(212,175,55,0.15);
+    border: 1px solid rgba(212,175,55,0.4); color: var(--gold);
+    font-family: inherit; font-size: 11px; letter-spacing: 1px; border-radius: 4px;
+    cursor: pointer; text-transform: uppercase; }
+  #gate .err { color: var(--red); font-size: 10px; margin-top: 8px; height: 12px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div>
+    <h1>æææ:// TOWER</h1>
+    <div class="sub">SOVEREIGN MESH SYNC · aeqr registry · live</div>
+  </div>
+  <div class="stats" id="stats">boot…</div>
+</div>
+
+<div id="panel">
+  <h3>Constellation Rings</h3>
+  <div id="rings"></div>
+  <div id="inspect"><span class="k">click a ring → then a node</span></div>
+
+  <!-- VAULT — mirrors the live vault-layers.html auth section -->
+  <div id="vault-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+    <h3>Vault</h3>
+    <div id="auth-status" style="font-size:9px;color:rgba(232,230,223,0.4);margin-bottom:8px">Not loaded</div>
+    <button id="load-vault-btn">Load Vault File</button>
+    <input type="file" id="vault-file" accept=".væult,.json" style="display:none">
+    <div id="vault-entries" style="margin-top:8px;font-size:9px;color:rgba(232,230,223,0.5)"></div>
+  </div>
+</div>
+
+<div class="scanlines"></div>
+<div id="status">SYNCING…</div>
+<div id="qrbox"><canvas id="qrcanvas"></canvas></div>
+
+<!-- GATE: vault-file + passphrase — mirrors live vault-layers.html -->
+<div id="gate">
+  <div class="card">
+    <h2>Unlock Tower</h2>
+    <input type="password" id="passphrase" placeholder="Enter vault passphrase" autocomplete="off">
+    <button id="unlock-btn">Unlock</button>
+    <div class="err" id="gate-err"></div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+} }
+</script>
+
+<script src="./vendor/qrcode.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── palette (gold-on-void, per æ design language) ──
+const COLORS = [0xD4AF37, 0x00eaff, 0x00ff9d, 0x8c72ff, 0xff4d5f,
+                0xffaa00, 0x00aaff, 0xa739de, 0x5fd0a0];
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.018);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 14, 34);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
+controls.minDistance = 8; controls.maxDistance = 90;
+
+scene.add(new THREE.AmbientLight(0x404040, 0.6));
+const gold = new THREE.PointLight(0xD4AF37, 2.2, 60); gold.position.set(0, 20, 0);
+scene.add(gold);
+const cool = new THREE.PointLight(0x00eaff, 1.0, 50); cool.position.set(12, -8, 12);
+scene.add(cool);
+
+// ── the tower core (æ) ──
+const coreGeo = new THREE.IcosahedronGeometry(1.1, 2);
+const coreMat = new THREE.MeshStandardMaterial({
+  color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.5,
+  metalness: 0.95, roughness: 0.06, wireframe: true });
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
+
+// vertical spine = the tower
+const spineMat = new THREE.LineBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.25 });
+const spinePts = [];
+for (let y = -20; y <= 20; y += 0.5) spinePts.push(new THREE.Vector3(0, y, 0));
+scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(spinePts), spineMat));
+
+// ── state ──
+const rings = [];
+const pickables = [];
+let activeRing = -1;
+let towerData = null;
+let isUnlocked = false;        // tiered gate: local/hybrid reveal after vault unlock
+
+function ringRadius(count, i) { return 6 + i * 2.6; }
+
+async function loadTower() {
+  const r = await fetch('./data/tower-nodes.json', { cache: 'no-store' });
+  towerData = await r.json();
+  buildRings(towerData);
+  buildRingPanel(towerData);
+  document.getElementById('status').textContent =
+    'SYNCED · ' + towerData.total + ' nodes · ' + towerData.rings.length + ' rings';
+}
+
+function buildRings(data) {
+  data.rings.forEach((ring, i) => {
+    const color = COLORS[i % COLORS.length];
+    const radius = ringRadius(ring.count, i);
+    const y = (i - (data.rings.length - 1) / 2) * 3.4;
+    const group = new THREE.Group();
+    group.position.y = y;
+
+    const torus = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.02, 8, 128),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.25 }));
+    torus.rotation.x = Math.PI / 2;
+    group.add(torus);
+
+    const n = Math.min(ring.nodes.length, 48);
+    const step = (Math.PI * 2) / n;
+    ring.nodes.slice(0, n).forEach((node, j) => {
+      const a = j * step;
+      const size = node.scope === 'local' ? 0.26 : node.scope === 'hybrid' ? 0.3 : 0.22;
+      const gated = node.scope !== 'public';
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 12, 12),
+        new THREE.MeshStandardMaterial({
+          color, emissive: color,
+          emissiveIntensity: gated ? 0.25 : 0.7,
+          metalness: 0.6, roughness: 0.3,
+          wireframe: gated }));
+      m.position.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+      m.userData.node = node;
+      m.userData.ring = i;
+      m.userData.gated = gated;
+      group.add(m);
+      pickables.push(m);
+    });
+
+    const pcount = 120;
+    const pg = new THREE.BufferGeometry();
+    const pos = new Float32Array(pcount * 3);
+    for (let k = 0; k < pcount; k++) {
+      const t = Math.random() * Math.PI * 2, r = radius + (Math.random() - 0.5) * 0.8;
+      pos[k*3] = Math.cos(t) * r; pos[k*3+1] = (Math.random()-0.5)*0.5; pos[k*3+2] = Math.sin(t) * r;
+    }
+    pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    group.add(new THREE.Points(pg, new THREE.PointsMaterial({
+      color, size: 0.05, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false })));
+
+    scene.add(group);
+    rings.push({ ...ring, group, color, radius, y, index: i });
+  });
+}
+
+function buildRingPanel(data) {
+  const host = document.getElementById('rings');
+  data.rings.forEach((ring, i) => {
+    const d = document.createElement('div');
+    d.className = 'ring-item';
+    d.innerHTML = '<span class="n" style="color:#' + COLORS[i % COLORS.length].toString(16).padStart(6,'0') +
+      '">' + ring.category + '</span><span class="c">' + ring.count + '</span>';
+    d.addEventListener('click', () => {
+      document.querySelectorAll('.ring-item').forEach(x => x.classList.remove('active'));
+      d.classList.add('active');
+      activeRing = i;
+      rings.forEach(r => r.group.position.y = (r.index === i) ? r.y + 1.6 : r.y);
+      controls.autoRotateSpeed = 0.35 + i * 0.08;
+    });
+    host.appendChild(d);
+  });
+}
+
+// ── picking ──
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let downXY = null;
+renderer.domElement.addEventListener('pointerdown', e => downXY = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!downXY) return;
+  if (Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 4) return;
+  ptr.x = (e.clientX / innerWidth) * 2 - 1;
+  ptr.y = -(e.clientY / innerHeight) * 2 + 1;
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  if (hit) inspect(hit.object.userData.node);
+});
+
+// ── tiered reveal: public is open; local/hybrid masked until vault unlocks ──
+function locked(node) { return !isUnlocked && node.scope !== 'public'; }
+
+function inspect(node) {
+  const el = document.getElementById('inspect');
+  const m = locked(node);
+  el.innerHTML =
+    '<div><span class="k">id</span> <span class="v">' + node.id + '</span></div>' +
+    '<div><span class="k">name</span> <span class="v">' + (m ? '· · · · ·' : node.name) + '</span></div>' +
+    '<div><span class="k">scope</span> <span class="scope ' + node.scope + '">' + node.scope + '</span></div>' +
+    '<div style="margin-top:6px"><span class="k">route</span><br><span class="v">' +
+      (m ? '· locked — load vault to reveal' : node.route) + '</span></div>';
+  if (m) { document.getElementById('qrbox').style.display = 'none'; return; }
+  showQR(node);
+}
+
+function showQR(node) {
+  const box = document.getElementById('qrbox');
+  const cv = document.getElementById('qrcanvas');
+  if (typeof qrcode === 'undefined') return;
+  const payload = 'ae:1:route:' + btoa(JSON.stringify({ cmd: node.route, id: node.id })).replace(/=+$/,'');
+  const qr = qrcode(0, 'M'); qr.addData(payload); qr.make();
+  const mods = qr.getModuleCount(), px = 4, sz = mods * px;
+  cv.width = sz; cv.height = sz;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, sz, sz);
+  ctx.fillStyle = '#D4AF37';
+  for (let r = 0; r < mods; r++) for (let c = 0; c < mods; c++)
+    if (qr.isDark(r, c)) ctx.fillRect(c*px, r*px, px, px);
+  box.style.display = 'block';
+}
+
+// ── animate ──
+const clock = new THREE.Clock();
+let frame = 0, fps = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  frame++;
+
+  core.rotation.x = t * 0.25; core.rotation.y = t * 0.45;
+  coreMat.emissiveIntensity = 0.4 + Math.sin(t * 2) * 0.18;
+
+  rings.forEach((r, i) => { r.group.rotation.y = t * (0.06 + i * 0.012) * (i % 2 ? -1 : 1); });
+  pickables.forEach((m, i) => {
+    const base = (m.userData.gated && !isUnlocked) ? 0.2 : 0.55;
+    m.material.emissiveIntensity = base + Math.sin(t * 2.4 + i) * 0.25;
+  });
+
+  if (frame % 15 === 0) {
+    fps = Math.round(1 / Math.max(clock.getDelta(), 1e-3));
+    document.getElementById('stats').textContent =
+      'FPS ' + fps + ' · ' + (towerData ? towerData.total : 0) + ' nodes · ' +
+      (activeRing >= 0 ? rings[activeRing].category : 'all rings') +
+      (isUnlocked ? ' · unlocked' : '');
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── GATE: vault-file + passphrase — mirrors the live vault-layers.html ──
+// Unlock = decrypt a real .væult vault (PBKDF2 → AES-GCM). No passphrase
+// ships in the page; nothing goes in the URL. Custody stays local.
+let vaultDoc = null, vaultKey = null;
+const PBKDF2_ITERATIONS = 600000;
+function b64d(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function aad(name) { return new TextEncoder().encode('vault-entry:' + name); }
+async function deriveKeyPBKDF2(passphrase, salt, iterations) {
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, km,
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function openEntry(key, name, blob) {
+  const nonce = b64d(blob.n), ct = b64d(blob.ct);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce, additionalData: aad(name) }, key, ct);
+  return new TextDecoder().decode(plain);
+}
+async function unlockVault(doc, passphrase) {
+  const salt = b64d(doc.salt);
+  let key;
+  if (doc.kdf === 'pbkdf2') key = await deriveKeyPBKDF2(passphrase, salt, doc.iterations || PBKDF2_ITERATIONS);
+  else throw new Error('scrypt vault — use Python væult.py');
+  if (doc.check) { try { await openEntry(key, '__check__', doc.check); } catch { throw new Error('Wrong passphrase'); } }
+  return key;
+}
+function requireGate() {
+  document.getElementById('gate').style.display = 'flex';
+  document.getElementById('passphrase').focus();
+}
+
+document.getElementById('load-vault-btn').addEventListener('click', () => document.getElementById('vault-file').click());
+document.getElementById('vault-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    vaultDoc = JSON.parse(await file.text());
+    if (!vaultDoc.salt || !vaultDoc.entries) throw new Error('Invalid vault file');
+    document.getElementById('auth-status').textContent = 'Vault loaded — enter passphrase';
+    document.getElementById('auth-status').style.color = '#ffaa00';
+    requireGate();
+  } catch (err) {
+    document.getElementById('auth-status').textContent = 'Error: ' + err.message;
+    document.getElementById('auth-status').style.color = '#ff6b6b';
+  }
+  e.target.value = '';
+});
+document.getElementById('unlock-btn').addEventListener('click', async () => {
+  const passphrase = document.getElementById('passphrase').value; if (!passphrase) return;
+  try {
+    vaultKey = await unlockVault(vaultDoc, passphrase);
+    isUnlocked = true;
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('passphrase').value = '';
+    document.getElementById('gate-err').textContent = '';
+    applyUnlock();
+  } catch (err) { document.getElementById('gate-err').textContent = err.message; }
+});
+document.getElementById('passphrase').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('unlock-btn').click();
+});
+
+function applyUnlock() {
+  const keys = vaultDoc ? Object.keys(vaultDoc.entries).sort() : [];
+  const kdf = vaultDoc ? (vaultDoc.kdf || 'scrypt') : '';
+  document.getElementById('auth-status').innerHTML =
+    '<span style="color:#00ff9d">✓ Unlocked</span> · ' + kdf + ' · ' + keys.length + ' entries';
+  document.getElementById('vault-entries').innerHTML = keys.map(k => '<div>• ' + k + '</div>').join('');
+  // reveal gated (local/hybrid) nodes
+  pickables.forEach(m => {
+    if (m.userData.gated) { m.material.wireframe = false; m.material.emissiveIntensity = 0.7; }
+  });
+  document.getElementById('status').textContent = 'UNLOCKED · vault open';
+}
+
+// ── boot ──
+loadTower().catch(err => {
+  document.getElementById('status').textContent = 'LOAD ERROR: ' + err.message;
+});
+window.__TOWER__ = { ready: true, get nodes(){return towerData?towerData.total:0;},
+  get rings(){return towerData?towerData.rings.length:0;},
+  get unlocked(){return isUnlocked;}, version: '1.1.0' };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/tower-sync/index.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

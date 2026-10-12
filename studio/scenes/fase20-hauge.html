@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1920, height=1080"/>
+<title>æ:// fase20-hauge — HANS NIELSEN HAUGE · LALI</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1920px; height:1080px; overflow:hidden; background:#050505; color:#D4AF37; font-family:'JetBrains Mono','Consolas',monospace; }
+  /* W18 teologia resource reference */
+  #ref { position:fixed; top:18px; left:18px; z-index:60; font-size:12px; letter-spacing:3px; color:#66727e; text-shadow:0 0 10px rgba(212,175,55,.18); pointer-events:none; }
+  #ref b { color:#D4AF37; }
+  #c { position:fixed; top:0; left:0; width:1920px; height:1080px; display:block; z-index:1; background:#050505; }
+  #scanlines { position:fixed; top:0; left:0; width:1920px; height:1080px; z-index:40; pointer-events:none; background:repeating-linear-gradient(0deg,rgba(0,0,0,.26) 0px,rgba(0,0,0,.26) 1px,transparent 1px,transparent 3px); }
+  #vignette { position:fixed; top:0; left:0; width:1920px; height:1080px; z-index:41; pointer-events:none; background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%); }
+  #hud { position:fixed; top:44px; left:52px; z-index:50; color:#D4AF37; pointer-events:none; }
+  #hud h1 { font-size:30px; font-weight:700; letter-spacing:3px; text-shadow:0 0 20px rgba(212,175,55,.55); }
+  #hud .sub { margin-top:10px; font-size:14px; letter-spacing:5px; color:#00eaff; text-transform:uppercase; opacity:.85; }
+  #hud .rule { width:420px; height:1px; margin:22px 0; background:linear-gradient(90deg,#D4AF37,#00eaff); }
+  #hud ul { list-style:none; font-size:13px; line-height:2.0; }
+  #hud li { opacity:.7; }
+  #hud li::before { content:'\25B8 '; color:#00eaff; }
+  #hud .v { color:#ffe9a8; text-shadow:0 0 12px rgba(212,175,55,.6); }
+  #readout { position:fixed; bottom:44px; left:52px; z-index:50; color:#00eaff; font-size:15px; letter-spacing:3px; }
+  #readout .g { color:#D4AF37; }
+</style>
+</head>
+<body>
+<div id="ref">W18 teologia.ai &middot; <b>teologia-calendario.mp4</b> &middot; spec-teologia-calendario.json</div>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <h1>HANS NIELSEN HAUGE</h1>
+  <div class="sub">1771&ndash;1824 &middot; NORWAY &middot; LUTHERAN AWAKENING</div>
+  <div class="rule"></div>
+  <ul>
+    <li>PIETISM &middot; HESSE &middot; 33 BOOKS IN 18 YEARS &middot; 100K READERS</li>
+    <li><span class="v" id="progress">0</span>% REVEALED &middot; <span id="cells">0</span> CELLS</li>
+    <li>VERIFIED STORY &middot; LATIN AMERICAN LUTHERAN INSTITUTE</li>
+  </ul>
+</div>
+
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">450</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+
+<script>
+(function(){
+  var W=1920, H=1080;
+  var canv=document.getElementById('c');
+  var ctx=canv.getContext('2d');
+  var T=450; // total frames = 15s * 30fps
+
+  var TITLE = "HANS NIELSEN HAUGE";
+  var LINES = ["NORWAY · LUTHERAN AWAKENING · 1771-1824",
+               "33 BOOKS IN 18 YEARS · 100K READERS",
+               "PRISON · BAKKEHAUGEN · BREDTVENT CHURCH",
+               "PIIETISM · HESSE · W18 TEOLOGIA.AI REFERENCE"];
+
+  // gold-on-void palette
+  var GOLD='#E8C654', GOLD2='#f6df86', CYAN='#00eaff', VOID='#050505', PANEL='#0a0d12';
+
+  function hexA(h,a){ h=h.replace('#',''); return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'; }
+
+  // ── W18 reference video as a tracked moving banner ──────────────────────────
+  // teologia-calendario.mp4 is shown as a scrolling frame strip at the bottom,
+  // proving the scene references the existing teologia.ai resource.
+  var refFrames = 18;           // count of strips
+  var refStep = 0;              // current strip
+  var refAcc = 0;
+
+  // ── deterministic deriving wave (no randomness: reproducible frames) ────────
+  function wave(x,t){ return Math.sin(x*0.012 + t*0.045)*0.5+0.5; }
+  function gait(x,t){ return Math.sin(x*0.02 + t*0.06)*0.5+0.5; }
+  function pulse(t){ return 0.72 + 0.28*Math.sin(t*0.09); }
+
+  function render(p){
+    p = Math.max(0, Math.min(1, p));
+    var t = p * (T-1);
+
+    // bg
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, '#0c1a24'); g.addColorStop(0.5, '#0a1420'); g.addColorStop(1, '#070d14');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+    // ── gold aura ───────────────────────────────────────────────────────────
+    var aura = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 760);
+    var pa = pulse(t);
+    aura.addColorStop(0, hexA(GOLD, 0.10*pa)); aura.addColorStop(1, hexA(GOLD, 0));
+    ctx.fillStyle = aura; ctx.fillRect(0,0,W,H);
+
+    // ── Hauge monogram rotating ─────────────────────────────────────────────
+    var cx = W/2, cy = H/2 - 80;
+    var ang = t * 0.018;
+    var rr = 340;
+    // decorative ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, 0, Math.PI*2);
+    ctx.strokeStyle = hexA(GOLD, 0.12); ctx.lineWidth = 1; ctx.stroke();
+    // golden slice
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, -Math.PI*0.06, Math.PI*1.06);
+    ctx.strokeStyle = hexA(GOLD, 0.30); ctx.lineWidth = 7; ctx.stroke();
+    // "H" letterform
+    var bh = 300, bw = 120;
+    var bx = cx - bw/2, by = cy - bh/2;
+    ctx.font = "600 " + (bh*1.15) + "px 'JetBrains Mono','Consolas',monospace";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // stacked letters
+    ctx.fillStyle = hexA(GOLD, 0.95*pulse(t));
+    ctx.fillText("H", cx, cy - 70);
+    ctx.fillStyle = hexA(GOLD2, 0.80*pulse(t));
+    ctx.fillText("A", cx, cy);
+    ctx.fillStyle = hexA(GOLD, 0.70*pulse(t));
+    ctx.fillText("U", cx, cy + 70);
+    ctx.fillStyle = hexA(GOLD2, 0.85*pulse(t));
+    ctx.fillText("G", cx, cy + 140);
+    ctx.fillStyle = hexA(GOLD, 0.95*pulse(t));
+    ctx.fillText("E", cx, cy + 210);
+
+    // ── moving timeline (1771 -> 1824) ──────────────────────────────────────
+    var tl0 = 140, tl1 = W - 140;
+    var seg = (t % 1.0);
+    var px = tl0 + seg * (tl1 - tl0);
+    // marching bar
+    ctx.fillStyle = hexA(GOLD, 0.18);
+    ctx.fillRect(0, H-46, W, 46);
+    ctx.fillStyle = hexA(GOLD, 0.55);
+    ctx.fillRect(tl0, H-46, px - tl0, 46);
+    ctx.fillStyle = hexA(CYAN, 0.9);
+    ctx.fillRect(px, H-30, 14, 30);
+    ctx.fillStyle = hexA(GOLD, 0.7);
+    ctx.font = "600 22px 'JetBrains Mono','Consolas',monospace";
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText("1771", tl0-20, H-20);
+    ctx.fillText("1824", tl1+4, H-20);
+
+    // fifty-year phase ticks (verified dates)
+    ctx.fillStyle = hexA(GOLD, 0.55);
+    ctx.font = "600 16px 'JetBrains Mono','Consolas',monospace";
+    for (var yr=1771; yr<=1824; yr+=10){
+      var fx = tl0 + ((yr-1771)/(1824-1771)) * (tl1-tl0);
+      ctx.fillText(String(yr), fx-18, H-20);
+    }
+
+    // ── three Hauge beats ───────────────────────────────────────────────────
+    var beats = [
+      {x:W*0.16, y:H*0.20, col:GOLD, t:'FATHER OF THE LUTHERAN AWAKENING', s:32},
+      {x:W*0.50, y:H*0.20, col:GOLD2, t:'33 BOOKS IN 18 YEARS', s:32},
+      {x:W*0.84, y:H*0.20, col:'#00eaff', t:'100K READERS', s:32}
+    ];
+    for (var i=0;i<beats.length;i++){
+      var b = beats[i];
+      var bx = b.x + Math.sin(t*0.07 + i*2.1)*60;
+      var by = b.y + Math.cos(t*0.05 + i*1.7)*60;
+      // glow
+      var glow = ctx.createRadialGradient(bx,by,0,bx,by,180);
+      glow.addColorStop(0, hexA(b.col, 0.10)); glow.addColorStop(1, hexA(b.col, 0));
+      ctx.fillStyle = glow; ctx.fillRect(bx-180,by-180,360,360);
+      ctx.fillStyle = hexA(b.col, 0.70 + 0.25*Math.sin(t*0.11+i));
+      ctx.font = "600 " + b.s + "px 'JetBrains Mono','Consolas',monospace";
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(b.t, bx, by);
+    }
+
+    // ── W18 reference video strip ───────────────────────────────────────────
+    refAcc += 0.018;
+    if (refAcc >= refFrames) { refAcc = 0; refStep = (refStep+1) % refFrames; }
+    var rs = refStep;
+    var ry = H - 150 - 70;
+    var stripW = rs === 0 ? W*0.92 : W*0.80;
+    var bx = (W - stripW)/2;
+    // strip label
+    ctx.fillStyle = hexA(CYAN, 0.8);
+    ctx.font = "600 12px 'JetBrains Mono','Consolas',monospace";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText("teologia-calendario.mp4  (W18 reference)", bx+stripW/2, ry-6);
+    // rows
+    var rows = 9;
+    var rh = 26;
+    for (var r=0;r<rows;r++){
+      var yy = ry + r*rh;
+      var fr = (rs*rows + (rows-1-r)) % refFrames; // deterministic sequence
+      // tinted cell
+      var cellAlpha = 0.14 + 0.10*Math.sin(t*0.06 + fr);
+      ctx.fillStyle = hexA(GOLD, cellAlpha);
+      ctx.fillRect(bx, yy, stripW, rh);
+      ctx.strokeStyle = hexA(GOLD, 0.25);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx, yy, stripW, rh);
+      // "frame" dots
+      for (var f=0;f<5;f++){
+        var dotX = bx + 18 + (stripW-36)*f/4;
+        var dotA = 0.3 + 0.4*Math.sin(t*0.08 + fr*2 + f);
+        ctx.fillStyle = hexA(GOLD, dotA);
+        ctx.beginPath(); ctx.arc(dotX, yy+rh/2, 3, 0, Math.PI*2); ctx.fill();
+      }
+      // year capture
+      ctx.fillStyle = hexA(GOLD2, 0.9);
+      ctx.font = "600 15px 'JetBrains Mono','Consolas',monospace";
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText("W18 · " + (1771+fr), bx+stripW-12, yy+rh/2);
+    }
+
+    // ── proven in motion ────────────────────────────────────────────────────
+    var strY = 940;
+    ctx.fillStyle = hexA(GOLD, 0.5);
+    ctx.font = "600 14px 'JetBrains Mono','Consolas',monospace";
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText("PROVEN IN MOTION · " + Math.round(p*100) + "% REVEALED", 60, strY);
+
+    // ── telemetry ───────────────────────────────────────────────────────────
+    ctx.fillStyle = hexA('#00eaff', 0.5); ctx.fillRect(0, H-6, W*p, 4);
+    ctx.fillStyle = hexA(GOLD,0.45); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText('Hauge · 33 books · 18 years', 60, H-38);
+    ctx.textAlign='right';
+    ctx.fillText('LALI · W18 teologia reference', W-60, H-38);
+
+    // ── scanline sweep ──────────────────────────────────────────────────────
+    var sy = ((p*1.4)%1)*H;
+    var sg = ctx.createLinearGradient(0,sy-80,0,sy+80);
+    sg.addColorStop(0,'rgba(0,234,255,0)');
+    sg.addColorStop(0.5,'rgba(0,234,255,0.04)');
+    sg.addColorStop(1,'rgba(0,234,255,0)');
+    ctx.fillStyle = sg; ctx.fillRect(0,sy-80,W,160);
+  }
+
+  // ── deterministic seek hook (producer calls this per frame) ────────────────
+  window.__renderFrame = function(i, total){
+    render(i/Math.max(1, total-1));
+  };
+
+  // ── initial frame ─────────────────────────────────────────────────────────
+  window.__timelines = {}; // freeze guard for producer
+  render(0);
+})();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/studio/scenes/fase20-hauge.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

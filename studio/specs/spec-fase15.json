@@ -1,0 +1,9 @@
+{
+  "title": "æ:// fase15-xmlsvg — Spreadsheets → XML → Geometry",
+  "text": "Semana 15 · XML parsing · DOMParser · node graph · data-driven geometry",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase15-xmlsvg-dataflow.html"
+}

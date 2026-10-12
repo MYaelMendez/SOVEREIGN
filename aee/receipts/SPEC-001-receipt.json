@@ -1,0 +1,34 @@
+{
+  "system": "\u00e6://",
+  "aee": {
+    "spec": {
+      "id": "SPEC-001",
+      "title": "UART Transmitter",
+      "hash": "6d2d6be292f6141ebca0b9f2bad8e2fc05e7854ac8294595eae18a55ad202d28",
+      "path": "C:/\u00e6/aee/spec/SPEC-001-uart-tx.md"
+    },
+    "rtl": {
+      "id": "RTL-001",
+      "title": "UART Transmitter RTL",
+      "hash": "7134e83192dd0b31f80b913ef3b2a10767d6a5551902724fbb94bf9e8e535822",
+      "path": "C:/\u00e6/aee/rtl/uart_tx.v"
+    },
+    "sim": {
+      "id": "SIM-001",
+      "title": "UART Transmitter Testbench",
+      "hash": "9a23751c04f66a89db8ae4730f0c3db852984d6baf0040069dae063a9312df9b",
+      "path": "C:/\u00e6/aee/sim/uart_tx_tb.v"
+    },
+    "synthesis": {
+      "status": "pending",
+      "reason": "EDA tools not in PATH",
+      "tools_needed": [
+        "iverilog",
+        "yosys",
+        "nextpnr-ice40"
+      ]
+    },
+    "timestamp": "2026-10-08T08:35:38.953334+00:00",
+    "receipt": "ae://receipt/aee-spec-001-6d2d6be292f6141e"
+  }
+}

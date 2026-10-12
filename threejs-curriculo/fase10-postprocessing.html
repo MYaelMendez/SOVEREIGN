@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 10 · Post-Processing Pipeline — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.88);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --bad: #f85149;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+  .panel h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+    font-family: inherit;
+  }
+
+  /* ── Panel izquierdo: debug / render targets ── */
+  #debug { top: 12px; left: 12px; width: 322px; padding: 12px 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+  #debug::-webkit-scrollbar { width: 6px; }
+  #debug::-webkit-scrollbar-thumb { background: rgba(88,166,255,.3); border-radius: 3px; }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 10px 0 4px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-all; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: #f2cc60; }
+  .row .v.off { color: #484f58; }
+
+  /* ── Panel derecho: controles ── */
+  #controls { top: 12px; right: 12px; width: 292px; padding: 12px 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+  #controls::-webkit-scrollbar { width: 6px; }
+  #controls::-webkit-scrollbar-thumb { background: rgba(88,166,255,.3); border-radius: 3px; }
+
+  .pass {
+    border: 1px solid rgba(88, 166, 255, 0.16);
+    border-radius: 7px;
+    margin-bottom: 7px;
+    background: rgba(88, 166, 255, 0.03);
+    overflow: hidden;
+  }
+  .pass-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 9px; cursor: pointer; user-select: none;
+    font-size: 11.5px; color: var(--text);
+  }
+  .pass-head:hover { background: rgba(88, 166, 255, 0.08); }
+  .pass-head .ord {
+    color: var(--dim); font-size: 10px; min-width: 14px;
+  }
+  .pass-head .name { flex: 1; letter-spacing: .02em; }
+  .pass-head .arrow { color: var(--dim); font-size: 9px; transition: transform .18s; }
+  .pass.open .pass-head .arrow { transform: rotate(90deg); }
+  .pass-body { display: none; padding: 4px 10px 10px 10px; border-top: 1px solid rgba(88,166,255,.12); }
+  .pass.open .pass-body { display: block; }
+
+  /* checkbox tipo switch */
+  input[type=checkbox] {
+    -webkit-appearance: none; appearance: none;
+    width: 30px; height: 15px; border-radius: 8px; cursor: pointer;
+    background: #30363d; border: 1px solid #484f58; position: relative;
+    transition: background .15s, border-color .15s; flex: none;
+  }
+  input[type=checkbox]::after {
+    content: ''; position: absolute; top: 1px; left: 1px;
+    width: 11px; height: 11px; border-radius: 50%; background: #8b949e;
+    transition: transform .15s, background .15s;
+  }
+  input[type=checkbox]:checked { background: rgba(63, 185, 80, .35); border-color: var(--good); }
+  input[type=checkbox]:checked::after { transform: translateX(15px); background: var(--good); }
+
+  .ctl { margin-top: 8px; }
+  .ctl > label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10.5px; color: var(--dim); margin-bottom: 3px;
+    letter-spacing: .03em;
+  }
+  .ctl > label b { color: var(--accent); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px; border-radius: 2px; outline: none;
+    background: rgba(88, 166, 255, 0.22); cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #0d1117; cursor: pointer;
+    box-shadow: 0 0 6px rgba(88,166,255,.6);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 11px; height: 11px; border-radius: 50%; background: var(--accent);
+    border: 2px solid #0d1117; cursor: pointer;
+  }
+  input[type=range]:disabled { opacity: .35; cursor: not-allowed; }
+
+  select {
+    width: 100%; background: rgba(88, 166, 255, 0.08); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.28); border-radius: 5px;
+    padding: 4px 6px; font-size: 11px; font-family: inherit; outline: none; cursor: pointer;
+  }
+  select:focus { border-color: var(--accent); }
+  option { background: #0d1117; color: var(--text); }
+
+  .btn {
+    display: block; width: 100%; margin: 6px 0 0; padding: 6px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11px; text-align: center; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn.warn { border-color: rgba(210, 153, 34, .4); color: #f2cc60; }
+  .btn.warn:hover { background: rgba(210, 153, 34, .18); }
+
+  .hint { color: var(--dim); font-size: 10px; line-height: 1.55; margin-top: 6px; }
+  .hint code { color: var(--accent); background: rgba(88,166,255,.1); padding: 0 3px; border-radius: 3px; }
+
+  #legend { bottom: 12px; left: 12px; padding: 8px 14px; color: var(--dim); font-size: 11px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 660px; }
+  #error h2 { color: var(--bad); font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════════════ PANEL DEBUG · RENDER TARGETS ══════════════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Pipeline · Fase 10</h1>
+
+  <div class="group-title">Composer · cadena de passes</div>
+  <div class="row"><span class="k">passes activos</span><span class="v hi" id="dbg-passes">—</span></div>
+  <div class="row"><span class="k">orden</span><span class="v" id="dbg-order">—</span></div>
+
+  <div class="group-title">Render targets (GPU)</div>
+  <div class="row"><span class="k">composer read/write</span><span class="v hl" id="dbg-rt-composer">—</span></div>
+  <div class="row"><span class="k">SSAO normal + depth</span><span class="v" id="dbg-rt-ssao">—</span></div>
+  <div class="row"><span class="k">bloom bright + mips</span><span class="v" id="dbg-rt-bloom">—</span></div>
+  <div class="row"><span class="k">feedback ping-pong</span><span class="v" id="dbg-rt-feedback">—</span></div>
+  <div class="row"><span class="k">total targets</span><span class="v hi" id="dbg-rt-total">—</span></div>
+
+  <div class="group-title">Presupuesto</div>
+  <div class="row"><span class="k">drawing buffer</span><span class="v" id="dbg-size">—</span></div>
+  <div class="row"><span class="k">pixel ratio</span><span class="v" id="dbg-dpr">—</span></div>
+  <div class="row"><span class="k">formato HDR</span><span class="v" id="dbg-hdr">—</span></div>
+  <div class="row"><span class="k">tone mapping</span><span class="v hl" id="dbg-tone">—</span></div>
+  <div class="row"><span class="k">color space</span><span class="v" id="dbg-cs">—</span></div>
+
+  <div class="group-title">Escena</div>
+  <div class="row"><span class="k">triángulos</span><span class="v" id="dbg-tris">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v" id="dbg-calls">—</span></div>
+  <div class="row"><span class="k">programas shader</span><span class="v" id="dbg-progs">—</span></div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="dbg-fps">—</span></div>
+  <div class="row"><span class="k">frame time</span><span class="v" id="dbg-ms">—</span></div>
+</div>
+
+<!-- ══════════════════════ PANEL CONTROLES ══════════════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Cadena de post-proceso</h1>
+  <div id="pass-list"></div>
+
+  <div class="group-title" style="margin-left:2px">Global</div>
+  <div class="ctl">
+    <label>Tone mapping <b id="v-tone">ACES</b></label>
+    <select id="in-tone">
+      <option value="4" selected>ACES Filmic</option>
+      <option value="5">AgX</option>
+      <option value="6">Neutral</option>
+      <option value="3">Cineon</option>
+      <option value="2">Reinhard</option>
+      <option value="1">Linear</option>
+      <option value="0">None</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label>Exposición <b id="v-exposure">1.00</b></label>
+    <input type="range" id="in-exposure" min="0.1" max="3" step="0.01" value="1" />
+  </div>
+
+  <button class="btn" id="btn-preset-todo">◉ Mostrar todo (máximo)</button>
+  <button class="btn" id="btn-preset-clean">◌ Limpiar (solo belleza)</button>
+  <button class="btn warn" id="btn-reset">↺ Reset pipeline</button>
+  <div class="hint">
+    <b>RT Inspector:</b> usá el selector <code>Salida SSAO</code> para ver los
+    render targets internos (Depth, Normal, SSAO, Blur) en pantalla.
+  </div>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Click derecho</b> pan · <b>Click</b> en un pass para expandirlo
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase10-postprocessing.html</code></p>
+</div></div>
+
+<!-- ══════════════════ IMPORT MAP · 100% local, sin CDN ══════════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
+import { SSAOPass }        from 'three/addons/postprocessing/SSAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
+import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+import { FXAAShader }      from 'three/addons/shaders/FXAAShader.js';
+
+// ─────────────────────────────────────────────────────────────────
+// 0. Utilidades
+// ─────────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => {
+  if (e.message && /import|module|three|shader|glsl/i.test(e.message)) fail(e);
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 1. Renderer · Scene · Cámara
+//    antialias:false  →  el AA lo hace FXAA en el post-proceso
+//    (Día 5: comparar FXAA on/off contra MSAA nativo)
+// ─────────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,               // ← FXAA se encarga (ver OutputPass/FXAA)
+  powerPreference: 'high-performance',
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;   // lo aplica OutputPass
+renderer.toneMappingExposure = 1.0;
+// Con post-proceso hay MUCHOS render() por frame; si autoReset está activo,
+// renderer.info solo refleja el último pass (el quad de FXAA). Lo desactivamos
+// y reseteamos manualmente una vez por frame para tener métricas reales.
+renderer.info.autoReset = false;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e15);
+scene.fog = new THREE.FogExp2(0x0a0e15, 0.022);
+
+const camera = new THREE.PerspectiveCamera(
+  50, window.innerWidth / window.innerHeight, 0.5, 140
+);
+camera.position.set(11, 7.5, 14);
+camera.lookAt(0, 2.2, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2.2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 4;
+controls.maxDistance = 60;
+controls.maxPolarAngle = Math.PI * 0.495;
+
+// ─────────────────────────────────────────────────────────────────
+// 2. Luces
+// ─────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+
+const hemi = new THREE.HemisphereLight(0x8fb4ff, 0x14181f, 0.55);
+scene.add(hemi);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+keyLight.position.set(9, 16, 10);
+scene.add(keyLight);
+
+const rimLight = new THREE.DirectionalLight(0x58a6ff, 1.6);
+rimLight.position.set(-12, 6, -10);
+scene.add(rimLight);
+
+// Luces de color orbitando: dan puntos brillantes para el bloom
+const NEON = [0xff3b6b, 0x3bffa0, 0x4d8bff, 0xffd23b, 0xc44dff, 0x3bf0ff];
+const neonLights = [];
+for (let i = 0; i < NEON.length; i++) {
+  const pl = new THREE.PointLight(NEON[i], 14, 22, 2);
+  scene.add(pl);
+  neonLights.push(pl);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 3. Contenido de escena
+//    Pensado para exhibir cada efecto:
+//      · emisivos    → bloom
+//      · geometría densa / contacto → SSAO
+//      · bordes finos / líneas      → FXAA
+// ─────────────────────────────────────────────────────────────────
+const world = new THREE.Group();
+scene.add(world);
+
+// 3.1 Piso metálico con rugosidad variable
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x151a22, roughness: 0.42, metalness: 0.75,
+});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+world.add(floor);
+
+const grid = new THREE.GridHelper(70, 70, 0x1f6feb, 0x1b2230);
+grid.position.y = 0.002;
+grid.material.transparent = true;
+grid.material.opacity = 0.35;
+world.add(grid);
+
+// 3.2 Nudo toroidal central (clearcoat: refleja luces → bloom + AO en el hueco)
+const knotMat = new THREE.MeshPhysicalMaterial({
+  color: 0x9aa6b8, metalness: 0.95, roughness: 0.09,
+  clearcoat: 1.0, clearcoatRoughness: 0.08,
+  envMapIntensity: 0.8,
+});
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.45, 0.42, 260, 40), knotMat);
+knot.position.set(0, 2.6, 0);
+knot.castShadow = true; knot.receiveShadow = true;
+world.add(knot);
+
+// 3.3 Anillo de pilares — contacto pilar/piso = donde se ve el SSAO
+const pillarMat = new THREE.MeshStandardMaterial({ color: 0x2b3240, roughness: 0.75, metalness: 0.2 });
+const pillarGeo = new THREE.BoxGeometry(0.5, 1, 0.5);
+const PILLARS = 28;
+const pillars = new THREE.InstancedMesh(pillarGeo, pillarMat, PILLARS);
+pillars.castShadow = true; pillars.receiveShadow = true;
+const _d = new THREE.Object3D();
+for (let i = 0; i < PILLARS; i++) {
+  const a = (i / PILLARS) * TAU;
+  const r = 7.2 + Math.sin(i * 2.7) * 0.35;
+  const h = 1.4 + Math.abs(Math.sin(i * 1.7)) * 2.6;
+  _d.position.set(Math.cos(a) * r, h / 2, Math.sin(a) * r);
+  _d.scale.set(1, h, 1);
+  _d.rotation.y = a;
+  _d.updateMatrix();
+  pillars.setMatrixAt(i, _d.matrix);
+}
+pillars.instanceMatrix.needsUpdate = true;
+world.add(pillars);
+
+// 3.4 Esferas emisivas orbitando — la fuente principal de bloom
+const orbGeo = new THREE.SphereGeometry(0.17, 24, 24);
+const orbs = [];
+for (let i = 0; i < NEON.length; i++) {
+  const m = new THREE.MeshStandardMaterial({
+    color: 0x000000,
+    emissive: new THREE.Color(NEON[i]),
+    emissiveIntensity: 6.0,
+    roughness: 0.4, metalness: 0.0,
+  });
+  const mesh = new THREE.Mesh(orbGeo, m);
+  world.add(mesh);
+  orbs.push({
+    mesh,
+    radius: 3.4 + Math.sin(i * 1.9) * 1.1,
+    yBase: 1.2 + i * 0.42,
+    speed: 0.22 + i * 0.035,
+    phase: (i / NEON.length) * TAU,
+  });
+}
+
+// 3.5 Sólidos flotantes con aristas — FXAA se nota en los bordes afilados
+const SHAPES = [
+  new THREE.IcosahedronGeometry(0.42, 0),
+  new THREE.OctahedronGeometry(0.4, 0),
+  new THREE.TetrahedronGeometry(0.44, 0),
+  new THREE.DodecahedronGeometry(0.36, 0),
+];
+const floaters = [];
+for (let i = 0; i < 16; i++) {
+  const geo = SHAPES[i % SHAPES.length];
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color().setHSL(i / 16, 0.55, 0.5),
+    metalness: 0.85, roughness: 0.18, clearcoat: 0.6,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  const a = (i / 16) * TAU;
+  const r = 4.6 + Math.sin(i * 3.1) * 1.6;
+  mesh.position.set(Math.cos(a) * r, 0.9 + Math.abs(Math.sin(i * 2.3)) * 3.4, Math.sin(a) * r);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  world.add(mesh);
+  floaters.push({
+    mesh, baseY: mesh.position.y,
+    bob: 0.5 + Math.random() * 0.9,
+    amp: 0.25 + Math.random() * 0.4,
+    rot: 0.15 + Math.random() * 0.5,
+  });
+}
+
+// 3.6 Rejilla de esferas pequeñas — detalle fino donde el SSAO aporta profundidad
+const beadGeo = new THREE.SphereGeometry(0.09, 14, 14);
+const beadMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, emissive: 0x1f6feb, emissiveIntensity: 1.4, roughness: 0.5 });
+const BEADS = 12;
+const beads = new THREE.InstancedMesh(beadGeo, beadMat, BEADS * BEADS);
+let bi = 0;
+for (let x = 0; x < BEADS; x++) {
+  for (let z = 0; z < BEADS; z++) {
+    _d.position.set(-2.6 + x * 0.47, 0.09, -2.6 + z * 0.47);
+    _d.rotation.set(0, 0, 0);
+    _d.scale.setScalar(1);
+    _d.updateMatrix();
+    beads.setMatrixAt(bi++, _d.matrix);
+  }
+}
+beads.instanceMatrix.needsUpdate = true;
+world.add(beads);
+
+// 3.7 Polvo / partículas — FXAA y bloom se ven en los puntos brillantes
+const DUST = 700;
+const dustPos = new Float32Array(DUST * 3);
+for (let i = 0; i < DUST; i++) {
+  dustPos[i * 3]     = (Math.random() - 0.5) * 34;
+  dustPos[i * 3 + 1] = Math.random() * 12;
+  dustPos[i * 3 + 2] = (Math.random() - 0.5) * 34;
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: 0x8fb4ff, size: 0.035, transparent: true, opacity: 0.55,
+  sizeAttenuation: true, depthWrite: false,
+}));
+world.add(dust);
+
+// ─────────────────────────────────────────────────────────────────
+// 4. SHADERS CUSTOM  (Día 7: "custom passes")
+//    Todo ShaderPass requiere el uniform `tDiffuse` y el vertex
+//    shader estándar de quad a pantalla completa.
+// ─────────────────────────────────────────────────────────────────
+const QUAD_VERT = /* glsl */`
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// 4.1 Aberración cromática — desplaza R y B radialmente desde el centro
+const ChromaticAberrationShader = {
+  name: 'ChromaticAberrationShader',
+  uniforms: {
+    tDiffuse:    { value: null },
+    amount:      { value: 0.0035 },
+    radial:      { value: 1.0 },   // 1 = radial (lente), 0 = lineal (barrido)
+    falloff:     { value: 2.0 },   // exponente de la caída radial
+    center:      { value: new THREE.Vector2(0.5, 0.5) },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse;
+    uniform float amount;
+    uniform float radial;
+    uniform float falloff;
+    uniform vec2  center;
+    varying vec2  vUv;
+
+    void main() {
+      vec2 dir = vUv - center;
+      float d  = length(dir);
+
+      // Mezcla entre desplazamiento radial (pura lente) y lineal (barrido horizontal)
+      vec2 radialOffset = dir * amount * pow(d, falloff) * 2.0;
+      vec2 linearOffset = vec2(amount, 0.0);
+      vec2 offset = mix(linearOffset, radialOffset, radial);
+
+      float r = texture2D(tDiffuse, vUv + offset).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv - offset).b;
+
+      gl_FragColor = vec4(r, g, b, 1.0);
+    }
+  `,
+};
+
+// 4.2 Viñeta — oscurece las esquinas
+const VignetteShader = {
+  name: 'VignetteShader',
+  uniforms: {
+    tDiffuse:  { value: null },
+    intensity: { value: 0.85 },
+    offset:    { value: 0.45 },
+    softness:  { value: 0.50 },
+    color:     { value: new THREE.Color(0x000000) },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse;
+    uniform float intensity;
+    uniform float offset;
+    uniform float softness;
+    uniform vec3  color;
+    varying vec2  vUv;
+
+    void main() {
+      vec4 texel = texture2D(tDiffuse, vUv);
+
+      // Distancia normalizada al centro, corregida por aspect (evita viñeta ovalada)
+      float d = distance(vUv, vec2(0.5)) * 1.41421356;
+      float v = smoothstep(offset, offset + softness, d) * intensity;
+      v = clamp(v, 0.0, 1.0);
+
+      texel.rgb = mix(texel.rgb, color, v);
+      gl_FragColor = texel;
+    }
+  `,
+};
+
+// 4.3 Feedback / estelas — pass custom CON su propio WebGLRenderTarget
+//     (Día 2: "Múltiples pasos de render / RT visualization").
+//     Mantiene un buffer persistente y lo mezcla con el frame actual.
+class FeedbackPass extends Pass {
+  constructor(width, height, decay = 0.90) {
+    super();
+    this.needsSwap = true;   // este pass SÍ produce una imagen nueva
+    this.decay = decay;
+    this.intensity = 1.0;
+
+    const rtOpts = {
+      type: THREE.HalfFloatType,
+      depthBuffer: false,
+      stencilBuffer: false,
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+    };
+    // Ping-pong: nunca se lee y escribe el mismo target en el mismo frame
+    this.rtA = new THREE.WebGLRenderTarget(width, height, rtOpts);
+    this.rtB = new THREE.WebGLRenderTarget(width, height, rtOpts);
+    this.rtA.texture.name = 'FeedbackPass.rtA';
+    this.rtB.texture.name = 'FeedbackPass.rtB';
+    this._write = this.rtA;
+    this._read  = this.rtB;
+    this._firstFrame = true;
+
+    // Mezcla frame actual con la estela anterior
+    this.mixMaterial = new THREE.ShaderMaterial({
+      name: 'FeedbackMixShader',
+      blending: THREE.NoBlending,
+      uniforms: {
+        tCurrent: { value: null },
+        tPrev:    { value: null },
+        decay:    { value: decay },
+        blend:    { value: 0.0 },
+        intensity:{ value: 1.0 },
+      },
+      vertexShader: QUAD_VERT,
+      fragmentShader: /* glsl */`
+        uniform sampler2D tCurrent;
+        uniform sampler2D tPrev;
+        uniform float decay;
+        uniform float blend;
+        uniform float intensity;
+        varying vec2 vUv;
+
+        void main() {
+          vec3 cur  = texture2D(tCurrent, vUv).rgb;
+          vec3 prev = texture2D(tPrev, vUv).rgb * decay;
+          // max() conserva las estelas luminosas → se combinan muy bien con bloom
+          vec3 trail = max(cur, prev);
+          gl_FragColor = vec4(mix(cur, trail, blend * intensity), 1.0);
+        }
+      `,
+    });
+
+    // Copia el resultado del target propio hacia el buffer del composer
+    this.copyMaterial = new THREE.ShaderMaterial({
+      name: 'FeedbackCopyShader',
+      blending: THREE.NoBlending,
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader: QUAD_VERT,
+      fragmentShader: /* glsl */`
+        uniform sampler2D tDiffuse;
+        varying vec2 vUv;
+        void main() { gl_FragColor = texture2D(tDiffuse, vUv); }
+      `,
+    });
+
+    this._fsQuad = new FullScreenQuad(this.mixMaterial);
+  }
+
+  /** Limpia la estela (evita contenido viejo al reactivar el pass o redimensionar). */
+  reset() { this._firstFrame = true; }
+
+  setSize(width, height) {
+    this.rtA.setSize(width, height);
+    this.rtB.setSize(width, height);
+    this.reset();
+  }
+
+  render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */) {
+    // 1) mezclar en nuestro propio render target
+    const u = this.mixMaterial.uniforms;
+    u.tCurrent.value  = readBuffer.texture;
+    u.tPrev.value     = this._read.texture;
+    u.decay.value     = this.decay;
+    u.intensity.value = this.intensity;
+    u.blend.value     = this._firstFrame ? 0.0 : 1.0;
+
+    this._fsQuad.material = this.mixMaterial;
+    renderer.setRenderTarget(this._write);
+    this._fsQuad.render(renderer);
+
+    // 2) volcar al pipeline (o a pantalla si este pass fuese el último)
+    this.copyMaterial.uniforms.tDiffuse.value = this._write.texture;
+    this._fsQuad.material = this.copyMaterial;
+
+    if (this.renderToScreen) {
+      renderer.setRenderTarget(null);
+    } else {
+      renderer.setRenderTarget(writeBuffer);
+    }
+    this._fsQuad.render(renderer);
+
+    // 3) ping-pong
+    const tmp = this._read;
+    this._read = this._write;
+    this._write = tmp;
+    this._firstFrame = false;
+  }
+
+  dispose() {
+    this.rtA.dispose();
+    this.rtB.dispose();
+    this.mixMaterial.dispose();
+    this.copyMaterial.dispose();
+    this._fsQuad.dispose();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 5. EFFECTCOMPOSER — construcción del pipeline
+//
+//  ORDEN (importa muchísimo):
+//    1 RenderPass    → pinta la escena en un RT HDR (linear, sin tone map)
+//    2 SSAOPass      → computa AO y la MULTIPLICA sobre el buffer leído
+//    3 UnrealBloom   → extrae zonas luminosas y las suma aditivamente
+//    4 ChromaticAbr. → shader custom (split RGB)
+//    5 Feedback      → pass custom con render target propio
+//    6 Vignette      → shader custom (oscurece esquinas)
+//    7 OutputPass    → tone mapping + conversión a sRGB
+//    8 FXAA          → anti-aliasing SOBRE la imagen ya en sRGB
+//
+//  Notas verificadas contra el código vendorizado:
+//   · SSAOPass NO reemplaza a RenderPass. Tiene needsSwap=false y en modo
+//     Default escribe con blending DstColor/Zero → necesita que RenderPass
+//     haya pintado la escena primero (así lo hace el ejemplo oficial r186).
+//   · OutputPass debe ir antes de FXAA: FXAA necesita luma en sRGB.
+// ─────────────────────────────────────────────────────────────────
+const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+
+// Render target HDR explícito para el composer (HalfFloat = rango > 1 → bloom real)
+const hdrTarget = new THREE.WebGLRenderTarget(size.x, size.y, {
+  type: THREE.HalfFloatType,      // rango HDR (>1.0) → el bloom no satura
+  depthBuffer: true,
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+});
+hdrTarget.texture.name = 'Pipeline.hdrTarget';
+
+// OJO: al pasar un renderTarget propio, el composer toma sus dimensiones EN PÍXELES
+// como _width/_height. Por eso onResize() llama composer.setSize(cssW, cssH),
+// que vuelve a aplicar el pixel ratio y deja todo coherente.
+const composer = new EffectComposer(renderer, hdrTarget);
+
+// ── 1. RenderPass ────────────────────────────────────────────────
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+// ── 2. SSAO ──────────────────────────────────────────────────────
+const ssaoPass = new SSAOPass(scene, camera, size.x, size.y, 32);
+ssaoPass.kernelRadius = 0.9;      // radio en unidades de view space
+ssaoPass.minDistance  = 0.0025;
+ssaoPass.maxDistance  = 0.22;
+ssaoPass.output       = SSAOPass.OUTPUT.Default;
+composer.addPass(ssaoPass);
+
+// ── 3. Bloom ─────────────────────────────────────────────────────
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(size.x, size.y),
+  0.85,   // strength
+  0.55,   // radius
+  0.62    // threshold
+);
+composer.addPass(bloomPass);
+
+// ── 4. Aberración cromática (custom ShaderPass) ──────────────────
+const caPass = new ShaderPass(ChromaticAberrationShader);
+composer.addPass(caPass);
+
+// ── 5. Feedback / estelas (custom Pass + render targets propios) ─
+const feedbackPass = new FeedbackPass(size.x, size.y, 0.90);
+composer.addPass(feedbackPass);
+
+// ── 6. Viñeta (custom ShaderPass) ────────────────────────────────
+const vignettePass = new ShaderPass(VignetteShader);
+composer.addPass(vignettePass);
+
+// ── 7. Output (tone mapping + sRGB) ──────────────────────────────
+const outputPass = new OutputPass();
+composer.addPass(outputPass);
+
+// ── 8. FXAA (anti-aliasing final) ────────────────────────────────
+const fxaaPass = new ShaderPass(FXAAShader);
+function syncFXAA() {
+  const s = renderer.getDrawingBufferSize(new THREE.Vector2());
+  fxaaPass.material.uniforms['resolution'].value.set(1 / s.x, 1 / s.y);
+}
+syncFXAA();
+composer.addPass(fxaaPass);
+
+// ─────────────────────────────────────────────────────────────────
+// 6. Registro de passes → UI autogenerada
+//    Cada descriptor declara sus sliders y cómo aplicarlos.
+// ─────────────────────────────────────────────────────────────────
+const PASSES = [
+  {
+    id: 'render', order: 1, name: 'RenderPass', pass: renderPass,
+    note: 'Pinta la escena en el RT HDR. Sin tone mapping (lo hace OutputPass).',
+    controls: [],
+  },
+  {
+    id: 'ssao', order: 2, name: 'SSAO', pass: ssaoPass,
+    note: 'Oclusión ambiental en screen space. La más costosa del pipeline.',
+    controls: [
+      { kind: 'range', label: 'kernel radius', min: 0.05, max: 4, step: 0.05, get: () => ssaoPass.kernelRadius, set: v => ssaoPass.kernelRadius = v, fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'min distance',  min: 0, max: 0.05, step: 0.0005, get: () => ssaoPass.minDistance, set: v => ssaoPass.minDistance = v, fmt: v => v.toFixed(4) },
+      { kind: 'range', label: 'max distance',  min: 0.01, max: 0.6, step: 0.005, get: () => ssaoPass.maxDistance, set: v => ssaoPass.maxDistance = v, fmt: v => v.toFixed(3) },
+      { kind: 'select', label: 'salida (RT inspector)', value: () => ssaoPass.output, set: v => ssaoPass.output = parseInt(v, 10),
+        options: [
+          [SSAOPass.OUTPUT.Default, 'Default (beauty × AO)'],
+          [SSAOPass.OUTPUT.SSAO,    'SSAO crudo'],
+          [SSAOPass.OUTPUT.Blur,    'SSAO + blur'],
+          [SSAOPass.OUTPUT.Depth,   'RT Depth'],
+          [SSAOPass.OUTPUT.Normal,  'RT Normal'],
+        ] },
+    ],
+  },
+  {
+    id: 'bloom', order: 3, name: 'UnrealBloom', pass: bloomPass,
+    note: '5 mips gaussianos (11 render targets). Umbral alto ⇒ solo los emisivos florecen.',
+    controls: [
+      { kind: 'range', label: 'intensity (strength)', min: 0, max: 4, step: 0.01, get: () => bloomPass.strength,  set: v => bloomPass.strength = v,  fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'radius',  min: 0, max: 1.5, step: 0.01, get: () => bloomPass.radius,    set: v => bloomPass.radius = v,    fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'threshold', min: 0, max: 2, step: 0.01, get: () => bloomPass.threshold, set: v => bloomPass.threshold = v, fmt: v => v.toFixed(2) },
+    ],
+  },
+  {
+    id: 'ca', order: 4, name: 'Chromatic Aberration ★', pass: caPass,
+    note: 'ShaderPass custom. Desplaza los canales R/B.',
+    controls: [
+      { kind: 'range', label: 'amount', min: 0, max: 0.02, step: 0.0001, get: () => caPass.uniforms.amount.value,  set: v => caPass.uniforms.amount.value = v,  fmt: v => v.toFixed(4) },
+      { kind: 'range', label: 'radial ↔ lineal', min: 0, max: 1, step: 0.01, get: () => caPass.uniforms.radial.value, set: v => caPass.uniforms.radial.value = v, fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'falloff', min: 0.5, max: 4, step: 0.05, get: () => caPass.uniforms.falloff.value, set: v => caPass.uniforms.falloff.value = v, fmt: v => v.toFixed(2) },
+    ],
+  },
+  {
+    id: 'feedback', order: 5, name: 'Feedback / Estelas ★', pass: feedbackPass,
+    note: 'Pass custom con 2 render targets propios en ping-pong.',
+    controls: [
+      { kind: 'range', label: 'decay', min: 0, max: 0.99, step: 0.01, get: () => feedbackPass.decay,     set: v => feedbackPass.decay = v,     fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'intensity', min: 0, max: 1, step: 0.01, get: () => feedbackPass.intensity, set: v => feedbackPass.intensity = v, fmt: v => v.toFixed(2) },
+      { kind: 'button', label: 'Limpiar estela', run: () => feedbackPass.reset() },
+    ],
+  },
+  {
+    id: 'vignette', order: 6, name: 'Vignette ★', pass: vignettePass,
+    note: 'ShaderPass custom. Oscurece las esquinas.',
+    controls: [
+      { kind: 'range', label: 'intensity', min: 0, max: 1.5, step: 0.01, get: () => vignettePass.uniforms.intensity.value, set: v => vignettePass.uniforms.intensity.value = v, fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'offset', min: 0, max: 1, step: 0.01, get: () => vignettePass.uniforms.offset.value, set: v => vignettePass.uniforms.offset.value = v, fmt: v => v.toFixed(2) },
+      { kind: 'range', label: 'softness', min: 0.01, max: 1, step: 0.01, get: () => vignettePass.uniforms.softness.value, set: v => vignettePass.uniforms.softness.value = v, fmt: v => v.toFixed(2) },
+    ],
+  },
+  {
+    id: 'output', order: 7, name: 'OutputPass', pass: outputPass,
+    note: 'Tone mapping + conversión a sRGB. Debe ir antes de FXAA.',
+    controls: [],
+  },
+  {
+    id: 'fxaa', order: 8, name: 'FXAA', pass: fxaaPass,
+    note: 'Anti-aliasing sobre la imagen final en sRGB. Compará desactivándolo.',
+    controls: [],
+  },
+];
+
+// Estado inicial de cada pass (para el reset)
+const INITIAL = {
+  ssao: { kernelRadius: ssaoPass.kernelRadius, minDistance: ssaoPass.minDistance, maxDistance: ssaoPass.maxDistance, output: ssaoPass.output },
+  bloom: { strength: bloomPass.strength, radius: bloomPass.radius, threshold: bloomPass.threshold },
+  ca: { amount: caPass.uniforms.amount.value, radial: caPass.uniforms.radial.value, falloff: caPass.uniforms.falloff.value },
+  feedback: { decay: feedbackPass.decay, intensity: feedbackPass.intensity },
+  vignette: { intensity: vignettePass.uniforms.intensity.value, offset: vignettePass.uniforms.offset.value, softness: vignettePass.uniforms.softness.value },
+};
+
+const DEFAULTS_ENABLED = {
+  render: true, ssao: true, bloom: true, ca: true,
+  feedback: false, vignette: true, output: true, fxaa: true,
+};
+
+// ─────────────────────────────────────────────────────────────────
+// 7. Construcción de la UI
+// ─────────────────────────────────────────────────────────────────
+const passList = $('pass-list');
+const uiRefs = {};   // id → { checkbox, controls: [...], refresh() }
+
+for (const spec of PASSES) {
+  const el = document.createElement('div');
+  el.className = 'pass';
+
+  // Cabecera: checkbox + nombre + flecha
+  const head = document.createElement('div');
+  head.className = 'pass-head';
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = DEFAULTS_ENABLED[spec.id] !== false;
+  cb.title = 'Activar / desactivar pass';
+  cb.addEventListener('change', () => {
+    spec.pass.enabled = cb.checked;
+    if (spec.id === 'feedback' && cb.checked) feedbackPass.reset();
+    refreshDebug();
+  });
+
+  const ord = document.createElement('span');
+  ord.className = 'ord'; ord.textContent = spec.order + '.';
+
+  const nm = document.createElement('span');
+  nm.className = 'name'; nm.textContent = spec.name;
+
+  const arrow = document.createElement('span');
+  arrow.className = 'arrow'; arrow.textContent = '▶';
+
+  head.append(cb, ord, nm, arrow);
+  head.addEventListener('click', (e) => {
+    if (e.target === cb) return;   // el checkbox no colapsa
+    el.classList.toggle('open');
+  });
+
+  const body = document.createElement('div');
+  body.className = 'pass-body';
+
+  if (spec.note) {
+    const n = document.createElement('div');
+    n.className = 'hint'; n.textContent = spec.note;
+    body.appendChild(n);
+  }
+
+  const ctlRefs = [];
+
+  for (const c of spec.controls) {
+    if (c.kind === 'range') {
+      const wrap = document.createElement('div');
+      wrap.className = 'ctl';
+      const lab = document.createElement('label');
+      const lname = document.createElement('span'); lname.textContent = c.label;
+      const lval = document.createElement('b');
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = c.min; input.max = c.max; input.step = c.step;
+      input.value = c.get();
+      lval.textContent = c.fmt(parseFloat(input.value));
+      input.addEventListener('input', () => {
+        const v = parseFloat(input.value);
+        c.set(v);
+        lval.textContent = c.fmt(v);
+      });
+      lab.append(lname, lval);
+      wrap.append(lab, input);
+      body.appendChild(wrap);
+      ctlRefs.push(() => {
+        const v = c.get();
+        input.value = v;
+        lval.textContent = c.fmt(v);
+      });
+
+    } else if (c.kind === 'select') {
+      const wrap = document.createElement('div');
+      wrap.className = 'ctl';
+      const lab = document.createElement('label');
+      const lname = document.createElement('span'); lname.textContent = c.label;
+      lab.appendChild(lname);
+      const sel = document.createElement('select');
+      for (const [val, text] of c.options) {
+        const o = document.createElement('option');
+        o.value = String(val); o.textContent = text;
+        sel.appendChild(o);
+      }
+      sel.value = String(c.value());
+      sel.addEventListener('change', () => c.set(sel.value));
+      wrap.append(lab, sel);
+      body.appendChild(wrap);
+      ctlRefs.push(() => { sel.value = String(c.value()); });
+
+    } else if (c.kind === 'button') {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = c.label;
+      btn.addEventListener('click', c.run);
+      body.appendChild(btn);
+    }
+  }
+
+  el.append(head, body);
+  passList.appendChild(el);
+
+  // Aplicar estado inicial
+  spec.pass.enabled = cb.checked;
+
+  uiRefs[spec.id] = { cb, ctlRefs, spec };
+}
+
+// Controles globales
+$('in-tone').addEventListener('change', (e) => {
+  renderer.toneMapping = parseInt(e.target.value, 10);
+  $('v-tone').textContent = e.target.selectedOptions[0].textContent;
+});
+$('in-exposure').addEventListener('input', (e) => {
+  renderer.toneMappingExposure = parseFloat(e.target.value);
+  $('v-exposure').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+// Presets
+$('btn-preset-todo').addEventListener('click', () => {
+  for (const spec of PASSES) {
+    uiRefs[spec.id].cb.checked = true;
+    spec.pass.enabled = true;
+  }
+  ssaoPass.output = SSAOPass.OUTPUT.Default;
+  feedbackPass.reset();
+  refreshDebug();
+});
+$('btn-preset-clean').addEventListener('click', () => {
+  const only = { render: true, output: true };
+  for (const spec of PASSES) {
+    const on = !!only[spec.id];
+    uiRefs[spec.id].cb.checked = on;
+    spec.pass.enabled = on;
+  }
+  ssaoPass.output = SSAOPass.OUTPUT.Default;
+  refreshDebug();
+});
+$('btn-reset').addEventListener('click', () => {
+  Object.assign(ssaoPass, INITIAL.ssao);
+  Object.assign(bloomPass, INITIAL.bloom);
+  Object.assign(feedbackPass, INITIAL.feedback);
+  caPass.uniforms.amount.value  = INITIAL.ca.amount;
+  caPass.uniforms.radial.value  = INITIAL.ca.radial;
+  caPass.uniforms.falloff.value = INITIAL.ca.falloff;
+  vignettePass.uniforms.intensity.value = INITIAL.vignette.intensity;
+  vignettePass.uniforms.offset.value    = INITIAL.vignette.offset;
+  vignettePass.uniforms.softness.value  = INITIAL.vignette.softness;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  $('in-tone').value = '4';
+  $('v-tone').textContent = 'ACES Filmic';
+  $('in-exposure').value = '1';
+  $('v-exposure').textContent = '1.00';
+
+  for (const spec of PASSES) {
+    const on = DEFAULTS_ENABLED[spec.id] !== false;
+    uiRefs[spec.id].cb.checked = on;
+    spec.pass.enabled = on;
+    uiRefs[spec.id].ctlRefs.forEach(fn => fn());
+  }
+  feedbackPass.reset();
+  refreshDebug();
+});
+
+// Abrir el panel de los passes clave al arrancar
+['ssao', 'bloom'].forEach(id => {
+  const idx = PASSES.findIndex(p => p.id === id);
+  if (idx >= 0) passList.children[idx].classList.add('open');
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 8. Panel de debug · inventario de render targets
+// ─────────────────────────────────────────────────────────────────
+function setText(id, txt, cls) {
+  const el = $(id);
+  el.textContent = txt;
+  el.className = 'v' + (cls ? ' ' + cls : '');
+}
+
+const RT_NAMES = {
+  [THREE.UnsignedByteType]: 'UnsignedByte',
+  [THREE.HalfFloatType]: 'HalfFloat',
+  [THREE.FloatType]: 'Float',
+};
+
+function refreshDebug() {
+  const s = renderer.getDrawingBufferSize(new THREE.Vector2());
+  const enabled = PASSES.filter(p => p.pass.enabled);
+
+  setText('dbg-passes', `${enabled.length} / ${PASSES.length}`, 'hi');
+  setText('dbg-order', enabled.map(p => p.order).join(' → ') || '—');
+
+  // Composer: 2 targets internos (read + write ping-pong)
+  const cw = composer.renderTarget1.width, ch = composer.renderTarget1.height;
+  setText('dbg-rt-composer', `2 × ${cw}×${ch}`, 'hl');
+
+  // SSAO: normalRT (con depthTexture) + ssaoRT + blurRT
+  if (ssaoPass.enabled) {
+    setText('dbg-rt-ssao', `3 × ${ssaoPass.width}×${ssaoPass.height}`);
+  } else {
+    setText('dbg-rt-ssao', 'inactivo', 'off');
+  }
+
+  // Bloom: bright + 5 mips × (h+v) = 11
+  if (bloomPass.enabled) {
+    const bw = bloomPass.renderTargetBright.width;
+    setText('dbg-rt-bloom', `11 × desde ${bw}×${bw}`);
+  } else {
+    setText('dbg-rt-bloom', 'inactivo', 'off');
+  }
+
+  // Feedback: ping-pong propio
+  if (feedbackPass.enabled) {
+    setText('dbg-rt-feedback', `2 × ${feedbackPass.rtA.width}×${feedbackPass.rtA.height}`);
+  } else {
+    setText('dbg-rt-feedback', 'inactivo', 'off');
+  }
+
+  let total = 2;                                        // composer
+  if (ssaoPass.enabled) total += 3;
+  if (bloomPass.enabled) total += 11;
+  if (feedbackPass.enabled) total += 2;
+  setText('dbg-rt-total', String(total), 'hi');
+
+  setText('dbg-size', `${s.x} × ${s.y}`);
+  setText('dbg-dpr', renderer.getPixelRatio().toFixed(2));
+  setText('dbg-hdr', RT_NAMES[hdrTarget.texture.type] || String(hdrTarget.texture.type), 'hi');
+  setText('dbg-tone', $('v-tone').textContent, 'hl');
+  setText('dbg-cs', renderer.outputColorSpace === THREE.SRGBColorSpace ? 'sRGB' : 'linear');
+
+  setText('dbg-tris', renderer.info.render.triangles.toLocaleString());
+  setText('dbg-calls', String(renderer.info.render.calls));
+  setText('dbg-progs', String(renderer.info.programs ? renderer.info.programs.length : '—'));
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 9. Resize
+// ─────────────────────────────────────────────────────────────────
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(w, h);
+  composer.setSize(w, h);          // propaga setSize a TODOS los passes (SSAO, bloom, feedback)
+  syncFXAA();                      // el uniform de FXAA va en píxeles del drawing buffer
+  feedbackPass.reset();            // descarta la estela vieja (evita estirado)
+  refreshDebug();
+}
+window.addEventListener('resize', onResize);
+
+// ─────────────────────────────────────────────────────────────────
+// 10. Loop de render
+// ─────────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frames = 0, fpsAccum = 0, msAccum = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const t = clock.getElapsedTime();
+
+  // ── animación de escena ──────────────────────────────────────
+  knot.rotation.x = t * 0.28;
+  knot.rotation.y = t * 0.42;
+
+  for (let i = 0; i < orbs.length; i++) {
+    const o = orbs[i];
+    const a = o.phase + t * o.speed;
+    o.mesh.position.set(
+      Math.cos(a) * o.radius,
+      o.yBase + Math.sin(t * 0.7 + i) * 0.55,
+      Math.sin(a) * o.radius
+    );
+    o.mesh.material.emissiveIntensity = 5.0 + Math.sin(t * 2.2 + i * 1.3) * 2.2;
+    // la luz de color sigue a su esfera
+    neonLights[i].position.copy(o.mesh.position);
+    neonLights[i].intensity = 11 + Math.sin(t * 1.6 + i) * 5;
+  }
+
+  for (const f of floaters) {
+    f.mesh.position.y = f.baseY + Math.sin(t * f.bob) * f.amp;
+    f.mesh.rotation.x += f.rot * 0.004;
+    f.mesh.rotation.y += f.rot * 0.006;
+  }
+
+  dust.rotation.y = t * 0.014;
+
+  controls.update();
+
+  // ── render del pipeline completo ─────────────────────────────
+  renderer.info.reset();          // ver nota en la creación del renderer
+  const t0 = performance.now();
+  composer.render();
+  const dt = performance.now() - t0;
+
+  // ── métricas ─────────────────────────────────────────────────
+  frames++; fpsAccum += dt; msAccum += dt;
+  if (frames >= 30) {
+    const avg = msAccum / frames;
+    setText('dbg-fps', (1000 / avg).toFixed(1), 'hi');
+    setText('dbg-ms', avg.toFixed(2) + ' ms');
+    setText('dbg-tris', renderer.info.render.triangles.toLocaleString());
+    setText('dbg-calls', String(renderer.info.render.calls));
+    frames = 0; fpsAccum = 0; msAccum = 0;
+  }
+}
+
+// Primer render y arranque
+onResize();
+composer.render();
+refreshDebug();
+animate();
+
+// Exponer el pipeline para inspección desde consola / WebMCP (Fase 12)
+window.__fase10 = {
+  THREE, renderer, scene, camera, composer,
+  passes: { renderPass, ssaoPass, bloomPass, caPass, feedbackPass, vignettePass, outputPass, fxaaPass },
+  ui: uiRefs,
+  setBloomIntensity(v) { bloomPass.strength = v; uiRefs.bloom.ctlRefs.forEach(f => f()); },
+  toggle(id, on) { const r = uiRefs[id]; if (!r) return; r.cb.checked = on; r.spec.pass.enabled = on; refreshDebug(); },
+  info() {
+    return {
+      three: THREE.REVISION,
+      enabled: PASSES.filter(p => p.pass.enabled).map(p => p.id),
+      targets: {
+        composer: [composer.renderTarget1.width, composer.renderTarget1.height],
+        ssao: ssaoPass.enabled ? [ssaoPass.width, ssaoPass.height] : null,
+        bloomMips: bloomPass.nMips,
+        feedback: feedbackPass.enabled ? [feedbackPass.rtA.width, feedbackPass.rtA.height] : null,
+      },
+      bloom: { strength: bloomPass.strength, radius: bloomPass.radius, threshold: bloomPass.threshold },
+      fxaa: fxaaPass.enabled,
+    };
+  },
+};
+console.log('[Fase 10] pipeline listo · three r' + THREE.REVISION + ' · window.__fase10 disponible');
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase10-postprocessing.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

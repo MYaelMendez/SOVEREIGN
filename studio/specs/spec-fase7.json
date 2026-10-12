@@ -1,0 +1,9 @@
+{
+  "title": "\u00e6:// fase7-performance \u2014 Escalabilidad Masiva",
+  "text": "Semana 7 \u00b7 InstancedMesh \u00b7 LOD \u00b7 Frustum Culling \u00b7 Batch Rendering",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase7-performance.html"
+}

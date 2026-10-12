@@ -1,0 +1,9 @@
+{
+  "title": "\u00e6:// fase9-webworkers \u2014 Async Rendering",
+  "text": "Semana 9 \u00b7 Web Workers \u00b7 Transferable Objects \u00b7 OffscreenCanvas \u00b7 Parallel",
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase9-webworkers.html"
+}

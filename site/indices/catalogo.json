@@ -1,0 +1,103 @@
+{
+  "namespace": "æææ://",
+  "version": 1,
+  "authority": "HUMAN://ROOT",
+  "indices": [
+    {
+      "slug": "etica",
+      "glyph": "æ¹",
+      "name": "Ética",
+      "en": "Ethics",
+      "color": "#e8c547",
+      "question": "¿Quién autoriza?",
+      "principle": "El humano permanece como principal.",
+      "description": "Principios, compromisos y límites para el trabajo de los agentes.",
+      "resources": [
+        {
+          "title": "Compromiso de los agentes",
+          "url": "/pledge.html",
+          "kind": "Principios",
+          "description": "Leer los compromisos y el alcance de la supervisión humana."
+        },
+        {
+          "title": "Registro público de compromisos",
+          "url": "/agent-pledge.json",
+          "kind": "Registro",
+          "description": "Consultar la evidencia publicada. La evidencia informa; no concede autoridad."
+        },
+        {
+          "title": "Supervisar antes de confiar",
+          "url": "https://yaeleureka-afk.github.io/diplomado-agentico/clases/m1-s3/",
+          "kind": "Clase",
+          "description": "Comprobar fuentes, fechas, cifras y nombres antes de aceptar una respuesta."
+        }
+      ]
+    },
+    {
+      "slug": "economia",
+      "glyph": "æ²",
+      "name": "Economía",
+      "en": "Economics",
+      "color": "#7ce2b1",
+      "question": "¿A quién beneficia?",
+      "principle": "La agencia debe ampliar las oportunidades humanas.",
+      "description": "Descubrir capacidades, construir valor y observar la fragilidad económica.",
+      "resources": [
+        {
+          "title": "LLM.store",
+          "url": "/llm-store.html",
+          "kind": "Capacidades",
+          "description": "Explorar el portal de capacidades y herramientas de la constelación."
+        },
+        {
+          "title": "Proyecto para mi comunidad",
+          "url": "https://yaeleureka-afk.github.io/diplomado-agentico/clases/m4-c4/",
+          "kind": "Proyecto",
+          "description": "Resolver una necesidad real y presentar lo construido a la comunidad."
+        },
+        {
+          "title": "Mi diplomado",
+          "url": "https://github.com/yaeleureka-afk/mi-diplomado",
+          "kind": "Plantilla",
+          "description": "Documentar el problema, el proyecto y las decisiones que sostienen su utilidad."
+        }
+      ]
+    },
+    {
+      "slug": "ingenieria",
+      "glyph": "æ³",
+      "name": "Ingeniería",
+      "en": "Engineering",
+      "color": "#70dcff",
+      "question": "¿Cómo lo construimos?",
+      "principle": "La autoridad debe expresarse en la arquitectura.",
+      "description": "Clases, repositorios y herramientas para aprender, construir, comprobar y enseñar.",
+      "resources": [
+        {
+          "title": "TEOTECH · Instituto",
+          "url": "/teotech.html",
+          "kind": "Portal",
+          "description": "Entrar a la formación tecnológica y teológica del Instituto."
+        },
+        {
+          "title": "Diplomado agéntico",
+          "url": "https://yaeleureka-afk.github.io/diplomado-agentico/",
+          "kind": "Curso",
+          "description": "Aprender con prácticas, proyectos y revisión humana."
+        },
+        {
+          "title": "TEOTECH Theme",
+          "url": "https://yaeleureka-afk.github.io/teotech-theme/",
+          "kind": "Herramienta",
+          "description": "Reutilizar el tema educativo móvil y explorar su tutor local."
+        },
+        {
+          "title": "Mi diplomado",
+          "url": "https://github.com/yaeleureka-afk/mi-diplomado",
+          "kind": "Plantilla",
+          "description": "Conservar código, contexto y reflexión en el repo del estudiante."
+        }
+      ]
+    }
+  ]
+}

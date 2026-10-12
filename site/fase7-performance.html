@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase7-performance — Escalabilidad Masiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 58%,rgba(0,0,0,0.55) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:400px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#hud ul{list-style:none;font-size:15px;line-height:2.05}
+#hud li{opacity:0.62}
+#hud li::before{content:'\25B8 ';color:var(--cyan)}
+#hud .v{color:#ffe9a8;text-shadow:0 0 12px rgba(212,175,55,0.7)}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);
+  border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <h1>æ:// fase7-performance</h1>
+  <div class="sub">Week 07 — Escalabilidad Masiva</div>
+  <div class="rule"></div>
+  <ul>
+    <li>InstancedMesh &middot; single draw call</li>
+    <li>instances &middot; <span class="v" id="inst">50000</span></li>
+    <li>fps &middot; <span class="v" id="fps">--</span></li>
+    <li>draw calls &middot; <span class="v" id="dc">1</span></li>
+    <li>geometry &middot; <span class="v">box 250 &times; 200</span></li>
+  </ul>
+</div>
+
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+
+<div id="badge"
+  onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 22px rgba(212,175,55,0.45)'"
+  onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+  onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+  title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase7-performance.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const W = 1920, H = 1080, DURATION = 12.0;
+const GOLD = 0xD4AF37, CYAN = 0x00eaff;
+
+/* ---- renderer / scene / camera ---- */
+const canvas = document.getElementById('c');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 8000);
+camera.position.set(0, 170, 360);
+camera.lookAt(0, 0, 0);
+scene.add(camera);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+
+/* ---- backdrop glow : camera child, always fills the frame (luminance floor) ---- */
+const backdropMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan; varying vec2 vUv;
+    void main(){
+      vec2 p = vUv - 0.5;
+      float d = length(p * vec2(1.0, 0.82));
+      float core = smoothstep(0.80, 0.0, d);
+      float ring = smoothstep(0.05, 0.0, abs(d - 0.42));
+      vec3 col = uGold * core * 0.62;
+      col += uCyan * ring * 0.36;
+      col += uGold * 0.055;
+      col *= 0.88 + 0.12 * sin(uTime * 1.3);
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(1900, 1100), backdropMat);
+backdrop.position.set(0, 0, -1000);
+backdrop.renderOrder = -1;
+camera.add(backdrop);
+
+/* ---- lights ---- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const dir = new THREE.DirectionalLight(0xffffff, 1.25);
+dir.position.set(120, 320, 200);
+scene.add(dir);
+const goldL = new THREE.PointLight(GOLD, 2.6, 4000);
+goldL.position.set(0, 200, 0);
+scene.add(goldL);
+const cyanL = new THREE.PointLight(CYAN, 1.6, 4000);
+cyanL.position.set(-220, 140, -220);
+scene.add(cyanL);
+
+/* ---- InstancedMesh : 50 000 boxes, ONE draw call, per-instance colour ---- */
+const GX = 250, GZ = 200, COUNT = GX * GZ; // 50 000
+const SP = 3.0;
+const geo = new THREE.BoxGeometry(2.4, 2.4, 2.4);
+const mat = new THREE.MeshStandardMaterial({ roughness: 0.38, metalness: 0.35, emissive: 0x1c1506, emissiveIntensity: 0.7 });
+const mesh = new THREE.InstancedMesh(geo, mat, COUNT);
+mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+mesh.frustumCulled = false;
+
+const dummy = new THREE.Object3D();
+const baseX = new Float32Array(COUNT);
+const baseZ = new Float32Array(COUNT);
+const cGold = new THREE.Color(GOLD), cCyan = new THREE.Color(CYAN), cWhite = new THREE.Color(0xffffff);
+const col = new THREE.Color();
+
+let k = 0;
+for (let ix = 0; ix < GX; ix++) {
+  for (let iz = 0; iz < GZ; iz++) {
+    const x = (ix - GX / 2) * SP;
+    const z = (iz - GZ / 2) * SP;
+    baseX[k] = x; baseZ[k] = z;
+    dummy.position.set(x, 0, z);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(k, dummy.matrix);
+    col.copy(cGold);
+    mesh.setColorAt(k, col);
+    k++;
+  }
+}
+mesh.instanceMatrix.needsUpdate = true;
+mesh.instanceColor.needsUpdate = true;
+scene.add(mesh);
+
+document.getElementById('inst').textContent = COUNT;
+
+/* ---- HUD handles ---- */
+const elFc = document.getElementById('fc');
+const elTc = document.getElementById('tc');
+const elTt = document.getElementById('tt');
+const elFps = document.getElementById('fps');
+
+/* ---- FPS (display only, never feeds the render) ---- */
+let _frames = 0, _last = performance.now(), _fps = 0;
+
+/* ---- deterministic frame renderer ---- */
+function renderAt(t) {
+  backdropMat.uniforms.uTime.value = t;
+
+  for (let j = 0; j < COUNT; j++) {
+    const bx = baseX[j], bz = baseZ[j];
+    const wave = Math.sin(bx * 0.045 + t * 1.7) * Math.cos(bz * 0.045 + t * 1.15);
+    const y = wave * 18.0;
+    const s = 0.55 + (wave + 1.0) * 0.5 * 0.95;
+    dummy.position.set(bx, y, bz);
+    dummy.scale.set(s, s, s);
+    dummy.rotation.y = wave * 0.7;
+    dummy.updateMatrix();
+    mesh.setMatrixAt(j, dummy.matrix);
+
+    const m = (wave + 1.0) * 0.5;
+    col.copy(cCyan).lerp(cGold, m);
+    if (m > 0.85) col.lerp(cWhite, (m - 0.85) / 0.15);
+    mesh.setColorAt(j, col);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.instanceColor.needsUpdate = true;
+
+  /* deterministic orbit camera */
+  const ang = t * Math.PI * 1.6;
+  const rad = 380 + Math.sin(t * 1.3) * 70;
+  const camY = 175 + Math.sin(t * 0.9) * 75;
+  camera.position.set(Math.cos(ang) * rad, camY, Math.sin(ang) * rad);
+  camera.lookAt(0, 0, 0);
+
+  goldL.position.set(Math.sin(t * 1.1) * 260, 200, Math.cos(t * 1.1) * 260);
+  cyanL.position.set(Math.cos(t * 0.8) * -260, 150, Math.sin(t * 0.8) * -260);
+
+  renderer.render(scene, camera);
+
+  /* fps (display only) */
+  _frames++;
+  const now = performance.now();
+  if (now - _last >= 500) {
+    _fps = Math.round(_frames / ((now - _last) / 1000));
+    _frames = 0; _last = now;
+    elFps.textContent = _fps;
+  }
+}
+
+/* ---- external frame hook (drives æRTXrender / vidæo producer) ---- */
+let driven = false;
+window.__renderFrame = function (i, total) {
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  elFc.textContent = i;
+  elTc.textContent = total;
+  elTt.textContent = t.toFixed(2);
+  return true;
+};
+
+/* ---- live loop for standalone viewing ---- */
+function loop() {
+  requestAnimationFrame(loop);
+  if (driven) return;
+  renderAt((performance.now() / 1000) % DURATION);
+}
+loop();
+
+window.__renderFrame(0, 1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fase7-performance.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

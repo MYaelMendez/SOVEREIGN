@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="data:," />
+<title>Fase 12 · WebMCP + Three.js + Agent Loop — Three.js 0.186.1 (offline)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:rgba(13,17,23,.92); --line:#1f6feb; --accent:#58a6ff;
+    --good:#3fb950; --warn:#d29922; --bad:#f85149; --text:#c9d1d9; --dim:#8b949e; --muted:#6e7681;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+  body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);}
+  #app{position:fixed;inset:0;}
+  canvas{display:block;width:100%;height:100%;}
+
+  .panel{
+    position:fixed;background:var(--panel);border:1px solid rgba(88,166,255,.35);border-radius:10px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.5);
+    font-family:"Cascadia Code","Consolas","SFMono-Regular",Menlo,monospace;font-size:12px;line-height:1.5;
+    z-index:10;overflow:hidden;
+  }
+  .panel h1{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+    margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(88,166,255,.25);font-family:inherit;}
+
+  #debug{top:12px;left:12px;width:340px;padding:12px 14px;max-height:calc(100vh - 24px);overflow-y:auto;}
+  #debug::-webkit-scrollbar{width:6px;}#debug::-webkit-scrollbar-thumb{background:rgba(88,166,255,.3);border-radius:3px;}
+  #tools{bottom:12px;left:12px;width:340px;padding:12px 14px;max-height:40vh;overflow-y:auto;}
+  #tools::-webkit-scrollbar{width:6px;}#tools::-webkit-scrollbar-thumb{background:rgba(88,166,255,.3);border-radius:3px;}
+  #agent{top:12px;right:12px;width:372px;padding:12px 14px;max-height:calc(100vh - 24px);overflow-y:auto;display:flex;flex-direction:column;}
+  #agent::-webkit-scrollbar{width:6px;}#agent::-webkit-scrollbar-thumb{background:rgba(88,166,255,.3);border-radius:3px;}
+
+  .group-title{color:var(--warn);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:10px 0 4px;opacity:.9;}
+  .row{display:flex;justify-content:space-between;gap:10px;}
+  .row .k{color:var(--dim);white-space:nowrap;}
+  .row .v{color:var(--text);text-align:right;word-break:break-all;}
+  .row .v.hi{color:var(--good);} .row .v.hl{color:#f2cc60;} .row .v.off{color:#484f58;} .row .v.bad{color:var(--bad);}
+
+  .tool-card{border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:8px;margin:6px 0;background:rgba(13,17,23,.65);}
+  .tool-card .name{color:var(--accent);font-weight:600;}
+  .tool-card .sig{color:var(--muted);font-size:11px;}
+  .tool-card .row2{display:flex;gap:4px;margin-top:6px;}
+  .tool-card button,.btn{padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:rgba(88,166,255,.12);
+    color:var(--text);font-size:11px;cursor:pointer;font-family:inherit;}
+  .tool-card button:hover,.btn:hover{background:rgba(88,166,255,.28);}
+  .btn:disabled{opacity:.45;cursor:default;}
+
+  .log{font-size:11px;font-family:"Cascadia Code",monospace;white-space:pre-wrap;word-break:break-word;}
+  #agent .tab{display:flex;gap:4px;margin-bottom:8px;}
+  #agent .tab button{flex:1;padding:6px;border:1px solid rgba(88,166,255,.3);background:rgba(25,30,38,.8);
+    color:var(--dim);font-size:11px;cursor:pointer;border-radius:6px;font-family:inherit;}
+  #agent .tab button.active{color:#fff;background:var(--line);border-color:var(--line);}
+  .pane{display:none;} .pane.on{display:block;}
+  .bar{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;}
+
+  .receipt{border-left:2px solid var(--good);padding:4px 0 4px 8px;margin:5px 0;background:rgba(63,185,80,.05);}
+  .receipt.err{border-left-color:var(--bad);background:rgba(248,81,73,.06);}
+  .receipt .id{color:var(--muted);font-size:10px;}
+  .receipt .code{color:var(--good);} .receipt.err .code{color:var(--bad);}
+  .t-ok{color:var(--good);} .t-no{color:var(--bad);} .e2e-hd{color:#f2cc60;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ═══════════════════ IZQUIERDA · DEBUG + INSPECCIÓN ═══════════════════ -->
+<div id="debug" class="panel">
+  <h1>Fase 12 · Debug &amp; Scene Inspection</h1>
+  <div class="group-title">Renderer</div>
+  <div class="row"><span class="k">Three.js</span><span class="v" id="i-rev">—</span></div>
+  <div class="row"><span class="k">GPU vendor</span><span class="v" id="i-vendor">—</span></div>
+  <div class="row"><span class="k">GPU renderer</span><span class="v" id="i-gpu">—</span></div>
+  <div class="row"><span class="k">Geometries</span><span class="v" id="i-geo">—</span></div>
+  <div class="row"><span class="k">Textures</span><span class="v" id="i-tex">—</span></div>
+  <div class="row"><span class="k">Programs</span><span class="v" id="i-prog">—</span></div>
+  <div class="row"><span class="k">Draw calls / frame</span><span class="v" id="i-calls">—</span></div>
+  <div class="row"><span class="k">Triangles</span><span class="v" id="i-tri">—</span></div>
+  <div class="row"><span class="k">FPS</span><span class="v hi" id="i-fps">—</span></div>
+
+  <div class="group-title">WebMCP</div>
+  <div class="row"><span class="k">modelContext</span><span class="v" id="w-native">—</span></div>
+  <div class="row"><span class="k">Transport</span><span class="v" id="w-transport">—</span></div>
+  <div class="row"><span class="k">Session</span><span class="v" id="w-session">—</span></div>
+  <div class="row"><span class="k">Tools registradas</span><span class="v hi" id="w-tools">—</span></div>
+  <div class="row"><span class="k">Resources (frames)</span><span class="v" id="w-res">—</span></div>
+  <div class="row"><span class="k">Capture</span><span class="v" id="w-cap">idle</span></div>
+
+  <div class="group-title">Scene Graph</div>
+  <div class="log" id="scene-graph" style="max-height:150px;overflow-y:auto;">(inspeccionar vía WebMCP)</div>
+
+  <div class="group-title">E2E · tail</div>
+  <div class="log" id="e2e-tail" style="max-height:150px;overflow:auto;"></div>
+</div>
+
+<!-- ═══════════════════ DERECHA · AGENT LOOP ═══════════════════ -->
+<div id="agent" class="panel">
+  <h1>Agent Loop · WebMCP Control Plane</h1>
+  <div class="tab">
+    <button class="tab-btn active" data-tab="p-ctrl">Agent Control</button>
+    <button class="tab-btn" data-tab="p-rcpt">Receipts</button>
+    <button class="tab-btn" data-tab="p-test">E2E Tests</button>
+  </div>
+
+  <div id="p-ctrl" class="pane on">
+    <div class="bar">
+      <button class="btn" id="b-agent">▶ Run Agent Step</button>
+      <button class="btn" id="b-inspect">Inspect</button>
+      <button class="btn" id="b-perf">Perf Report</button>
+    </div>
+    <div class="bar">
+      <button class="btn" id="b-capstart">● Start Capture</button>
+      <button class="btn" id="b-capstop">■ Stop Capture</button>
+      <button class="btn" id="b-grab">◉ Grab Frame → WebMCP</button>
+      <button class="btn" id="b-export">⤓ Export JSON</button>
+    </div>
+    <div class="group-title">Agent Control Log</div>
+    <div class="log" id="agent-log" style="max-height:340px;overflow:auto;"></div>
+  </div>
+
+  <div id="p-rcpt" class="pane">
+    <div class="bar">
+      <button class="btn" id="b-verify">✓ Verify all receipts</button>
+      <button class="btn" id="b-clearrcpt">Clear</button>
+    </div>
+    <div class="group-title">Receipts &amp; Verification</div>
+    <div class="log" id="receipt-log" style="max-height:360px;overflow:auto;"></div>
+  </div>
+
+  <div id="p-test" class="pane">
+    <div class="bar"><button class="btn" id="b-e2e">⟳ Re-run E2E suite</button></div>
+    <div class="group-title">Test Results</div>
+    <div class="log" id="test-log" style="max-height:360px;overflow:auto;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ IZQUIERDA-ABAJO · TOOLS REGISTRADAS ═══════════════════ -->
+<div id="tools" class="panel">
+  <h1>WebMCP Tools Registradas (<span id="tools-count">0</span>/6)</h1>
+  <div id="tool-list"></div>
+</div>
+
+<!-- ═══════════════ IMPORT MAP · 100% LOCAL, SIN CDN ═══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }      from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer }     from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }         from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass }         from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass }    from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }         from 'three/addons/postprocessing/OutputPass.js';
+import { FXAAShader }         from 'three/addons/shaders/FXAAShader.js';
+
+/* ══════════════════════════════════════════════════════════════════════
+   0. UTILIDADES
+   ══════════════════════════════════════════════════════════════════════ */
+const $  = (id) => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const nowMs = () => (performance && performance.now ? performance.now() : Date.now());
+
+const uid = () => {
+  try { if (crypto && crypto.randomUUID) return crypto.randomUUID().slice(0,8); } catch(_){}
+  return Math.random().toString(36).slice(2,10);
+};
+// FNV-1a 32-bit → hash de recibo (verificación offline, sin dependencias)
+function hashStr(s){
+  let h = 0x811c9dc5 >>> 0;
+  for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return ('00000000' + h.toString(16)).slice(-8);
+}
+function logTo(id, msg, cls=''){
+  const el = $(id); if(!el) return;
+  const line = (typeof msg === 'object') ? JSON.stringify(msg) : String(msg);
+  const span = document.createElement('div');
+  if (cls) span.className = cls;
+  span.textContent = line;
+  el.appendChild(span);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   1. WEBMCP  ·  shim compatible con la propuesta W3C/Microsoft
+   ----------------------------------------------------------------------
+   La propuesta expone `navigator.modelContext` con:
+     · registerTool({ name, description, inputSchema, execute })
+     · provideContext({ tools, resources })
+     · unregisterTool(name)
+   Si el navegador ya lo implementa, delegamos en él. Si no, usamos este
+   shim local, de modo que la página funciona 100% offline.
+   ══════════════════════════════════════════════════════════════════════ */
+const WebMCP = (() => {
+  const native = (typeof navigator !== 'undefined') ? navigator.modelContext : null;
+  const tools = new Map();
+  const resources = new Map();
+  const listeners = new Set();
+
+  const shim = {
+    _isShim: true,
+    async registerTool(tool){ tools.set(tool.name, tool); },
+    async unregisterTool(name){ tools.delete(name); },
+    async provideContext(spec={}){
+      tools.clear();
+      (spec.tools||[]).forEach(t => tools.set(t.name, t));
+      (spec.resources||[]).forEach(r => resources.set(r.uri, r));
+    },
+    // Superficie de invocación usada por el agent loop / E2E
+    async call(name, args={}){
+      const tool = tools.get(name);
+      if(!tool) throw new Error(`WebMCP: tool "${name}" no registrada`);
+      return await tool.execute(args, { source:'agent', name });
+    },
+    listTools(){ return [...tools.values()].map(t => ({ name:t.name, description:t.description, inputSchema:t.inputSchema })); },
+    addResource(uri, res){ resources.set(uri, res); return uri; },
+    listResources(){ return [...resources.values()]; },
+  };
+
+  const ctx = native || shim;
+  const transport = native ? 'navigator.modelContext (nativo)' : 'shim local (offline)';
+
+  return {
+    native: !!native,
+    transport,
+    ctx,
+    shim,
+    tools,
+    resources,
+    sessionId: 'sess_' + uid(),
+    async registerTools(spec){ await ctx.provideContext(spec); },
+    async call(name, args={}){
+      // Preferimos la superficie nativa si existe y expone call/invoke
+      if (native && typeof native.call === 'function') return await native.call(name, args);
+      return await shim.call(name, args);
+    },
+    on(fn){ listeners.add(fn); return () => listeners.delete(fn); },
+    emit(evt){ listeners.forEach(fn => { try { fn(evt); } catch(_){} }); },
+  };
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   2. RECEIPTS  ·  ledger firmado por hash, verificable offline
+   ══════════════════════════════════════════════════════════════════════ */
+const Ledger = {
+  receipts: [],
+  record(tool, args, result, status, duration){
+    const r = {
+      id: uid(), tool, args: args ?? {},
+      status, duration: Math.round(duration*100)/100,
+      ts: new Date().toISOString(),
+    };
+    r.hash = hashStr(JSON.stringify({ id:r.id, tool:r.tool, args:r.args, ts:r.ts }));
+    r.result = result;
+    this.receipts.push(r);
+    return r;
+  },
+  verify(r){
+    const expect = hashStr(JSON.stringify({ id:r.id, tool:r.tool, args:r.args, ts:r.ts }));
+    return expect === r.hash;
+  },
+  verifyAll(){
+    return this.receipts.map(r => ({ id:r.id, tool:r.tool, ok:this.verify(r) }));
+  },
+  clear(){ this.receipts.length = 0; },
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   3. BOOTSTRAP THREE.JS  ·  ESM desde ./vendor/  (offline)
+   ══════════════════════════════════════════════════════════════════════ */
+const container = $('app');
+const renderer = new THREE.WebGLRenderer({
+  antialias:false,                      // FXAA hace el AA en post-proceso
+  powerPreference:'high-performance',
+  preserveDrawingBuffer:true,           // necesario para toDataURL / grabFrame
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.info.autoReset = false;        // con post-proceso hay varios render() por frame
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.FogExp2(0x0d1117, 0.018);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 2000);
+camera.position.set(30, 22, 38);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;          // (propiedad correcta de OrbitControls)
+controls.target.set(0, 4, 0);
+controls.maxPolarAngle = Math.PI * 0.495;
+
+// ── Post-proceso: Render → Bloom → FXAA → Output ──
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);  renderPass.name = 'RenderPass';
+composer.addPass(renderPass);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.85, 0.22);
+bloomPass.name = 'Bloom';
+composer.addPass(bloomPass);
+const fxaaPass = new ShaderPass(FXAAShader);        fxaaPass.name = 'FXAA';
+fxaaPass.uniforms['resolution'].value.set(
+  1/(window.innerWidth  * renderer.getPixelRatio()),
+  1/(window.innerHeight * renderer.getPixelRatio()));
+composer.addPass(fxaaPass);
+const outputPass = new OutputPass();                outputPass.name = 'Output';
+composer.addPass(outputPass);
+
+/* ══════════════════════════════════════════════════════════════════════
+   4. ESCENA  ·  56 meshes (48 cubos + 8 torus), luces, suelo
+   ══════════════════════════════════════════════════════════════════════ */
+scene.add(new THREE.HemisphereLight(0x87ceeb, 0x30240f, 0.65));
+const sun = new THREE.DirectionalLight(0xffe6b3, 1.35);
+sun.position.set(24, 46, 12);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera, { left:-60, right:60, top:60, bottom:-60, near:1, far:160 });
+scene.add(sun);
+const orbitLight = new THREE.PointLight(0xff8c42, 900, 0, 2);
+orbitLight.position.set(-14, 6, -8);
+scene.add(orbitLight);
+scene.add(new THREE.AmbientLight(0x404060, 0.35));
+
+const root = new THREE.Group(); root.name = 'Root'; scene.add(root);
+const objects = {};          // name → Mesh
+const meshes   = [];         // lista plana para animación
+
+const geoBox   = new THREE.BoxGeometry(1.7, 1.7, 1.7);
+const geoTorus = new THREE.TorusKnotGeometry(1.0, 0.33, 180, 24);
+const baseMat  = new THREE.MeshStandardMaterial({ color:0x2a9d8f, metalness:0.5, roughness:0.32 });
+
+for (let i=0;i<56;i++){
+  const isTorus = (i % 7 === 0);
+  const mat = baseMat.clone();                 // material propio → highlight por objeto
+  const m = new THREE.Mesh(isTorus ? geoTorus : geoBox, mat);
+  const id = isTorus ? `torus_${i}` : `cube_${i}`;
+  m.name = id;
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData = { type:isTorus?'torus':'cube', index:i, tagged:false, anim:false, spin:0 };
+  const col = i % 7, row = Math.floor(i/7);
+  m.position.set((col-3)*6.0, row*5.0 + 2, (row % 2 ? 1 : -1) * 5.5);
+  m.rotation.set(Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2);
+  root.add(m);
+  objects[id] = m; meshes.push(m);
+}
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(600,600),
+  new THREE.MeshStandardMaterial({ color:0x0f141a, metalness:0.1, roughness:0.9 }));
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -0.6;
+ground.receiveShadow = true;
+ground.name = 'Ground';
+scene.add(ground);
+
+const clock = new THREE.Clock();
+let globalSpin = 0.5;          // velocidad de rotación global
+
+/* ══════════════════════════════════════════════════════════════════════
+   5. LAS 6 HERRAMIENTAS WEBMCP
+   ══════════════════════════════════════════════════════════════════════ */
+const S = { tools:{} };
+
+S.tools.scene_inspect = {
+  name:'scene_inspect',
+  description:'Inspecciona el scene graph y devuelve métricas de render/objetos.',
+  inputSchema:{ type:'object', properties:{}, additionalProperties:false },
+  execute: async () => {
+    const nodes = [];
+    scene.traverse(o => {
+      if (o.isMesh) nodes.push({
+        name:o.name, type:o.userData?.type || 'mesh',
+        visible:o.visible, tagged:!!o.userData?.tagged, animating:!!o.userData?.anim,
+        position:o.position.toArray().map(v=>Math.round(v*100)/100),
+      });
+    });
+    return {
+      ok:true,
+      objects: nodes.length,
+      lights: scene.children.filter(o => o.isLight).length,
+      camera:{ type:camera.type, fov:camera.fov,
+        position:camera.position.toArray().map(v=>Math.round(v*100)/100),
+        target:controls.target.toArray() },
+      memory:{ geometries:renderer.info.memory.geometries,
+        textures:renderer.info.memory.textures, programs:renderer.info.memory.programs },
+      nodes,
+    };
+  },
+};
+
+S.tools.camera_control = {
+  name:'camera_control',
+  description:'Mueve la cámara a un objetivo (nombre de objeto o "scene") con zoom opcional.',
+  inputSchema:{ type:'object',
+    properties:{ target:{type:'string'}, zoom:{type:'number'}, animate:{type:'boolean'} },
+    required:['target'] },
+  execute: async ({ target='scene', zoom=1, animate=true }) => {
+    let dest;
+    if (target === 'scene' || !objects[target]) dest = new THREE.Vector3(0,4,0);
+    else dest = objects[target].position.clone();
+    const radius = 34 / clamp(zoom, 0.2, 4);
+    const goal = dest.clone().add(new THREE.Vector3(
+      Math.cos(controls.getAzimuthalAngle()) * radius,
+      radius * 0.55,
+      Math.sin(controls.getAzimuthalAngle()) * radius));
+    controls.target.copy(dest);
+    if (animate) camTween = { from:camera.position.clone(), to:goal, t:0 };
+    else { camera.position.copy(goal); }
+    controls.update();
+    return { ok:true, target, zoom, resolvedTarget:dest.toArray(), cameraGoal:goal.toArray(), animated:!!animate };
+  },
+};
+
+S.tools.object_highlight = {
+  name:'object_highlight',
+  description:'Activa/desactiva un resaltado emisivo sobre un objeto por nombre.',
+  inputSchema:{ type:'object',
+    properties:{ name:{type:'string'}, enable:{type:'boolean'}, color:{type:'number'} },
+    required:['name'] },
+  execute: async ({ name, enable=true, color=0xffcc00 }) => {
+    const obj = objects[name];
+    if (!obj) throw new Error(`object_highlight: objeto "${name}" no encontrado`);
+    obj.userData.tagged = enable;
+    obj.material.emissive = new THREE.Color(enable ? color : 0x000000);
+    obj.material.emissiveIntensity = enable ? 0.9 : 0;
+    return { ok:true, name, enabled:enable, highlighted:obj.userData.tagged,
+      emissive:obj.material.emissive.getHex() };
+  },
+};
+
+S.tools.animation_trigger = {
+  name:'animation_trigger',
+  description:'Alterna la animación de rotación de un objeto, o la global si no se indica nombre.',
+  inputSchema:{ type:'object',
+    properties:{ name:{type:'string'}, loop:{type:'boolean'} } },
+  execute: async ({ name, loop=true }) => {
+    if (!name){ globalSpin = globalSpin > 0 ? 0 : 0.5; return { ok:true, scope:'global', spin:globalSpin, loop }; }
+    const obj = objects[name];
+    if (!obj) throw new Error(`animation_trigger: objeto "${name}" no encontrado`);
+    obj.userData.anim = !obj.userData.anim;
+    obj.userData.spin = obj.userData.anim ? (loop ? 0.9 : 0.4) : 0;
+    return { ok:true, scope:'object', name, animating:obj.userData.anim, loop };
+  },
+};
+
+S.tools.scene_export = {
+  name:'scene_export',
+  description:'Exporta la escena: JSON del scene graph o PNG del frame actual.',
+  inputSchema:{ type:'object', properties:{ format:{type:'string', enum:['json','png']} } },
+  execute: async ({ format='json' }) => {
+    if (format === 'png'){
+      const dataUrl = grabFrame('export');
+      return { ok:true, format:'png', bytes:dataUrl.length, resource:lastFrameUri };
+    }
+    const json = scene.toJSON();
+    const text = JSON.stringify(json);
+    // Descarga (no-op en headless, pero devuelve el tamaño real)
+    try {
+      const blob = new Blob([text], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'fase12-scene.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch(_){}
+    return { ok:true, format:'json', bytes:text.length, objects:scene.children.length };
+  },
+};
+
+S.tools.performance_report = {
+  name:'performance_report',
+  description:'Reporta FPS, draw calls, memoria GPU y anomalías de rendimiento.',
+  inputSchema:{ type:'object', properties:{}, additionalProperties:false },
+  execute: async () => {
+    const fr = renderer.info.render, mem = renderer.info.memory;
+    const anomalies = [];
+    if (Perf.fps > 0 && Perf.fps < 30) anomalies.push('fps_bajo_30');
+    if (fr.calls > 600) anomalies.push('draw_calls_altos');
+    if (mem.geometries > 400) anomalies.push('geometrias_altas');
+    if (mem.textures > 200) anomalies.push('texturas_altas');
+    return { ok:true, fps:Math.round(Perf.fps*10)/10, frameMs:Math.round(Perf.frameMs*100)/100,
+      drawCalls:fr.calls, triangles:fr.triangles, points:fr.points, lines:fr.lines,
+      geometries:mem.geometries, textures:mem.textures, programs:mem.programs,
+      frame:Perf.frame, anomalies, healthy:anomalies.length === 0 };
+  },
+};
+
+const TOOL_ORDER = ['scene_inspect','camera_control','object_highlight','animation_trigger','scene_export','performance_report'];
+
+/* ══════════════════════════════════════════════════════════════════════
+   6. CANVAS CAPTURE → WEBMCP
+   · captureStream(30fps) + MediaRecorder → WebM (vídeo)
+   · grabFrame() → dataURL PNG publicado como Resource WebMCP
+   ══════════════════════════════════════════════════════════════════════ */
+const Capture = {
+  stream:null, recorder:null, chunks:[], frames:[], recording:false, frameCount:0,
+};
+let lastFrameUri = null;
+
+function startCapture(){
+  if (Capture.recording){ logTo('agent-log','⚠ Capture ya está activa',''); return false; }
+  if (typeof renderer.domElement.captureStream !== 'function'){
+    logTo('agent-log','❌ captureStream() no disponible en este navegador'); return false;
+  }
+  try {
+    Capture.stream = renderer.domElement.captureStream(30);
+    const types = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+    const mime = types.find(t => { try { return MediaRecorder.isTypeSupported(t); } catch(_){ return false; } }) || '';
+    Capture.recorder = mime ? new MediaRecorder(Capture.stream, { mimeType:mime }) : new MediaRecorder(Capture.stream);
+    Capture.chunks = [];
+    Capture.recorder.ondataavailable = e => { if (e.data && e.data.size > 0) Capture.chunks.push(e.data); };
+    Capture.recorder.start(400);
+    Capture.recording = true;
+    $('w-cap').textContent = 'recording (30fps)';
+    $('w-cap').style.color = 'var(--good)';
+    logTo('agent-log', `▶ Canvas capture → WebMCP stream iniciada (${mime||'default'})`);
+    return true;
+  } catch(e){
+    logTo('agent-log', `❌ capture error: ${e.message}`); return false;
+  }
+}
+function stopCapture(){
+  if (!Capture.recording){ logTo('agent-log','⚠ No hay capture activa'); return false; }
+  try { Capture.recorder.stop(); } catch(_){}
+  Capture.recording = false;
+  $('w-cap').textContent = `stopped (${Capture.chunks.length} chunks)`;
+  $('w-cap').style.color = 'var(--warn)';
+  logTo('agent-log', `⏹ Capture detenida · ${Capture.chunks.length} chunks en buffer WebMCP`);
+  return true;
+}
+// Captura un frame estático y lo publica como Resource WebMCP
+function grabFrame(kind='manual'){
+  const canvas = renderer.domElement;
+  let dataUrl;
+  try { dataUrl = canvas.toDataURL('image/png'); }
+  catch(e){ dataUrl = ''; }
+  Capture.frameCount++;
+  const uri = `fase12://frame/${Capture.frameCount}`;
+  const res = {
+    uri, name:`Frame ${Capture.frameCount}`, mimeType:'image/png',
+    kind, bytes:dataUrl.length,
+    createdAt:new Date().toISOString(),
+    blob:dataUrl,
+  };
+  Capture.frames.push(res);
+  WebMCP.ctx.addResource(uri, res);
+  lastFrameUri = uri;
+  $('w-res').textContent = `${Capture.frames.length} recursos`;
+  return dataUrl;
+}
+function downloadCapture(){
+  if (!Capture.chunks.length){ logTo('agent-log','⚠ No hay chunks para descargar'); return; }
+  try {
+    const blob = new Blob(Capture.chunks, { type:'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'fase12-capture.webm';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    logTo('agent-log', `📥 WebMCP capture descargada (${(blob.size/1024).toFixed(1)} KB)`);
+  } catch(e){ logTo('agent-log', `❌ download: ${e.message}`); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   7. DISPATCHER  ·  ejecuta una tool, genera recibo, actualiza UI
+   ══════════════════════════════════════════════════════════════════════ */
+async function callTool(name, args = {}){
+  const t0 = nowMs();
+  let result, status = 'ok';
+  try {
+    if (!WebMCP.tools.has(name)) throw new Error(`tool "${name}" no registrada`);
+    result = await WebMCP.call(name, args);
+  } catch(e){
+    status = 'error';
+    result = { error: e.message };
+  }
+  const receipt = Ledger.record(name, args, result, status, nowMs() - t0);
+  renderReceipt(receipt);
+  WebMCP.emit({ type:'tool_call', name, status, receipt });
+  logTo('agent-log', `→ ${name}() [${receipt.id}] ${status==='ok'?'✓':'✗'} ${receipt.duration}ms`);
+  return receipt;
+}
+
+function renderReceipt(r){
+  const box = document.createElement('div');
+  box.className = 'receipt' + (r.status==='error' ? ' err' : '');
+  const code = r.status==='error'
+    ? `error: ${r.result.error}`
+    : JSON.stringify(r.result).slice(0,220);
+  box.innerHTML =
+    `<div class="id">#${r.id} · ${r.tool} · ${r.ts} · ${r.duration}ms · hash:${r.hash}</div>` +
+    `<div class="code">args=${JSON.stringify(r.args)} → ${code}</div>`;
+  $('receipt-log').prepend(box);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   8. AGENT LOOP  ·  agente scripted (determinista, offline) que dirige
+      la escena exclusivamente a través de WebMCP.
+   ══════════════════════════════════════════════════════════════════════ */
+let agentStepNo = 0;
+async function runAgentStep(){
+  agentStepNo++;
+  const plan = [
+    { t:'scene_inspect' },
+    { t:'object_highlight', a:{ name:'torus_0', enable:true } },
+    { t:'animation_trigger', a:{ name:'cube_1', loop:true } },
+    { t:'camera_control',    a:{ target:'torus_0', zoom:1.25, animate:true } },
+    { t:'performance_report' },
+  ];
+  logTo('agent-log', `\n┌─ AGENT STEP #${agentStepNo} · plan de ${plan.length} acciones`);
+  for (const step of plan){
+    await callTool(step.t, step.a || {});
+    await sleep(60);
+  }
+  logTo('agent-log', `└─ STEP #${agentStepNo} completo · ${Ledger.receipts.length} recibos totales\n`);
+  updateSceneGraph();
+  return Ledger.receipts.length;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   9. E2E TEST SUITE  ·  aserciones reales sobre escena + WebMCP
+   ══════════════════════════════════════════════════════════════════════ */
+const E2E = {
+  passed:0, failed:0, results:[], running:false,
+  check(label, cond, detail=''){
+    const ok = !!cond;
+    this.results.push({ label, ok, detail });
+    ok ? this.passed++ : this.failed++;
+    logTo('e2e-tail', `${ok?'✅':'❌'} ${label}${ok?'':' — '+detail}`);
+    return ok;
+  },
+  async run(){
+    if (this.running) return;
+    this.running = true;
+    this.passed = this.failed = 0; this.results = [];
+    $('test-log').innerHTML = '';
+    $('e2e-tail').innerHTML = '';
+    logTo('test-log', '═══ E2E TEST SUITE ═══', 'e2e-hd');
+
+    // ── 1. Entorno offline ──
+    this.check('Three.js REVISION 186', THREE.REVISION === '186', `got ${THREE.REVISION}`);
+    const externals = [...document.querySelectorAll('script[src],link[href],img[src]')]
+      .map(e => e.getAttribute('src') || e.getAttribute('href') || '')
+      .filter(u => /^https?:\/\//i.test(u));
+    this.check('Sin recursos externos (offline)', externals.length === 0, externals.join(','));
+
+    // ── 2. Registro de tools ──
+    this.check('6 tools registradas', WebMCP.tools.size === 6, `got ${WebMCP.tools.size}`);
+    TOOL_ORDER.forEach(t => this.check(`tool registrada: ${t}`, WebMCP.tools.has(t), 'faltante'));
+
+    // ── 3. Escena ──
+    this.check('Root group presente', !!scene.getObjectByName('Root'), 'sin Root');
+    this.check('56 meshes en escena', meshes.length === 56, `got ${meshes.length}`);
+    this.check('OrbitControls activos', !!controls, 'sin controls');
+    this.check('Post-proceso: Bloom', composer.passes.some(p => p.name === 'Bloom'), 'sin bloom');
+    this.check('Post-proceso: FXAA',  composer.passes.some(p => p.name === 'FXAA'),  'sin fxaa');
+    this.check('Post-proceso: Output', composer.passes.some(p => p.name === 'Output'), 'sin output');
+
+    // ── 4. scene_inspect ──
+    const rIns = await callTool('scene_inspect');
+    this.check('scene_inspect ok', rIns.status === 'ok', JSON.stringify(rIns.result));
+    // 56 meshes en Root + 1 suelo (Ground) = 57 meshes en toda la escena
+    this.check('scene_inspect devuelve 57 objetos', rIns.result.objects === 57, `got ${rIns.result.objects}`);
+    this.check('scene_inspect devuelve cámara', !!rIns.result.camera, 'sin cámara');
+    this.check('scene_inspect devuelve memoria', !!rIns.result.memory, 'sin memoria');
+
+    // ── 5. object_highlight (aislamiento por objeto) ──
+    const neighborEmissiveBefore = objects['cube_2'].material.emissive.getHex();
+    const rHi = await callTool('object_highlight', { name:'torus_0', enable:true });
+    this.check('object_highlight enciende objetivo', rHi.result.highlighted === true, JSON.stringify(rHi.result));
+    this.check('object_highlight NO afecta vecinos',
+      objects['cube_2'].material.emissive.getHex() === neighborEmissiveBefore, 'material compartido');
+    const rHiOff = await callTool('object_highlight', { name:'torus_0', enable:false });
+    this.check('object_highlight apaga objetivo', rHiOff.result.highlighted === false, JSON.stringify(rHiOff.result));
+
+    // ── 6. animation_trigger ──
+    const rAnim = await callTool('animation_trigger', { name:'cube_3', loop:true });
+    this.check('animation_trigger activa objeto', rAnim.result.animating === true, JSON.stringify(rAnim.result));
+    const rAnimG = await callTool('animation_trigger', {});
+    this.check('animation_trigger global devuelve spin', typeof rAnimG.result.spin === 'number', JSON.stringify(rAnimG.result));
+
+    // ── 7. camera_control ──
+    const camBefore = camera.position.clone();
+    const rCam = await callTool('camera_control', { target:'torus_0', zoom:1.4, animate:false });
+    this.check('camera_control mueve la cámara', camera.position.distanceTo(camBefore) > 0.5, 'sin movimiento');
+    this.check('camera_control fija target', rCam.result.resolvedTarget.length === 3, JSON.stringify(rCam.result));
+
+    // ── 8. performance_report ──
+    const rPerf = await callTool('performance_report');
+    this.check('performance_report fps numérico', typeof rPerf.result.fps === 'number', JSON.stringify(rPerf.result));
+    this.check('performance_report drawCalls numérico', typeof rPerf.result.drawCalls === 'number', 'sin drawCalls');
+    this.check('performance_report anomalías array', Array.isArray(rPerf.result.anomalies), 'sin anomalías');
+
+    // ── 9. canvas capture → WebMCP ──
+    this.check('captureStream disponible', typeof renderer.domElement.captureStream === 'function', 'no disponible');
+    const dataUrl = grabFrame('e2e');
+    this.check('grabFrame produce PNG dataURL', /^data:image\/png;base64,/.test(dataUrl), 'dataURL inválido');
+    this.check('frame publicado como Resource WebMCP',
+      WebMCP.ctx.listResources().some(r => r.uri === lastFrameUri), 'recurso ausente');
+
+    // ── 10. scene_export ──
+    const rExp = await callTool('scene_export', { format:'json' });
+    this.check('scene_export JSON produce bytes', rExp.result.bytes > 0, JSON.stringify(rExp.result));
+
+    // ── 11. recibos + verificación (8 llamadas previas a este punto) ──
+    this.check('recibos generados (>=8)', Ledger.receipts.length >= 8, `got ${Ledger.receipts.length}`);
+    this.check('recibos bien formados',
+      Ledger.receipts.every(r => r.id && r.tool && r.status && typeof r.duration === 'number'), 'recibo malformado');
+    const ver = Ledger.verifyAll();
+    this.check('todos los recibos verifican (hash)', ver.every(v => v.ok), 'hash no coincide');
+
+    // ── 12. manejo de error ──
+    const rErr = await callTool('no_existe', {});
+    this.check('tool desconocida devuelve error', rErr.status === 'error' && !!rErr.result.error, 'sin error');
+
+    // ── 13. agent loop ──
+    const before = Ledger.receipts.length;
+    await runAgentStep();
+    this.check('agent loop ejecuta plan (5 calls)', Ledger.receipts.length - before >= 5, 'menos de 5');
+
+    // ── Resumen ──
+    const total = this.passed + this.failed;
+    const okAll = this.failed === 0;
+    logTo('test-log', `\n═══ RESULTADO: ${this.passed}/${total} OK · ${this.failed} FAIL · ${Ledger.receipts.length} recibos ═══`,
+      okAll ? 't-ok' : 't-no');
+    $('w-tools').textContent = `${WebMCP.tools.size}/6`;
+    this.running = false;
+    window.__fase12.e2e = { passed:this.passed, failed:this.failed, total, results:this.results, done:true };
+    return window.__fase12.e2e;
+  },
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   10. UI  ·  panel de tools, tabs y handlers
+   ══════════════════════════════════════════════════════════════════════ */
+const TOOL_PRESETS = {
+  scene_inspect:      {},
+  camera_control:     { target:'torus_0', zoom:1.3, animate:true },
+  object_highlight:   { name:'cube_12', enable:true },
+  animation_trigger:  { name:'cube_18', loop:true },
+  scene_export:       { format:'json' },
+  performance_report: {},
+};
+const TOOL_SIG = {
+  scene_inspect:'() → {objects, lights, camera, memory}',
+  camera_control:'(target, zoom?, animate?) → tween de cámara',
+  object_highlight:'(name, enable?) → emissive por objeto',
+  animation_trigger:'(name?, loop?) → rotación',
+  scene_export:'(format) → json | png',
+  performance_report:'() → {fps, draws, mem, anomalies}',
+};
+function buildToolPanel(){
+  const list = $('tool-list'); list.innerHTML = '';
+  TOOL_ORDER.forEach(name => {
+    const card = document.createElement('div'); card.className = 'tool-card';
+    card.innerHTML =
+      `<div class="name">${name}</div>` +
+      `<div class="sig">${TOOL_SIG[name]}</div>`;
+    const row = document.createElement('div'); row.className = 'row2';
+    const b = document.createElement('button'); b.textContent = 'Call';
+    b.onclick = () => callTool(name, TOOL_PRESETS[name]);
+    row.appendChild(b);
+    if (name === 'object_highlight'){
+      const b2 = document.createElement('button'); b2.textContent = 'Off';
+      b2.onclick = () => callTool(name, { name:'cube_12', enable:false });
+      row.appendChild(b2);
+    }
+    card.appendChild(row); list.appendChild(card);
+  });
+  $('tools-count').textContent = TOOL_ORDER.length;
+  $('w-tools').textContent = `${WebMCP.tools.size}/6`;
+}
+function show(id){
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  $(id).classList.add('on');
+  const btn = document.querySelector(`[data-tab="${id}"]`); if (btn) btn.classList.add('active');
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+
+$('b-agent').onclick   = () => runAgentStep();
+$('b-inspect').onclick = () => { callTool('scene_inspect').then(updateSceneGraph); };
+$('b-perf').onclick    = () => callTool('performance_report');
+$('b-capstart').onclick= () => startCapture();
+$('b-capstop').onclick = () => stopCapture();
+$('b-grab').onclick    = () => { grabFrame('manual'); logTo('agent-log', '◉ Frame capturado → Resource WebMCP'); };
+$('b-export').onclick  = () => callTool('scene_export', { format:'json' });
+$('b-verify').onclick  = () => {
+  const ver = Ledger.verifyAll();
+  const ok = ver.filter(v => v.ok).length;
+  logTo('receipt-log', `\n✓ Verificación: ${ok}/${ver.length} recibos válidos`, ok === ver.length ? 't-ok' : 't-no');
+};
+$('b-clearrcpt').onclick = () => { Ledger.clear(); $('receipt-log').innerHTML = ''; };
+$('b-e2e').onclick = () => E2E.run();
+
+function updateSceneGraph(){
+  const lines = [];
+  scene.traverse(o => {
+    if (o.isMesh){
+      const d = o.parent === root ? 1 : 0;
+      lines.push('  '.repeat(d) + '▷ ' + o.name +
+        (o.userData?.tagged ? '  ←TAGGED' : '') +
+        (o.userData?.anim ? '  ←ANIM' : ''));
+    }
+  });
+  $('scene-graph').textContent = lines.join('\n');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   11. RENDER LOOP + MÉTRICAS
+   ══════════════════════════════════════════════════════════════════════ */
+const Perf = { frame:0, fps:0, frameMs:16.7, _last:nowMs(), _acc:0, _n:0 };
+let camTween = null;
+
+function animate(){
+  const t = nowMs();
+  const dt = Math.min((t - Perf._last) / 1000, 0.1);
+  Perf._last = t;
+  Perf.frameMs = Perf.frameMs * 0.9 + (dt*1000) * 0.1;
+  Perf._acc += dt; Perf._n++;
+  if (Perf._acc >= 0.5){ Perf.fps = Perf._n / Perf._acc; Perf._acc = 0; Perf._n = 0; }
+  Perf.frame++;
+
+  const elapsed = clock.elapsedTime;
+  controls.update();
+
+  // Cámara (tween del tool camera_control)
+  if (camTween){
+    camTween.t = Math.min(1, camTween.t + dt * 1.6);
+    const e = 1 - Math.pow(1 - camTween.t, 3);
+    camera.position.lerpVectors(camTween.from, camTween.to, e);
+    if (camTween.t >= 1) camTween = null;
+  }
+
+  // Animación de meshes + pulso de highlight
+  for (let i=0;i<meshes.length;i++){
+    const m = meshes[i];
+    const spin = m.userData.anim ? m.userData.spin : globalSpin;
+    if (spin > 0){
+      m.rotation.x += spin * dt * 0.8;
+      m.rotation.y += spin * dt * 1.2;
+    }
+    if (m.userData.tagged){
+      m.material.emissiveIntensity = 0.6 + Math.sin(elapsed * 6 + i) * 0.3;
+    }
+  }
+  orbitLight.position.set(Math.cos(elapsed) * 16, 6 + Math.sin(elapsed * 0.7) * 3, Math.sin(elapsed) * 16);
+
+  renderer.info.reset();
+  composer.render();
+
+  // Panel de métricas (~8Hz)
+  if (Perf.frame % 8 === 0) updateInfoPanel();
+}
+renderer.setAnimationLoop(animate);
+
+let gpuInfo = null;
+function updateInfoPanel(){
+  const inf = renderer.info;
+  $('i-geo').textContent   = inf.memory.geometries;
+  $('i-tex').textContent   = inf.memory.textures;
+  $('i-prog').textContent  = inf.memory.programs;
+  $('i-calls').textContent = inf.render.calls;
+  $('i-tri').textContent   = inf.render.triangles.toLocaleString();
+  $('i-fps').textContent   = Perf.fps.toFixed(1);
+  if (!gpuInfo){
+    try {
+      const gl = renderer.getContext();
+      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      gpuInfo = {
+        vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+        renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+      };
+    } catch(_){ gpuInfo = { vendor:'—', renderer:'—' }; }
+    $('i-vendor').textContent = String(gpuInfo.vendor).slice(0,42);
+    $('i-gpu').textContent    = String(gpuInfo.renderer).slice(0,42);
+  }
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  fxaaPass.uniforms['resolution'].value.set(
+    1/(window.innerWidth  * renderer.getPixelRatio()),
+    1/(window.innerHeight * renderer.getPixelRatio()));
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+   12. BOOT
+   ══════════════════════════════════════════════════════════════════════ */
+async function boot(){
+  await WebMCP.registerTools({ tools: TOOL_ORDER.map(n => S.tools[n]) });
+  $('w-native').textContent    = WebMCP.native ? 'presente' : 'ausente';
+  $('w-native').style.color    = WebMCP.native ? 'var(--good)' : 'var(--warn)';
+  $('w-transport').textContent = WebMCP.transport;
+  $('w-session').textContent   = WebMCP.sessionId;
+  $('i-rev').textContent       = 'r' + THREE.REVISION;
+  buildToolPanel();
+  updateSceneGraph();
+
+  // Superficie de inspección externa (harness headless)
+  window.__fase12 = {
+    THREE, scene, camera, renderer, composer, controls, objects, meshes,
+    WebMCP, Ledger, Capture, E2E, Perf,
+    callTool, grabFrame, startCapture, stopCapture, runAgentStep,
+    listTools: () => WebMCP.ctx.listTools(),
+    listResources: () => WebMCP.ctx.listResources(),
+    receipts: () => Ledger.receipts,
+    e2e: null,
+  };
+
+  logTo('agent-log', `🔧 Fase 12 inicializada · Three.js r${THREE.REVISION} · ${WebMCP.transport}`);
+  logTo('agent-log', `📋 ${WebMCP.tools.size} herramientas WebMCP registradas. Ejecutando E2E…`);
+
+  // E2E automático tras el primer frame renderizado
+  requestAnimationFrame(() => setTimeout(() => E2E.run(), 400));
+}
+boot();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase12-webmcp-integration.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

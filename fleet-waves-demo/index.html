@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ── Font declarations ── */
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('https://cdn.jsdelivr.net/npm/jetbrains-mono@2.300/fonts/webfonts/JetBrainsMono-Regular.woff2') format('woff2');
+        font-weight: 400; font-style: normal;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('https://cdn.jsdelivr.net/npm/jetbrains-mono@2.300/fonts/webfonts/JetBrainsMono-Bold.woff2') format('woff2');
+        font-weight: 700; font-style: normal;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('https://cdn.jsdelivr.net/npm/jetbrains-mono@2.300/fonts/webfonts/JetBrainsMono-Black.woff2') format('woff2');
+        font-weight: 900; font-style: normal;
+      }
+      @font-face {
+        font-family: 'Space Grotesk';
+        src: url('https://fonts.gstatic.com/s/spacegrotesk/v9/P6s9jY08h5f3j5f3j5f3j5f3j5f3j5f3.woff2') format('woff2');
+        font-weight: 400; font-style: normal;
+      }
+      @font-face {
+        font-family: 'Orbitron';
+        src: url('https://cdn.jsdelivr.net/npm/orbitron@5.1/fonts/ttf/Orbitron-Black.ttf') format('truetype');
+        font-weight: 900; font-style: normal;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+        background: #010204; color: #f5f7fa;
+        font-family: 'JetBrains Mono', 'Consolas', monospace; }
+      #root { width: 100%; height: 100%; position: relative; overflow: hidden; }
+      .scanlines { position: absolute; inset: 0; pointer-events: none; z-index: 100;
+        background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.25) 3px, rgba(0,0,0,0.25) 4px); }
+      .neural-mesh { position: absolute; inset: 0; z-index: 1;
+        background: radial-gradient(circle at 50% 50%, rgba(0,234,255,0.03) 0%, transparent 70%),
+                    radial-gradient(circle at 30% 30%, rgba(212,175,55,0.02) 0%, transparent 50%); }
+      .footer { position: absolute; bottom: 20px; left: 20px; right: 20px;
+        display: flex; justify-content: space-between; font-size: 12px; color: rgba(212,175,55,0.3); z-index: 10; }
+      .timeline-marker { display: flex; align-items: center; gap: 8px; }
+      .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(212,175,55,0.2);
+        box-shadow: 0 0 0px rgba(212,175,55,0); }
+      .timeline-dot.active { background: #D4AF37; box-shadow: 0 0 12px #D4AF37; }
+      .timeline-dot.current { background: #00ff9d; box-shadow: 0 0 12px #00ff9d; }
+      .tech-stack { display: flex; gap: 4px; flex-wrap: wrap; }
+      .tech { font-size: 10px; padding: 2px 6px; border: 1px solid rgba(212,175,55,0.3);
+        border-radius: 3px; background: rgba(212,175,55,0.08); color: rgba(212,175,55,0.5); }
+      .tech.active { color: #00ff9d; border-color: rgba(0,255,157,0.4); }
+      .phase { position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center;
+        opacity: 0; transform: translateY(20px); }
+      .phase h2 { font-size: 28px; color: #D4AF37; margin-bottom: 12px;
+        font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 0.02em; }
+      .phase p { font-size: 14px; color: rgba(212,175,55,0.5); max-width: 600px; line-height: 1.6; }
+      .phase .code { font-size: 11px; color: #00eaff; margin-top: 16px;
+        background: rgba(5,5,5,0.8); padding: 16px 24px; border-radius: 6px;
+        font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(0,234,255,0.2);
+        text-align: left; white-space: pre; }
+      .phase .highlight { color: #ff4d5f; }
+      .phase .metric { color: #00ff9d; font-weight: 700; }
+      .fleet-wave { position: absolute; bottom: 0; left: 0; width: 100%; height: 1;
+        display: flex; align-items: flex-end; gap: 2px; padding: 0 4px; z-index: 3;
+        opacity: 0; }
+      .fleet-wave.active { opacity: 1; }
+      .fleet-bar { width: 4px; border-radius: 2px 2px 0 0; height: 0; }
+      .fleet-bar.hermes { background: #D4AF37; }
+      .fleet-bar.vps { background: #00eaff; }
+      .fleet-bar.teknium { background: #00ff9d; }
+      .fleet-label { position: absolute; bottom: -20px; left: 4px; font-size: 8px;
+        color: rgba(212,175,55,0.4); letter-spacing: 0.1em; }
+      .progress-bar { position: absolute; bottom: 0; left: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, #00eaff, transparent);
+        z-index: 4; opacity: 0.3; }
+    </style>
+</head>
+<body>
+    <div id="root" data-composition-id="fleet-waves" data-start="0" data-duration="22" data-width="1920" data-height="1080">
+      <div class="neural-mesh"></div>
+      <div class="scanlines"></div>
+
+      <!-- Progress bar -->
+      <div class="progress-bar clip" data-start="0" data-duration="22" data-track-index="4"
+           style="width: 0%"></div>
+
+      <!-- Phase 1: Particle Field -->
+      <div id="phase1" class="phase clip" data-start="0" data-duration="6" data-track-index="1">
+        <h2>PHASE 1: PARTICLE FIELD</h2>
+        <p>Initial <span class="highlight">90,000 particles</span> rendered as a deterministic torus field<br/>
+        using <span class="metric">mulberry32(seed=1517)</span> for stable, repeatable output.<br/>
+        Single <span class="metric">PointsMaterial</span>, single color channel.</p>
+        <div class="code">const r = mulberry32(1517);
+for(let i = 0; i < 90000; i++) {
+  const a = r() * Math.PI * 2;
+  const rad = FIELD_RADIUS + (r() - .5) * 9;
+  // ...position + color
+}</div>
+      </div>
+
+      <!-- Phase 2: Fleet Waves -->
+      <div id="phase2" class="phase clip" data-start="6" data-duration="6" data-track-index="1">
+        <h2>PHASE 2: FLEET WAVES</h2>
+        <p>Three bot swarms introduced as <span class="highlight">waves of fleets</span> —<br/>
+        <span class="metric">hermes-agent</span> (gold, 5000 pts), <span class="metric">vps_node</span> (cyan, 3000 pts),<br/>
+        <span class="metric">teknium</span> (emerald, 2000 pts) — each with distinct orbital radius.</p>
+        <div class="code">const FLEETS = [
+  { name: "hermes-agent", color: 0xD4AF37, count: 5000, radius: 8 },
+  { name: "vps_node",     color: 0x00eaff, count: 3000, radius: 12 },
+  { name: "teknium",      color: 0x00ff9d, count: 2000, radius: 10 }
+];</div>
+      </div>
+
+      <!-- Phase 3: Shader Orchestration -->
+      <div id="phase3" class="phase clip" data-start="12" data-duration="6" data-track-index="1">
+        <h2>PHASE 3: SHADER ORCHESTRATION</h2>
+        <p>Upgraded from <span class="highlight">PointsMaterial</span> to <span class="metric">ShaderMaterial</span><br/>
+        with <span class="highlight">GPU-driven wave functions</span>. Each fleet gets its own<br/>
+        phase offset, wave amplitude, and pulse via <span class="metric">uniforms</span>.</p>
+        <div class="code">uniform float u_time;
+uniform float u_phase;
+
+vertexShader:
+  float wave = sin(u_time * (0.3 + u_phase * 0.1) + fleetId * 6.28);
+  pos.y += wave;</div>
+      </div>
+
+      <!-- Phase 4: Render Pipeline -->
+      <div id="phase4" class="phase clip" data-start="18" data-duration="4" data-track-index="1">
+        <h2>PHASE 4: RENDER PIPELINE</h2>
+        <p>Full pipeline: <span class="highlight">three.js → hyperframes → MP4</span><br/>
+        Deterministic render at <span class="metric">37.7s</span> for 12s of 1920×1080 footage.<br/>
+        GPU capture via WebGPU + H.264 encode.</p>
+        <div class="code">npx hyperframes render
+→ 360 frames captured
+→ 30.2s capture · 2.2s encode
+→ 931KB MP4</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer clip" data-start="0" data-duration="22" data-track-index="3">
+        <div class="timeline-marker" id="timeline">
+          <span class="timeline-dot" id="dot1">1p1</span>
+          <span>Particle Field</span>
+          <span class="timeline-dot" id="dot2">2p2</span>
+          <span>Fleet Waves</span>
+          <span class="timeline-dot" id="dot3">3p3</span>
+          <span>Shader Orchestration</span>
+          <span class="timeline-dot" id="dot4">4p4</span>
+          <span>Render Pipeline</span>
+        </div>
+        <div class="tech-stack" id="tech-stack">
+          <span class="tech">three.js 0.170.0</span>
+          <span class="tech">WebGPU</span>
+          <span class="tech">ShaderMaterial</span>
+          <span class="tech">hyperframes</span>
+          <span class="tech">gsap timeline</span>
+          <span class="tech">mulberry32 PRNG</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      /* Phase transitions timed to 6s each */
+      tl.to("#dot1", { backgroundColor: "#D4AF37", boxShadow: "0 0 12px #D4AF37" }, 0);
+      tl.to("#phase1", { opacity: 1, y: 0 }, 0.3);
+
+      tl.to("#dot2", { backgroundColor: "#D4AF37", boxShadow: "0 0 12px #D4AF37" }, 6);
+      tl.to("#phase1", { opacity: 0, y: -20 }, 6);
+      tl.to("#phase2", { opacity: 1, y: 0 }, 6.3);
+
+      tl.to("#dot3", { backgroundColor: "#D4AF37", boxShadow: "0 0 12px #D4AF37" }, 12);
+      tl.to("#phase2", { opacity: 0, y: -20 }, 12);
+      tl.to("#phase3", { opacity: 1, y: 0 }, 12.3);
+
+      tl.to("#dot4", { backgroundColor: "#D4AF37", boxShadow: "0 0 12px #D4AF37" }, 18);
+      tl.to("#phase3", { opacity: 0, y: -20 }, 18);
+      tl.to("#phase4", { opacity: 1, y: 0 }, 18.3);
+
+      /* Tech stack highlight per phase */
+      tl.to(".tech:nth-child(1)", { color: "#00ff9d", borderColor: "rgba(0,255,157,0.4)" }, 0.3);
+      tl.to(".tech:nth-child(2)", { color: "#00ff9d", borderColor: "rgba(0,255,157,0.4)" }, 6.3);
+      tl.to(".tech:nth-child(3)", { color: "#00ff9d", borderColor: "rgba(0,255,157,0.4)" }, 12.3);
+      tl.to(".tech:nth-child(4), .tech:nth-child(5), .tech:nth-child(6)", { color: "#00ff9d", borderColor: "rgba(0,255,157,0.4)" }, 18.3);
+
+      /* Progress bar */
+      tl.to(".progress-bar", { width: "100%" }, 0);
+
+      /* Fleet wave bars */
+      const fleetWave = document.createElement("div");
+      fleetWave.className = "fleet-wave";
+      for (let i = 0; i < 200; i++) {
+        const bar = document.createElement("div");
+        const fleet = i < 100 ? "hermes" : i < 160 ? "vps" : "teknium";
+        bar.className = `fleet-bar ${fleet}`;
+        bar.dataset.fleet = fleet;
+        fleetWave.appendChild(bar);
+      }
+      document.getElementById("root").appendChild(fleetWave);
+
+      tl.to(".fleet-wave", { opacity: 1 }, 6);
+      tl.to(".fleet-wave", { opacity: 0 }, 18);
+
+      /* Fleet bar height animation via gsap (deterministic) */
+      tl.to(".fleet-bar.hermes", { height: "40px", stagger: 0.01 }, 6);
+      tl.to(".fleet-bar.vps", { height: "25px", stagger: 0.01 }, 6.1);
+      tl.to(".fleet-bar.teknium", { height: "50px", stagger: 0.01 }, 6.2);
+      tl.to(".fleet-bar.hermes", { height: "0px", stagger: 0.01 }, 17.9);
+      tl.to(".fleet-bar.vps", { height: "0px", stagger: 0.01 }, 18);
+      tl.to(".fleet-bar.teknium", { height: "0px", stagger: 0.01 }, 18.1);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["fleet-waves"] = tl;
+    </script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/fleet-waves-demo/index.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 3 · Materiales y Texturas — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.86);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+    --hot: #f2cc60;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+
+  #debug { top: 12px; left: 12px; width: 340px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 12px 14px; }
+  #debug h1, #controls h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+    font-family: inherit;
+  }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 9px 0 3px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-word; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: var(--hot); }
+  .row .v.bad { color: #f85149; }
+
+  #controls { top: 12px; right: 12px; width: 280px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 12px 14px; }
+  .btn {
+    display: block; width: 100%; margin: 6px 0; padding: 7px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; text-align: left; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30363d; margin-right: 8px; vertical-align: middle; }
+  .btn.on .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+  .btn-row { display: flex; gap: 6px; }
+  .btn-row .btn { margin: 6px 0; text-align: center; }
+
+  .slider { margin: 8px 0 4px; }
+  .slider label { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; }
+  .slider label b { color: var(--hot); font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 2px; }
+  input[type=number] {
+    width: 70px; background: rgba(88,166,255,.08); color: var(--text);
+    border: 1px solid rgba(88,166,255,.35); border-radius: 5px;
+    font-family: inherit; font-size: 11px; padding: 3px 6px;
+  }
+  select {
+    width: 100%; background: rgba(88,166,255,.08); color: var(--text);
+    border: 1px solid rgba(88,166,255,.35); border-radius: 5px;
+    font-family: inherit; font-size: 11px; padding: 4px 6px; margin-top: 2px;
+  }
+  #legend { bottom: 12px; left: 12px; padding: 9px 14px; color: var(--dim); font-size: 11.5px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 660px; }
+  #error h2 { color: #f85149; font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(88,166,255,.25); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════ DEBUG PANEL ══════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Debug · Fase 3</h1>
+
+  <div class="group-title">Performance</div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="m-fps">—</span></div>
+  <div class="row"><span class="k">frame time</span><span class="v" id="m-frame">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v hl" id="m-calls">—</span></div>
+  <div class="row"><span class="k">triangles</span><span class="v" id="m-tris">—</span></div>
+  <div class="row"><span class="k">geometries / textures</span><span class="v" id="m-mem">—</span></div>
+
+  <div class="group-title">Material Comparison</div>
+  <div class="row"><span class="k">materiales activos</span><span class="v hi" id="mat-count">—</span></div>
+  <div class="row"><span class="k">env map</span><span class="v" id="mat-env">—</span></div>
+  <div class="row"><span class="k">env intensity</span><span class="v" id="mat-env-int">—</span></div>
+  <div class="row"><span class="k">tone mapping</span><span class="v" id="mat-tone">—</span></div>
+
+  <div class="group-title">Texture Atlas</div>
+  <div class="row"><span class="k">atlas size</span><span class="v" id="atlas-size">—</span></div>
+  <div class="row"><span class="k">regiones</span><span class="v" id="atlas-regions">—</span></div>
+  <div class="row"><span class="k">UV offset</span><span class="v" id="atlas-uv">—</span></div>
+  <div class="row"><span class="k">draw calls (atlas)</span><span class="v hl" id="atlas-calls">—</span></div>
+
+  <div class="group-title">onBeforeCompile</div>
+  <div class="row"><span class="k">shader modificado</span><span class="v hi" id="shader-mod">—</span></div>
+  <div class="row"><span class="k">injection point</span><span class="v" id="shader-point">—</span></div>
+  <div class="row"><span class="k">uniform time</span><span class="v" id="shader-time">—</span></div>
+  <div class="row"><span class="k">compilaciones</span><span class="v hl" id="shader-compiles">—</span></div>
+
+  <div class="group-title">Material Library</div>
+  <div class="row"><span class="k">materiales guardados</span><span class="v hi" id="lib-count">—</span></div>
+  <div class="row"><span class="k">export format</span><span class="v" id="lib-format">—</span></div>
+  <div class="row"><span class="k">último export</span><span class="v" id="lib-last">—</span></div>
+</div>
+
+<!-- ══════════════ CONTROLS PANEL ══════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Controles</h1>
+
+  <div class="group-title">Environment Map (IBL)</div>
+  <div class="slider">
+    <label>env intensity <b id="v-env-int">1.0</b></label>
+    <input type="range" id="env-int" min="0" max="3" step="0.1" value="1" />
+  </div>
+  <div class="slider">
+    <label>roughness <b id="v-rough">0.5</b></label>
+    <input type="range" id="rough" min="0" max="1" step="0.05" value="0.5" />
+  </div>
+  <div class="slider">
+    <label>metalness <b id="v-metal">0.5</b></label>
+    <input type="range" id="metal" min="0" max="1" step="0.05" value="0.5" />
+  </div>
+  <button class="btn on" id="btn-env"><span class="dot"></span>Environment map (IBL)</button>
+  <button class="btn" id="btn-rotate-env"><span class="dot"></span>Rotar environment</button>
+
+  <div class="group-title">Material Comparison</div>
+  <div class="slider">
+    <label>geometría <b id="v-geo">sphere</b></label>
+    <input type="range" id="geo" min="0" max="3" step="1" value="0" />
+  </div>
+  <button class="btn on" id="btn-anim"><span class="dot"></span>Animar materiales</button>
+  <button class="btn" id="btn-wire"><span class="dot"></span>Wireframe</button>
+
+  <div class="group-title">Texture Atlas</div>
+  <div class="slider">
+    <label>columnas <b id="v-cols">4</b></label>
+    <input type="range" id="cols" min="2" max="8" step="1" value="4" />
+  </div>
+  <div class="slider">
+    <label>filas <b id="v-rows">4</b></label>
+    <input type="range" id="rows" min="2" max="8" step="1" value="4" />
+  </div>
+  <button class="btn" id="btn-atlas-uv"><span class="dot"></span>Mostrar UV overlay</button>
+  <button class="btn on" id="btn-atlas-anim"><span class="dot"></span>Animar atlas</button>
+
+  <div class="group-title">onBeforeCompile</div>
+  <div class="slider">
+    <label>efecto intensidad <b id="v-shader-int">1.0</b></label>
+    <input type="range" id="shader-int" min="0" max="3" step="0.1" value="1" />
+  </div>
+  <button class="btn on" id="btn-shader"><span class="dot"></span>Shader injection activa</button>
+  <button class="btn" id="btn-shader-pulse"><span class="dot"></span>Pulso automático</button>
+
+  <div class="group-title">Material Library</div>
+  <button class="btn" id="btn-lib-export">⬇ Exportar biblioteca (JSON)</button>
+  <button class="btn" id="btn-lib-import">⬆ Importar biblioteca</button>
+  <button class="btn" id="btn-lib-clear">🗑 Limpiar biblioteca</button>
+  <button class="btn" id="btn-lib-apply">✓ Aplicar a escena</button>
+
+  <div class="group-title">Vistas</div>
+  <button class="btn on" id="btn-grid"><span class="dot"></span>Grid 10 materiales</button>
+  <button class="btn" id="btn-atlas-view"><span class="dot"></span>Vista atlas</button>
+  <button class="btn" id="btn-shader-view"><span class="dot"></span>Vista shader</button>
+  <button class="btn" id="btn-reset">↺ Reset cámara</button>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Click derecho</b> pan ·
+  <b>10 materiales</b> + <b>IBL</b> + <b>atlas</b> + <b>onBeforeCompile</b> + <b>biblioteca</b>
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/three.module.js</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase3-materiales.html</code></p>
+</div></div>
+
+<!-- ══════════════ IMPORT MAP (todo local, sin CDN) ══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─────────────────────────────────────────────────────────────
+// 0. Utilidades
+// ─────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(d);
+const int = (n) => n.toLocaleString('es-ES');
+
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message && /import|module|three/i.test(e.message)) fail(e); });
+
+// ─────────────────────────────────────────────────────────────
+// 1. RENDERER · SCENE · CAMERA · LIGHTS
+// ─────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(18, 14, 24);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.rotateSpeed = 0.85;
+controls.zoomSpeed = 0.9;
+controls.minDistance = 3;
+controls.maxDistance = 120;
+controls.target.set(0, 2, 0);
+controls.update();
+
+// Lights (además del env map, para relleno)
+scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+keyLight.position.set(20, 30, 15);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x58a6ff, 0.8);
+rimLight.position.set(-20, 15, -20);
+scene.add(rimLight);
+
+// ─────────────────────────────────────────────────────────────
+// 2. PROCEDURAL ENVIRONMENT MAP (IBL)
+//    Genera un environment map procedural usando PMREMGenerator
+//    a partir de una escena con esferas emisivas de colores.
+//    100% offline, sin archivos HDR externos.
+// ─────────────────────────────────────────────────────────────
+function createProceduralEnvMap() {
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0x111111);
+
+  // Crear "luces" como esferas emisivas en un cielo artificial
+  const lightColors = [0xff6b35, 0x58a6ff, 0x3fb950, 0xf2cc60, 0xff69b4, 0x8b5cf6];
+  const lightPositions = [
+    [10, 8, 0], [-10, 6, 5], [0, 10, -10],
+    [5, -3, 10], [-8, -5, -8], [0, 12, 0]
+  ];
+
+  for (let i = 0; i < lightColors.length; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: lightColors[i] });
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16), mat);
+    sphere.position.set(...lightPositions[i]);
+    envScene.add(sphere);
+  }
+
+  // Suelo oscuro
+  const floorMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -5;
+  envScene.add(floor);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envMap = pmrem.fromScene(envScene, 0.04).texture;
+  pmrem.dispose();
+
+  // Limpiar geometrías del envScene
+  envScene.traverse((obj) => {
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) obj.material.dispose();
+  });
+
+  return envMap;
+}
+
+const envMap = createProceduralEnvMap();
+scene.environment = envMap;
+console.log('[Fase 3] Environment map procedural generado (PMREM)');
+
+// ─────────────────────────────────────────────────────────────
+// 3. TEXTURE ATLAS GENERATOR
+//    Genera un atlas de texturas procedural usando Canvas.
+//    Cada región tiene un patrón y color distinto.
+// ─────────────────────────────────────────────────────────────
+function createTextureAtlas(cols = 4, rows = 4) {
+  const cellSize = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = cols * cellSize;
+  canvas.height = rows * cellSize;
+  const ctx = canvas.getContext('2d');
+
+  const total = cols * rows;
+  const hueStep = 360 / total;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const idx = row * cols + col;
+      const x = col * cellSize;
+      const y = row * cellSize;
+      const hue = (idx * hueStep) % 360;
+
+      // Fondo con gradiente
+      const grad = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
+      grad.addColorStop(0, `hsl(${hue}, 70%, 50%)`);
+      grad.addColorStop(1, `hsl(${(hue + 40) % 360}, 70%, 30%)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, cellSize, cellSize);
+
+      // Patrón: círculos concéntricos
+      ctx.strokeStyle = `hsla(${(hue + 180) % 360}, 80%, 70%, 0.6)`;
+      ctx.lineWidth = 2;
+      for (let r = 10; r < cellSize / 2; r += 12) {
+        ctx.beginPath();
+        ctx.arc(x + cellSize / 2, y + cellSize / 2, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Borde
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, cellSize - 1, cellSize - 1);
+
+      // Índice
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(idx), x + cellSize / 2, y + cellSize / 2);
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+
+  return { texture, canvas, cols, rows, cellSize };
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4. MATERIAL LIBRARY — Export/Import API
+//    Sistema para guardar, exportar e importar configuraciones
+//    de materiales en formato JSON.
+// ─────────────────────────────────────────────────────────────
+class MaterialLibrary {
+  constructor() {
+    this.materials = new Map();
+    this.version = '1.0.0';
+  }
+
+  /**
+   * Registra un material en la biblioteca.
+   * @param {string} name - Nombre identificativo
+   * @param {THREE.Material} material - Material a guardar
+   * @param {Object} metadata - Metadatos opcionales
+   */
+  register(name, material, metadata = {}) {
+    const config = this._serialize(material, metadata);
+    this.materials.set(name, config);
+    console.log(`[MaterialLibrary] Registrado: ${name} (${material.type})`);
+    return config;
+  }
+
+  /**
+   * Serializa un material a JSON.
+   */
+  _serialize(material, metadata) {
+    const params = {};
+
+    // Propiedades comunes serializables
+    const serializableProps = [
+      'color', 'emissive', 'emissiveIntensity', 'roughness', 'metalness',
+      'opacity', 'transparent', 'side', 'flatShading', 'wireframe',
+      'map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap',
+      'envMapIntensity', 'reflectivity', 'clearcoat', 'clearcoatRoughness',
+      'transmission', 'thickness', 'ior', 'sheen', 'sheenColor',
+      'specularColor', 'shininess', 'gradientMap'
+    ];
+
+    for (const prop of serializableProps) {
+      if (material[prop] !== undefined) {
+        const val = material[prop];
+        if (val === null || val === undefined) continue;
+        if (val instanceof THREE.Color) {
+          params[prop] = '#' + val.getHexString();
+        } else if (val instanceof THREE.Vector2) {
+          params[prop] = { x: val.x, y: val.y };
+        } else if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'string') {
+          params[prop] = val;
+        } else if (val.isTexture) {
+          params[prop] = { isTexture: true, name: val.name || 'texture' };
+        }
+      }
+    }
+
+    return {
+      name: material.name || 'unnamed',
+      type: material.type,
+      parameters: params,
+      metadata,
+      uuid: material.uuid,
+      serializedAt: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Deserializa y recrea un material desde la biblioteca.
+   */
+  create(name) {
+    const config = this.materials.get(name);
+    if (!config) {
+      console.warn(`[MaterialLibrary] No encontrado: ${name}`);
+      return null;
+    }
+
+    const MaterialClass = THREE[config.type];
+    if (!MaterialClass) {
+      console.warn(`[MaterialLibrary] Tipo no soportado: ${config.type}`);
+      return null;
+    }
+
+    // Convertir colores hex a THREE.Color
+    const params = { ...config.parameters };
+    for (const key of ['color', 'emissive', 'sheenColor', 'specularColor']) {
+      if (params[key] && typeof params[key] === 'string' && params[key].startsWith('#')) {
+        params[key] = new THREE.Color(params[key]);
+      }
+    }
+
+    const material = new MaterialClass(params);
+    material.name = config.name;
+    material.userData = { ...config.metadata, libraryName: name };
+
+    return material;
+  }
+
+  /**
+   * Exporta toda la biblioteca como JSON.
+   */
+  export() {
+    const data = {
+      version: this.version,
+      exportedAt: new Date().toISOString(),
+      count: this.materials.size,
+      materials: {}
+    };
+    for (const [name, config] of this.materials) {
+      data.materials[name] = config;
+    }
+    return JSON.stringify(data, null, 2);
+  }
+
+  /**
+   * Importa una biblioteca desde JSON.
+   */
+  import(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data.materials) throw new Error('Formato inválido: falta "materials"');
+
+      let count = 0;
+      for (const [name, config] of Object.entries(data.materials)) {
+        this.materials.set(name, config);
+        count++;
+      }
+      console.log(`[MaterialLibrary] Importados: ${count} materiales`);
+      return count;
+    } catch (e) {
+      console.error('[MaterialLibrary] Error importando:', e);
+      return 0;
+    }
+  }
+
+  /**
+   * Lista nombres de materiales registrados.
+   */
+  list() {
+    return Array.from(this.materials.keys());
+  }
+
+  /**
+   * Limpia la biblioteca.
+   */
+  clear() {
+    this.materials.clear();
+    console.log('[MaterialLibrary] Biblioteca limpiada');
+  }
+
+  /**
+   * Cuenta materiales registrados.
+   */
+  get size() {
+    return this.materials.size;
+  }
+}
+
+const materialLib = new MaterialLibrary();
+
+// ─────────────────────────────────────────────────────────────
+// 5. 10 MATERIAL TYPES — Comparativa lado a lado
+//    Cada material se aplica a una esfera/cubo/torus/octaedro
+//    en una cuadrícula 5×2.
+// ─────────────────────────────────────────────────────────────
+const MATERIAL_DEFS = [
+  {
+    name: 'Standard',
+    type: 'MeshStandardMaterial',
+    params: { color: 0x58a6ff, roughness: 0.4, metalness: 0.6, envMapIntensity: 1.0 },
+    desc: 'PBR estándar — equilibrio rugosidad/metal'
+  },
+  {
+    name: 'Physical',
+    type: 'MeshPhysicalMaterial',
+    params: { color: 0x8b5cf6, roughness: 0.15, metalness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.1, envMapIntensity: 1.2 },
+    desc: 'PBR + clearcoat (barniz)'
+  },
+  {
+    name: 'Phong',
+    type: 'MeshPhongMaterial',
+    params: { color: 0x3fb950, specular: 0xffffff, shininess: 80, envMapIntensity: 0.8 },
+    desc: 'Blinn-Phong clásico — specular'
+  },
+  {
+    name: 'Lambert',
+    type: 'MeshLambertMaterial',
+    params: { color: 0xd29922, envMapIntensity: 0.5 },
+    desc: 'Difuso puro — Lambert'
+  },
+  {
+    name: 'Basic',
+    type: 'MeshBasicMaterial',
+    params: { color: 0xf85149 },
+    desc: 'Sin iluminación — color plano'
+  },
+  {
+    name: 'Toon',
+    type: 'MeshToonMaterial',
+    params: { color: 0xff69b4, gradientMap: null },
+    desc: 'Cel-shading — bandas de color'
+  },
+  {
+    name: 'Normal',
+    type: 'MeshNormalMaterial',
+    params: {},
+    desc: 'Visualiza normales (RGB → XYZ)'
+  },
+  {
+    name: 'Depth',
+    type: 'MeshDepthMaterial',
+    params: {},
+    desc: 'Mapa de profundidad'
+  },
+  {
+    name: 'Transmission',
+    type: 'MeshPhysicalMaterial',
+    params: { color: 0xffffff, roughness: 0.05, metalness: 0.0, transmission: 0.95, thickness: 1.5, ior: 1.5, envMapIntensity: 1.5 },
+    desc: 'Vidrio — refracción (transmission)'
+  },
+  {
+    name: 'Emissive',
+    type: 'MeshStandardMaterial',
+    params: { color: 0x1a1a2e, emissive: 0xff6b35, emissiveIntensity: 2.0, roughness: 0.8, metalness: 0.2 },
+    desc: 'Emisivo — brilla en la oscuridad'
+  }
+];
+
+const materialGroup = new THREE.Group();
+materialGroup.name = 'MaterialComparison';
+scene.add(materialGroup);
+
+const materialMeshes = [];
+const materialInstances = [];
+
+// Geometrías para rotar entre ellas
+const geometries = [
+  new THREE.SphereGeometry(1.2, 48, 48),
+  new THREE.BoxGeometry(1.8, 1.8, 1.8, 4, 4, 4),
+  new THREE.TorusGeometry(1.0, 0.4, 32, 64),
+  new THREE.OctahedronGeometry(1.4, 2)
+];
+const geoNames = ['sphere', 'box', 'torus', 'octahedron'];
+
+function buildMaterialGrid() {
+  // Limpiar
+  while (materialGroup.children.length) {
+    const child = materialGroup.children[0];
+    materialGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  }
+  materialMeshes.length = 0;
+  materialInstances.length = 0;
+
+  const cols = 5;
+  const rows = 2;
+  const spacingX = 4.5;
+  const spacingZ = 5.0;
+  const offsetX = -(cols - 1) * spacingX / 2;
+  const offsetZ = -(rows - 1) * spacingZ / 2;
+
+  for (let i = 0; i < MATERIAL_DEFS.length; i++) {
+    const def = MATERIAL_DEFS[i];
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+
+    const MaterialClass = THREE[def.type];
+    const mat = new MaterialClass({ ...def.params });
+    mat.name = def.name;
+
+    // Aplicar environment map
+    mat.envMap = envMap;
+    mat.envMapIntensity = def.params.envMapIntensity || 1.0;
+
+    const mesh = new THREE.Mesh(geometries[0], mat);
+    mesh.position.set(offsetX + col * spacingX, 1.5, offsetZ + row * spacingZ);
+    mesh.userData = { name: def.name, desc: def.desc, index: i };
+
+    materialGroup.add(mesh);
+    materialMeshes.push(mesh);
+    materialInstances.push({ mesh, def, mat });
+
+    // Registrar en biblioteca
+    materialLib.register(def.name, mat, { description: def.desc, index: i });
+  }
+
+  console.log(`[Fase 3] Grid de materiales: ${MATERIAL_DEFS.length} materiales`);
+}
+
+buildMaterialGrid();
+
+// ─────────────────────────────────────────────────────────────
+// 6. TEXTURE ATLAS DEMO
+//    Plano con texturas del atlas, mostrando diferentes regiones
+//    mediante UV offset. Demuestra optimización de draw calls.
+// ─────────────────────────────────────────────────────────────
+const atlasGroup = new THREE.Group();
+atlasGroup.name = 'TextureAtlas';
+atlasGroup.visible = false;
+scene.add(atlasGroup);
+
+let atlasData = null;
+let atlasMesh = null;
+let atlasUVOverlay = null;
+let atlasAnimTime = 0;
+
+function buildAtlasDemo() {
+  // Limpiar
+  while (atlasGroup.children.length) {
+    const child = atlasGroup.children[0];
+    atlasGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  }
+
+  const cols = parseInt($('cols').value);
+  const rows = parseInt($('rows').value);
+
+  atlasData = createTextureAtlas(cols, rows);
+
+  // Plano principal con el atlas completo
+  const planeGeom = new THREE.PlaneGeometry(8, 8);
+  const planeMat = new THREE.MeshStandardMaterial({
+    map: atlasData.texture,
+    roughness: 0.6,
+    metalness: 0.1,
+    side: THREE.DoubleSide
+  });
+  atlasMesh = new THREE.Mesh(planeGeom, planeMat);
+  atlasMesh.position.set(0, 2, 0);
+  atlasMesh.name = 'AtlasPlane';
+  atlasGroup.add(atlasMesh);
+
+  // Overlay de UV (wireframe sobre el plano)
+  const wireGeom = new THREE.PlaneGeometry(8, 8, cols, rows);
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.15
+  });
+  atlasUVOverlay = new THREE.Mesh(wireGeom, wireMat);
+  atlasUVOverlay.position.copy(atlasMesh.position);
+  atlasUVOverlay.position.z += 0.01;
+  atlasGroup.add(atlasUVOverlay);
+
+  // Esferas con diferentes regiones del atlas
+  const sphereCount = Math.min(cols * rows, 8);
+  for (let i = 0; i < sphereCount; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+
+    // Clonar textura con offset UV
+    const tex = atlasData.texture.clone();
+    tex.repeat.set(1 / cols, 1 / rows);
+    tex.offset.set(col / cols, row / rows);
+    tex.needsUpdate = true;
+
+    const sphereMat = new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.5,
+      metalness: 0.3
+    });
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.6, 32, 32), sphereMat);
+    sphere.position.set(
+      (i - sphereCount / 2 + 0.5) * 1.5,
+      4.5,
+      0
+    );
+    sphere.name = `AtlasSphere_${i}`;
+    atlasGroup.add(sphere);
+  }
+
+  // Suelo con grid
+  const grid = new THREE.GridHelper(20, 20, 0x1f6feb, 0x21262d);
+  grid.position.y = -0.02;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.3;
+  atlasGroup.add(grid);
+
+  console.log(`[Fase 3] Atlas: ${cols}×${rows} = ${cols * rows} regiones, 1 textura`);
+}
+
+buildAtlasDemo();
+
+// ─────────────────────────────────────────────────────────────
+// 7. ONBEFORECOMPILE — Shader Injection
+//    Modifica el shader de un MeshStandardMaterial para añadir
+//    un efecto de "pulso" emisivo basado en tiempo y posición.
+// ─────────────────────────────────────────────────────────────
+const shaderGroup = new THREE.Group();
+shaderGroup.name = 'ShaderInjection';
+shaderGroup.visible = false;
+scene.add(shaderGroup);
+
+let shaderMesh = null;
+let shaderMaterial = null;
+let shaderUniforms = null;
+let shaderCompileCount = 0;
+let shaderActive = true;
+let shaderPulse = false;
+let shaderTime = 0;
+
+function buildShaderDemo() {
+  // Limpiar
+  while (shaderGroup.children.length) {
+    const child = shaderGroup.children[0];
+    shaderGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  }
+
+  // Material base
+  shaderMaterial = new THREE.MeshStandardMaterial({
+    color: 0x58a6ff,
+    roughness: 0.3,
+    metalness: 0.7,
+    envMap: envMap,
+    envMapIntensity: 1.0
+  });
+
+  // ── onBeforeCompile: inyectar código GLSL ──
+  shaderMaterial.onBeforeCompile = (shader) => {
+    shaderCompileCount++;
+
+    // Uniform personalizado
+    shader.uniforms.uTime = { value: 0 };
+    shader.uniforms.uIntensity = { value: 1.0 };
+    shaderUniforms = shader.uniforms;
+
+    // ── Vertex shader: pasar posición al fragment ──
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      `#include <common>
+      varying vec3 vWorldPos;
+      varying vec3 vNormalW;`
+    );
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <worldpos_vertex>',
+      `#include <worldpos_vertex>
+      vWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+      vNormalW = normalize(mat3(modelMatrix) * objectNormal);
+      #ifdef USE_INSTANCING
+        vWorldPos = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+        vNormalW = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * objectNormal);
+      #endif`
+    );
+
+    // ── Fragment shader: efecto de pulso emisivo ──
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      `#include <common>
+      uniform float uTime;
+      uniform float uIntensity;
+      varying vec3 vWorldPos;
+      varying vec3 vNormalW;`
+    );
+
+    // Inyectar después del cálculo de iluminación
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <emissivemap_fragment>',
+      `#include <emissivemap_fragment>
+
+      // ── Shader injection: pulso emisivo procedural ──
+      float pulse = sin(uTime * 2.0 + vWorldPos.x * 0.5 + vWorldPos.y * 0.3) * 0.5 + 0.5;
+      float fresnel = pow(1.0 - abs(dot(vNormalW, vec3(0.0, 0.0, 1.0))), 2.0);
+      vec3 pulseColor = vec3(1.0, 0.4, 0.1) * pulse * uIntensity;
+      totalEmissiveRadiance += pulseColor * (0.5 + fresnel * 0.5);
+      `
+    );
+
+    console.log(`[Fase 3] onBeforeCompile: shader #${shaderCompileCount} modificado`);
+  };
+
+  // Geometría: esfera de alta resolución para ver el efecto
+  const geom = new THREE.SphereGeometry(2, 128, 128);
+  shaderMesh = new THREE.Mesh(geom, shaderMaterial);
+  shaderMesh.position.set(0, 2.5, 0);
+  shaderMesh.name = 'ShaderInjectionMesh';
+  shaderGroup.add(shaderMesh);
+
+  // Anillo decorativo
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(3.5, 0.05, 8, 64),
+    new THREE.MeshBasicMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.4 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 2.5;
+  shaderGroup.add(ring);
+
+  // Grid
+  const grid = new THREE.GridHelper(20, 20, 0x1f6feb, 0x21262d);
+  grid.position.y = -0.02;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.3;
+  shaderGroup.add(grid);
+
+  // Registrar en biblioteca
+  materialLib.register('ShaderInjected', shaderMaterial, {
+    description: 'MeshStandardMaterial + onBeforeCompile (pulso emisivo)',
+    injectionPoint: 'emissivemap_fragment'
+  });
+}
+
+buildShaderDemo();
+
+// ─────────────────────────────────────────────────────────────
+// 8. UI STATE + INTERACTIONS
+// ─────────────────────────────────────────────────────────────
+const state = {
+  envMap: true,
+  rotateEnv: false,
+  animMaterials: true,
+  wireframe: false,
+  atlasUV: false,
+  atlasAnim: true,
+  shaderActive: true,
+  shaderPulse: false,
+  currentView: 'grid', // 'grid' | 'atlas' | 'shader'
+  envIntensity: 1.0,
+  roughness: 0.5,
+  metalness: 0.5,
+  shaderIntensity: 1.0,
+  geoIndex: 0,
+};
+
+function bindToggle(id, key, onChange) {
+  const btn = $(id);
+  btn.addEventListener('click', () => {
+    state[key] = !state[key];
+    btn.classList.toggle('on', state[key]);
+    if (onChange) onChange(state[key]);
+  });
+  return btn;
+}
+
+// ── Environment map controls ──
+$('env-int').addEventListener('input', (e) => {
+  state.envIntensity = parseFloat(e.target.value);
+  $('v-env-int').textContent = state.envIntensity.toFixed(1);
+  for (const inst of materialInstances) {
+    inst.mat.envMapIntensity = state.envIntensity;
+  }
+  if (shaderMaterial) shaderMaterial.envMapIntensity = state.envIntensity;
+});
+
+bindToggle('btn-env', 'envMap', (on) => {
+  if (on) {
+    scene.environment = envMap;
+    for (const inst of materialInstances) inst.mat.envMap = envMap;
+  } else {
+    scene.environment = null;
+    for (const inst of materialInstances) inst.mat.envMap = null;
+  }
+  // Forzar recompilación
+  for (const inst of materialInstances) inst.mat.needsUpdate = true;
+  if (shaderMaterial) shaderMaterial.needsUpdate = true;
+});
+
+bindToggle('btn-rotate-env', 'rotateEnv');
+
+// ── Material comparison controls ──
+$('rough').addEventListener('input', (e) => {
+  state.roughness = parseFloat(e.target.value);
+  $('v-rough').textContent = state.roughness.toFixed(2);
+  for (const inst of materialInstances) {
+    if (inst.mat.roughness !== undefined) inst.mat.roughness = state.roughness;
+  }
+});
+
+$('metal').addEventListener('input', (e) => {
+  state.metalness = parseFloat(e.target.value);
+  $('v-metal').textContent = state.metalness.toFixed(2);
+  for (const inst of materialInstances) {
+    if (inst.mat.metalness !== undefined) inst.mat.metalness = state.metalness;
+  }
+});
+
+$('geo').addEventListener('input', (e) => {
+  state.geoIndex = parseInt(e.target.value);
+  $('v-geo').textContent = geoNames[state.geoIndex];
+  for (const mesh of materialMeshes) {
+    mesh.geometry = geometries[state.geoIndex];
+  }
+});
+
+bindToggle('btn-anim', 'animMaterials');
+bindToggle('btn-wire', 'wireframe', (on) => {
+  for (const inst of materialInstances) {
+    inst.mat.wireframe = on;
+  }
+});
+
+// ── Atlas controls ──
+$('cols').addEventListener('input', (e) => {
+  $('v-cols').textContent = e.target.value;
+  buildAtlasDemo();
+});
+
+$('rows').addEventListener('input', (e) => {
+  $('v-rows').textContent = e.target.value;
+  buildAtlasDemo();
+});
+
+bindToggle('btn-atlas-uv', 'atlasUV', (on) => {
+  if (atlasUVOverlay) atlasUVOverlay.visible = on;
+});
+
+bindToggle('btn-atlas-anim', 'atlasAnim');
+
+// ── Shader controls ──
+$('shader-int').addEventListener('input', (e) => {
+  state.shaderIntensity = parseFloat(e.target.value);
+  $('v-shader-int').textContent = state.shaderIntensity.toFixed(1);
+  if (shaderUniforms) {
+    shaderUniforms.uIntensity.value = state.shaderIntensity;
+  }
+});
+
+bindToggle('btn-shader', 'shaderActive', (on) => {
+  if (shaderMesh) {
+    shaderMesh.material = on ? shaderMaterial : new THREE.MeshStandardMaterial({
+      color: 0x58a6ff, roughness: 0.3, metalness: 0.7
+    });
+  }
+});
+
+bindToggle('btn-shader-pulse', 'shaderPulse');
+
+// ── Material Library controls ──
+$('btn-lib-export').addEventListener('click', () => {
+  const json = materialLib.export();
+  $('lib-last').textContent = `${materialLib.size} materiales`;
+  $('lib-format').textContent = 'JSON';
+
+  // Descargar como archivo
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'material-library.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  console.log('[MaterialLibrary] Exportado:', json.length, 'bytes');
+});
+
+$('btn-lib-import').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const count = materialLib.import(ev.target.result);
+      $('lib-last').textContent = `Importados: ${count}`;
+      updateLibCount();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
+
+$('btn-lib-clear').addEventListener('click', () => {
+  materialLib.clear();
+  updateLibCount();
+  $('lib-last').textContent = '—';
+});
+
+$('btn-lib-apply').addEventListener('click', () => {
+  // Aplicar materiales de la biblioteca a la escena
+  const names = materialLib.list();
+  let applied = 0;
+  for (let i = 0; i < materialInstances.length && i < names.length; i++) {
+    const mat = materialLib.create(names[i]);
+    if (mat) {
+      materialInstances[i].mesh.material.dispose();
+      materialInstances[i].mesh.material = mat;
+      materialInstances[i].mat = mat;
+      applied++;
+    }
+  }
+  $('lib-last').textContent = `Aplicados: ${applied}`;
+  console.log(`[MaterialLibrary] Aplicados ${applied} materiales a la escena`);
+});
+
+function updateLibCount() {
+  $('lib-count').textContent = materialLib.size;
+}
+
+// ── View switching ──
+function setView(view) {
+  state.currentView = view;
+  materialGroup.visible = (view === 'grid');
+  atlasGroup.visible = (view === 'atlas');
+  shaderGroup.visible = (view === 'shader');
+
+  $('btn-grid').classList.toggle('on', view === 'grid');
+  $('btn-atlas-view').classList.toggle('on', view === 'atlas');
+  $('btn-shader-view').classList.toggle('on', view === 'shader');
+
+  // Ajustar cámara según vista
+  if (view === 'grid') {
+    camera.position.set(18, 14, 24);
+    controls.target.set(0, 2, 0);
+  } else if (view === 'atlas') {
+    camera.position.set(0, 12, 18);
+    controls.target.set(0, 2, 0);
+  } else if (view === 'shader') {
+    camera.position.set(0, 5, 10);
+    controls.target.set(0, 2.5, 0);
+  }
+  controls.update();
+}
+
+// View buttons: direct click handlers (not toggle)
+$('btn-grid').addEventListener('click', () => setView('grid'));
+$('btn-atlas-view').addEventListener('click', () => setView('atlas'));
+$('btn-shader-view').addEventListener('click', () => setView('shader'));
+
+$('btn-reset').addEventListener('click', () => {
+  setView(state.currentView);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 9. RESIZE HANDLER
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 10. ANIMATION LOOP
+// ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+let lastFpsTime = 0;
+let fps = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  // FPS counter
+  frameCount++;
+  if (elapsed - lastFpsTime >= 0.5) {
+    fps = Math.round(frameCount / (elapsed - lastFpsTime));
+    frameCount = 0;
+    lastFpsTime = elapsed;
+  }
+
+  // ── Animar materiales ──
+  if (state.animMaterials && materialGroup.visible) {
+    for (let i = 0; i < materialMeshes.length; i++) {
+      const mesh = materialMeshes[i];
+      mesh.rotation.y = elapsed * 0.3 + i * 0.2;
+      mesh.rotation.x = Math.sin(elapsed * 0.5 + i) * 0.15;
+    }
+  }
+
+  // ── Rotar environment ──
+  if (state.rotateEnv && envMap) {
+    // PMREM no se puede rotar directamente, pero podemos rotar la escena
+    // o regenerar. Para demo, rotamos un grupo de "luces" visibles.
+    // En producción, usaríamos scene.backgroundRotation (Three.js 0.186+)
+    if (scene.backgroundRotation) {
+      scene.backgroundRotation.y = elapsed * 0.1;
+    }
+  }
+
+  // ── Animar atlas ──
+  if (state.atlasAnim && atlasGroup.visible) {
+    atlasAnimTime += delta;
+    // Rotar esferas del atlas
+    for (const child of atlasGroup.children) {
+      if (child.name.startsWith('AtlasSphere_')) {
+        child.rotation.y = atlasAnimTime * 0.5;
+        child.position.y = 4.5 + Math.sin(atlasAnimTime * 2 + child.position.x) * 0.3;
+      }
+    }
+  }
+
+  // ── Shader injection ──
+  if (shaderGroup.visible && shaderUniforms) {
+    shaderTime += delta;
+    shaderUniforms.uTime.value = shaderTime;
+
+    if (state.shaderPulse) {
+      // Pulso automático de intensidad
+      shaderUniforms.uIntensity.value = 1.0 + Math.sin(shaderTime * 3) * 1.5;
+    }
+
+    if (shaderMesh) {
+      shaderMesh.rotation.y = shaderTime * 0.2;
+    }
+  }
+
+  // ── Actualizar debug panel ──
+  if (frameCount % 10 === 0) {
+    $('m-fps').textContent = fps;
+    $('m-frame').textContent = fmt(delta * 1000, 1) + ' ms';
+    $('m-calls').textContent = renderer.info.render.calls;
+    $('m-tris').textContent = int(renderer.info.render.triangles);
+    $('m-mem').textContent = `${renderer.info.memory.geometries} / ${renderer.info.memory.textures}`;
+
+    $('mat-count').textContent = materialInstances.length;
+    $('mat-env').textContent = state.envMap ? 'Procedural (PMREM)' : 'Off';
+    $('mat-env-int').textContent = state.envIntensity.toFixed(1);
+    $('mat-tone').textContent = 'ACES Filmic';
+
+    if (atlasData) {
+      $('atlas-size').textContent = `${atlasData.cols * atlasData.cellSize}×${atlasData.rows * atlasData.cellSize}px`;
+      $('atlas-regions').textContent = `${atlasData.cols * atlasData.rows} (1 textura)`;
+      $('atlas-uv').textContent = `${atlasData.cols}×${atlasData.rows} celdas`;
+      $('atlas-calls').textContent = renderer.info.render.calls;
+    }
+
+    $('shader-mod').textContent = shaderActive ? 'Sí' : 'No';
+    $('shader-point').textContent = 'emissivemap_fragment';
+    $('shader-time').textContent = fmt(shaderTime, 1) + ' s';
+    $('shader-compiles').textContent = shaderCompileCount;
+
+    updateLibCount();
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ─────────────────────────────────────────────────────────────
+// 11. INIT
+// ─────────────────────────────────────────────────────────────
+console.log('[Fase 3] Materiales y Texturas — inicializado');
+console.log('[Fase 3] Materiales:', MATERIAL_DEFS.map(d => d.name).join(', '));
+console.log('[Fase 3] Biblioteca:', materialLib.list().join(', '));
+
+updateLibCount();
+animate();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase3-materiales.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

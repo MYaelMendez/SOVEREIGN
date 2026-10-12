@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storyboard Generator — æ:// Media Agent</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #d4af37; font-family: 'Consolas', 'Monaco', monospace; overflow-x: hidden; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 20px; letter-spacing: 3px; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px; }
+  h2 { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #88aaff; margin: 20px 0 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #111; border: 1px solid #222; padding: 14px; }
+  .card h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #88aaff; margin-bottom: 8px; }
+  textarea { width: 100%; height: 50px; background: #0d0d0d; color: #d4af37; border: 1px solid #333; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; }
+  button { background: #1a1a1a; color: #d4af37; border: 1px solid #d4af37; padding: 8px 16px; font-family: inherit; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin: 4px; }
+  button:hover { background: #d4af37; color: #0a0a0a; }
+  button:disabled { opacity: 0.3; cursor: not-allowed; }
+  button.active { background: #d4af37; color: #0a0a0a; }
+  .log { background: #0d0d0d; border: 1px solid #222; padding: 12px; font-size: 11px; line-height: 1.6; max-height: 250px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .log .ok { color: #44ff44; }
+  .log .err { color: #ff4444; }
+  .log .info { color: #88aaff; }
+  .log .warn { color: #ffaa44; }
+  .receipt { font-size: 10px; color: #666; word-break: break-all; }
+  .receipt .hash { color: #d4af37; }
+  #viewport-container { width: 100%; aspect-ratio: 16/9; background: #000; border: 1px solid #222; position: relative; margin: 12px 0; }
+  #viewport-container canvas { width: 100%; height: 100%; display: block; }
+  .controls-bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+  .controls-bar input[type=range] { flex: 1; min-width: 200px; }
+  .scene-strip { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
+  .scene-thumb { width: 60px; height: 34px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; transition: all 0.2s; color: #666; }
+  .scene-thumb:hover { border-color: #d4af37; }
+  .scene-thumb.active { border-color: #d4af37; color: #d4af37; background: rgba(212,175,55,0.1); }
+  .scene-thumb.done { border-color: #44ff44; color: #44ff44; }
+  .webmcp-tools { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .webmcp-tool { background: #1a1a2a; border: 1px solid #4488ff; color: #88aaff; padding: 6px 12px; font-size: 10px; cursor: pointer; letter-spacing: 1px; }
+  .webmcp-tool:hover { background: #4488ff; color: #fff; }
+  .status-bar { display: flex; justify-content: space-between; font-size: 10px; color: #555; padding: 8px 0; border-top: 1px solid #222; margin-top: 12px; }
+  .status-bar span { color: #d4af37; }
+  .progress-bar { height: 3px; background: #222; margin: 8px 0; }
+  .progress-bar .fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.1s; }
+  .scene-detail { font-size: 11px; color: #888; margin: 8px 0; }
+  .scene-detail strong { color: #d4af37; }
+  .json-output { background: #0d0d0d; border: 1px solid #222; padding: 10px; font-size: 10px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; color: #88aaff; }
+  .import-area { width: 100%; height: 80px; background: #0d0d0d; color: #88aaff; border: 1px solid #333; padding: 10px; font-family: inherit; font-size: 11px; resize: vertical; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⬡ Storyboard Generator</h1>
+  <div style="font-size:10px;color:#555;margin-bottom:16px;">æ:// concept → storyboard → renderable scene sequence · 12 scenes × 1.75s = 21s</div>
+
+  <!-- Concept Input -->
+  <div class="card" id="card-concept">
+    <h3>Concept Input</h3>
+    <textarea id="concept-input" placeholder="Describe your video concept...">21s video of the agentic electronic engineering constellation</textarea>
+    <div style="margin-top:8px;">
+      <button onclick="app.generate()">Generate Storyboard</button>
+      <button onclick="app.exportJSON()">Export JSON</button>
+      <button onclick="app.importJSON()">Import JSON</button>
+    </div>
+  </div>
+
+  <!-- Storyboard Scenes -->
+  <div class="card" id="card-storyboard" style="display:none;">
+    <h3>Storyboard — 12 Scenes</h3>
+    <div class="scene-strip" id="scene-strip"></div>
+    <div class="scene-detail" id="scene-detail"></div>
+    <div class="progress-bar" id="storyboard-progress"><div class="fill"></div></div>
+  </div>
+
+  <!-- Viewport -->
+  <div class="card" id="card-viewport" style="display:none;">
+    <h3>Three.js Preview</h3>
+    <div id="viewport-container"></div>
+    <div class="controls-bar">
+      <button id="btn-play" onclick="app.togglePlay()">▶ Play</button>
+      <button onclick="app.seek(0)">⏮ Start</button>
+      <input type="range" id="seek-bar" min="0" max="21" step="0.01" value="0" oninput="app.seek(this.value)">
+      <span id="time-display" style="font-size:11px;color:#88aaff;">0.00 / 21.00s</span>
+    </div>
+    <div class="progress-bar" id="render-progress"><div class="fill"></div></div>
+    <div style="font-size:10px;color:#555;">
+      <span id="render-status">Idle</span> · <span id="render-fps">0 FPS</span> · <span id="render-frame">0 / 630</span>
+    </div>
+  </div>
+
+  <!-- WebMCP Tools -->
+  <div class="card" id="card-webmcp" style="display:none;">
+    <h3>WebMCP Tools</h3>
+    <div class="webmcp-tools">
+      <div class="webmcp-tool" onclick="app.webmcpCreate()">storyboard_create</div>
+      <div class="webmcp-tool" onclick="app.webmcpExport()">storyboard_export</div>
+      <div class="webmcp-tool" onclick="app.webmcpPreview()">storyboard_preview</div>
+    </div>
+    <div id="webmcp-result" class="json-output"></div>
+  </div>
+
+  <!-- Export/Import -->
+  <div class="grid" id="card-io" style="display:none;">
+    <div class="card">
+      <h3>Export JSON</h3>
+      <div class="json-output" id="export-output"></div>
+      <button onclick="app.downloadJSON()" style="margin-top:8px;">Download .json</button>
+    </div>
+    <div class="card">
+      <h3>Import JSON</h3>
+      <textarea class="import-area" id="import-input" placeholder="Paste storyboard JSON here..."></textarea>
+      <button onclick="app.doImport()" style="margin-top:8px;">Import Storyboard</button>
+    </div>
+  </div>
+
+  <!-- Receipts -->
+  <div class="card" id="card-receipts" style="display:none;">
+    <h3>SHA-256 Receipts</h3>
+    <div id="receipt-list" class="receipt">No receipts yet</div>
+  </div>
+
+  <!-- Log -->
+  <h2>Agent Log</h2>
+  <div class="log" id="agent-log"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>æ:// storyboard-generator v1.0</span>
+    <span id="status-concept">○ No concept</span>
+    <span id="status-storyboard">○ No storyboard</span>
+    <span id="status-receipts">○ No receipts</span>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const SCENE_DURATION = 1.75;
+const TOTAL_SCENES = 12;
+const TOTAL_DURATION = SCENE_DURATION * TOTAL_SCENES; // 21s
+const FPS = 30;
+const TOTAL_FRAMES = TOTAL_DURATION * FPS; // 630
+
+// ============================================================
+// CONSTELLATION DATA (from constellation-viewport.html)
+// ============================================================
+const NODES = [
+  { id: 'root', label: 'HUMAN://ROOT', pos: [0, 0, 0], color: 0xD4AF37, size: 0.8, type: 'core' },
+  { id: 'ae', label: 'æ:// language', pos: [0, 3, 0], color: 0xD4AF37, size: 0.6, type: 'core' },
+  { id: 'conductor', label: 'conductor.py', pos: [-3, 2, 0], color: 0xff4444, size: 0.4, type: 'core' },
+  { id: 'python', label: 'Python backbone', pos: [-5, 4, -2], color: 0x44ff44, size: 0.5, type: 'python' },
+  { id: 'cupy', label: 'CuPy 14.2', pos: [-7, 5, -3], color: 0x44ff44, size: 0.35, type: 'python' },
+  { id: 'numpy', label: 'NumPy 2.5', pos: [-6, 6, -1], color: 0x44ff44, size: 0.35, type: 'python' },
+  { id: 'gpu-mcp', label: 'gpu-mcp', pos: [-8, 4, -4], color: 0x44ff44, size: 0.4, type: 'python' },
+  { id: 'vision', label: 'vision-supervision', pos: [-4, 5, -5], color: 0x44ff44, size: 0.4, type: 'python' },
+  { id: 'threejs', label: 'Three.js 0.186', pos: [5, 4, -2], color: 0x4488ff, size: 0.5, type: 'three' },
+  { id: 'f1', label: 'F1 Fundamentos', pos: [7, 5, -3], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f4', label: 'F4 Shaders', pos: [8, 6, -1], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f6', label: 'F6 Ray Marching', pos: [6, 6, -4], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f7', label: 'F7 100k Inst', pos: [9, 4, -5], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f10', label: 'F10 Post-FX', pos: [5, 5, -6], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f11', label: 'F11 DOF+SSR', pos: [8, 3, -6], color: 0x4488ff, size: 0.25, type: 'three' },
+  { id: 'f12', label: 'F12 WebMCP', pos: [6, 7, -2], color: 0x4488ff, size: 0.3, type: 'three' },
+  { id: 'webmcp', label: 'WebMCP', pos: [3, 6, 2], color: 0xff88ff, size: 0.5, type: 'webmcp' },
+  { id: 'webauthn', label: 'WebAuthn', pos: [1, 7, 3], color: 0xff88ff, size: 0.4, type: 'webmcp' },
+  { id: 'passkey', label: 'Passkey Gate', pos: [-1, 8, 2], color: 0xff88ff, size: 0.35, type: 'webmcp' },
+  { id: 'daollc', label: 'DAOLLC.AI', pos: [-3, 6, 3], color: 0xffaa44, size: 0.5, type: 'daollc' },
+  { id: 'gate', label: 'Evidence Gate', pos: [-5, 7, 2], color: 0xffaa44, size: 0.35, type: 'daollc' },
+  { id: 'receipts', label: 'Receipts SHA-256', pos: [-4, 8, 4], color: 0xffaa44, size: 0.35, type: 'daollc' },
+  { id: 'nous', label: 'Nous Portal', pos: [0, 8, -4], color: 0x88aaff, size: 0.5, type: 'cloud' },
+  { id: 'ae-cloud', label: 'æ (RUNNING)', pos: [-2, 9, -5], color: 0x88aaff, size: 0.4, type: 'cloud' },
+  { id: 'llm-store', label: 'LLM.STORE', pos: [2, 9, -5], color: 0x666688, size: 0.35, type: 'cloud' },
+  { id: 'vscode', label: 'VS Code 0.3.0', pos: [-6, 3, 4], color: 0x44aaff, size: 0.5, type: 'vscode' },
+  { id: 'bridge', label: 'Preview Bridge', pos: [-8, 4, 5], color: 0x44aaff, size: 0.35, type: 'vscode' },
+  { id: 'humanloop', label: 'Human Loop', pos: [-7, 5, 3], color: 0x44aaff, size: 0.35, type: 'vscode' },
+  { id: 'plugins', label: '10 Plugins', pos: [6, 3, 4], color: 0x44ffaa, size: 0.4, type: 'plugins' },
+  { id: 'vlc', label: 'VLC Player', pos: [8, 4, 5], color: 0x44ffaa, size: 0.3, type: 'plugins' },
+  { id: 'mesh-mgr', label: 'Mesh Manager', pos: [7, 5, 3], color: 0x44ffaa, size: 0.3, type: 'plugins' },
+  { id: 'domains', label: '6 Domains', pos: [0, 5, 6], color: 0xffdd44, size: 0.4, type: 'public' },
+  { id: 'github', label: 'GitHub Pages', pos: [-2, 6, 7], color: 0xffdd44, size: 0.3, type: 'public' },
+  { id: 'droplet', label: 'Droplet', pos: [2, 6, 7], color: 0xffdd44, size: 0.3, type: 'public' },
+];
+
+const EDGES = [
+  ['root', 'ae'], ['root', 'conductor'],
+  ['ae', 'python'], ['ae', 'threejs'], ['ae', 'webmcp'], ['ae', 'daollc'],
+  ['ae', 'nous'], ['ae', 'vscode'], ['ae', 'plugins'], ['ae', 'domains'],
+  ['python', 'cupy'], ['python', 'numpy'], ['python', 'gpu-mcp'], ['python', 'vision'],
+  ['threejs', 'f1'], ['threejs', 'f4'], ['threejs', 'f6'], ['threejs', 'f7'],
+  ['threejs', 'f10'], ['threejs', 'f11'], ['threejs', 'f12'],
+  ['webmcp', 'webauthn'], ['webmcp', 'passkey'],
+  ['daollc', 'gate'], ['daollc', 'receipts'],
+  ['nous', 'ae-cloud'], ['nous', 'llm-store'],
+  ['vscode', 'bridge'], ['vscode', 'humanloop'],
+  ['plugins', 'vlc'], ['plugins', 'mesh-mgr'],
+  ['domains', 'github'], ['domains', 'droplet'],
+  ['webmcp', 'threejs'], ['daollc', 'webmcp'],
+];
+
+// ============================================================
+// SCENE DEFINITIONS — camera, target, nodes, transition
+// ============================================================
+const SCENE_DEFS = [
+  {
+    id: 1, name: 'Boot', desc: 'Initialize renderer, camera, lights',
+    camera: { pos: [0, 15, 25], target: [0, 0, 0], fov: 60 },
+    nodes: [], transition: 'fade-in', duration: SCENE_DURATION,
+  },
+  {
+    id: 2, name: 'Core Nodes', desc: 'HUMAN://ROOT, æ://, conductor.py',
+    camera: { pos: [0, 5, 12], target: [0, 1.5, 0], fov: 50 },
+    nodes: ['root', 'ae', 'conductor'], transition: 'cut', duration: SCENE_DURATION,
+  },
+  {
+    id: 3, name: 'Python Backbone', desc: 'Python, CuPy, NumPy, gpu-mcp, vision',
+    camera: { pos: [-6, 6, 8], target: [-6, 5, -3], fov: 55 },
+    nodes: ['python', 'cupy', 'numpy', 'gpu-mcp', 'vision'], transition: 'dolly-in', duration: SCENE_DURATION,
+  },
+  {
+    id: 4, name: 'Three.js View', desc: 'Three.js 0.186 + 12-phase curriculum',
+    camera: { pos: [7, 6, 8], target: [7, 5, -3], fov: 55 },
+    nodes: ['threejs', 'f1', 'f4', 'f6', 'f7', 'f10', 'f11', 'f12'], transition: 'pan-left', duration: SCENE_DURATION,
+  },
+  {
+    id: 5, name: 'WebMCP Tools', desc: 'WebMCP 6 tools, WebAuthn, Passkey Gate',
+    camera: { pos: [3, 7, 8], target: [1, 7, 2.5], fov: 50 },
+    nodes: ['webmcp', 'webauthn', 'passkey'], transition: 'dolly-in', duration: SCENE_DURATION,
+  },
+  {
+    id: 6, name: 'DAOLLC', desc: 'DAOLLC.AI, Evidence Gate, Receipts',
+    camera: { pos: [-3, 7, 8], target: [-4, 7, 3], fov: 50 },
+    nodes: ['daollc', 'gate', 'receipts'], transition: 'cut', duration: SCENE_DURATION,
+  },
+  {
+    id: 7, name: 'Cloud Layer', desc: 'Nous Portal, æ (RUNNING), LLM.STORE',
+    camera: { pos: [0, 10, 6], target: [0, 8.5, -4.5], fov: 55 },
+    nodes: ['nous', 'ae-cloud', 'llm-store'], transition: 'tilt-up', duration: SCENE_DURATION,
+  },
+  {
+    id: 8, name: 'VS Code', desc: 'VS Code 0.3.0, Preview Bridge, Human Loop',
+    camera: { pos: [-7, 5, 8], target: [-7, 4, 4], fov: 50 },
+    nodes: ['vscode', 'bridge', 'humanloop'], transition: 'pan-right', duration: SCENE_DURATION,
+  },
+  {
+    id: 9, name: 'Plugins', desc: '10 Plugins, VLC Player, Mesh Manager',
+    camera: { pos: [7, 5, 8], target: [7, 4, 4], fov: 50 },
+    nodes: ['plugins', 'vlc', 'mesh-mgr'], transition: 'dolly-in', duration: SCENE_DURATION,
+  },
+  {
+    id: 10, name: 'Public Surface', desc: '6 Domains, GitHub Pages, Droplet',
+    camera: { pos: [0, 6, 10], target: [0, 5.5, 6.5], fov: 55 },
+    nodes: ['domains', 'github', 'droplet'], transition: 'crane-up', duration: SCENE_DURATION,
+  },
+  {
+    id: 11, name: 'Connections', desc: 'Edges, data flow, agentic loop',
+    camera: { pos: [0, 12, 18], target: [0, 4, 0], fov: 60 },
+    nodes: NODES.map(n => n.id), transition: 'zoom-out', duration: SCENE_DURATION,
+  },
+  {
+    id: 12, name: 'Finale', desc: 'Full constellation, all systems active',
+    camera: { pos: [0, 8, 22], target: [0, 4, 0], fov: 65 },
+    nodes: NODES.map(n => n.id), transition: 'fade-out', duration: SCENE_DURATION,
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  concept: '',
+  storyboard: [],
+  currentScene: 0,
+  currentTime: 0,
+  isPlaying: false,
+  receipts: [],
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  nodeMap: {},
+  nodeGroup: null,
+  edgeGroup: null,
+  particles: null,
+  clock: null,
+  animId: null,
+  renderFrame: 0,
+  renderStartTime: 0,
+  isRendering: false,
+};
+
+// ============================================================
+// SHA-256 (Web Crypto API)
+// ============================================================
+async function sha256(data) {
+  const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ============================================================
+// LOGGING
+// ============================================================
+function log(msg, type = 'info') {
+  const el = document.getElementById('agent-log');
+  const ts = new Date().toISOString().substr(11, 12);
+  const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : type === 'warn' ? 'warn' : 'info';
+  el.innerHTML += `<span class="${cls}">[${ts}] ${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============================================================
+// STORYBOARD GENERATION
+// ============================================================
+function generateStoryboard() {
+  const concept = document.getElementById('concept-input').value.trim();
+  if (!concept) { log('Error: empty concept', 'err'); return; }
+
+  state.concept = concept;
+  state.storyboard = SCENE_DEFS.map(s => ({
+    ...s,
+    startFrame: (s.id - 1) * SCENE_DURATION * FPS,
+    endFrame: s.id * SCENE_DURATION * FPS,
+    startTime: (s.id - 1) * SCENE_DURATION,
+    endTime: s.id * SCENE_DURATION,
+  }));
+
+  document.getElementById('card-storyboard').style.display = 'block';
+  document.getElementById('card-viewport').style.display = 'block';
+  document.getElementById('card-webmcp').style.display = 'block';
+  document.getElementById('card-io').style.display = 'grid';
+  document.getElementById('card-receipts').style.display = 'block';
+
+  log(`Concept: "${concept}"`);
+  log(`Generated ${TOTAL_SCENES} scenes × ${SCENE_DURATION}s = ${TOTAL_DURATION}s`, 'ok');
+
+  renderSceneStrip();
+  showSceneDetail(1);
+  initViewport();
+  updateStatus();
+}
+
+function renderSceneStrip() {
+  const strip = document.getElementById('scene-strip');
+  strip.innerHTML = state.storyboard.map(s =>
+    `<div class="scene-thumb" id="thumb-${s.id}" onclick="app.showScene(${s.id})">${s.id}·${s.name}</div>`
+  ).join('');
+}
+
+function showSceneDetail(sceneId) {
+  const s = state.storyboard.find(x => x.id === sceneId);
+  if (!s) return;
+  document.getElementById('scene-detail').innerHTML =
+    `<strong>Scene ${s.id}: ${s.name}</strong> — ${s.desc}<br>` +
+    `Camera: pos=[${s.camera.pos.join(', ')}] target=[${s.camera.target.join(', ')}] fov=${s.camera.fov}<br>` +
+    `Nodes: ${s.nodes.length > 0 ? s.nodes.join(', ') : '(none)'} · Transition: ${s.transition} · Duration: ${s.duration}s`;
+  document.querySelectorAll('.scene-thumb').forEach(el => el.classList.remove('active'));
+  const thumb = document.getElementById(`thumb-${sceneId}`);
+  if (thumb) thumb.classList.add('active');
+}
+
+function showScene(sceneId) {
+  showSceneDetail(sceneId);
+  if (state.camera) {
+    const s = state.storyboard.find(x => x.id === sceneId);
+    if (s) {
+      state.camera.position.set(...s.camera.pos);
+      state.camera.fov = s.camera.fov;
+      state.camera.updateProjectionMatrix();
+      if (state.controls) {
+        state.controls.target.set(...s.camera.target);
+        state.controls.update();
+      }
+    }
+  }
+  showSceneNodes(sceneId);
+}
+
+// ============================================================
+// VIEWPORT (Three.js)
+// ============================================================
+function initViewport() {
+  const container = document.getElementById('viewport-container');
+  container.innerHTML = '';
+
+  const w = container.clientWidth || 800;
+  const h = w * 9 / 16;
+
+  state.scene = new THREE.Scene();
+  state.scene.background = new THREE.Color(0x050505);
+  state.scene.fog = new THREE.FogExp2(0x050505, 0.008);
+
+  state.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
+  state.camera.position.set(0, 15, 25);
+
+  state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  state.renderer.setSize(w, h);
+  state.renderer.setPixelRatio(1);
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.2;
+  container.appendChild(state.renderer.domElement);
+
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.05;
+  state.controls.autoRotate = false;
+
+  // Lights
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.5));
+  const goldLight = new THREE.PointLight(0xD4AF37, 2, 50);
+  goldLight.position.set(0, 10, 0);
+  state.scene.add(goldLight);
+  const blueLight = new THREE.PointLight(0x4488ff, 1, 30);
+  blueLight.position.set(-10, 5, -10);
+  state.scene.add(blueLight);
+  const redLight = new THREE.PointLight(0xff4444, 0.5, 20);
+  redLight.position.set(10, 3, 10);
+  state.scene.add(redLight);
+
+  // Build nodes
+  state.nodeGroup = new THREE.Group();
+  state.scene.add(state.nodeGroup);
+  state.nodeMap = {};
+
+  NODES.forEach(n => {
+    const geo = new THREE.SphereGeometry(n.size, 32, 32);
+    const mat = new THREE.MeshStandardMaterial({
+      color: n.color, emissive: n.color, emissiveIntensity: 0.3,
+      metalness: 0.8, roughness: 0.2,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...n.pos);
+    mesh.userData = n;
+    mesh.visible = false;
+    state.nodeGroup.add(mesh);
+    state.nodeMap[n.id] = mesh;
+
+    const glowGeo = new THREE.SphereGeometry(n.size * 1.5, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: n.color, transparent: true, opacity: 0.1 });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.position.copy(mesh.position);
+    glow.visible = false;
+    state.nodeGroup.add(glow);
+    mesh.userData.glow = glow;
+  });
+
+  // Build edges
+  state.edgeGroup = new THREE.Group();
+  state.scene.add(state.edgeGroup);
+
+  EDGES.forEach(([a, b]) => {
+    const aPos = state.nodeMap[a].position;
+    const bPos = state.nodeMap[b].position;
+    const geo = new THREE.BufferGeometry().setFromPoints([aPos.clone(), bPos.clone()]);
+    const mat = new THREE.LineBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.3 });
+    const line = new THREE.Line(geo, mat);
+    line.visible = false;
+    state.edgeGroup.add(line);
+  });
+
+  // Particles
+  const particleCount = 2000;
+  const particleGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 40;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+    const c = new THREE.Color();
+    c.setHSL(0.12 + Math.random() * 0.1, 0.8, 0.5 + Math.random() * 0.3);
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.05, vertexColors: true, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+  });
+  state.particles = new THREE.Points(particleGeo, particleMat);
+  state.scene.add(state.particles);
+
+  state.clock = new THREE.Clock();
+
+  showSceneNodes(1);
+
+  if (state.animId) cancelAnimationFrame(state.animId);
+  animate();
+
+  log('Viewport initialized: Three.js 0.186.1, 35 nodes, 33 edges', 'ok');
+}
+
+function showSceneNodes(sceneId) {
+  const s = state.storyboard.find(x => x.id === sceneId);
+  const visible = s ? s.nodes : [];
+  const allIds = NODES.map(n => n.id);
+
+  allIds.forEach(id => {
+    if (state.nodeMap[id]) {
+      state.nodeMap[id].visible = false;
+      state.nodeMap[id].userData.glow.visible = false;
+    }
+  });
+
+  visible.forEach(id => {
+    if (state.nodeMap[id]) {
+      state.nodeMap[id].visible = true;
+      state.nodeMap[id].userData.glow.visible = true;
+    }
+  });
+
+  // Show edges where both endpoints are visible
+  state.edgeGroup.children.forEach((line, i) => {
+    const [a, b] = EDGES[i];
+    line.visible = visible.includes(a) && visible.includes(b);
+  });
+}
+
+function animate() {
+  state.animId = requestAnimationFrame(animate);
+  const t = state.clock.getElapsedTime();
+
+  // Pulse nodes
+  state.nodeGroup.children.forEach((child, i) => {
+    if (child.userData && child.userData.size && child.visible) {
+      const scale = 1 + Math.sin(t * 2 + i) * 0.1;
+      child.scale.setScalar(scale);
+    }
+  });
+
+  // Rotate particles
+  state.particles.rotation.y = t * 0.02;
+
+  // Update scene based on playback time
+  if (state.isPlaying) {
+    state.currentTime += state.clock.getDelta();
+    if (state.currentTime >= TOTAL_DURATION) {
+      state.currentTime = 0; // loop
+    }
+    const sceneIndex = Math.floor(state.currentTime / SCENE_DURATION) + 1;
+    if (sceneIndex !== state.currentScene) {
+      state.currentScene = sceneIndex;
+      showSceneNodes(sceneIndex);
+      updateSceneHighlight(sceneIndex);
+    }
+    // Update camera for current scene
+    const s = state.storyboard.find(x => x.id === sceneIndex);
+    if (s && state.camera) {
+      state.camera.position.set(...s.camera.pos);
+      state.camera.fov = s.camera.fov;
+      state.camera.updateProjectionMatrix();
+      if (state.controls) {
+        state.controls.target.set(...s.camera.target);
+        state.controls.update();
+      }
+    }
+    // Update UI
+    document.getElementById('seek-bar').value = state.currentTime;
+    document.getElementById('time-display').textContent = `${state.currentTime.toFixed(2)} / ${TOTAL_DURATION.toFixed(2)}s`;
+    const pct = (state.currentTime / TOTAL_DURATION * 100).toFixed(1);
+    document.getElementById('storyboard-progress').querySelector('.fill').style.width = pct + '%';
+  }
+
+  state.controls.update();
+  state.renderer.render(state.scene, state.camera);
+
+  // Update render stats
+  if (state.isRendering) {
+    state.renderFrame++;
+    const pct = (state.renderFrame / TOTAL_FRAMES * 100).toFixed(1);
+    document.getElementById('render-progress').querySelector('.fill').style.width = pct + '%';
+    document.getElementById('render-frame').textContent = `${state.renderFrame} / ${TOTAL_FRAMES}`;
+    const elapsed = (performance.now() - state.renderStartTime) / 1000;
+    const fps = (state.renderFrame / elapsed).toFixed(1);
+    document.getElementById('render-fps').textContent = `${fps} FPS`;
+  }
+}
+
+function updateSceneHighlight(sceneId) {
+  state.storyboard.forEach(s => {
+    const el = document.getElementById(`thumb-${s.id}`);
+    if (el) {
+      el.className = 'scene-thumb' + (s.id === sceneId ? ' active' : s.id < sceneId ? ' done' : '');
+    }
+  });
+}
+
+// ============================================================
+// PLAYBACK CONTROLS
+// ============================================================
+function togglePlay() {
+  state.isPlaying = !state.isPlaying;
+  document.getElementById('btn-play').textContent = state.isPlaying ? '⏸ Pause' : '▶ Play';
+  document.getElementById('btn-play').classList.toggle('active', state.isPlaying);
+  if (state.isPlaying) {
+    state.clock.getDelta(); // reset delta
+    log('Playback started', 'info');
+  } else {
+    log('Playback paused', 'warn');
+  }
+}
+
+function seek(time) {
+  state.currentTime = parseFloat(time);
+  const sceneIndex = Math.floor(state.currentTime / SCENE_DURATION) + 1;
+  state.currentScene = sceneIndex;
+  showSceneNodes(sceneIndex);
+  updateSceneHighlight(sceneIndex);
+  const s = state.storyboard.find(x => x.id === sceneIndex);
+  if (s && state.camera) {
+    state.camera.position.set(...s.camera.pos);
+    state.camera.fov = s.camera.fov;
+    state.camera.updateProjectionMatrix();
+    if (state.controls) {
+      state.controls.target.set(...s.camera.target);
+      state.controls.update();
+    }
+  }
+  document.getElementById('time-display').textContent = `${state.currentTime.toFixed(2)} / ${TOTAL_DURATION.toFixed(2)}s`;
+  const pct = (state.currentTime / TOTAL_DURATION * 100).toFixed(1);
+  document.getElementById('storyboard-progress').querySelector('.fill').style.width = pct + '%';
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportJSON() {
+  if (state.storyboard.length === 0) { log('No storyboard to export', 'err'); return; }
+  const exportData = {
+    version: '1.0',
+    concept: state.concept,
+    generated: new Date().toISOString(),
+    sceneDuration: SCENE_DURATION,
+    totalScenes: TOTAL_SCENES,
+    totalDuration: TOTAL_DURATION,
+    fps: FPS,
+    totalFrames: TOTAL_FRAMES,
+    scenes: state.storyboard.map(s => ({
+      id: s.id, name: s.name, desc: s.desc,
+      camera: s.camera, nodes: s.nodes,
+      transition: s.transition, duration: s.duration,
+      startTime: s.startTime, endTime: s.endTime,
+      startFrame: s.startFrame, endFrame: s.endFrame,
+    })),
+  };
+  const json = JSON.stringify(exportData, null, 2);
+  document.getElementById('export-output').textContent = json;
+  log(`Exported storyboard: ${json.length} bytes`, 'ok');
+  return json;
+}
+
+function downloadJSON() {
+  const json = exportJSON();
+  if (!json) return;
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'storyboard.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  log('Downloaded storyboard.json', 'ok');
+}
+
+function importJSON() {
+  const input = document.getElementById('import-input').value.trim();
+  if (!input) { log('No JSON to import', 'err'); return; }
+  doImport(input);
+}
+
+function doImport(jsonStr) {
+  try {
+    const data = JSON.parse(jsonStr);
+    if (!data.scenes || !Array.isArray(data.scenes)) throw new Error('Invalid storyboard format');
+    state.concept = data.concept || 'Imported';
+    state.storyboard = data.scenes.map(s => ({
+      ...s,
+      startFrame: s.startFrame || (s.id - 1) * SCENE_DURATION * FPS,
+      endFrame: s.endFrame || s.id * SCENE_DURATION * FPS,
+      startTime: s.startTime || (s.id - 1) * SCENE_DURATION,
+      endTime: s.endTime || s.id * SCENE_DURATION,
+    }));
+    document.getElementById('card-storyboard').style.display = 'block';
+    document.getElementById('card-viewport').style.display = 'block';
+    document.getElementById('card-webmcp').style.display = 'block';
+    document.getElementById('card-io').style.display = 'grid';
+    document.getElementById('card-receipts').style.display = 'block';
+    renderSceneStrip();
+    showSceneDetail(1);
+    if (!state.scene) initViewport();
+    updateStatus();
+    log(`Imported storyboard: ${state.storyboard.length} scenes`, 'ok');
+  } catch (e) {
+    log(`Import failed: ${e.message}`, 'err');
+  }
+}
+
+// ============================================================
+// RECEIPT SYSTEM
+// ============================================================
+async function generateReceipt(assetName, data) {
+  const hash = await sha256(data);
+  const receipt = {
+    asset: assetName,
+    hash: hash,
+    timestamp: new Date().toISOString(),
+    algorithm: 'SHA-256',
+    size: typeof data === 'string' ? data.length : data.byteLength || 0,
+  };
+  state.receipts.push(receipt);
+  updateReceiptList();
+  log(`Receipt: ${assetName} → ${hash.substr(0, 16)}...`, 'ok');
+  return receipt;
+}
+
+function updateReceiptList() {
+  const el = document.getElementById('receipt-list');
+  if (state.receipts.length === 0) {
+    el.innerHTML = 'No receipts yet';
+    return;
+  }
+  el.innerHTML = state.receipts.map(r =>
+    `<div style="margin-bottom:6px;">` +
+    `<strong>${r.asset}</strong><br>` +
+    `<span class="hash">${r.hash}</span><br>` +
+    `<span style="color:#444">${r.timestamp} · ${r.size}B</span>` +
+    `</div>`
+  ).join('');
+  document.getElementById('status-receipts').textContent = `✓ ${state.receipts.length} receipt(s)`;
+}
+
+// ============================================================
+// WEBMCP TOOLS
+// ============================================================
+async function webmcpCreate() {
+  log('WebMCP: storyboard_create', 'info');
+  const result = {
+    tool: 'storyboard_create',
+    concept: state.concept,
+    scenes: state.storyboard.length,
+    sceneDuration: SCENE_DURATION,
+    totalDuration: TOTAL_DURATION,
+    fps: FPS,
+    totalFrames: TOTAL_FRAMES,
+    nodes: NODES.length,
+    edges: EDGES.length,
+    status: 'ok',
+  };
+  document.getElementById('webmcp-result').textContent = JSON.stringify(result, null, 2);
+  log(`storyboard_create → ${state.storyboard.length} scenes`, 'ok');
+  return result;
+}
+
+async function webmcpExport() {
+  log('WebMCP: storyboard_export', 'info');
+  const json = exportJSON();
+  if (!json) return null;
+  const receipt = await generateReceipt('storyboard.json', json);
+  const result = {
+    tool: 'storyboard_export',
+    size: json.length,
+    scenes: state.storyboard.length,
+    receipt: receipt,
+    status: 'ok',
+  };
+  document.getElementById('webmcp-result').textContent = JSON.stringify(result, null, 2);
+  log(`storyboard_export → ${json.length} bytes, receipt ${receipt.hash.substr(0, 16)}...`, 'ok');
+  return result;
+}
+
+async function webmcpPreview() {
+  log('WebMCP: storyboard_preview', 'info');
+  if (state.storyboard.length === 0) { log('No storyboard to preview', 'err'); return null; }
+  if (!state.scene) initViewport();
+  const result = {
+    tool: 'storyboard_preview',
+    scenes: state.storyboard.map(s => ({
+      id: s.id, name: s.name,
+      camera: s.camera, nodes: s.nodes.length,
+      transition: s.transition, duration: s.duration,
+    })),
+    totalDuration: TOTAL_DURATION,
+    fps: FPS,
+    status: 'ok',
+  };
+  document.getElementById('webmcp-result').textContent = JSON.stringify(result, null, 2);
+  log(`storyboard_preview → ${state.storyboard.length} scenes ready`, 'ok');
+  return result;
+}
+
+// ============================================================
+// STATUS
+// ============================================================
+function updateStatus() {
+  document.getElementById('status-concept').textContent = state.concept ? `✓ ${state.concept.substr(0, 30)}` : '○ No concept';
+  document.getElementById('status-storyboard').textContent = state.storyboard.length > 0 ? `✓ ${state.storyboard.length} scenes` : '○ No storyboard';
+}
+
+// ============================================================
+// PUBLIC API
+// ============================================================
+window.app = {
+  generate: generateStoryboard,
+  exportJSON,
+  importJSON,
+  doImport,
+  downloadJSON,
+  togglePlay,
+  seek,
+  showScene,
+  webmcpCreate,
+  webmcpExport,
+  webmcpPreview,
+  generateReceipt,
+  state,
+};
+
+// ============================================================
+// VERIFICATION HOOK (for CDP)
+// ============================================================
+window.__STORYBOARD__ = {
+  ready: true,
+  version: '1.0',
+  scenes: TOTAL_SCENES,
+  sceneDuration: SCENE_DURATION,
+  totalDuration: TOTAL_DURATION,
+  fps: FPS,
+  totalFrames: TOTAL_FRAMES,
+  nodes: NODES.length,
+  edges: EDGES.length,
+  sceneDefs: SCENE_DEFS,
+  state: state,
+  webmcpTools: ['storyboard_create', 'storyboard_export', 'storyboard_preview'],
+};
+
+log('Storyboard Generator initialized', 'ok');
+log('12 scenes × 1.75s = 21s · 630 frames @ 30fps');
+log('WebMCP tools: storyboard_create, storyboard_export, storyboard_preview');
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/storyboard.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

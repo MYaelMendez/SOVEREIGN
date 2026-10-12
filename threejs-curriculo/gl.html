@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset=utf-8><title>t</title></head><body><canvas id=c></canvas><script>
+const c=document.getElementById('c');
+const gl=c.getContext('webgl2');
+let r={webgl2:!!gl};
+if(gl){r.vendor=gl.getParameter(gl.VENDOR);r.renderer=gl.getParameter(gl.RENDERER);r.version=gl.getParameter(gl.VERSION);}
+document.title='GL '+JSON.stringify(r);
+</script><!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/gl.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body></html>

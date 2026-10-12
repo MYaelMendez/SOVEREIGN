@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ:// skill-graph — sovereign topology</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--void:#050505;--gold:#D4AF37;--ink:#f0ece4;--muted:rgba(240,236,228,.42);
+  --border:rgba(212,175,55,.16);--hot:rgba(212,175,55,.5);--glow:rgba(212,175,55,.32);--neon:#00ff9d}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--void);color:var(--ink);font-family:'JetBrains Mono',monospace;overflow:hidden}
+#graph{position:fixed;inset:0;z-index:1;cursor:grab}#graph.drag{cursor:grabbing}
+.scan{position:fixed;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px)}
+.vig{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 42%,rgba(5,5,5,.9) 100%)}
+.tl{position:fixed;top:14px;left:14px;z-index:10;pointer-events:none}
+.tl .cmd{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:16px;color:var(--gold);text-shadow:0 0 16px var(--glow)}
+.tl h1{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;margin-top:4px}
+.tl .st{font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:1px}
+.tl .st b{color:var(--gold)}
+.tl .meta{font-size:9px;color:rgba(240,236,228,.3);margin-top:3px}
+.panel{position:fixed;top:14px;right:14px;z-index:10;width:280px;max-height:calc(100vh - 28px);overflow-y:auto;
+  border:1px solid var(--border);background:rgba(5,5,5,.88);backdrop-filter:blur(6px)}
+.ph{padding:9px 12px;border-bottom:1px solid var(--border);font-family:'Orbitron',sans-serif;font-size:11px;
+  letter-spacing:1px;color:var(--gold);display:flex;justify-content:space-between}
+.search{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--ink);
+  font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 12px;outline:none}
+.search::placeholder{color:var(--muted)}
+.quick{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.qb{border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'JetBrains Mono',monospace;
+  font-size:9px;padding:3px 7px;cursor:pointer;letter-spacing:.5px}
+.qb:hover{border-color:var(--hot);color:var(--ink)}.qb.on{background:var(--gold);color:#050505;border-color:var(--gold);font-weight:700}
+.legend{padding:6px 12px;border-bottom:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);padding:2px 0;cursor:pointer}
+.leg:hover{color:var(--ink)}.leg .sw{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leg .ct{margin-left:auto;color:rgba(240,236,228,.3)}.leg.off{opacity:.32}
+.detail{padding:10px 12px;font-size:11px;line-height:1.6}
+.detail .nm{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold);word-break:break-word}
+.detail .badge{display:inline-block;font-size:8px;padding:1px 5px;border:1px solid var(--hot);color:var(--gold);margin-left:6px;vertical-align:middle}
+.detail .badge.f{border-color:rgba(0,255,157,.4);color:var(--neon)}
+.detail .row{color:var(--muted);margin-top:5px}.detail .row b{color:var(--ink);font-weight:400}
+.detail .nb{color:var(--muted);font-size:10px;margin-top:8px;border-top:1px solid var(--border);padding-top:6px}
+.detail .nb span{display:inline-block;color:var(--ink);border:1px solid var(--border);padding:1px 5px;margin:2px 3px 0 0;cursor:pointer}
+.detail .nb span:hover{border-color:var(--hot);color:var(--gold)}
+.hint{padding:8px 12px;font-size:9px;color:rgba(240,236,228,.28);letter-spacing:.5px;line-height:1.5}
+</style>
+</head>
+<body>
+<canvas id="graph"></canvas><div class="scan"></div><div class="vig"></div>
+
+<div class="tl">
+  <div class="cmd">&gt;_æ graph</div>
+  <h1>SOVEREIGN SKILL TOPOLOGY</h1>
+  <div class="st"><b id="nc">0</b> skills · <b id="ec">0</b> edges · <b id="sovc">0</b> sovereign · <b id="flc">0</b> fleet</div>
+  <div class="meta" id="sig"></div>
+</div>
+
+<div class="panel">
+  <div class="ph"><span>◈ FILTER</span><span id="vis" style="color:var(--muted)"></span></div>
+  <input class="search" id="q" placeholder="> find a skill…" autocomplete="off"/>
+  <div class="quick">
+    <button class="qb" id="qb-sov">◈ sovereign</button>
+    <button class="qb" id="qb-fleet">◈ fleet</button>
+    <button class="qb" id="qb-hub">◈ hubs</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="detail" id="detail"><div class="row">Hover a node to inspect. Click to pin. Edge weight: declared 3 · tag 2 · mention 1.</div></div>
+  <div class="hint">regenerate: <b>python gen_skill_graph.py</b> — a new SKILL.md adds a node + edges</div>
+</div>
+
+<script>
+const G = __DATA__;
+const cv=document.getElementById('graph'),ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+
+const idx={};G.nodes.forEach((n,i)=>idx[n.id]=i);
+const N=G.nodes.map(n=>({...n,x:0,y:0,vx:0,vy:0,r:n.sz}));
+const E=G.edges.map(e=>({...e,a:idx[e.s],b:idx[e.t]})).filter(e=>e.a!=null&&e.b!=null);
+const nbr=N.map(()=>new Set());E.forEach(e=>{nbr[e.a].add(e.b);nbr[e.b].add(e.a);});
+document.getElementById('nc').textContent=N.length;
+document.getElementById('ec').textContent=E.length;
+document.getElementById('sovc').textContent=N.filter(n=>n.sov).length;
+document.getElementById('flc').textContent=N.filter(n=>n.fleet).length;
+const S=G.stats;
+document.getElementById('sig').textContent=`declared ${S.declared} · tag ${S.tag} · mention ${S.mention}`;
+
+const groups=G.groups,gAng={};groups.forEach((g,i)=>gAng[g.key]=(i/groups.length)*Math.PI*2);
+const R0=Math.min(W,H)*0.34;
+N.forEach(n=>{const a=gAng[n.g]??Math.random()*6.28;
+  n.x=W/2+Math.cos(a)*R0+(Math.random()-.5)*80;n.y=H/2+Math.sin(a)*R0+(Math.random()-.5)*80;});
+
+let alpha=1;
+function tick(){
+  for(let i=0;i<N.length;i++){const a=N[i];
+    for(let j=i+1;j<N.length;j++){const b=N[j];
+      let dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;if(d2<1)d2=1;if(d2>90000)continue;
+      const f=900/d2,d=Math.sqrt(d2),fx=(dx/d)*f,fy=(dy/d)*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;}}
+  E.forEach(e=>{const a=N[e.a],b=N[e.b];const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;
+    const target=70+(a.r+b.r)*3;const f=(d-target)*0.008*e.w;const fx=(dx/d)*f,fy=(dy/d)*f;
+    a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
+  N.forEach(n=>{const a=gAng[n.g]??0,ax=W/2+Math.cos(a)*R0,ay=H/2+Math.sin(a)*R0;
+    n.vx+=(ax-n.x)*0.006+(W/2-n.x)*0.002;n.vy+=(ay-n.y)*0.006+(H/2-n.y)*0.002;
+    n.vx*=0.82;n.vy*=0.82;n.x+=n.vx*alpha;n.y+=n.vy*alpha;});
+  alpha=Math.max(0.08,alpha*0.995);
+}
+let ox=0,oy=0,zoom=1;
+const toWorld=(px,py)=>({x:(px-W/2-ox)/zoom+W/2,y:(py-H/2-oy)/zoom+H/2});
+let hover=null,pinned=null,drag=null,didDrag=false;
+const hidden=new Set(); let focusMode=null;
+function hexA(h,a){const n=parseInt(h.replace('#',''),16);return`rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+
+function visible(n){
+  if(hidden.has(n.g))return false;
+  if(focusMode==='sov'&&!n.sov)return false;
+  if(focusMode==='fleet'&&!n.fleet)return false;
+  if(focusMode==='hub'&&n.deg<6)return false;
+  return true;
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);ctx.save();
+  ctx.translate(W/2+ox,H/2+oy);ctx.scale(zoom,zoom);ctx.translate(-W/2,-H/2);
+  E.forEach(e=>{const a=N[e.a],b=N[e.b];if(!visible(a)||!visible(b))return;
+    const lit=(pinned!=null&&(e.a===pinned||e.b===pinned))||(hover!=null&&(e.a===hover||e.b===hover));
+    const base=e.w>=3?0.20:e.w>=2?0.14:0.09;
+    ctx.strokeStyle=lit?'rgba(212,175,55,.6)':`rgba(212,175,55,${base})`;
+    ctx.lineWidth=(lit?1.6:e.w>=3?1.1:0.7)/zoom;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();});
+  N.forEach((n,i)=>{if(!visible(n))return;
+    const isH=i===hover||i===pinned||(pinned!=null&&nbr[pinned].has(i));
+    const r=n.r*(isH?1.35:1);
+    const cc=n.sov?'#D4AF37':n.fleet?'#00ff9d':n.col;
+    if(isH||n.deg>=6||n.sov||n.fleet){
+      const gr=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
+      gr.addColorStop(0,hexA(cc,isH?0.5:n.sov||n.fleet?0.35:0.22));gr.addColorStop(1,hexA(cc,0));
+      ctx.fillStyle=gr;ctx.beginPath();ctx.arc(n.x,n.y,r*4,0,7);ctx.fill();}
+    ctx.fillStyle=isH?cc:hexA(cc,0.72);ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();
+    if(n.sov||n.fleet){ctx.strokeStyle=hexA(cc,.9);ctx.lineWidth=1.2/zoom;ctx.beginPath();ctx.arc(n.x,n.y,r+2/zoom,0,7);ctx.stroke();}
+    if(n.deg>=8||isH||n.sov||n.fleet){
+      ctx.fillStyle=isH?'rgba(240,236,228,.95)':'rgba(240,236,228,.6)';
+      ctx.font=`${(isH?10.5:9.5)/zoom}px 'JetBrains Mono', monospace`;ctx.textAlign='center';
+      ctx.fillText(n.id,n.x,n.y-r-5/zoom);}});
+  ctx.restore();
+}
+function loop(){tick();draw();requestAnimationFrame(loop);}
+function hit(px,py){const w=toWorld(px,py);let best=null,bd=1e9;
+  N.forEach((n,i)=>{if(!visible(n))return;const d=Math.hypot(n.x-w.x,n.y-w.y);
+    if(d<Math.max(9,n.r+5)&&d<bd){bd=d;best=i;}});return best;}
+cv.addEventListener('mousemove',ev=>{
+  if(drag){drag.dx=ev.clientX-drag.x;drag.dy=ev.clientY-drag.y;ox=drag.ox+drag.dx;oy=drag.oy+drag.dy;didDrag=true;return;}
+  const i=hit(ev.clientX,ev.clientY);if(i!==hover){hover=i;if(i!=null)showDetail(N[i]);}
+  cv.style.cursor=i!=null?'pointer':'grab';});
+cv.addEventListener('mousedown',ev=>{drag={x:ev.clientX,y:ev.clientY,ox,oy};didDrag=false;cv.classList.add('drag');});
+addEventListener('mouseup',ev=>{if(drag&&!didDrag){const i=hit(ev.clientX,ev.clientY);pinned=(i===pinned)?null:i;if(pinned!=null)showDetail(N[pinned]);}drag=null;cv.classList.remove('drag');});
+cv.addEventListener('wheel',ev=>{ev.preventDefault();const f=ev.deltaY<0?1.12:1/1.12;
+  const w=toWorld(ev.clientX,ev.clientY);zoom=Math.max(0.25,Math.min(4,zoom*f));
+  const w2=toWorld(ev.clientX,ev.clientY);ox+=(w2.x-w.x)*zoom;oy+=(w2.y-w.y)*zoom;},{passive:false});
+
+const detail=document.getElementById('detail');
+function showDetail(n){
+  const i=idx[n.id],ns=[...nbr[i]].map(k=>N[k].id).sort();
+  const lbl=(G.groups.find(g=>g.key===n.g)||{}).label||n.g;
+  detail.innerHTML=`<div class="nm">${n.id}${n.sov?'<span class="badge">SOVEREIGN</span>':''}${n.fleet?'<span class="badge f">FLEET</span>':''}</div>
+    <div class="row">group <b>${lbl}</b></div>
+    <div class="row">degree <b>${n.deg}</b> · ${n.ln} lines</div>
+    ${ns.length?`<div class="nb">neighbors (${ns.length}): ${ns.map(x=>`<span data-go="${x}">${x}</span>`).join('')}</div>`:`<div class="nb">no connections — standalone skill</div>`}`;
+  detail.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>{
+    const k=idx[el.dataset.go];if(k==null)return;pinned=k;showDetail(N[k]);
+    ox=-(N[k].x-W/2)*zoom;oy=-(N[k].y-H/2)*zoom;}));
+}
+const legend=document.getElementById('legend');
+const counts={};N.forEach(n=>counts[n.g]=(counts[n.g]||0)+1);
+legend.innerHTML=G.groups.filter(g=>counts[g.key]).map(g=>
+  `<div class="leg" data-g="${g.key}"><span class="sw" style="background:${g.col}"></span>${g.label}<span class="ct">${counts[g.key]}</span></div>`).join('');
+legend.addEventListener('click',e=>{const el=e.target.closest('.leg');if(!el)return;const g=el.dataset.g;
+  if(hidden.has(g)){hidden.delete(g);el.classList.remove('off');}else{hidden.add(g);el.classList.add('off');}updateVis();});
+function updateVis(){document.getElementById('vis').textContent=N.filter(visible).length+'/'+N.length;}
+updateVis();
+function setFocus(m){focusMode=(focusMode===m)?null:m;
+  document.querySelectorAll('.qb').forEach(b=>b.classList.toggle('on',b.id==='qb-'+focusMode));
+  pinned=null;updateVis();}
+document.getElementById('qb-sov').onclick=()=>setFocus('sov');
+document.getElementById('qb-fleet').onclick=()=>setFocus('fleet');
+document.getElementById('qb-hub').onclick=()=>setFocus('hub');
+document.getElementById('q').addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();
+  if(!q){hover=null;pinned=null;return;}
+  const m=N.find(n=>visible(n)&&n.id.toLowerCase().includes(q));
+  if(m){pinned=idx[m.id];hover=idx[m.id];showDetail(m);ox=-(m.x-W/2)*zoom;oy=-(m.y-H/2)*zoom;}});
+loop();
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/skill-guide/skill-graph.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

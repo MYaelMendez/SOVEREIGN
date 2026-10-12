@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 11 · Efectos Avanzados — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:rgba(13,17,23,.9); --accent:#58a6ff; --good:#3fb950;
+    --warn:#d29922; --bad:#f85149; --text:#c9d1d9; --dim:#8b949e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text)}
+  #app{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%}
+
+  .panel{
+    position:fixed;background:var(--panel);border:1px solid rgba(88,166,255,.35);
+    border-radius:10px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+    font-family:"Cascadia Code","Consolas",Menlo,monospace;font-size:12px;line-height:1.5;z-index:10;
+  }
+  .panel h1{
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+    margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(88,166,255,.25);font-family:inherit;
+  }
+  #debug{top:12px;left:12px;width:300px;padding:12px 14px;max-height:calc(100vh - 24px);overflow-y:auto}
+  #controls{top:12px;right:12px;width:300px;padding:12px 14px;max-height:calc(100vh - 24px);overflow-y:auto}
+  #debug::-webkit-scrollbar,#controls::-webkit-scrollbar{width:6px}
+  #debug::-webkit-scrollbar-thumb,#controls::-webkit-scrollbar-thumb{background:rgba(88,166,255,.3);border-radius:3px}
+
+  .group-title{color:var(--warn);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:10px 0 4px;opacity:.9}
+  .row{display:flex;justify-content:space-between;gap:10px}
+  .row .k{color:var(--dim);white-space:nowrap}
+  .row .v{color:var(--text);text-align:right;word-break:break-all}
+  .row .v.hi{color:var(--good)}
+  .row .v.hl{color:#f2cc60}
+  .row .v.off{color:#484f58}
+
+  .pass{border:1px solid rgba(88,166,255,.16);border-radius:7px;margin-bottom:7px;background:rgba(88,166,255,.03);overflow:hidden}
+  .pass-head{display:flex;align-items:center;gap:8px;padding:6px 9px;cursor:pointer;user-select:none;font-size:11.5px}
+  .pass-head:hover{background:rgba(88,166,255,.08)}
+  .pass-head .ord{color:var(--dim);font-size:10px;min-width:14px}
+  .pass-head .name{flex:1}
+  .pass-head .arrow{color:var(--dim);font-size:9px;transition:transform .18s}
+  .pass.open .pass-head .arrow{transform:rotate(90deg)}
+  .pass-body{display:none;padding:4px 10px 10px;border-top:1px solid rgba(88,166,255,.12)}
+  .pass.open .pass-body{display:block}
+
+  input[type=checkbox]{
+    -webkit-appearance:none;appearance:none;width:30px;height:15px;border-radius:8px;cursor:pointer;
+    background:#30363d;border:1px solid #484f58;position:relative;transition:background .15s,border-color .15s;flex:none;
+  }
+  input[type=checkbox]::after{content:'';position:absolute;top:1px;left:1px;width:11px;height:11px;border-radius:50%;background:#8b949e;transition:transform .15s,background .15s}
+  input[type=checkbox]:checked{background:rgba(63,185,80,.35);border-color:var(--good)}
+  input[type=checkbox]:checked::after{transform:translateX(15px);background:var(--good)}
+
+  .ctl{margin-top:8px}
+  .ctl>label{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;color:var(--dim);margin-bottom:3px;letter-spacing:.03em}
+  .ctl>label b{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;outline:none;background:rgba(88,166,255,.22);cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid #0d1117;cursor:pointer;box-shadow:0 0 6px rgba(88,166,255,.6)}
+  select{width:100%;background:#161b22;color:var(--text);border:1px solid rgba(88,166,255,.3);border-radius:5px;padding:4px 6px;font-family:inherit;font-size:11px;outline:none}
+  select:focus{border-color:var(--accent)}
+  .hint{color:var(--dim);font-size:10px;margin-top:4px;line-height:1.4}
+
+  #error{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(13,17,23,.94);z-index:50;padding:40px}
+  #error div{max-width:640px;border:1px solid var(--bad);border-radius:10px;padding:20px;font-family:"Cascadia Code",monospace;font-size:13px;color:#ffb3ad}
+  #error h2{color:var(--bad);font-size:14px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="debug" class="panel">
+  <h1>Fase 11 · Efectos Avanzados</h1>
+  <div class="group-title">Métricas</div>
+  <div class="row"><span class="k">Three.js</span><span class="v hi" id="dbg-three">—</span></div>
+  <div class="row"><span class="k">FPS</span><span class="v hi" id="dbg-fps">—</span></div>
+  <div class="row"><span class="k">Frame</span><span class="v" id="dbg-ms">—</span></div>
+  <div class="row"><span class="k">Triángulos</span><span class="v" id="dbg-tris">—</span></div>
+  <div class="row"><span class="k">Draw calls</span><span class="v" id="dbg-calls">—</span></div>
+  <div class="row"><span class="k">Draw buffer</span><span class="v" id="dbg-size">—</span></div>
+
+  <div class="group-title">Pipeline (orden real)</div>
+  <div id="dbg-chain"></div>
+
+  <div class="group-title">G-Buffer</div>
+  <div class="row"><span class="k">Vista previa</span><span class="v hl" id="dbg-preview">Final</span></div>
+  <div class="hint">Tecla <b>P</b> cicla: Final → Profundidad → Normales. El G-Buffer se re-renderiza cada frame con <i>overrideMaterial</i>.</div>
+</div>
+
+<div id="controls" class="panel">
+  <h1>Efectos</h1>
+  <div id="pass-list"></div>
+  <div class="hint">Cada efecto es un <b>pase de post-proceso custom</b> que lee el color HDR y el G-Buffer (profundidad + normales en view space). El tone mapping lo aplica <b>OutputPass</b> al final.</div>
+</div>
+
+<div id="error"><div><h2>Error de ejecución</h2><pre id="error-msg"></pre></div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }   from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
+import { FXAAShader }      from 'three/addons/shaders/FXAAShader.js';
+
+// ═════════════════════════════════════════════════════════════════
+// 0 · Utilidades y captura de errores
+// ═════════════════════════════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+window.__ERRORS = [];
+function fail(err){
+  console.error(err);
+  const m = err && err.message ? err.message : String(err);
+  window.__ERRORS.push(m);
+  $('error-msg').textContent = m;
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message) window.__ERRORS.push(String(e.message)); });
+window.addEventListener('unhandledrejection', (e) => { window.__ERRORS.push('rejection: ' + (e.reason && e.reason.message || e.reason)); });
+
+const CAM_NEAR = 0.1, CAM_FAR = 200;
+
+// ═════════════════════════════════════════════════════════════════
+// 1 · Renderer · Escena · Cámara
+// ═════════════════════════════════════════════════════════════════
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,             // el AA lo hace FXAA en el post-proceso
+  powerPreference: 'high-performance',
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;   // lo aplica OutputPass
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;   // PCFSoftShadowMap se eliminó en r186
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e14);
+scene.fog = new THREE.FogExp2(0x0a0e14, 0.016);
+
+const camera = new THREE.PerspectiveCamera(48, window.innerWidth/window.innerHeight, CAM_NEAR, CAM_FAR);
+camera.position.set(7.5, 4.6, 10.5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.4, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.minDistance = 4;
+controls.maxDistance = 30;
+
+// ═════════════════════════════════════════════════════════════════
+// 2 · Iluminación
+// ═════════════════════════════════════════════════════════════════
+scene.add(new THREE.HemisphereLight(0x88aaff, 0x14181f, 0.55));
+
+const keyLight = new THREE.DirectionalLight(0xfff2d6, 2.2);
+keyLight.position.set(6, 12, 7);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 60;
+keyLight.shadow.camera.left = -16; keyLight.shadow.camera.right = 16;
+keyLight.shadow.camera.top = 16;  keyLight.shadow.camera.bottom = -16;
+keyLight.shadow.bias = -0.0004;
+scene.add(keyLight);
+
+// Luz volumétrica: spot visible con ray-marching
+const spot = new THREE.SpotLight(0x9ecbff, 260, 40, 0.52, 0.55, 1.6);
+spot.position.set(-3.5, 9.5, 2.5);
+spot.target.position.set(0.5, 0, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(1024, 1024);
+spot.shadow.bias = -0.0006;
+scene.add(spot, spot.target);
+
+const rim = new THREE.PointLight(0xff5fa2, 90, 26, 2);
+rim.position.set(4.2, 2.6, -4.5);
+scene.add(rim);
+
+const fill = new THREE.PointLight(0x49f2c8, 70, 24, 2);
+fill.position.set(-5.0, 2.0, -3.0);
+scene.add(fill);
+
+// ═════════════════════════════════════════════════════════════════
+// 3 · Escena (geometría variada para SSR / DOF / volumétricas)
+// ═════════════════════════════════════════════════════════════════
+const world = new THREE.Group();
+scene.add(world);
+
+// Suelo metálico (buen candidato para reflexiones)
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x11161d, metalness: 0.85, roughness: 0.22 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+world.add(floor);
+
+// Torus knot central, material PBR brillante
+const knot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1.35, 0.42, 220, 32),
+  new THREE.MeshStandardMaterial({ color: 0xd6e2f0, metalness: 0.95, roughness: 0.12 })
+);
+knot.position.set(0, 2.3, 0);
+knot.castShadow = true; knot.receiveShadow = true;
+world.add(knot);
+
+// Esferas metálicas orbitando (DOF + SSR)
+const orbs = [];
+const orbColors = [0xff5f8f, 0x4fd2ff, 0x9d7bff, 0x6effb0, 0xffd166];
+for (let i = 0; i < orbColors.length; i++) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 48, 48),
+    new THREE.MeshStandardMaterial({ color: orbColors[i], metalness: 1.0, roughness: 0.08,
+      emissive: new THREE.Color(orbColors[i]).multiplyScalar(0.35), emissiveIntensity: 1.2 })
+  );
+  m.castShadow = true; m.receiveShadow = true;
+  world.add(m);
+  orbs.push({ mesh: m, phase: (i / orbColors.length) * Math.PI * 2, radius: 4.0 + (i % 2) * 1.1,
+              speed: 0.28 + i * 0.05, yBase: 1.6 + (i % 3) * 0.5 });
+}
+
+// Cubos flotantes
+const floaters = [];
+for (let i = 0; i < 7; i++) {
+  const s = 0.5 + Math.random() * 0.55;
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(s, s, s),
+    new THREE.MeshStandardMaterial({ color: 0x2b3440, metalness: 0.6, roughness: 0.35 })
+  );
+  const a = (i / 7) * Math.PI * 2;
+  m.position.set(Math.cos(a) * 7.5, 3.2 + Math.random() * 2.4, Math.sin(a) * 7.5);
+  m.castShadow = true; m.receiveShadow = true;
+  world.add(m);
+  floaters.push({ mesh: m, baseY: m.position.y, bob: 0.5 + Math.random(), amp: 0.35 + Math.random() * 0.5, rot: 0.4 + Math.random() });
+}
+
+// Polvo volumétrico (partículas)
+const DUST = 500;
+const dustPos = new Float32Array(DUST * 3);
+for (let i = 0; i < DUST; i++) {
+  dustPos[i*3]   = (Math.random() - 0.5) * 30;
+  dustPos[i*3+1] = Math.random() * 12;
+  dustPos[i*3+2] = (Math.random() - 0.5) * 30;
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: 0x8fb4ff, size: 0.05, transparent: true, opacity: 0.5, sizeAttenuation: true, depthWrite: false,
+}));
+world.add(dust);
+
+// ═════════════════════════════════════════════════════════════════
+// 4 · G-BUFFER  (color = normales en view space, depthTexture = profundidad)
+//     Se re-renderiza la escena una vez con overrideMaterial = MeshNormalMaterial.
+//     De un solo render obtenemos normales Y profundidad (el depth buffer se
+//     escribe para cualquier material con depthWrite=true).
+// ═════════════════════════════════════════════════════════════════
+const gbufferNormalMat = new THREE.MeshNormalMaterial();
+let gbuffer = null;
+
+function makeGBuffer(w, h) {
+  const rt = new THREE.WebGLRenderTarget(w, h, {
+    type: THREE.HalfFloatType,          // normales con precisión
+    minFilter: THREE.NearestFilter,
+    magFilter: THREE.NearestFilter,
+    depthBuffer: true,
+    depthTexture: new THREE.DepthTexture(w, h, THREE.UnsignedIntType),
+  });
+  rt.depthTexture.minFilter = THREE.NearestFilter;
+  rt.depthTexture.magFilter = THREE.NearestFilter;
+  rt.texture.name = 'Fase11.gbuffer';
+  rt.depthTexture.name = 'Fase11.gbuffer.depth';
+  return rt;
+}
+
+function renderGBuffer() {
+  const old = scene.overrideMaterial;
+  scene.overrideMaterial = gbufferNormalMat;
+  renderer.setRenderTarget(gbuffer);
+  renderer.clear(true, true, false);
+  renderer.render(scene, camera);
+  scene.overrideMaterial = old;
+  renderer.setRenderTarget(null);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// 5 · SHADERS CUSTOM
+//     Todo ShaderPass necesita el uniform `tDiffuse` (lo inyecta ShaderPass)
+//     y el vertex shader estándar de quad a pantalla completa.
+// ═════════════════════════════════════════════════════════════════
+const QUAD_VERT = /* glsl */`
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// Convierte profundidad de buffer (0..1, no lineal) a profundidad de vista lineal
+const LINEARIZE = /* glsl */`
+  float linearizeDepth(float d, float n, float f) {
+    float z = d * 2.0 - 1.0;                 // → NDC [-1,1]
+    return (2.0 * n * f) / (f + n - z * (f - n));
+  }
+`;
+
+// ── 5.1 Profundidad de campo (DoF) ──────────────────────────────
+//     CoC = |depth - focusDistance| / focusRange. Disco de muestreo (golden angle)
+//     con pesos por CoC para evitar sangrado de objetos nítidos.
+const DOFShader = {
+  name: 'DepthOfFieldShader',
+  uniforms: {
+    tDiffuse:      { value: null },
+    tDepth:        { value: null },
+    focusDistance: { value: 9.0 },   // unidades de mundo
+    focusRange:    { value: 4.5 },
+    aperture:      { value: 1.0 },
+    maxBlur:       { value: 14.0 },  // radio en píxeles
+    near:          { value: CAM_NEAR },
+    far:           { value: CAM_FAR },
+    resolution:    { value: new THREE.Vector2(1, 1) },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform sampler2D tDiffuse;
+    uniform sampler2D tDepth;
+    uniform float focusDistance, focusRange, aperture, maxBlur, near, far;
+    uniform vec2 resolution;
+    varying vec2 vUv;
+    ${LINEARIZE}
+
+    void main() {
+      vec4 base = texture2D(tDiffuse, vUv);
+      float depth = linearizeDepth(texture2D(tDepth, vUv).x, near, far);
+      float coc = clamp(abs(depth - focusDistance) / max(focusRange, 0.001), 0.0, 1.0);
+      float radius = coc * coc * aperture * maxBlur;   // píxeles
+
+      if (radius < 0.6) { gl_FragColor = base; return; }
+
+      const int N = 24;
+      vec3 sum = vec3(0.0);
+      float wsum = 0.0;
+      for (int i = 0; i < N; i++) {
+        float fi = float(i);
+        float ang = fi * 2.39996323;                    // golden angle → disco uniforme
+        float r = sqrt((fi + 0.5) / float(N)) * radius;
+        vec2 uv = vUv + vec2(cos(ang), sin(ang)) * r / resolution;
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) continue;
+        float sd = linearizeDepth(texture2D(tDepth, uv).x, near, far);
+        float scoc = clamp(abs(sd - focusDistance) / max(focusRange, 0.001), 0.0, 1.0);
+        float w = scoc * scoc + 0.02;                   // más peso a lo ya desenfocado
+        sum += texture2D(tDiffuse, uv).rgb * w;
+        wsum += w;
+      }
+      vec3 blur = sum / max(wsum, 0.0001);
+      gl_FragColor = vec4(mix(base.rgb, blur, clamp(coc, 0.0, 1.0)), base.a);
+    }
+  `,
+};
+
+// ── 5.2 Motion blur por velocity buffer ─────────────────────────
+//     Reconstruye la posición de mundo desde el depth buffer y la reproyecta
+//     con la view-projection del frame ANTERIOR → vector de velocidad.
+//     Luego integra el color a lo largo de esa velocidad.
+const MotionBlurShader = {
+  name: 'VelocityMotionBlurShader',
+  uniforms: {
+    tDiffuse:          { value: null },
+    tDepth:            { value: null },
+    invProjection:     { value: new THREE.Matrix4() },
+    invView:           { value: new THREE.Matrix4() },
+    prevViewProjection:{ value: new THREE.Matrix4() },
+    strength:          { value: 1.0 },
+    maxLength:         { value: 0.06 },
+    near:              { value: CAM_NEAR },
+    far:               { value: CAM_FAR },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform sampler2D tDiffuse;
+    uniform sampler2D tDepth;
+    uniform mat4 invProjection, invView, prevViewProjection;
+    uniform float strength, maxLength, near, far;
+    varying vec2 vUv;
+    ${LINEARIZE}
+
+    void main() {
+      vec4 base = texture2D(tDiffuse, vUv);
+      float raw = texture2D(tDepth, vUv).x;
+      if (raw >= 0.9999) { gl_FragColor = base; return; }
+
+      // uv + profundidad → clip → view → mundo
+      vec4 clip = vec4(vUv * 2.0 - 1.0, raw * 2.0 - 1.0, 1.0);
+      vec4 viewPos = invProjection * clip; viewPos /= viewPos.w;
+      vec4 worldPos = invView * viewPos;
+
+      // reproyecta con la cámara anterior
+      vec4 prevClip = prevViewProjection * worldPos;
+      vec2 prevUv = prevClip.xy / prevClip.w * 0.5 + 0.5;
+      vec2 vel = (vUv - prevUv) * strength;
+
+      float len = length(vel);
+      vel *= min(len, maxLength) / max(len, 1e-5);
+
+      if (length(vel) < 1e-5) { gl_FragColor = base; return; }
+
+      const int N = 12;
+      vec3 col = vec3(0.0);
+      for (int i = 0; i < N; i++) {
+        float t = float(i) / float(N - 1) - 0.5;
+        vec2 uv = clamp(vUv + vel * t, 0.0, 1.0);
+        col += texture2D(tDiffuse, uv).rgb;
+      }
+      gl_FragColor = vec4(col / float(N), base.a);
+    }
+  `,
+};
+
+// ── 5.3 Reflexiones en espacio de pantalla (SSR) ────────────────
+//     Ray-march en view space contra el depth buffer. La normal viene del
+//     G-Buffer (view space). Mezcla con Fresnel.
+const SSRShader = {
+  name: 'SSRShader',
+  uniforms: {
+    tDiffuse:      { value: null },
+    tDepth:        { value: null },
+    tNormal:       { value: null },
+    projection:    { value: new THREE.Matrix4() },
+    invProjection: { value: new THREE.Matrix4() },
+    near:          { value: CAM_NEAR },
+    far:           { value: CAM_FAR },
+    maxDistance:   { value: 14.0 },
+    thickness:     { value: 0.55 },
+    intensity:     { value: 0.85 },
+    fresnelPower:  { value: 3.0 },
+    steps:         { value: 40 },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform sampler2D tDiffuse, tDepth, tNormal;
+    uniform mat4 projection, invProjection;
+    uniform float near, far, maxDistance, thickness, intensity, fresnelPower;
+    uniform int steps;
+    varying vec2 vUv;
+    ${LINEARIZE}
+
+    vec3 viewPosFromUv(vec2 uv, float raw) {
+      vec4 clip = vec4(uv * 2.0 - 1.0, raw * 2.0 - 1.0, 1.0);
+      vec4 v = invProjection * clip;
+      return v.xyz / v.w;
+    }
+
+    void main() {
+      vec3 color = texture2D(tDiffuse, vUv).rgb;
+      float raw = texture2D(tDepth, vUv).x;
+      if (raw >= 0.9999) { gl_FragColor = vec4(color, 1.0); return; }
+
+      vec3 vPos = viewPosFromUv(vUv, raw);
+      vec3 n = normalize(texture2D(tNormal, vUv).rgb * 2.0 - 1.0);   // normal view space
+      vec3 viewDir = normalize(vPos);
+      vec3 refl = reflect(viewDir, n);
+      if (refl.z > -0.02) { gl_FragColor = vec4(color, 1.0); return; } // apunta a la cámara
+
+      vec3 ray = vPos;
+      vec3 stepVec = refl * (maxDistance / float(steps));
+      float hit = 0.0;
+      vec2 hitUv = vUv;
+
+      for (int i = 0; i < 64; i++) {
+        if (i >= steps) break;
+        ray += stepVec;
+        vec4 clip = projection * vec4(ray, 1.0);
+        if (clip.w <= 0.0) break;
+        vec2 uv = clip.xy / clip.w * 0.5 + 0.5;
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+
+        float sRaw = texture2D(tDepth, uv).x;
+        if (sRaw >= 0.9999) continue;
+        float sLin = linearizeDepth(sRaw, near, far);
+        float rLin = -ray.z;                              // profundidad del rayo
+        if (rLin > sLin && rLin < sLin + thickness) { hit = 1.0; hitUv = uv; break; }
+      }
+
+      vec3 reflCol = texture2D(tDiffuse, hitUv).rgb;
+      float fres = pow(1.0 - clamp(dot(-viewDir, n), 0.0, 1.0), fresnelPower);
+      float amount = clamp(fres * intensity * hit, 0.0, 1.0);
+      gl_FragColor = vec4(mix(color, reflCol, amount), 1.0);
+    }
+  `,
+};
+
+// ── 5.4 Luces volumétricas (ray marching) ───────────────────────
+//     Marcha a lo largo del rayo de vista, se detiene en la superficie
+//     (depth buffer) y acumula dispersión dentro del cono del spot.
+const VolumetricShader = {
+  name: 'VolumetricLightShader',
+  uniforms: {
+    tDiffuse:      { value: null },
+    tDepth:        { value: null },
+    invProjection: { value: new THREE.Matrix4() },
+    invView:       { value: new THREE.Matrix4() },
+    cameraPos:     { value: new THREE.Vector3() },
+    lightPos:      { value: new THREE.Vector3() },
+    lightDir:      { value: new THREE.Vector3(0, -1, 0) },
+    lightColor:    { value: new THREE.Color(0x9ecbff) },
+    lightIntensity:{ value: 1.0 },
+    density:       { value: 0.9 },
+    coneCos:       { value: Math.cos(0.52) },
+    near:          { value: CAM_NEAR },
+    far:           { value: CAM_FAR },
+    time:          { value: 0 },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    #define STEPS 40
+    uniform sampler2D tDiffuse, tDepth;
+    uniform mat4 invProjection, invView;
+    uniform vec3 cameraPos, lightPos, lightDir, lightColor;
+    uniform float lightIntensity, density, coneCos, near, far, time;
+    varying vec2 vUv;
+    ${LINEARIZE}
+
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+    void main() {
+      vec3 color = texture2D(tDiffuse, vUv).rgb;
+      float raw = texture2D(tDepth, vUv).x;
+      float sceneLin = (raw >= 0.9999) ? far : linearizeDepth(raw, near, far);
+      float maxT = min(sceneLin, far - 0.5);
+      if (maxT <= 0.05) { gl_FragColor = vec4(color, 1.0); return; }
+
+      // Rayo de vista en espacio de mundo
+      vec4 vp = invProjection * vec4(vUv * 2.0 - 1.0, -1.0, 1.0);
+      vec3 dirView = normalize(vp.xyz / vp.w);
+      vec3 dirWorld = normalize((invView * vec4(dirView, 0.0)).xyz);
+
+      float stepSize = maxT / float(STEPS);
+      float jitter = hash(vUv + fract(time));
+      vec3 accum = vec3(0.0);
+      float trans = 1.0;
+
+      for (int i = 0; i < STEPS; i++) {
+        float t = (float(i) + jitter) * stepSize;
+        if (t > maxT) break;
+        vec3 p = cameraPos + dirWorld * t;
+
+        vec3 toL = lightPos - p;
+        float dl = length(toL);
+        vec3 ld = toL / max(dl, 1e-4);
+        float cosA = dot(ld, lightDir);
+        float cone = smoothstep(coneCos, coneCos + 0.18, cosA);
+        if (cone > 0.001) {
+          float atten = 1.0 / (1.0 + dl * dl * 0.045);
+          float d = density * cone * atten;
+          float a = 1.0 - exp(-d * stepSize);
+          accum += lightColor * lightIntensity * a * trans * 6.0;
+          trans *= (1.0 - a * 0.6);
+        }
+      }
+      gl_FragColor = vec4(color + accum, 1.0);
+    }
+  `,
+};
+
+// ── 5.5 Color grading con LUT (textura 2D "strip") ──────────────
+//     LUT 16³ aplanada en 256×16. Se aplica sobre la imagen ya en sRGB
+//     (después de OutputPass), que es donde viven las LUTs de display.
+const ColorGradingShader = {
+  name: 'ColorGradingLUTShader',
+  uniforms: {
+    tDiffuse:   { value: null },
+    tLut:       { value: null },
+    lutSize:    { value: 16.0 },
+    lutAmount:  { value: 1.0 },
+    exposure:   { value: 1.0 },
+    saturation: { value: 1.0 },
+    contrast:   { value: 1.0 },
+    lift:       { value: 0.0 },
+    gammaV:     { value: 1.0 },
+    gain:       { value: 1.0 },
+  },
+  vertexShader: QUAD_VERT,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform sampler2D tDiffuse, tLut;
+    uniform float lutSize, lutAmount, exposure, saturation, contrast, lift, gammaV, gain;
+    varying vec2 vUv;
+
+    vec3 lutSample(vec3 c) {
+      c = clamp(c, 0.0, 1.0);
+      float N = lutSize;
+      float blue = c.b * (N - 1.0);
+      float s0 = floor(blue);
+      float s1 = min(s0 + 1.0, N - 1.0);
+      float a = blue - s0;
+      float v = (c.g * (N - 1.0) + 0.5) / N;
+      float u0 = ((s0 * N) + c.r * (N - 1.0) + 0.5) / (N * N);
+      float u1 = ((s1 * N) + c.r * (N - 1.0) + 0.5) / (N * N);
+      vec3 c0 = texture2D(tLut, vec2(u0, v)).rgb;
+      vec3 c1 = texture2D(tLut, vec2(u1, v)).rgb;
+      return mix(c0, c1, a);
+    }
+
+    void main() {
+      vec4 t = texture2D(tDiffuse, vUv);
+      vec3 c = t.rgb;
+      c = mix(c, lutSample(c), lutAmount);
+      c = pow(max(c, 0.0), vec3(gammaV));
+      c = (c + lift) * gain;
+      c = (c - 0.5) * contrast + 0.5;
+      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      c = mix(vec3(l), c, saturation);
+      c *= exposure;
+      gl_FragColor = vec4(clamp(c, 0.0, 1.0), t.a);
+    }
+  `,
+};
+
+// ═════════════════════════════════════════════════════════════════
+// 6 · LUTs procedurales (16³ aplanada en strip 2D)
+// ═════════════════════════════════════════════════════════════════
+const LUT_N = 16;
+
+function buildLUT(fn) {
+  const w = LUT_N * LUT_N, h = LUT_N;
+  const data = new Uint8Array(w * h * 4);
+  for (let b = 0; b < LUT_N; b++) {
+    for (let g = 0; g < LUT_N; g++) {
+      for (let r = 0; r < LUT_N; r++) {
+        const x = b * LUT_N + r, y = g;
+        const pi = (y * w + x) * 4;
+        const c = fn(r / (LUT_N - 1), g / (LUT_N - 1), b / (LUT_N - 1));
+        data[pi]     = Math.round(clamp(c[0], 0, 1) * 255);
+        data[pi + 1] = Math.round(clamp(c[1], 0, 1) * 255);
+        data[pi + 2] = Math.round(clamp(c[2], 0, 1) * 255);
+        data[pi + 3] = 255;
+      }
+    }
+  }
+  const tex = new THREE.DataTexture(data, w, h, THREE.RGBAFormat);
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const LUTS = {
+  'Neutral (identidad)': buildLUT((r, g, b) => [r, g, b]),
+  'Teal & Orange': buildLUT((r, g, b) => {
+    const l = 0.2126*r + 0.7152*g + 0.0722*b;
+    const sh = Math.pow(1 - l, 1.4), hi = Math.pow(l, 1.4);
+    return [clamp(r + hi*0.16 - sh*0.05, 0, 1), g + hi*0.04, clamp(b + sh*0.18 - hi*0.10, 0, 1)];
+  }),
+  'Cálido (Warm)': buildLUT((r, g, b) => [Math.pow(r, 0.9)*1.06, Math.pow(g, 0.97), Math.pow(b, 1.10)*0.94]),
+  'Frío (Moonlight)': buildLUT((r, g, b) => [Math.pow(r, 1.10)*0.90, Math.pow(g, 1.02)*0.98, Math.pow(b, 0.90)*1.12]),
+  'Noir (B/N alto contraste)': buildLUT((r, g, b) => {
+    let l = 0.2126*r + 0.7152*g + 0.0722*b;
+    l = clamp((l - 0.5) * 1.45 + 0.5, 0, 1);
+    return [l, l, l];
+  }),
+  'Cyberpunk (magenta/cian)': buildLUT((r, g, b) => {
+    const l = 0.2126*r + 0.7152*g + 0.0722*b;
+    const sh = Math.pow(1 - l, 1.6), hi = Math.pow(l, 1.6);
+    return [clamp(r + sh*0.22 + hi*0.05, 0, 1), clamp(g + sh*0.02, 0, 1), clamp(b + sh*0.18 + hi*0.20, 0, 1)];
+  }),
+};
+
+// ═════════════════════════════════════════════════════════════════
+// 7 · Pipeline EffectComposer
+//    RenderPass → SSR → DoF → MotionBlur → Volumétricas
+//      → OutputPass (tone mapping + sRGB) → ColorGrading(LUT) → FXAA
+// ═════════════════════════════════════════════════════════════════
+const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+
+const hdrTarget = new THREE.WebGLRenderTarget(size.x, size.y, {
+  type: THREE.HalfFloatType,
+  depthBuffer: true,
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+});
+hdrTarget.texture.name = 'Fase11.hdr';
+const composer = new EffectComposer(renderer, hdrTarget);
+
+const renderPass  = new RenderPass(scene, camera);
+const ssrPass     = new ShaderPass(SSRShader);
+const dofPass     = new ShaderPass(DOFShader);
+const motionPass  = new ShaderPass(MotionBlurShader);
+const volPass     = new ShaderPass(VolumetricShader);
+const outputPass  = new OutputPass();
+const gradePass   = new ShaderPass(ColorGradingShader);
+const fxaaPass    = new ShaderPass(FXAAShader);
+
+composer.addPass(renderPass);
+composer.addPass(ssrPass);
+composer.addPass(dofPass);
+composer.addPass(motionPass);
+composer.addPass(volPass);
+composer.addPass(outputPass);
+composer.addPass(gradePass);
+composer.addPass(fxaaPass);
+
+// Estado de prev-frame para el velocity buffer
+const prevViewProjection = new THREE.Matrix4();
+let prevValid = false;
+
+// ═════════════════════════════════════════════════════════════════
+// 8 · UI (toggles + sliders)
+// ═════════════════════════════════════════════════════════════════
+const PASSES = [
+  { id: 'ssr',   order: 2, name: 'SSR · Reflexiones',   pass: ssrPass,   open: false,
+    note: 'Ray-march en view space contra el depth buffer.',
+    ctls: [
+      { key: 'intensity',    label: 'Intensidad',   min: 0,   max: 2,   step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'fresnelPower', label: 'Fresnel',      min: 0.5, max: 6,   step: 0.1,  fmt: v => v.toFixed(1) },
+      { key: 'thickness',    label: 'Grosor',       min: 0.05,max: 2,   step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'maxDistance',  label: 'Distancia',    min: 2,   max: 30,  step: 0.5,  fmt: v => v.toFixed(1) },
+      { key: 'steps',        label: 'Pasos',        min: 8,   max: 64,  step: 1,    fmt: v => String(v|0) },
+    ] },
+  { id: 'dof',   order: 3, name: 'DoF · Desenfoque',    pass: dofPass,   open: true,
+    note: 'Disco de muestreo con CoC desde la profundidad.',
+    ctls: [
+      { key: 'focusDistance', label: 'Distancia foco', min: 0.5, max: 40, step: 0.1, fmt: v => v.toFixed(1) + ' u' },
+      { key: 'focusRange',    label: 'Rango foco',     min: 0.5, max: 20, step: 0.1, fmt: v => v.toFixed(1) },
+      { key: 'aperture',      label: 'Apertura',       min: 0,   max: 2,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'maxBlur',       label: 'Radio máx (px)', min: 0,   max: 30, step: 0.5,  fmt: v => v.toFixed(0) + ' px' },
+    ] },
+  { id: 'motion', order: 4, name: 'Motion Blur · Velocidad', pass: motionPass, open: false,
+    note: 'Velocity buffer por reproyección con la cámara anterior.',
+    ctls: [
+      { key: 'strength',  label: 'Intensidad',   min: 0,    max: 3,    step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'maxLength', label: 'Longitud máx', min: 0.005,max: 0.2,  step: 0.005,fmt: v => v.toFixed(3) },
+    ] },
+  { id: 'vol',   order: 5, name: 'Volumétricas · Ray march', pass: volPass, open: false,
+    note: '40 pasos dentro del cono del spot, ocluidas por el depth buffer.',
+    ctls: [
+      { key: 'density',        label: 'Densidad',    min: 0,   max: 3,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'lightIntensity', label: 'Intensidad',  min: 0,   max: 3,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'coneCos',        label: 'Apertura cono', min: 0.5, max: 0.999, step: 0.001, fmt: v => v.toFixed(3) },
+    ] },
+  { id: 'grade', order: 7, name: 'Color Grading · LUT', pass: gradePass, open: true,
+    note: 'LUT 16³ (strip 256×16) + lift/gamma/gain/saturación.',
+    ctls: [
+      { key: 'lutAmount',  label: 'Mezcla LUT',  min: 0,   max: 1,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'exposure',   label: 'Exposición',  min: 0.2, max: 2.5,step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'saturation', label: 'Saturación',  min: 0,   max: 2,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'contrast',   label: 'Contraste',   min: 0.5, max: 2,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'lift',       label: 'Lift',        min: -0.3,max: 0.3,step: 0.005,fmt: v => v.toFixed(3) },
+      { key: 'gammaV',     label: 'Gamma',       min: 0.5, max: 2,  step: 0.01, fmt: v => v.toFixed(2) },
+      { key: 'gain',       label: 'Gain',        min: 0.5, max: 1.8,step: 0.01, fmt: v => v.toFixed(2) },
+    ] },
+  { id: 'fxaa',  order: 8, name: 'FXAA · Anti-aliasing', pass: fxaaPass, open: false,
+    note: 'Debe ir último: opera sobre la imagen ya en sRGB.',
+    ctls: [] },
+];
+
+const uiRefs = {};
+const passList = $('pass-list');
+const chainEl = $('dbg-chain');
+
+for (const spec of PASSES) {
+  const el = document.createElement('div');
+  el.className = 'pass' + (spec.open ? ' open' : '');
+  el.innerHTML = `
+    <div class="pass-head">
+      <span class="ord">${spec.order}</span>
+      <input type="checkbox" ${spec.pass.enabled ? 'checked' : ''} />
+      <span class="name">${spec.name}</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="pass-body">
+      ${spec.note ? `<div class="hint" style="margin-bottom:6px">${spec.note}</div>` : ''}
+      ${spec.ctls.map((c, i) => `
+        <div class="ctl">
+          <label>${c.label} <b data-out="${i}">${c.fmt(spec.pass.uniforms[c.key].value)}</b></label>
+          <input type="range" data-ctl="${i}" min="${c.min}" max="${c.max}" step="${c.step}"
+                 value="${spec.pass.uniforms[c.key].value}" />
+        </div>`).join('')}
+    </div>`;
+  passList.appendChild(el);
+
+  const cb = el.querySelector('input[type=checkbox]');
+  const head = el.querySelector('.pass-head');
+  head.addEventListener('click', (e) => {
+    if (e.target === cb) return;
+    el.classList.toggle('open');
+  });
+  cb.addEventListener('change', () => {
+    spec.pass.enabled = cb.checked;
+    refreshChain();
+  });
+
+  const ctlRefs = [];
+  el.querySelectorAll('input[type=range]').forEach((slider) => {
+    const i = +slider.dataset.ctl;
+    const c = spec.ctls[i];
+    const out = el.querySelector(`b[data-out="${i}"]`);
+    const apply = () => {
+      const v = +slider.value;
+      spec.pass.uniforms[c.key].value = v;
+      out.textContent = c.fmt(v);
+    };
+    slider.addEventListener('input', apply);
+    ctlRefs.push(() => { slider.value = spec.pass.uniforms[c.key].value; apply(); });
+  });
+
+  uiRefs[spec.id] = { el, cb, spec, ctlRefs };
+}
+
+// Selector de LUT + tone mapping (controles globales)
+const globalPanel = document.createElement('div');
+globalPanel.innerHTML = `
+  <div class="group-title" style="margin-top:12px">Tone mapping (OutputPass)</div>
+  <select id="tm-sel">
+    <option value="4">ACES Filmic</option>
+    <option value="2">Reinhard</option>
+    <option value="3">Filmic (Cineon)</option>
+    <option value="6">AgX</option>
+    <option value="7">Neutral</option>
+    <option value="1">Linear</option>
+    <option value="0">None</option>
+  </select>
+  <div class="ctl">
+    <label>Exposición <b id="tm-exp-out">1.05</b></label>
+    <input type="range" id="tm-exp" min="0.2" max="2.5" step="0.01" value="1.05" />
+  </div>
+  <div class="group-title">LUT de color</div>
+  <select id="lut-sel">${Object.keys(LUTS).map((k) => `<option>${k}</option>`).join('')}</select>`;
+$('controls').appendChild(globalPanel);
+
+$('tm-sel').addEventListener('change', (e) => {
+  // OutputPass reconstruye sus defines al detectar el cambio en renderer.toneMapping
+  renderer.toneMapping = +e.target.value;
+});
+$('tm-exp').addEventListener('input', (e) => {
+  renderer.toneMappingExposure = +e.target.value;
+  $('tm-exp-out').textContent = (+e.target.value).toFixed(2);
+});
+$('lut-sel').addEventListener('change', (e) => {
+  gradePass.uniforms.tLut.value = LUTS[e.target.value];
+});
+gradePass.uniforms.tLut.value = LUTS['Teal & Orange'];
+
+function refreshChain() {
+  const rows = [
+    ['1', 'RenderPass', renderPass],
+    ...PASSES.map((p) => [String(p.order), p.name, p.pass]),
+  ];
+  chainEl.innerHTML = rows.map(([o, n, p]) =>
+    `<div class="row"><span class="k">${o} ${n.split(' ')[0]}</span>` +
+    `<span class="v ${p.enabled ? 'hi' : 'off'}">${p.enabled ? 'ON' : 'off'}</span></div>`
+  ).join('');
+}
+
+// Vista previa del G-Buffer
+let previewMode = 0; // 0 final · 1 profundidad · 2 normales
+const previewNames = ['Final', 'Profundidad', 'Normales'];
+function cyclePreview() {
+  previewMode = (previewMode + 1) % 3;
+  $('dbg-preview').textContent = previewNames[previewMode];
+  dofPass.enabled   = previewMode === 0 && uiRefs.dof.cb.checked;
+  motionPass.enabled= previewMode === 0 && uiRefs.motion.cb.checked;
+  ssrPass.enabled   = previewMode === 0 && uiRefs.ssr.cb.checked;
+  volPass.enabled   = previewMode === 0 && uiRefs.vol.cb.checked;
+  gradePass.enabled = previewMode === 0 && uiRefs.grade.cb.checked;
+  outputPass.enabled= previewMode === 0;
+}
+window.addEventListener('keydown', (e) => { if (e.key === 'p' || e.key === 'P') cyclePreview(); });
+
+// ═════════════════════════════════════════════════════════════════
+// 9 · Resize
+// ═════════════════════════════════════════════════════════════════
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+
+  const s = renderer.getDrawingBufferSize(new THREE.Vector2());
+  composer.setSize(w, h);
+
+  if (gbuffer) gbuffer.dispose();
+  gbuffer = makeGBuffer(s.x, s.y);
+
+  dofPass.uniforms.resolution.value.set(s.x, s.y);
+  fxaaPass.material.uniforms['resolution'].value.set(1 / s.x, 1 / s.y);
+  $('dbg-size').textContent = s.x + '×' + s.y;
+}
+window.addEventListener('resize', onResize);
+
+// ═════════════════════════════════════════════════════════════════
+// 10 · Loop
+// ═════════════════════════════════════════════════════════════════
+const timer = new THREE.Timer();          // THREE.Clock está deprecado en r186
+let frames = 0, msAccum = 0;
+const spotDir = new THREE.Vector3();
+let paused = false;
+let frameCount = 0;
+
+function updateUniforms() {
+  // Cámara / matrices (después de controls.update)
+  camera.updateMatrixWorld();
+  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+
+  dofPass.uniforms.tDepth.value = gbuffer.depthTexture;
+
+  motionPass.uniforms.tDepth.value = gbuffer.depthTexture;
+  motionPass.uniforms.invProjection.value.copy(camera.projectionMatrixInverse);
+  motionPass.uniforms.invView.value.copy(camera.matrixWorld);
+  motionPass.uniforms.prevViewProjection.value.copy(prevViewProjection);
+
+  ssrPass.uniforms.tDepth.value = gbuffer.depthTexture;
+  ssrPass.uniforms.tNormal.value = gbuffer.texture;
+  ssrPass.uniforms.projection.value.copy(camera.projectionMatrix);
+  ssrPass.uniforms.invProjection.value.copy(camera.projectionMatrixInverse);
+
+  volPass.uniforms.tDepth.value = gbuffer.depthTexture;
+  volPass.uniforms.invProjection.value.copy(camera.projectionMatrixInverse);
+  volPass.uniforms.invView.value.copy(camera.matrixWorld);
+  volPass.uniforms.cameraPos.value.copy(camera.position);
+  volPass.uniforms.lightPos.value.copy(spot.position);
+  spot.getWorldDirection(spotDir);
+  volPass.uniforms.lightDir.value.copy(spotDir).normalize();
+  volPass.uniforms.lightColor.value.copy(spot.color);
+  volPass.uniforms.coneCos.value = Math.cos(spot.angle);
+}
+
+function renderGBufferPreview() {
+  // Modo profundidad / normales: pinta el G-Buffer directo a pantalla
+  const old = scene.overrideMaterial;
+  scene.overrideMaterial = previewMode === 2 ? gbufferNormalMat : depthPreviewMat;
+  renderer.setRenderTarget(null);
+  renderer.clear(true, true, false);
+  renderer.render(scene, camera);
+  scene.overrideMaterial = old;
+}
+
+const depthPreviewMat = new THREE.MeshDepthMaterial();
+
+function readPixels() {
+  const gl = renderer.getContext();
+  const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+  const pts = [[w>>1,h>>1],[w>>2,h>>2],[3*w>>2,h>>1],[w>>1,3*h>>2],[w>>2,3*h>>2]];
+  const out = [];
+  const b = new Uint8Array(4);
+  for (const [x, y] of pts) {
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, b);
+    out.push([b[0], b[1], b[2]]);
+  }
+  return out;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  timer.update();
+  const t = timer.getElapsed();
+  frameCount++;
+  if (paused) return;
+
+  // ── animación de escena ──
+  knot.rotation.x = t * 0.30;
+  knot.rotation.y = t * 0.45;
+  for (let i = 0; i < orbs.length; i++) {
+    const o = orbs[i];
+    const a = o.phase + t * o.speed;
+    o.mesh.position.set(Math.cos(a) * o.radius, o.yBase + Math.sin(t * 0.8 + i) * 0.5, Math.sin(a) * o.radius);
+    o.mesh.material.emissiveIntensity = 1.0 + Math.sin(t * 2.0 + i) * 0.4;
+  }
+  for (const f of floaters) {
+    f.mesh.position.y = f.baseY + Math.sin(t * f.bob) * f.amp;
+    f.mesh.rotation.x += f.rot * 0.004;
+    f.mesh.rotation.y += f.rot * 0.006;
+  }
+  dust.rotation.y = t * 0.012;
+  volPass.uniforms.time.value = t;
+
+  controls.update();
+
+  // ── matrices del frame actual ──
+  camera.updateMatrixWorld();
+  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+
+  // ── G-Buffer (normales + profundidad) ──
+  renderGBuffer();
+
+  // ── pipeline ──
+  updateUniforms();
+  const t0 = performance.now();
+
+  if (previewMode === 0) {
+    renderer.info.reset();
+    composer.render();
+  } else {
+    renderGBufferPreview();
+  }
+
+  const dt = performance.now() - t0;
+  msAccum += dt;
+  frames++;
+
+  // guarda la view-projection de este frame para el velocity buffer
+  prevViewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+
+  if (frames >= 20) {
+    const avg = msAccum / frames;
+    $('dbg-fps').textContent = (1000 / avg).toFixed(1);
+    $('dbg-ms').textContent = avg.toFixed(2) + ' ms';
+    if (previewMode === 0) {
+      $('dbg-tris').textContent = renderer.info.render.triangles.toLocaleString();
+      $('dbg-calls').textContent = String(renderer.info.render.calls);
+    }
+    frames = 0; msAccum = 0;
+  }
+
+  // ── resultado para el arnés de pruebas (headless) ──
+  if (!window.__RESULT && t > 0.6) {
+    try {
+      window.__RESULT = JSON.stringify({
+        ok: window.__ERRORS.length === 0,
+        three: THREE.REVISION,
+        passes: PASSES.map((p) => p.id),
+        chain: ['renderPass','ssr','dof','motion','vol','output','grade','fxaa'],
+        toneMappings: ['None','Linear','Cineon(Filmic)','Reinhard','ACESFilmic','AgX','Neutral'],
+        currentToneMapping: renderer.toneMapping,
+        luts: Object.keys(LUTS),
+        gbuffer: { color: !!gbuffer.texture, depth: !!gbuffer.depthTexture,
+                   w: gbuffer.width, h: gbuffer.height },
+        pixels: readPixels(),
+        errors: window.__ERRORS,
+      });
+    } catch (e) { window.__ERRORS.push('result: ' + e.message); }
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// 11 · Arranque
+// ═════════════════════════════════════════════════════════════════
+try {
+  $('dbg-three').textContent = 'r' + THREE.REVISION;
+  onResize();
+  refreshChain();
+  camera.updateMatrixWorld();
+  prevViewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  renderGBuffer();
+  updateUniforms();
+  composer.render();
+  animate();
+} catch (err) {
+  fail(err);
+}
+
+// API para inspección / WebMCP (Fase 12)
+window.__fase11 = {
+  THREE, renderer, scene, camera, composer, controls,
+  passes: { renderPass, ssrPass, dofPass, motionPass, volPass, outputPass, gradePass, fxaaPass },
+  ui: uiRefs, luts: LUTS,
+  setToneMapping(v) { renderer.toneMapping = v; },
+  setExposure(v) { renderer.toneMappingExposure = v; },
+  setLUT(name) { if (LUTS[name]) gradePass.uniforms.tLut.value = LUTS[name]; },
+  setControl(id, key, value) {
+    const r = uiRefs[id]; if (!r) return false;
+    const spec = r.spec.ctls.find((c) => c.key === key); if (!spec) return false;
+    r.spec.pass.uniforms[key].value = value;
+    if (r.ctlRefs) r.ctlRefs.forEach((f) => f());
+    return true;
+  },
+  toggle(id, on) {
+    const r = uiRefs[id]; if (!r) return;
+    r.cb.checked = on; r.spec.pass.enabled = on; refreshChain();
+  },
+  focusAt(d) { dofPass.uniforms.focusDistance.value = d; uiRefs.dof.ctlRefs.forEach((f) => f()); },
+  // ── hooks deterministas para el arnés de pruebas ──
+  freeze() { paused = true; },
+  resume() { paused = false; },
+  renderNow() {
+    controls.update();
+    camera.updateMatrixWorld();
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    renderGBuffer();
+    updateUniforms();
+    if (previewMode === 0) { renderer.info.reset(); composer.render(); }
+    else renderGBufferPreview();
+    prevViewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    return frameCount;
+  },
+  grid(W, A) {
+    const gl = renderer.getContext();
+    const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    const buf = new Uint8Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    const GW = 48, GH = 27, out = new Uint8Array(GW * GH * 3);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const sx = Math.floor((x + 0.5) * w / GW), sy = Math.floor((y + 0.5) * h / GH);
+      const i = (sy * w + sx) * 4, o = (y * GW + x) * 3;
+      out[o] = buf[i]; out[o + 1] = buf[i + 1]; out[o + 2] = buf[i + 2];
+    }
+    return out;
+  },
+  info() {
+    return {
+      three: THREE.REVISION,
+      enabled: PASSES.filter((p) => p.pass.enabled).map((p) => p.id),
+      toneMapping: renderer.toneMapping,
+      gbuffer: { w: gbuffer.width, h: gbuffer.height },
+    };
+  },
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase11-efectos-avanzados.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

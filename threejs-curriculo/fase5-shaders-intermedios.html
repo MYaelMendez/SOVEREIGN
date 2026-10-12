@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fase 5 · Shaders Intermedios — Three.js 0.186.1 (offline)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: rgba(13, 17, 23, 0.88);
+    --line: #1f6feb;
+    --accent: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --bad: #f85149;
+    --text: #c9d1d9;
+    --dim: #8b949e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .panel {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+  }
+  .panel h1 {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.25); font-family: inherit;
+  }
+  .group-title {
+    color: var(--warn); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 9px 0 3px; opacity: .9;
+  }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  .row .k { color: var(--dim); white-space: nowrap; }
+  .row .v { color: var(--text); text-align: right; word-break: break-all; }
+  .row .v.hi { color: var(--good); }
+  .row .v.hl { color: #f2cc60; }
+
+  #debug { top: 12px; left: 12px; width: 340px; padding: 12px 14px; }
+  #controls { top: 12px; right: 12px; width: 280px; padding: 12px 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+
+  .btn {
+    display: block; width: 100%; margin: 6px 0; padding: 7px 10px;
+    background: rgba(88, 166, 255, 0.10); color: var(--text);
+    border: 1px solid rgba(88, 166, 255, 0.35); border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; text-align: left; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(88, 166, 255, 0.22); border-color: var(--accent); }
+  .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30363d; margin-right: 8px; vertical-align: middle; }
+  .btn.on .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+
+  .slider { margin: 7px 0; }
+  .slider label { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; }
+  .slider label b { color: var(--text); font-weight: 500; }
+  .slider input[type=range] { width: 100%; margin-top: 3px; accent-color: var(--accent); }
+
+  #info { bottom: 12px; left: 12px; width: 480px; max-width: calc(100vw - 24px); padding: 10px 14px; }
+  #info .body { font-size: 11.5px; color: var(--dim); line-height: 1.6; }
+  #info .body b { color: var(--text); }
+  #info .body code { color: var(--accent); background: rgba(88,166,255,.1); padding: 1px 4px; border-radius: 3px; }
+
+  #legend { bottom: 12px; right: 12px; padding: 9px 14px; color: var(--dim); font-size: 11.5px; }
+  #legend b { color: var(--text); font-weight: 600; }
+
+  #error {
+    position: fixed; inset: 0; display: none; z-index: 100;
+    align-items: center; justify-content: center; padding: 40px;
+    background: rgba(13,17,23,.96); text-align: center;
+  }
+  #error .box { max-width: 680px; }
+  #error h2 { color: var(--bad); font-size: 18px; margin-bottom: 12px; }
+  #error p { color: var(--dim); font-size: 13px; line-height: 1.7; }
+  #error code { color: var(--accent); background: rgba(88,166,255,.1);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; }
+
+  #glconsole {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    width: min(720px, calc(100vw - 24px)); max-height: 40vh; overflow: auto;
+    display: none; padding: 12px 14px; z-index: 20;
+    border-color: rgba(248, 81, 73, .6);
+  }
+  #glconsole h1 { color: var(--bad); border-color: rgba(248,81,73,.3); }
+  #glconsole pre { white-space: pre-wrap; font-size: 11px; color: #ffb4ae; }
+  #glconsole .close { float: right; cursor: pointer; color: var(--dim); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ══════════════ DEBUG PANEL ══════════════ -->
+<div id="debug" class="panel">
+  <h1>◉ Debug · Fase 5 — Shaders Intermedios</h1>
+
+  <div class="group-title">Modo activo</div>
+  <div class="row"><span class="k">modo</span><span class="v hi" id="dbg-mode">—</span></div>
+  <div class="row"><span class="k">descripción</span><span class="v" id="dbg-desc">—</span></div>
+
+  <div class="group-title">Renderer</div>
+  <div class="row"><span class="k">fps</span><span class="v hi" id="dbg-fps">—</span></div>
+  <div class="row"><span class="k">draw calls</span><span class="v" id="dbg-calls">—</span></div>
+  <div class="row"><span class="k">triangles</span><span class="v" id="dbg-tris">—</span></div>
+  <div class="row"><span class="k">pixel ratio</span><span class="v" id="dbg-pr">—</span></div>
+
+  <div class="group-title">Cámara</div>
+  <div class="row"><span class="k">position</span><span class="v" id="dbg-cam">—</span></div>
+  <div class="row"><span class="k">fov</span><span class="v" id="dbg-fov">—</span></div>
+
+  <div class="group-title">Modo específico</div>
+  <div class="row"><span class="k" id="dbg-spec-k1">—</span><span class="v" id="dbg-spec-v1">—</span></div>
+  <div class="row"><span class="k" id="dbg-spec-k2">—</span><span class="v" id="dbg-spec-v2">—</span></div>
+  <div class="row"><span class="k" id="dbg-spec-k3">—</span><span class="v" id="dbg-spec-v3">—</span></div>
+</div>
+
+<!-- ══════════════ CONTROLS PANEL ══════════════ -->
+<div id="controls" class="panel">
+  <h1>◈ Modos</h1>
+  <button class="btn on" data-mode="water"><span class="dot"></span>Agua Procedural</button>
+  <button class="btn" data-mode="fire"><span class="dot"></span>Fuego (Noise)</button>
+  <button class="btn" data-mode="fresnel"><span class="dot"></span>Efecto Fresnel</button>
+  <button class="btn" data-mode="sdf"><span class="dot"></span>SDF Shapes</button>
+  <button class="btn" data-mode="normal"><span class="dot"></span>Normal Mapping</button>
+  <button class="btn" data-mode="uv"><span class="dot"></span>Manipulación UV</button>
+
+  <div class="group-title">Controles globales</div>
+  <button class="btn on" id="btn-animate"><span class="dot"></span>Animar uTime</button>
+  <button class="btn" id="btn-wire"><span class="dot"></span>Wireframe</button>
+  <button class="btn" id="btn-rotate"><span class="dot on"></span>Auto-rotación</button>
+
+  <div class="slider">
+    <label>Velocidad <b id="lb-speed">1.00</b></label>
+    <input type="range" id="sl-speed" min="0" max="3" step="0.01" value="1" />
+  </div>
+  <div class="slider">
+    <label>Intensidad <b id="lb-intensity">1.00</b></label>
+    <input type="range" id="sl-intensity" min="0" max="2" step="0.01" value="1" />
+  </div>
+  <div class="slider">
+    <label>Detalle <b id="lb-detail">1.00</b></label>
+    <input type="range" id="sl-detail" min="0.2" max="3" step="0.01" value="1" />
+  </div>
+
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(88,166,255,.25);">
+    <button class="btn" id="btn-reset" style="text-align:center;">↺ Reset cámara</button>
+  </div>
+</div>
+
+<!-- ══════════════ INFO PANEL ══════════════ -->
+<div id="info" class="panel">
+  <h1>ℹ Info del shader</h1>
+  <div class="body" id="info-body"></div>
+</div>
+
+<div id="legend" class="panel">
+  <b>Arrastrar</b> orbitar · <b>Rueda</b> zoom · <b>Click derecho</b> pan · <b>1-6</b> cambiar modo
+</div>
+
+<!-- Consola de errores de shader -->
+<div id="glconsole" class="panel">
+  <span class="close" id="glclose">✕</span>
+  <h1>⚠ Error de compilación GLSL</h1>
+  <pre id="glmsg"></pre>
+</div>
+
+<div id="error"><div class="box">
+  <h2>No se pudo cargar Three.js</h2>
+  <p id="error-msg"></p>
+  <p style="margin-top:14px">Esta escena carga los módulos ES locales desde
+  <code>./vendor/three.module.js</code>. Los módulos ES no funcionan sobre
+  <code>file://</code> en la mayoría de navegadores: serví la carpeta por HTTP, p. ej.<br>
+  <code>cd "C:/æ/threejs-curriculo" &amp;&amp; python -m http.server 8000</code><br>
+  y abrí <code>http://localhost:8000/fase5-shaders-intermedios.html</code></p>
+</div></div>
+
+<!-- ══════════════ IMPORT MAP (todo local, sin CDN) ══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const TAU = Math.PI * 2;
+const DEG = 180 / Math.PI;
+
+// ─────────────────────────────────────────────────────────────
+// 0. Utilidades de UI
+// ─────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(d);
+const vecStr = (v) => `${fmt(v.x)}, ${fmt(v.y)}, ${fmt(v.z)}`;
+function fail(err) {
+  console.error(err);
+  $('error-msg').textContent = String(err && err.message ? err.message : err);
+  $('error').style.display = 'flex';
+}
+window.addEventListener('error', (e) => { if (e.message && /import|module|three/i.test(e.message)) fail(e); });
+
+// Diagnóstico global
+window.__FASE5__ = { ready: false, shaderErrors: 0, revision: THREE.REVISION, log: [] };
+
+// ─────────────────────────────────────────────────────────────
+// GLSL NOISE LIBRARY (Simplex 3D + FBM + Perlin)
+// ─────────────────────────────────────────────────────────────
+const GLSL_NOISE = /* glsl */`
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);
+  const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));
+  vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);
+  vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);
+  vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;
+  vec3 x2=x0-i2+C.yyy;
+  vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(
+    i.z+vec4(0.0,i1.z,i2.z,1.0))
+    +i.y+vec4(0.0,i1.y,i2.y,1.0))
+    +i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857;
+  vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);
+  vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;
+  vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);
+  vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;
+  vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+  vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);
+  vec3 p1=vec3(a0.zw,h.y);
+  vec3 p2=vec3(a1.xy,h.z);
+  vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+
+float fbm(vec3 p){
+  float f=0.0,a=0.5;
+  for(int i=0;i<5;i++){f+=a*snoise(p);p*=2.0;a*=0.5;}
+  return f;
+}
+
+float fbm4(vec3 p){
+  float f=0.0,a=0.5;
+  for(int i=0;i<4;i++){f+=a*snoise(p);p*=2.0;a*=0.5;}
+  return f;
+}
+
+// Perlin noise 2D (classic)
+float hash21(vec2 p){
+  p=fract(p*vec2(123.34,456.21));
+  p+=dot(p,p+45.32);
+  return fract(p.x*p.y);
+}
+float perlin2(vec2 p){
+  vec2 i=floor(p);
+  vec2 f=fract(p);
+  vec2 u=f*f*(3.0-2.0*f);
+  float a=hash21(i);
+  float b=hash21(i+vec2(1.0,0.0));
+  float c=hash21(i+vec2(0.0,1.0));
+  float d=hash21(i+vec2(1.0,1.0));
+  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);
+}
+float fbm2(vec2 p){
+  float f=0.0,a=0.5;
+  for(int i=0;i<5;i++){f+=a*perlin2(p);p*=2.0;a*=0.5;}
+  return f;
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 1. Renderer · Scene · Cámara
+// ─────────────────────────────────────────────────────────────
+const container = $('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(3.5, 2.5, 5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 1.5;
+controls.maxDistance = 30;
+
+// ─────────────────────────────────────────────────────────────
+// 2. Shared uniforms
+// ─────────────────────────────────────────────────────────────
+const shared = {
+  uTime:       { value: 0 },
+  uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+  uSpeed:      { value: 1.0 },
+  uIntensity:  { value: 1.0 },
+  uDetail:     { value: 1.0 },
+};
+
+// ─────────────────────────────────────────────────────────────
+// 3. SHADER: AGUA PROCEDURAL
+//    Día 1: Noise (Simplex) + Día 2: UV manipulation + Día 6: Fresnel
+// ─────────────────────────────────────────────────────────────
+const waterVert = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uDetail;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying float vWaveHeight;
+
+${GLSL_NOISE}
+
+// Multi-octave wave displacement
+float waveHeight(vec2 p, float t){
+  float h = 0.0;
+  // Olas grandes
+  h += sin(p.x * 1.2 + t * 0.8) * 0.35;
+  h += cos(p.y * 0.9 + t * 0.6) * 0.25;
+  // Olas medias con ruido
+  float n1 = snoise(vec3(p * 0.8, t * 0.3)) * 0.4;
+  h += n1;
+  // Olas finas
+  h += sin(p.x * 3.5 + t * 1.5) * cos(p.y * 2.8 + t * 1.2) * 0.12;
+  // Detalle con FBM
+  float detail = fbm4(vec3(p * 2.0, t * 0.2)) * 0.15 * uDetail;
+  h += detail;
+  return h;
+}
+
+void main(){
+  vUv = uv;
+  vec3 pos = position;
+  float t = uTime * uSpeed;
+
+  // Desplazamiento vertical por olas
+  float h = waveHeight(pos.xz, t);
+  pos.y += h;
+  vWaveHeight = h;
+
+  // Calcular normales por diferencias finitas
+  float eps = 0.15;
+  float hL = waveHeight(pos.xz - vec2(eps, 0.0), t);
+  float hR = waveHeight(pos.xz + vec2(eps, 0.0), t);
+  float hD = waveHeight(pos.xz - vec2(0.0, eps), t);
+  float hU = waveHeight(pos.xz + vec2(0.0, eps), t);
+
+  vec3 calcNormal = normalize(vec3(hL - hR, 2.0 * eps, hD - hU));
+  vWorldNormal = normalize(mat3(modelMatrix) * calcNormal);
+
+  vec4 wp = modelMatrix * vec4(pos, 1.0);
+  vWorldPos = wp.xyz;
+
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const waterFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform vec3 uWaterColor;
+uniform vec3 uDeepColor;
+uniform vec3 uFoamColor;
+uniform vec3 uSkyColor;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying float vWaveHeight;
+
+${GLSL_NOISE}
+
+void main(){
+  float t = uTime * uSpeed;
+  vec3 N = normalize(vWorldNormal);
+  vec3 V = normalize(cameraPosition - vWorldPos);
+  vec3 L = normalize(vec3(0.5, 0.8, 0.3));
+
+  // ── Color base: mezcla profundidad/oleaje ──
+  float depthMix = smoothstep(-0.3, 0.5, vWaveHeight);
+  vec3 baseColor = mix(uDeepColor, uWaterColor, depthMix);
+
+  // ── Difuso ──
+  float diff = max(dot(N, L), 0.0);
+
+  // ── Especular (Blinn-Phong) ──
+  vec3 H = normalize(L + V);
+  float spec = pow(max(dot(N, H), 0.0), 128.0) * 1.5;
+
+  // ── Fresnel (Schlick) ──
+  float F0 = 0.02;
+  float fresnel = F0 + (1.0 - F0) * pow(1.0 - max(dot(N, V), 0.0), 5.0);
+
+  // ── Reflexión del cielo ──
+  vec3 R = reflect(-V, N);
+  float skyFactor = smoothstep(-0.1, 0.5, R.y);
+  vec3 skyRefl = mix(uWaterColor * 0.5, uSkyColor, skyFactor);
+
+  // ── Espuma en crestas ──
+  float foamNoise = fbm4(vec3(vWorldPos.xz * 3.0, t * 0.5));
+  float foam = smoothstep(0.25, 0.45, vWaveHeight + foamNoise * 0.15);
+  foam *= uIntensity;
+
+  // ── Composición final ──
+  vec3 color = baseColor * (0.3 + 0.7 * diff);
+  color = mix(color, skyRefl, fresnel * 0.7);
+  color += spec * vec3(1.0, 0.95, 0.8);
+  color = mix(color, uFoamColor, foam * 0.6);
+
+  // Transparencia en bordes
+  float alpha = 0.85 + fresnel * 0.15;
+
+  gl_FragColor = vec4(color, alpha);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 4. SHADER: FUEGO PROCEDURAL
+//    Día 1: Noise (Simplex/FBM) + Día 2: UV manipulation
+// ─────────────────────────────────────────────────────────────
+const fireVert = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vLocalPos;
+
+${GLSL_NOISE}
+
+void main(){
+  vUv = uv;
+  vLocalPos = position;
+  vec3 pos = position;
+
+  // Ligera deformación por ruido
+  float n = snoise(vec3(pos.xy * 2.0, uTime * uSpeed * 0.5));
+  pos += normal * n * 0.05;
+
+  vec4 wp = modelMatrix * vec4(pos, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const fireFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform float uDetail;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vLocalPos;
+
+${GLSL_NOISE}
+
+// Color ramp para fuego
+vec3 fireColorRamp(float t){
+  // negro -> rojo oscuro -> rojo -> naranja -> amarillo -> blanco
+  vec3 c0 = vec3(0.0, 0.0, 0.0);
+  vec3 c1 = vec3(0.3, 0.0, 0.0);
+  vec3 c2 = vec3(0.8, 0.1, 0.0);
+  vec3 c3 = vec3(1.0, 0.5, 0.0);
+  vec3 c4 = vec3(1.0, 0.9, 0.3);
+  vec3 c5 = vec3(1.0, 1.0, 1.0);
+
+  if(t < 0.2) return mix(c0, c1, t / 0.2);
+  if(t < 0.4) return mix(c1, c2, (t - 0.2) / 0.2);
+  if(t < 0.6) return mix(c2, c3, (t - 0.4) / 0.2);
+  if(t < 0.8) return mix(c3, c4, (t - 0.6) / 0.2);
+  return mix(c4, c5, (t - 0.8) / 0.2);
+}
+
+void main(){
+  float t = uTime * uSpeed;
+  vec2 uv = vUv;
+
+  // ── UV manipulation: distorsión ascendente ──
+  // El fuego sube: desplazamos UV.y con el tiempo
+  float rise = t * 0.4;
+  vec2 fireUV = uv;
+  fireUV.y += rise;
+
+  // Turbulencia horizontal
+  float turbX = snoise(vec3(fireUV * vec2(3.0, 1.0), t * 0.3)) * 0.15;
+  fireUV.x += turbX;
+
+  // ── Ruido principal del fuego ──
+  float scale = 4.0 * uDetail;
+  float n1 = fbm4(vec3(fireUV * scale, t * 0.2));
+
+  // Ruido secundario para detalle
+  float n2 = fbm4(vec3(fireUV * scale * 2.0 + 100.0, t * 0.4));
+
+  // Combinar ruidos
+  float fire = n1 * 0.7 + n2 * 0.3;
+
+  // Forma de llama: más intenso en el centro, se desvanece arriba
+  float centerDist = abs(uv.x - 0.5) * 2.0;
+  float shape = 1.0 - smoothstep(0.0, 0.8, centerDist + uv.y * 0.5);
+  fire *= shape;
+
+  // Pulsación
+  float pulse = 0.85 + 0.15 * sin(t * 3.0 + uv.y * 5.0);
+  fire *= pulse * uIntensity;
+
+  // ── Color ──
+  vec3 color = fireColorRamp(fire);
+
+  // Alpha: transparente donde no hay fuego
+  float alpha = smoothstep(0.05, 0.4, fire);
+
+  // Brillo adicional en el núcleo
+  float core = smoothstep(0.5, 0.9, fire);
+  color += vec3(0.3, 0.2, 0.1) * core;
+
+  gl_FragColor = vec4(color, alpha);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 5. SHADER: FRESNEL EFFECT
+//    Día 6: Fresnel effect
+// ─────────────────────────────────────────────────────────────
+const fresnelVert = /* glsl */`
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying vec3 vLocalPos;
+varying vec2 vUv;
+
+void main(){
+  vUv = uv;
+  vLocalPos = position;
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const fresnelFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform vec3 uBaseColor;
+uniform vec3 uRimColor;
+uniform float uFresnelPower;
+
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying vec3 vLocalPos;
+varying vec2 vUv;
+
+${GLSL_NOISE}
+
+void main(){
+  float t = uTime * uSpeed;
+  vec3 N = normalize(vWorldNormal);
+  vec3 V = normalize(cameraPosition - vWorldPos);
+
+  // ── Fresnel (Schlick) ──
+  float F0 = 0.04;
+  float fresnel = F0 + (1.0 - F0) * pow(1.0 - max(dot(N, V), 0.0), uFresnelPower);
+
+  // ── Color animado ──
+  float colorCycle = sin(t * 0.5) * 0.5 + 0.5;
+  vec3 rimColor = mix(uRimColor, uRimColor.bgr, colorCycle);
+
+  // ── Textura de ruido sutil en la superficie ──
+  float surfaceNoise = fbm4(vec3(vUv * 5.0, t * 0.1)) * 0.15;
+
+  // ── Composición ──
+  vec3 color = uBaseColor + surfaceNoise;
+  color = mix(color, rimColor, fresnel * uIntensity);
+
+  // Brillo especular en el borde
+  float rimGlow = pow(fresnel, 2.0) * 0.5;
+  color += rimColor * rimGlow;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 6. SHADER: SDF SHAPES
+//    Día 3: SDF (Signed Distance Fields)
+// ─────────────────────────────────────────────────────────────
+const sdfVert = /* glsl */`
+varying vec2 vUv;
+varying vec3 vWorldPos;
+
+void main(){
+  vUv = uv;
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const sdfFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uDetail;
+uniform vec2 uResolution;
+uniform vec3 uColor1;
+uniform vec3 uColor2;
+uniform vec3 uColor3;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+
+// ── SDF Primitives ──
+float sdCircle(vec2 p, float r){
+  return length(p) - r;
+}
+
+float sdBox(vec2 p, vec2 b){
+  vec2 d = abs(p) - b;
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
+float sdTriangle(vec2 p, vec2 p0, vec2 p1, vec2 p2){
+  vec2 e0 = p1 - p0, e1 = p2 - p1, e2 = p0 - p2;
+  vec2 v0 = p - p0, v1 = p - p1, v2 = p - p2;
+  vec2 pq0 = v0 - e0 * clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0);
+  vec2 pq1 = v1 - e1 * clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0);
+  vec2 pq2 = v2 - e2 * clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0);
+  float s = sign(e0.x * e2.y - e0.y * e2.x);
+  vec2 d = min(min(vec2(dot(pq0, pq0), s * (v0.x * e0.y - v0.y * e0.x)),
+                   vec2(dot(pq1, pq1), s * (v1.x * e1.y - v1.y * e1.x))),
+                   vec2(dot(pq2, pq2), s * (v2.x * e2.y - v2.y * e2.x)));
+  return -sqrt(d.x) * sign(d.y);
+}
+
+float sdHexagon(vec2 p, float r){
+  const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+  p = abs(p);
+  p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+  p -= vec2(clamp(p.x, -k.z * r, k.z * r), r);
+  return length(p) * sign(p.y);
+}
+
+float sdStar5(vec2 p, float r, float rf){
+  const vec2 k1 = vec2(0.809016994375, -0.587785252292);
+  const vec2 k2 = vec2(-k1.x, k1.y);
+  p.x = abs(p.x);
+  p -= 2.0 * max(dot(k1, p), 0.0) * k1;
+  p -= 2.0 * max(dot(k2, p), 0.0) * k2;
+  p.x = abs(p.x);
+  p.y -= r;
+  vec2 ba = rf * vec2(-k1.y, k1.x) - vec2(0, 1);
+  float h = clamp(dot(p, ba) / dot(ba, ba), 0.0, r);
+  return length(p - ba * h) * sign(p.y * ba.x - p.x * ba.y);
+}
+
+// ── Operaciones booleanas suaves ──
+float opSmoothUnion(float d1, float d2, float k){
+  float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
+  return mix(d2, d1, h) - k * h * (1.0 - h);
+}
+
+float opSmoothSubtract(float d1, float d2, float k){
+  float h = clamp(0.5 - 0.5 * (d2 + d1) / k, 0.0, 1.0);
+  return mix(d1, -d2, h) + k * h * (1.0 - h);
+}
+
+float opSmoothIntersect(float d1, float d2, float k){
+  float h = clamp(0.5 - 0.5 * (d2 - d1) / k, 0.0, 1.0);
+  return mix(d2, d1, h) + k * h * (1.0 - h);
+}
+
+void main(){
+  float t = uTime * uSpeed;
+
+  // Coordenadas centradas y aspect-corrected
+  vec2 uv = (vUv - 0.5) * 2.0;
+  uv.x *= uResolution.x / uResolution.y;
+
+  // Rotación lenta
+  float angle = t * 0.15;
+  mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+  uv = rot * uv;
+
+  // Escala con detalle
+  uv *= 1.0 / uDetail;
+
+  // ── Formas SDF ──
+  // Círculo animado
+  vec2 c1 = vec2(sin(t * 0.7) * 0.4, cos(t * 0.5) * 0.3);
+  float d1 = sdCircle(uv - c1, 0.25 + sin(t * 0.3) * 0.05);
+
+  // Caja rotada
+  vec2 c2 = vec2(cos(t * 0.6) * 0.5, sin(t * 0.4) * 0.4);
+  float d2 = sdBox(uv - c2, vec2(0.18 + sin(t * 0.2) * 0.03));
+
+  // Hexágono
+  vec2 c3 = vec2(sin(t * 0.8 + 2.0) * 0.6, cos(t * 0.3 + 1.0) * 0.5);
+  float d3 = sdHexagon(uv - c3, 0.15 + cos(t * 0.4) * 0.03);
+
+  // Estrella
+  vec2 c4 = vec2(cos(t * 0.5 + 4.0) * 0.3, sin(t * 0.7 + 3.0) * 0.6);
+  float d4 = sdStar5(uv - c4, 0.2, 0.5);
+
+  // Triángulo
+  float d5 = sdTriangle(uv, vec2(-0.3, -0.2), vec2(0.3, -0.2), vec2(0.0, 0.35));
+
+  // ── Composición con operaciones suaves ──
+  float k = 0.15; // suavizado
+  float shape = opSmoothUnion(d1, d2, k);
+  shape = opSmoothUnion(shape, d3, k);
+  shape = opSmoothUnion(shape, d4, k);
+  shape = opSmoothSubtract(shape, d5, k * 0.5);
+
+  // ── Renderizado ──
+  // Antialiasing basado en distancia
+  float aa = 0.003 * uDetail;
+  float fill = smoothstep(aa, -aa, shape);
+
+  // Borde
+  float border = smoothstep(aa * 2.0, 0.0, abs(shape));
+
+  // Color interior con gradiente
+  float colorMix = 1.0 - abs(shape) * 2.0;
+  vec3 innerColor = mix(uColor1, uColor2, colorMix * 0.5 + 0.5);
+
+  // Color del borde
+  vec3 borderColor = uColor3;
+
+  // Fondo con patrón sutil
+  float bgPattern = sin(uv.x * 10.0 + t) * sin(uv.y * 10.0 + t) * 0.03;
+  vec3 bgColor = vec3(0.05, 0.05, 0.08) + bgPattern;
+
+  // Composición
+  vec3 color = bgColor;
+  color = mix(color, innerColor, fill);
+  color = mix(color, borderColor, border * 0.8);
+
+  // Brillo en el borde
+  float glow = exp(-abs(shape) * 8.0) * 0.3;
+  color += uColor3 * glow;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 7. SHADER: NORMAL MAPPING PROCEDURAL
+//    Día 5: Normal mapping (sin textura — generado por ruido)
+// ─────────────────────────────────────────────────────────────
+const normalVert = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying vec3 vLocalPos;
+
+${GLSL_NOISE}
+
+void main(){
+  vUv = uv;
+  vLocalPos = position;
+  vec3 pos = position;
+
+  // Desplazamiento sutil por ruido
+  float n = snoise(vec3(pos.xy * 3.0, uTime * uSpeed * 0.3));
+  pos += normal * n * 0.03;
+
+  vec4 wp = modelMatrix * vec4(pos, 1.0);
+  vWorldPos = wp.xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const normalFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform float uDetail;
+uniform vec3 uLightPos;
+uniform vec3 uLightColor;
+uniform vec3 uObjectColor;
+uniform float uNormalStrength;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+varying vec3 vLocalPos;
+
+${GLSL_NOISE}
+
+// Generar normal map procedural desde ruido
+vec3 proceduralNormal(vec2 uv, float t, float strength){
+  float eps = 0.01;
+  float scale = 8.0 * uDetail;
+
+  // Muestrear FBM en 3 puntos para calcular gradiente
+  float n  = fbm4(vec3(uv * scale, t * 0.1));
+  float nx = fbm4(vec3((uv + vec2(eps, 0.0)) * scale, t * 0.1));
+  float ny = fbm4(vec3((uv + vec2(0.0, eps)) * scale, t * 0.1));
+
+  // Gradiente -> perturbación de normal
+  vec3 perturb = vec3(
+    (nx - n) / eps * strength,
+    (ny - n) / eps * strength,
+    0.0
+  );
+
+  return normalize(vec3(perturb.xy, 1.0));
+}
+
+void main(){
+  float t = uTime * uSpeed;
+
+  // ── Normal procedural ──
+  vec3 N = normalize(vWorldNormal);
+  vec3 mapN = proceduralNormal(vUv, t, uNormalStrength * uIntensity);
+
+  // Transformar normal del mapa al espacio mundo
+  // (simplificación: asumimos que la normal base es aproximadamente correcta)
+  vec3 perturbedN = normalize(N + mapN * 0.5);
+
+  // ── Iluminación Phong ──
+  vec3 L = normalize(uLightPos - vWorldPos);
+  vec3 V = normalize(cameraPosition - vWorldPos);
+  vec3 R = reflect(-L, perturbedN);
+
+  float diff = max(dot(perturbedN, L), 0.0);
+  float spec = pow(max(dot(R, V), 0.0), 32.0);
+
+  // ── Fresnel sutil ──
+  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0) * 0.15;
+
+  // ── Color ──
+  vec3 ambient = uObjectColor * 0.15;
+  vec3 diffuse = uObjectColor * diff * uLightColor;
+  vec3 specular = vec3(1.0) * spec * 0.5;
+
+  vec3 color = ambient + diffuse + specular + fresnel * uLightColor;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 8. SHADER: MANIPULACIÓN UV
+//    Día 2: UV manipulation
+// ─────────────────────────────────────────────────────────────
+const uvVert = /* glsl */`
+varying vec2 vUv;
+varying vec3 vWorldPos;
+
+void main(){
+  vUv = uv;
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const uvFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform float uDetail;
+uniform vec2 uResolution;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+
+${GLSL_NOISE}
+
+void main(){
+  float t = uTime * uSpeed;
+  vec2 uv = vUv;
+
+  // ── Técnica 1: Ondas sinusoidales ──
+  uv.x += sin(uv.y * 10.0 * uDetail + t * 2.0) * 0.03 * uIntensity;
+  uv.y += cos(uv.x * 8.0 * uDetail + t * 1.5) * 0.03 * uIntensity;
+
+  // ── Técnica 2: Distorsión por ruido ──
+  float noiseX = snoise(vec3(uv * 5.0 * uDetail, t * 0.3)) * 0.05 * uIntensity;
+  float noiseY = snoise(vec3(uv * 5.0 * uDetail + 100.0, t * 0.3)) * 0.05 * uIntensity;
+  uv += vec2(noiseX, noiseY);
+
+  // ── Técnica 3: Remolino (swirl) ──
+  vec2 center = vec2(0.5);
+  vec2 fromCenter = uv - center;
+  float dist = length(fromCenter);
+  float angle = atan(fromCenter.y, fromCenter.x);
+  float swirlAmount = sin(dist * 15.0 - t * 3.0) * 0.1 * uIntensity;
+  angle += swirlAmount;
+  uv = center + vec2(cos(angle), sin(angle)) * dist;
+
+  // ── Técnica 4: Mosaico repetido ──
+  vec2 tiledUv = fract(uv * 4.0 * uDetail);
+
+  // ── Técnica 5: Coordenadas polares ──
+  vec2 polarUv = vec2(
+    atan(uv.y - 0.5, uv.x - 0.5) / 6.28318 + 0.5,
+    length(uv - 0.5)
+  );
+
+  // ── Patrones de color ──
+  // Patrón 1: Cuadrícula
+  vec2 grid = fract(uv * 8.0 * uDetail);
+  float gridLine = step(0.95, grid.x) + step(0.95, grid.y);
+
+  // Patrón 2: Ondas concéntricas
+  float waves = sin(length(uv - 0.5) * 20.0 * uDetail - t * 4.0) * 0.5 + 0.5;
+
+  // Patrón 3: Espiral
+  float spiral = sin(atan(uv.y - 0.5, uv.x - 0.5) * 5.0 + length(uv - 0.5) * 15.0 - t * 3.0) * 0.5 + 0.5;
+
+  // Patrón 4: Ruido coloreado
+  float noisePattern = fbm4(vec3(uv * 6.0 * uDetail, t * 0.2));
+
+  // ── Composición de colores ──
+  vec3 color1 = vec3(
+    sin(uv.x * 3.14159 + t),
+    cos(uv.y * 3.14159 + t * 0.7),
+    sin((uv.x + uv.y) * 1.5708 + t * 0.5)
+  ) * 0.5 + 0.5;
+
+  vec3 color2 = vec3(
+    spiral,
+    waves,
+    noisePattern
+  );
+
+  vec3 color = mix(color1, color2, 0.5);
+  color += gridLine * 0.15;
+  color += waves * 0.1;
+
+  // Viñeta
+  float vignette = 1.0 - length(vUv - 0.5) * 0.8;
+  color *= vignette;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 9. COMPOSICIÓN (Día 7): Shader que combina 3+ efectos
+// ─────────────────────────────────────────────────────────────
+const compositeVert = /* glsl */`
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+
+void main(){
+  vUv = uv;
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const compositeFrag = /* glsl */`
+uniform float uTime;
+uniform float uSpeed;
+uniform float uIntensity;
+uniform float uDetail;
+
+varying vec2 vUv;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+
+${GLSL_NOISE}
+
+void main(){
+  float t = uTime * uSpeed;
+  vec3 N = normalize(vWorldNormal);
+  vec3 V = normalize(cameraPosition - vWorldPos);
+  vec3 L = normalize(vec3(0.5, 0.8, 0.3));
+
+  // ── Efecto 1: Fresnel ──
+  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+  // ── Efecto 2: Normal mapping procedural ──
+  float eps = 0.01;
+  float scale = 6.0 * uDetail;
+  float n  = fbm4(vec3(vUv * scale, t * 0.1));
+  float nx = fbm4(vec3((vUv + vec2(eps, 0.0)) * scale, t * 0.1));
+  float ny = fbm4(vec3((vUv + vec2(0.0, eps)) * scale, t * 0.1));
+  vec3 perturb = vec3((nx - n) / eps * 0.3, (ny - n) / eps * 0.3, 0.0);
+  vec3 perturbedN = normalize(N + perturb);
+
+  // ── Efecto 3: UV distortion para color ──
+  vec2 distortedUv = vUv;
+  distortedUv.x += sin(vUv.y * 8.0 + t) * 0.02;
+  distortedUv.y += cos(vUv.x * 6.0 + t * 0.8) * 0.02;
+
+  // ── Iluminación ──
+  float diff = max(dot(perturbedN, L), 0.0);
+  vec3 H = normalize(L + V);
+  float spec = pow(max(dot(perturbedN, H), 0.0), 64.0);
+
+  // ── Color compuesto ──
+  vec3 baseColor = vec3(0.15, 0.2, 0.35);
+  vec3 rimColor = vec3(0.3, 0.6, 1.0);
+  vec3 patternColor = vec3(
+    sin(distortedUv.x * 5.0 + t) * 0.5 + 0.5,
+    cos(distortedUv.y * 4.0 + t * 0.7) * 0.5 + 0.5,
+    sin((distortedUv.x + distortedUv.y) * 3.0 + t * 0.5) * 0.5 + 0.5
+  );
+
+  vec3 color = baseColor * (0.3 + 0.7 * diff);
+  color = mix(color, rimColor, fresnel * 0.6 * uIntensity);
+  color = mix(color, patternColor, 0.2);
+  color += spec * vec3(1.0, 0.95, 0.8) * 0.5;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ─────────────────────────────────────────────────────────────
+// 10. Crear materiales y mallas
+// ─────────────────────────────────────────────────────────────
+const allMeshes = {};
+
+// Agua
+const waterGeo = new THREE.PlaneGeometry(6, 6, 128, 128);
+const waterMat = new THREE.ShaderMaterial({
+  vertexShader: waterVert,
+  fragmentShader: waterFrag,
+  uniforms: {
+    ...shared,
+    uWaterColor: { value: new THREE.Color(0x1a6b8a) },
+    uDeepColor:  { value: new THREE.Color(0x0a2a3a) },
+    uFoamColor:  { value: new THREE.Color(0xffffff) },
+    uSkyColor:   { value: new THREE.Color(0x87ceeb) },
+  },
+  transparent: true,
+  side: THREE.DoubleSide,
+});
+const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+waterMesh.rotation.x = -Math.PI / 2;
+waterMesh.position.y = -0.5;
+allMeshes.water = waterMesh;
+scene.add(waterMesh);
+
+// Fuego
+const fireGeo = new THREE.PlaneGeometry(2, 3, 64, 64);
+const fireMat = new THREE.ShaderMaterial({
+  vertexShader: fireVert,
+  fragmentShader: fireFrag,
+  uniforms: { ...shared },
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+});
+const fireMesh = new THREE.Mesh(fireGeo, fireMat);
+fireMesh.position.set(0, 0.5, 0);
+allMeshes.fire = fireMesh;
+scene.add(fireMesh);
+
+// Fresnel
+const fresnelGeo = new THREE.SphereGeometry(1.2, 64, 64);
+const fresnelMat = new THREE.ShaderMaterial({
+  vertexShader: fresnelVert,
+  fragmentShader: fresnelFrag,
+  uniforms: {
+    ...shared,
+    uBaseColor:    { value: new THREE.Color(0x1a1a2e) },
+    uRimColor:     { value: new THREE.Color(0x00d4ff) },
+    uFresnelPower: { value: 3.0 },
+  },
+});
+const fresnelMesh = new THREE.Mesh(fresnelGeo, fresnelMat);
+allMeshes.fresnel = fresnelMesh;
+scene.add(fresnelMesh);
+
+// SDF
+const sdfGeo = new THREE.PlaneGeometry(4, 4);
+const sdfMat = new THREE.ShaderMaterial({
+  vertexShader: sdfVert,
+  fragmentShader: sdfFrag,
+  uniforms: {
+    ...shared,
+    uColor1: { value: new THREE.Color(0x1f6feb) },
+    uColor2: { value: new THREE.Color(0x3fb950) },
+    uColor3: { value: new THREE.Color(0xf2cc60) },
+  },
+});
+const sdfMesh = new THREE.Mesh(sdfGeo, sdfMat);
+allMeshes.sdf = sdfMesh;
+scene.add(sdfMesh);
+
+// Normal Mapping
+const normalGeo = new THREE.TorusKnotGeometry(0.8, 0.25, 128, 32);
+const normalMat = new THREE.ShaderMaterial({
+  vertexShader: normalVert,
+  fragmentShader: normalFrag,
+  uniforms: {
+    ...shared,
+    uLightPos:       { value: new THREE.Vector3(3, 4, 5) },
+    uLightColor:     { value: new THREE.Color(0xffffff) },
+    uObjectColor:    { value: new THREE.Color(0x4a90d9) },
+    uNormalStrength: { value: 0.5 },
+  },
+});
+const normalMesh = new THREE.Mesh(normalGeo, normalMat);
+allMeshes.normal = normalMesh;
+scene.add(normalMesh);
+
+// UV Manipulation
+const uvGeo = new THREE.PlaneGeometry(3, 3);
+const uvMat = new THREE.ShaderMaterial({
+  vertexShader: uvVert,
+  fragmentShader: uvFrag,
+  uniforms: { ...shared },
+});
+const uvMesh = new THREE.Mesh(uvGeo, uvMat);
+allMeshes.uv = uvMesh;
+scene.add(uvMesh);
+
+// Composite (Día 7)
+const compositeGeo = new THREE.IcosahedronGeometry(1.2, 4);
+const compositeMat = new THREE.ShaderMaterial({
+  vertexShader: compositeVert,
+  fragmentShader: compositeFrag,
+  uniforms: { ...shared },
+});
+const compositeMesh = new THREE.Mesh(compositeGeo, compositeMat);
+allMeshes.composite = compositeMesh;
+scene.add(compositeMesh);
+
+// ─────────────────────────────────────────────────────────────
+// 11. Mode management
+// ─────────────────────────────────────────────────────────────
+const MODES = {
+  water: {
+    name: 'Agua Procedural',
+    desc: 'Olas con Simplex noise, reflexión Fresnel, espuma y cielo',
+    camPos: new THREE.Vector3(0, 3, 5),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['oleaje', fmt(u.uDetail.value, 2)],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['intensidad', fmt(u.uIntensity.value, 2)],
+    ],
+  },
+  fire: {
+    name: 'Fuego (Noise)',
+    desc: 'FBM noise, color ramp, turbulencia y pulsación',
+    camPos: new THREE.Vector3(0, 0.5, 3.5),
+    camTarget: new THREE.Vector3(0, 0.5, 0),
+    spec: (u) => [
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['intensidad', fmt(u.uIntensity.value, 2)],
+      ['detalle', fmt(u.uDetail.value, 2)],
+    ],
+  },
+  fresnel: {
+    name: 'Efecto Fresnel',
+    desc: 'Rim lighting con Schlick Fresnel, color animado',
+    camPos: new THREE.Vector3(0, 0, 3.5),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['power', '3.0'],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['intensidad', fmt(u.uIntensity.value, 2)],
+    ],
+  },
+  sdf: {
+    name: 'SDF Shapes',
+    desc: 'Círculo, caja, hexágono, estrella con ops suaves',
+    camPos: new THREE.Vector3(0, 0, 3.5),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['detalle', fmt(u.uDetail.value, 2)],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['resolución', `${u.uResolution.value.x|0}×${u.uResolution.value.y|0}`],
+    ],
+  },
+  normal: {
+    name: 'Normal Mapping',
+    desc: 'Normal procedural por FBM, iluminación Phong',
+    camPos: new THREE.Vector3(0, 0, 3.5),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['strength', '0.50'],
+      ['detalle', fmt(u.uDetail.value, 2)],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+    ],
+  },
+  uv: {
+    name: 'Manipulación UV',
+    desc: 'Ondas, ruido, swirl, mosaico y polares',
+    camPos: new THREE.Vector3(0, 0, 3),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['detalle', fmt(u.uDetail.value, 2)],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['intensidad', fmt(u.uIntensity.value, 2)],
+    ],
+  },
+  composite: {
+    name: 'Composición (Día 7)',
+    desc: 'Fresnel + Normal mapping + UV distortion combinados',
+    camPos: new THREE.Vector3(0, 0, 3.5),
+    camTarget: new THREE.Vector3(0, 0, 0),
+    spec: (u) => [
+      ['detalle', fmt(u.uDetail.value, 2)],
+      ['velocidad', fmt(u.uSpeed.value, 2)],
+      ['intensidad', fmt(u.uIntensity.value, 2)],
+    ],
+  },
+};
+
+let currentMode = 'water';
+let autoRotate = true;
+let animating = true;
+
+function setMode(mode) {
+  if (!MODES[mode]) return;
+  currentMode = mode;
+
+  // Visibilidad
+  for (const [key, mesh] of Object.entries(allMeshes)) {
+    mesh.visible = (key === mode);
+  }
+
+  // Cámara
+  const m = MODES[mode];
+  camera.position.copy(m.camPos);
+  controls.target.copy(m.camTarget);
+  controls.update();
+
+  // UI
+  $('dbg-mode').textContent = m.name;
+  $('dbg-desc').textContent = m.desc;
+
+  // Botones
+  document.querySelectorAll('#controls .btn[data-mode]').forEach(b => {
+    b.classList.toggle('on', b.dataset.mode === mode);
+  });
+
+  // Info
+  updateInfo(mode);
+}
+
+// ─────────────────────────────────────────────────────────────
+// 12. Info panel content
+// ─────────────────────────────────────────────────────────────
+const INFO = {
+  water: `<b>Agua Procedural</b> — Días 1, 2, 6<br><br>
+• <b>Noise Simplex 3D</b>: <code>snoise()</code> para olas multi-octava<br>
+• <b>FBM</b>: <code>fbm4()</code> para detalle fino<br>
+• <b>Fresnel</b>: <code>F0 + (1-F0)(1-N·V)^5</code> para reflexión<br>
+• <b>UV manipulation</b>: coordenadas del plano como espacio de olas<br>
+• <b>Normal mapping</b>: diferencias finitas para normales dinámicas<br>
+• <b>Espuma</b>: <code>smoothstep</code> en crestas + ruido<br>
+• <b>Iluminación</b>: Blinn-Phong + cielo reflejado`,
+
+  fire: `<b>Fuego Procedural</b> — Días 1, 2<br><br>
+• <b>FBM noise</b>: <code>fbm4()</code> con 4 octavas para turbulencia<br>
+• <b>UV manipulation</b>: <code>uv.y += rise</code> para ascenso<br>
+• <b>Color ramp</b>: negro → rojo → naranja → amarillo → blanco<br>
+• <b>Forma de llama</b>: <code>1 - smoothstep(0, 0.8, dist)</code><br>
+• <b>Pulsación</b>: <code>sin(t*3 + uv.y*5)</code> para parpadeo<br>
+• <b>Alpha</b>: <code>smoothstep(0.05, 0.4, fire)</code>`,
+
+  fresnel: `<b>Efecto Fresnel</b> — Día 6<br><br>
+• <b>Schlick Fresnel</b>: <code>F0 + (1-F0)(1-N·V)^power</code><br>
+• <b>Rim lighting</b>: brillo en bordes donde N⊥V<br>
+• <b>Color animado</b>: <code>mix(color, color.bgr, cycle)</code><br>
+• <b>Superficie</b>: ruido FBM sutil como textura<br>
+• <b>Glow</b>: <code>pow(fresnel, 2) * 0.5</code>`,
+
+  sdf: `<b>SDF Shapes</b> — Día 3<br><br>
+• <b>Primitivas</b>: <code>sdCircle</code>, <code>sdBox</code>, <code>sdHexagon</code>, <code>sdStar5</code>, <code>sdTriangle</code><br>
+• <b>Ops suaves</b>: <code>opSmoothUnion</code>, <code>opSmoothSubtract</code><br>
+• <b>Antialiasing</b>: <code>smoothstep(aa, -aa, d)</code><br>
+• <b>Borde</b>: <code>smoothstep(aa*2, 0, abs(d))</code><br>
+• <b>Glow</b>: <code>exp(-|d|*8) * 0.3</code>`,
+
+  normal: `<b>Normal Mapping Procedural</b> — Día 5<br><br>
+• <b>Sin textura</b>: normal generada por <code>fbm4()</code><br>
+• <b>Gradiente</b>: <code>(n(x+eps) - n(x))/eps</code><br>
+• <b>Phong</b>: difuso + especular + ambiente<br>
+• <b>Fresnel sutil</b>: <code>pow(1-N·V, 3) * 0.15</code><br>
+• <b>Perturbación</b>: <code>N + mapN * 0.5</code>`,
+
+  uv: `<b>Manipulación UV</b> — Día 2<br><br>
+• <b>Ondas</b>: <code>uv.x += sin(uv.y*10 + t)*0.03</code><br>
+• <b>Ruido</b>: <code>uv += snoise(uv*5, t)*0.05</code><br>
+• <b>Swirl</b>: rotación angular por distancia<br>
+• <b>Mosaico</b>: <code>fract(uv * 4)</code><br>
+• <b>Polares</b>: <code>atan2</code> + <code>length</code><br>
+• <b>Patrones</b>: cuadrícula, ondas, espiral, ruido`,
+
+  composite: `<b>Composición</b> — Día 7<br><br>
+• <b>Fresnel</b>: rim lighting con Schlick<br>
+• <b>Normal mapping</b>: perturbación por FBM<br>
+• <b>UV distortion</d>: ondas sinusoidales<br>
+• <b>Iluminación</b>: Phong completo<br>
+• <b>Patrón</b>: color por UV distorsionada<br>
+• <b>3+ efectos</b> combinados en un solo shader`,
+};
+
+function updateInfo(mode) {
+  $('info-body').innerHTML = INFO[mode] || '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// 13. UI Event handlers
+// ─────────────────────────────────────────────────────────────
+document.querySelectorAll('#controls .btn[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
+
+$('btn-animate').addEventListener('click', () => {
+  animating = !animating;
+  $('btn-animate').classList.toggle('on', animating);
+});
+
+$('btn-wire').addEventListener('click', () => {
+  const mesh = allMeshes[currentMode];
+  if (mesh) {
+    mesh.material.wireframe = !mesh.material.wireframe;
+    $('btn-wire').classList.toggle('on', mesh.material.wireframe);
+  }
+});
+
+$('btn-rotate').addEventListener('click', () => {
+  autoRotate = !autoRotate;
+  $('btn-rotate').classList.toggle('on', autoRotate);
+});
+
+$('btn-reset').addEventListener('click', () => {
+  const m = MODES[currentMode];
+  camera.position.copy(m.camPos);
+  controls.target.copy(m.camTarget);
+  controls.update();
+});
+
+$('sl-speed').addEventListener('input', (e) => {
+  shared.uSpeed.value = parseFloat(e.target.value);
+  $('lb-speed').textContent = fmt(shared.uSpeed.value);
+});
+
+$('sl-intensity').addEventListener('input', (e) => {
+  shared.uIntensity.value = parseFloat(e.target.value);
+  $('lb-intensity').textContent = fmt(shared.uIntensity.value);
+});
+
+$('sl-detail').addEventListener('input', (e) => {
+  shared.uDetail.value = parseFloat(e.target.value);
+  $('lb-detail').textContent = fmt(shared.uDetail.value);
+});
+
+// Teclas 1-7
+window.addEventListener('keydown', (e) => {
+  const modes = ['water', 'fire', 'fresnel', 'sdf', 'normal', 'uv', 'composite'];
+  const idx = parseInt(e.key) - 1;
+  if (idx >= 0 && idx < modes.length) {
+    setMode(modes[idx]);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// 14. Resize
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  shared.uResolution.value.set(window.innerWidth, window.innerHeight);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 15. Animation loop
+// ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let fps = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const elapsed = clock.getElapsedTime();
+  if (animating) {
+    shared.uTime.value = elapsed;
+  }
+
+  // Auto-rotación
+  if (autoRotate && allMeshes[currentMode]) {
+    allMeshes[currentMode].rotation.y += 0.003;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  // FPS counter
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    fps = Math.round(frameCount * 1000 / (now - lastFpsTime));
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+
+  // Debug panel
+  $('dbg-fps').textContent = fps;
+  $('dbg-calls').textContent = renderer.info.render.calls;
+  $('dbg-tris').textContent = renderer.info.render.triangles;
+  $('dbg-pr').textContent = renderer.getPixelRatio().toFixed(2);
+  $('dbg-cam').textContent = vecStr(camera.position);
+  $('dbg-fov').textContent = camera.fov + '°';
+
+  // Mode-specific
+  const m = MODES[currentMode];
+  if (m && m.spec) {
+    const specs = m.spec(shared);
+    for (let i = 0; i < 3; i++) {
+      $(`dbg-spec-k${i+1}`).textContent = specs[i] ? specs[i][0] : '—';
+      $(`dbg-spec-v${i+1}`).textContent = specs[i] ? specs[i][1] : '—';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 16. Init
+// ─────────────────────────────────────────────────────────────
+setMode('water');
+animate();
+
+// Marcar ready
+window.__FASE5__.ready = true;
+window.__FASE5__.log.push('Fase 5 initialized: 7 shader modes (water, fire, fresnel, sdf, normal, uv, composite)');
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/fase5-shaders-intermedios.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

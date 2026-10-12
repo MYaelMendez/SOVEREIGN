@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// fase8-architecture — Escenas Complejas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00eaff;--violet:#8b5cf6}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 58%,rgba(0,0,0,0.55) 100%)}
+#hud{position:fixed;top:44px;left:52px;z-index:50;color:var(--gold);pointer-events:none}
+#hud h1{font-size:31px;font-weight:700;letter-spacing:3px;text-shadow:0 0 20px rgba(212,175,55,0.65)}
+#hud .sub{margin-top:10px;font-size:15px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;opacity:0.9}
+#hud .rule{width:400px;height:1px;margin:22px 0;background:linear-gradient(90deg,var(--gold),transparent)}
+#tree{white-space:pre;font-size:15px;line-height:1.72;color:#e9d79a}
+#tree .g{color:var(--gold)}
+#tree .c{color:var(--cyan)}
+#tree .v{color:#b79bff}
+#readout{position:fixed;bottom:44px;left:52px;z-index:50;color:var(--cyan);font-size:15px;letter-spacing:3px}
+#readout .g{color:var(--gold)}
+#badge{position:fixed;bottom:36px;right:36px;z-index:60;width:64px;height:64px;border:1px solid var(--gold);
+  border-radius:10px;background:#050505;padding:4px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+#badge:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(212,175,55,0.45)}
+#badge img{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <h1>æ:// fase8-architecture</h1>
+  <div class="sub">Week 08 — Escenas Complejas</div>
+  <div class="rule"></div>
+  <div id="tree"></div>
+</div>
+
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+
+<div id="badge"
+  onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 22px rgba(212,175,55,0.45)'"
+  onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+  onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+  title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=https://myaelmendez.github.io/aipodcast_me/fase8-architecture.html&color=D4AF37&bgcolor=050505" alt="æQR">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const W = 1920, H = 1080, DURATION = 12.0;
+const GOLD = 0xD4AF37, CYAN = 0x00eaff, VIOLET = 0x8b5cf6;
+
+/* ---- renderer / scene / camera ---- */
+const canvas = document.getElementById('c');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 6000);
+camera.position.set(0, 40, 150);
+camera.lookAt(0, 0, 0);
+scene.add(camera);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+
+/* ---- backdrop glow : camera child, always fills the frame (luminance floor) ---- */
+const backdropMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGold: { value: new THREE.Color(GOLD) }, uCyan: { value: new THREE.Color(CYAN) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uGold; uniform vec3 uCyan; varying vec2 vUv;
+    void main(){
+      vec2 p = vUv - 0.5;
+      float d = length(p * vec2(1.0, 0.82));
+      float core = smoothstep(0.82, 0.0, d);
+      float ring = smoothstep(0.05, 0.0, abs(d - 0.44));
+      vec3 col = uGold * core * 0.60;
+      col += uCyan * ring * 0.34;
+      col += uGold * 0.055;
+      col *= 0.88 + 0.12 * sin(uTime * 1.3);
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(1500, 900), backdropMat);
+backdrop.position.set(0, 0, -1200);
+backdrop.renderOrder = -1;
+camera.add(backdrop);
+
+/* ---- lights ---- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.35);
+key.position.set(120, 260, 180);
+scene.add(key);
+const rim = new THREE.PointLight(CYAN, 2.0, 3000);
+rim.position.set(-180, 120, -120);
+scene.add(rim);
+
+/* ---- starfield (extra luminance + depth) ---- */
+(function () {
+  const n = 1600, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = 1400, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i * 3 + 2] = r * Math.cos(ph);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x8a7433, size: 2.0, sizeAttenuation: false })));
+})();
+
+/* ================= SCENE GRAPH =================
+   root
+    ├─ planetGroup ── planet (gold) + glow shell
+    ├─ moon1Group ── moon1 (cyan) ── ring1Group ── ring1a (violet) + ring1b (cyan)
+    ├─ moon2Group ── moon2 (cyan) ── ring2Group ── ring2a (violet) + ring2b (cyan)
+    └─ moon3Group ── moon3 (cyan) ── ring3Group ── ring3a (violet) + ring3b (cyan)
+================================================ */
+const root = new THREE.Group();
+scene.add(root);
+
+/* ---- planet ---- */
+const planetGroup = new THREE.Group();
+root.add(planetGroup);
+
+const planetMat = new THREE.MeshStandardMaterial({
+  color: GOLD, roughness: 0.22, metalness: 0.85,
+  emissive: 0x5a4308, emissiveIntensity: 1.0
+});
+const planet = new THREE.Mesh(new THREE.SphereGeometry(9, 64, 64), planetMat);
+planetGroup.add(planet);
+
+const glowMat = new THREE.MeshBasicMaterial({
+  color: GOLD, transparent: true, opacity: 0.10, side: THREE.BackSide,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const glow = new THREE.Mesh(new THREE.SphereGeometry(11, 32, 32), glowMat);
+planetGroup.add(glow);
+
+/* ---- moons + their own ring systems ---- */
+const MOONS = [
+  { orbR: 28, orbSpeed: 0.85, size: 2.4, ringR: 4.6, ringTube: 0.20, tilt: 0.42, ringSpeed: 2.1 },
+  { orbR: 46, orbSpeed: 0.55, size: 3.2, ringR: 6.0, ringTube: 0.24, tilt: -0.34, ringSpeed: -1.7 },
+  { orbR: 64, orbSpeed: 0.36, size: 2.0, ringR: 3.6, ringTube: 0.16, tilt: 0.62, ringSpeed: 2.6 },
+];
+
+const moonMat = new THREE.MeshStandardMaterial({
+  color: CYAN, roughness: 0.28, metalness: 0.7,
+  emissive: 0x0a4a52, emissiveIntensity: 1.0
+});
+const ringMatA = new THREE.MeshStandardMaterial({
+  color: VIOLET, roughness: 0.4, metalness: 0.55,
+  emissive: 0x3a1a66, emissiveIntensity: 1.0, side: THREE.DoubleSide
+});
+const ringMatB = new THREE.MeshBasicMaterial({
+  color: CYAN, transparent: true, opacity: 0.55,
+  blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+});
+
+const moonOrbits = [], moonMeshes = [], ringGroups = [];
+MOONS.forEach((m) => {
+  const orbit = new THREE.Group();          // rotates about planet
+  root.add(orbit);
+
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(m.size, 32, 32), moonMat);
+  moon.position.x = m.orbR;
+  orbit.add(moon);
+
+  const rg = new THREE.Group();             // ring system, child of the moon
+  rg.rotation.z = m.tilt;
+  moon.add(rg);
+
+  const ringA = new THREE.Mesh(new THREE.TorusGeometry(m.ringR, m.ringTube, 18, 96), ringMatA);
+  ringA.rotation.x = Math.PI / 2;
+  rg.add(ringA);
+
+  const ringB = new THREE.Mesh(new THREE.TorusGeometry(m.ringR * 0.66, m.ringTube * 0.7, 16, 72), ringMatB);
+  ringB.rotation.x = Math.PI / 2 + 0.28;
+  rg.add(ringB);
+
+  moonOrbits.push(orbit);
+  moonMeshes.push(moon);
+  ringGroups.push(rg);
+});
+
+/* ---- HUD handles ---- */
+const treeEl = document.getElementById('tree');
+const elFc = document.getElementById('fc');
+const elTc = document.getElementById('tc');
+const elTt = document.getElementById('tt');
+
+function deg(r) { return ((r * 180 / Math.PI) % 360 + 360) % 360; }
+
+function drawTree(t) {
+  const pAng = deg(t * 0.35);
+  let s = '';
+  s += '<span class="g">scene (root)</span>\n';
+  s += ' ├─ <span class="g">planetGroup</span>  rotY=' + pAng.toFixed(0) + '\u00B0\n';
+  s += ' │   ├─ planet   (gold)\n';
+  s += ' │   └─ glow     (shell)\n';
+  for (let i = 0; i < MOONS.length; i++) {
+    const m = MOONS[i];
+    const oa = deg(t * m.orbSpeed);
+    const ra = deg(t * m.ringSpeed);
+    const last = i === MOONS.length - 1;
+    const bar = last ? ' ' : ' │';
+    s += ' ' + (last ? '└' : '├') + '─ <span class="c">moon' + (i + 1) + 'Group</span>  orb=' + oa.toFixed(0) + '\u00B0\n';
+    s += ' ' + bar + '   ├─ <span class="c">moon' + (i + 1) + '</span> (cyan)\n';
+    s += ' ' + bar + '   └─ <span class="v">ring' + (i + 1) + 'Group</span>  rot=' + ra.toFixed(0) + '\u00B0\n';
+    s += ' ' + bar + '       ├─ <span class="v">ring' + (i + 1) + 'a</span> (violet)\n';
+    s += ' ' + bar + '       └─ <span class="c">ring' + (i + 1) + 'b</span> (cyan)';
+    if (!last) s += '\n';
+  }
+  treeEl.innerHTML = s;
+}
+
+/* ---- deterministic frame renderer ---- */
+function renderAt(t) {
+  backdropMat.uniforms.uTime.value = t;
+
+  planetGroup.rotation.y = t * 0.35;
+
+  for (let i = 0; i < MOONS.length; i++) {
+    const m = MOONS[i];
+    moonOrbits[i].rotation.y = t * m.orbSpeed;
+    ringGroups[i].rotation.y = t * m.ringSpeed;
+    moonMeshes[i].rotation.x = t * 0.5 + i;
+  }
+
+  const gp = 0.08 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.9));
+  glowMat.opacity = gp;
+  glow.scale.setScalar(1 + Math.sin(t * 0.7) * 0.04);
+
+  /* deterministic camera drift */
+  const ang = t * Math.PI * 0.8 + 0.4;
+  const rad = 155 + Math.sin(t * 1.1) * 35;
+  const camY = 45 + Math.sin(t * 0.85) * 30;
+  camera.position.set(Math.cos(ang) * rad, camY, Math.sin(ang) * rad);
+  camera.lookAt(0, 0, 0);
+
+  rim.position.set(Math.cos(t * 0.9) * -200, 130, Math.sin(t * 0.9) * -200);
+
+  drawTree(t);
+  renderer.render(scene, camera);
+}
+
+/* ---- external frame hook (drives æRTXrender / vidæo producer) ---- */
+let driven = false;
+window.__renderFrame = function (i, total) {
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  elFc.textContent = i;
+  elTc.textContent = total;
+  elTt.textContent = t.toFixed(2);
+  return true;
+};
+
+/* ---- live loop for standalone viewing ---- */
+function loop() {
+  requestAnimationFrame(loop);
+  if (driven) return;
+  renderAt((performance.now() / 1000) % DURATION);
+}
+loop();
+
+window.__renderFrame(0, 1);
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/aipodcast_me/fase8-architecture.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>æ:// Teleprompter + VLC — 9:16 Portable</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #050505;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    color: #f0ece4;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* 9:16 container — portable first */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 56.25vh; /* 9:16 ratio */
+    margin: 0 auto;
+    position: relative;
+    background: #050505;
+  }
+
+  /* HUD */
+  #hud {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #D4AF37;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  #hud .title { font-weight: 700; }
+  #hud .status { color: rgba(212,175,55,0.5); }
+
+  /* Main content area */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* VLC Player Section */
+  #vlc-section {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+  }
+  #vlc-section .vlc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #vlc-section .vlc-title {
+    font-size: 10px;
+    color: #D4AF37;
+    letter-spacing: 1px;
+  }
+  #vlc-section .vlc-state {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,68,68,0.15);
+    color: #ff4444;
+  }
+  #vlc-section .vlc-state.playing {
+    background: rgba(0,255,157,0.15);
+    color: #00ff9d;
+  }
+  #vlc-section .vlc-state.paused {
+    background: rgba(212,175,55,0.15);
+    color: #D4AF37;
+  }
+
+  /* VLC Controls — touch-friendly */
+  #vlc-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .vlc-btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vlc-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .vlc-btn.active { background: #D4AF37; color: #050505; }
+
+  /* VLC Seek + Volume */
+  #vlc-seek-row, #vlc-vol-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  #vlc-seek-row span, #vlc-vol-row span {
+    font-size: 9px;
+    color: rgba(240,236,228,0.4);
+    min-width: 30px;
+  }
+  #vlc-seek-row input[type="range"], #vlc-vol-row input[type="range"] {
+    flex: 1;
+    accent-color: #D4AF37;
+    height: 24px;
+  }
+
+  /* Teleprompter Section */
+  #prompter-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #text-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    mask-image: linear-gradient(transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(transparent 0%, black 10%, black 90%, transparent 100%);
+  }
+  #text {
+    font-size: 22px;
+    line-height: 1.7;
+    color: #f0ece4;
+    text-align: center;
+    white-space: pre-wrap;
+    max-width: 100%;
+    transition: transform 0.1s linear;
+  }
+
+  /* Teleprompter Controls */
+  #prompter-controls {
+    padding: 8px;
+    border-top: 1px solid rgba(212,175,55,0.15);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .prompter-btn {
+    background: rgba(5,5,5,0.6);
+    border: 1px solid rgba(212,175,55,0.3);
+    color: #D4AF37;
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+    min-height: 36px;
+  }
+  .prompter-btn:hover { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+  .prompter-btn.active { background: #D4AF37; color: #050505; }
+
+  /* Edit panel */
+  #edit-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(5,5,5,0.98);
+    border-top: 1px solid rgba(212,175,55,0.3);
+    padding: 8px;
+    display: none;
+    z-index: 20;
+    max-height: 60%;
+    flex-direction: column;
+  }
+  #edit-panel.open { display: flex; }
+  #edit-textarea {
+    flex: 1;
+    min-height: 120px;
+    background: #0a0a0a;
+    border: 1px solid rgba(212,175,55,0.2);
+    color: #f0ece4;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px;
+    resize: none;
+    outline: none;
+  }
+  #edit-textarea:focus { border-color: #D4AF37; }
+  #edit-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: flex-end;
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(212,175,55,0.015) 2px, rgba(212,175,55,0.015) 4px);
+  }
+
+  /* Mirror overlay */
+  #mirror-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 4;
+    background: repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(212,175,55,0.03) 4px, rgba(212,175,55,0.03) 5px);
+    display: none;
+  }
+  #mirror-overlay.active { display: block; }
+
+  /* VLC HTTP status */
+  #vlc-status {
+    font-size: 9px;
+    color: rgba(240,236,228,0.3);
+    text-align: center;
+    padding: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HUD -->
+  <div id="hud">
+    <span class="title">æ:// Teleprompter + VLC</span>
+    <span class="status" id="status">READY</span>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- VLC Section -->
+    <div id="vlc-section">
+      <div class="vlc-header">
+        <span class="vlc-title">VLC PLAYER</span>
+        <span class="vlc-state" id="vlc-state">STOPPED</span>
+      </div>
+      <div id="vlc-controls">
+        <button class="vlc-btn" id="vlc-prev" title="Previous">⏮</button>
+        <button class="vlc-btn" id="vlc-play" title="Play">▶</button>
+        <button class="vlc-btn" id="vlc-pause" title="Pause">⏸</button>
+        <button class="vlc-btn" id="vlc-stop" title="Stop">⏹</button>
+        <button class="vlc-btn" id="vlc-next" title="Next">⏭</button>
+        <button class="vlc-btn" id="vlc-open" title="Open File">📂</button>
+      </div>
+      <div id="vlc-seek-row">
+        <span>Seek</span>
+        <input type="range" id="vlc-seek" min="0" max="100" value="0">
+        <span id="vlc-time">0:00 / 0:00</span>
+      </div>
+      <div id="vlc-vol-row">
+        <span>Vol</span>
+        <input type="range" id="vlc-vol" min="0" max="100" value="50">
+        <span id="vlc-vol-val">50%</span>
+      </div>
+      <div id="vlc-status">VLC HTTP: checking...</div>
+    </div>
+
+    <!-- Teleprompter Section -->
+    <div id="prompter-section">
+      <div id="text-container">
+        <div id="text"></div>
+      </div>
+    </div>
+
+    <!-- Teleprompter Controls -->
+    <div id="prompter-controls">
+      <button class="prompter-btn" id="btn-play">▶ Play</button>
+      <button class="prompter-btn" id="btn-pause">⏸ Pause</button>
+      <button class="prompter-btn" id="btn-reset">↺ Reset</button>
+      <button class="prompter-btn" id="btn-mirror">Mirror</button>
+      <button class="prompter-btn" id="btn-edit">Edit</button>
+    </div>
+  </div>
+
+  <!-- Edit Panel -->
+  <div id="edit-panel">
+    <textarea id="edit-textarea" placeholder="Paste your script here..."></textarea>
+    <div id="edit-actions">
+      <button class="prompter-btn" id="btn-edit-cancel">Cancel</button>
+      <button class="prompter-btn" id="btn-edit-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="scanlines"></div>
+<div id="mirror-overlay"></div>
+
+<script>
+const DEFAULT_TEXT = `æ:// — Attention is all you need.
+
+The language is compute.
+The chassis is always a language.
+The surface is an addressable route.
+
+Sovereign. Local. Alive.
+
+We build agentic electronic engineering.
+We generate Three.js with GPU.
+We verify with QR Vision.
+We encode with ffmpeg.
+We prove with receipts.
+
+The droplet is the private client corpus.
+The QR is the simulated chip.
+The vault is multilayered, multipermission.
+
+MCP³ — GitHub.io as MCP server, PDS for social.
+Monæco — the editor surface.
+Vidæo — agentic video engineering.
+
+>_ æ:// — start a business.
+>_ æ:// — the seam is the work.
+>_ æ:// — open sourceware.`;
+
+// ── State ──
+let playing = false;
+let speed = 1.0;
+let fontSize = 22;
+let scrollY = 0;
+let mirror = false;
+let lastTime = 0;
+let rafId = null;
+let currentText = DEFAULT_TEXT;
+
+// ── VLC State ──
+let vlcStatus = null;
+let vlcPolling = null;
+
+// ── DOM ──
+const textEl = document.getElementById('text');
+const container = document.getElementById('text-container');
+const statusEl = document.getElementById('status');
+const editPanel = document.getElementById('edit-panel');
+const editTextarea = document.getElementById('edit-textarea');
+const vlcStateEl = document.getElementById('vlc-state');
+const vlcStatusEl = document.getElementById('vlc-status');
+const vlcSeekEl = document.getElementById('vlc-seek');
+const vlcVolEl = document.getElementById('vlc-vol');
+const vlcTimeEl = document.getElementById('vlc-time');
+const vlcVolValEl = document.getElementById('vlc-vol-val');
+
+// ── Teleprompter ──
+function renderText() {
+  textEl.style.fontSize = fontSize + 'px';
+  textEl.style.transform = mirror ? `translateY(${-scrollY}px) scaleX(-1)` : `translateY(${-scrollY}px)`;
+}
+
+function updateStatus() {
+  const state = playing ? 'PLAYING' : 'PAUSED';
+  statusEl.textContent = `${state} · ${speed.toFixed(1)}× · ${fontSize}px${mirror ? ' · MIRROR' : ''}`;
+}
+
+function tick(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (playing) {
+    scrollY += speed * 50 * dt;
+    renderText();
+    const maxScroll = textEl.scrollHeight - container.clientHeight;
+    if (scrollY >= maxScroll) {
+      playing = false;
+      updateStatus();
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true;
+  lastTime = 0;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+  updateStatus();
+}
+
+function pause() {
+  playing = false;
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('btn-pause').classList.add('active');
+  updateStatus();
+}
+
+function reset() {
+  scrollY = 0;
+  renderText();
+  pause();
+}
+
+function setSpeed(val) {
+  speed = Math.max(0.1, Math.min(5.0, val));
+  updateStatus();
+}
+
+function setFontSize(val) {
+  fontSize = Math.max(14, Math.min(48, val));
+  renderText();
+  updateStatus();
+}
+
+function toggleMirror() {
+  mirror = !mirror;
+  document.getElementById('mirror-overlay').classList.toggle('active', mirror);
+  document.getElementById('btn-mirror').classList.toggle('active', mirror);
+  renderText();
+  updateStatus();
+}
+
+function openEditor() {
+  editTextarea.value = currentText;
+  editPanel.classList.add('open');
+  editTextarea.focus();
+}
+
+function closeEditor() {
+  editPanel.classList.remove('open');
+}
+
+function applyEditor() {
+  currentText = editTextarea.value;
+  textEl.textContent = currentText;
+  scrollY = 0;
+  renderText();
+  closeEditor();
+}
+
+// ── VLC HTTP API ──
+const VLC_HTTP = 'http://127.0.0.1:8081/requests/status.json';
+const VLC_AUTH = 'Basic ' + btoa(':hermes');
+
+async function vlcCommand(cmd, params = {}) {
+  const qs = Object.entries({ command: cmd, ...params })
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+    .join('&');
+  try {
+    const resp = await fetch(`${VLC_HTTP}?${qs}`, {
+      headers: { 'Authorization': VLC_AUTH }
+    });
+    return await resp.json();
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+async function vlcPlay() { return vlcCommand('pl_play'); }
+async function vlcPause() { return vlcCommand('pl_pause'); }
+async function vlcStop() { return vlcCommand('pl_stop'); }
+async function vlcPrev() { return vlcCommand('pl_prev'); }
+async function vlcNext() { return vlcCommand('pl_next'); }
+async function vlcSeek(percent) { return vlcCommand('seek', { val: `${percent}%` }); }
+async function vlcVolume(vol) { return vlcCommand('volume', { val: String(Math.round((vol / 100) * 512)) }); }
+
+async function pollVlcStatus() {
+  try {
+    const resp = await fetch(VLC_HTTP, { headers: { 'Authorization': VLC_AUTH } });
+    const data = await resp.json();
+    vlcStatus = data;
+    updateVlcUI(data);
+  } catch (e) {
+    vlcStatusEl.textContent = 'VLC HTTP: not running';
+    vlcStateEl.textContent = 'OFFLINE';
+    vlcStateEl.className = 'vlc-state';
+  }
+}
+
+function fmtTime(seconds) {
+  if (!seconds || isNaN(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function updateVlcUI(data) {
+  const state = data.state || 'stopped';
+  vlcStateEl.textContent = state.toUpperCase();
+  vlcStateEl.className = `vlc-state ${state}`;
+
+  const time = data.time || 0;
+  const length = data.length || 0;
+  const percent = length > 0 ? Math.round((time / length) * 100) : 0;
+  vlcSeekEl.value = percent;
+  vlcTimeEl.textContent = `${fmtTime(time)} / ${fmtTime(length)}`;
+
+  const vol = data.volume || 0;
+  const volPercent = Math.round((vol / 512) * 100);
+  vlcVolEl.value = volPercent;
+  vlcVolValEl.textContent = `${volPercent}%`;
+
+  vlcStatusEl.textContent = `VLC HTTP: ${state} · ${data.information?.category?.meta?.filename || 'no media'}`;
+}
+
+// ── Event Listeners ──
+document.getElementById('btn-play').addEventListener('click', play);
+document.getElementById('btn-pause').addEventListener('click', pause);
+document.getElementById('btn-reset').addEventListener('click', reset);
+document.getElementById('btn-mirror').addEventListener('click', toggleMirror);
+document.getElementById('btn-edit').addEventListener('click', openEditor);
+document.getElementById('btn-edit-cancel').addEventListener('click', closeEditor);
+document.getElementById('btn-edit-apply').addEventListener('click', applyEditor);
+
+// VLC controls
+document.getElementById('vlc-play').addEventListener('click', () => vlcPlay());
+document.getElementById('vlc-pause').addEventListener('click', () => vlcPause());
+document.getElementById('vlc-stop').addEventListener('click', () => vlcStop());
+document.getElementById('vlc-prev').addEventListener('click', () => vlcPrev());
+document.getElementById('vlc-next').addEventListener('click', () => vlcNext());
+document.getElementById('vlc-open').addEventListener('click', () => {
+  const path = prompt('Enter media file path or URL:');
+  if (path) {
+    vlcCommand('pl_empty').then(() => {
+      vlcCommand('pl_add', { input: path }).then(() => vlcPlay());
+    });
+  }
+});
+vlcSeekEl.addEventListener('change', () => vlcSeek(Number(vlcSeekEl.value)));
+vlcVolEl.addEventListener('change', () => vlcVolume(Number(vlcVolEl.value)));
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case ' ':
+      e.preventDefault();
+      playing ? pause() : play();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      setSpeed(speed + 0.2);
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      setSpeed(speed - 0.2);
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      scrollY = Math.max(0, scrollY - 80);
+      renderText();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      scrollY += 80;
+      renderText();
+      break;
+    case 'm': case 'M':
+      toggleMirror();
+      break;
+    case 'r': case 'R':
+      reset();
+      break;
+    case 'e': case 'E':
+      editPanel.classList.contains('open') ? closeEditor() : openEditor();
+      break;
+    case '+': case '=':
+      setFontSize(fontSize + 2);
+      break;
+    case '-':
+      setFontSize(fontSize - 2);
+      break;
+    case 'Escape':
+      closeEditor();
+      break;
+  }
+});
+
+// ── Initialize ──
+textEl.textContent = currentText;
+renderText();
+updateStatus();
+rafId = requestAnimationFrame(tick);
+
+// Poll VLC status every 2s
+pollVlcStatus();
+vlcPolling = setInterval(pollVlcStatus, 2000);
+
+window.__TELEPROMPTER_VLC__ = {
+  ready: true,
+  aspectRatio: '9:16',
+  portable: true,
+  vlcHttp: VLC_HTTP,
+  controls: ['play', 'pause', 'reset', 'mirror', 'edit', 'vlc-play', 'vlc-pause', 'vlc-stop', 'vlc-seek', 'vlc-volume'],
+  shortcuts: ['Space', 'ArrowUp/Down', 'ArrowLeft/Right', 'M', 'R', 'E', '+/-', 'Escape'],
+};
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/teleprompter-vlc-9x16.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>

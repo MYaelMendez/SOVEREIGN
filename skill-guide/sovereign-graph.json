@@ -1,0 +1,2716 @@
+{
+ "nodes": {
+  "agentic-mail": {
+   "dir": "agentic-mail",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when building agentic electronic engineering mail.",
+   "lines": 130,
+   "chars": 3989
+  },
+  "code-mode": {
+   "dir": "code-mode",
+   "cat": "single",
+   "tags": [],
+   "desc": "Execute agent code against the æ mesh DSL in sandbox.",
+   "lines": 171,
+   "chars": 7420
+  },
+  "computer-use": {
+   "dir": "autonomous-ai-agents/computer-use",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Drive the desktop background-first; escalate on signal.",
+   "lines": 357,
+   "chars": 17954
+  },
+  "cri-index": {
+   "dir": "cri-index",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when building Consumer Redline Index.",
+   "lines": 140,
+   "chars": 3386
+  },
+  "cuda": {
+   "dir": "mlops/cuda",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Use when building NVIDIA/CUDA compute surfaces for Hermes — the >_n: NemoClaw operator grammar, nvidia-smi host bridges, GPU telemetry tiles, and local CUDA compiler workflows (nvcc kernels + NVIDIA CUDA Tile IR). Covers the VS Code webview file:// pitfall, WebGPU fallback, and PyTorch/CuPy probe patterns. Pioneer skill: Hermes ships no CUDA skill; this defines the surface and its compiler layer.",
+   "lines": 199,
+   "chars": 10117
+  },
+  "dogfood": {
+   "dir": "dogfood",
+   "cat": "single",
+   "tags": [],
+   "desc": "Systematic exploratory QA testing of web applications — find bugs, capture evidence, and generate structured reports",
+   "lines": 163,
+   "chars": 6327
+  },
+  "hermes-desktop-plugins": {
+   "dir": "hermes-desktop-plugins",
+   "cat": "single",
+   "tags": [],
+   "desc": "Build Hermes desktop plugins with Python backend + ESM UI.",
+   "lines": 314,
+   "chars": 18199
+  },
+  "hermes-native": {
+   "dir": "hermes-native",
+   "cat": "single",
+   "tags": [],
+   "desc": "|",
+   "lines": 53,
+   "chars": 2814
+  },
+  "hermes-operator-grammar": {
+   "dir": "hermes/hermes-operator-grammar",
+   "cat": "hermes",
+   "tags": [],
+   "desc": "Governs Hermes operator scheme design, standalone `SchemeDispatcher` architecture, scheme registration order/longest-prefix dispatch, surface shapes, Windows local-first workflows, and new primitive implementation patterns. Covers `mcp://`, `NOUS://`, `pc://`, `vscode://`, `vlc://`, `ffmpeg://`, `NVIDIA://GEFORCERTX^command and control`, `+æ://identity`, `+æ://victus`, `+æ://qrcode`, `commandprompt://`, `home://`, `hermes-superagent://`, `H://`, bounded-private-client mesh, HTML landing shell/C2 routing, Hermes Code runtime identity, QR headless manifest extraction, and VS Code terminal/C2 bridging via `vscode-remote-use`. Also covers the +æ^glocal naming ladder (+æ^glocal → æ://glocal-agent → GPU-MCP → Hermes Agent plugin → viewport://hermes-agent), the 'v in vscode = viewport (the mandate), not Visual Studio' reframe, and qc64 (Commodore BASIC) as a chassis for +æ:// language conventions (see references/glocal-naming-ladder.md and references/qc64-basic-chassis.md).",
+   "lines": 5,
+   "chars": 1049
+  },
+  "hyperframes": {
+   "dir": "hyperframes",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 144,
+   "chars": 18354
+  },
+  "hyperframes-animation": {
+   "dir": "hyperframes-animation",
+   "cat": "single",
+   "tags": [],
+   "desc": "All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND the seven runtime adapters (GSAP default, plus Lottie, Three.js, Anime.js, CSS keyframes, Web Animations API, TypeGPU). Use for any motion or animation task: pick 2-4 rules and compose, or load a blueprint, or look up runtime-specific API (e.g. GSAP eases / Lottie player / Three.js mixer). Also covers auditing an existing composition's choreography (animation map) and 24 named text-animation effects. HyperFrames-native: single paused timeline, seek-safe, deterministic.",
+   "lines": 89,
+   "chars": 8361
+  },
+  "hyperframes-audio": {
+   "dir": "hyperframes-audio",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 479,
+   "chars": 25684
+  },
+  "hyperframes-cli": {
+   "dir": "hyperframes-cli",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 189,
+   "chars": 22197
+  },
+  "hyperframes-core": {
+   "dir": "hyperframes-core",
+   "cat": "single",
+   "tags": [],
+   "desc": "The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class=\"clip\"`, tracks, sub-compositions, variables, framework-owned media playback, deterministic-render rules, and validation. Read before writing composition HTML.",
+   "lines": 101,
+   "chars": 12601
+  },
+  "hyperframes-creative": {
+   "dir": "hyperframes-creative",
+   "cat": "single",
+   "tags": [],
+   "desc": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patterns, and brand / style decisions. For atomic motion patterns and scene blueprints, use `hyperframes-animation`.",
+   "lines": 74,
+   "chars": 6561
+  },
+  "hyperframes-keyframes": {
+   "dir": "hyperframes-keyframes",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 265,
+   "chars": 16143
+  },
+  "hyperframes-registry": {
+   "dir": "hyperframes-registry",
+   "cat": "single",
+   "tags": [],
+   "desc": "Search, install, and wire registry blocks and components into HyperFrames compositions. Use BEFORE hand-building any named visual — whenever a brief, a user, or a storyboard names a look, effect, treatment, or transition such as CRT scanlines, glitch, chromatic aberration, film grain, a shimmer sweep, a chart, a code or terminal window, a map, or a confetti burst — because roughly 400 hosted items already cover many of them and the search ranks all of them with nothing installed, no project, and no account. Also use when running hyperframes add or hyperframes catalog, installing one item or every block matching a tag, wiring an installed item into index.html, or working with hyperframes.json. Covers discovery, install locations, block sub-composition wiring, component snippet merging, and authoring a new block or component to contribute upstream (idea → scaffold → validate → PR).",
+   "lines": 148,
+   "chars": 9839
+  },
+  "hyperframes-studio": {
+   "dir": "hyperframes-studio",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 141,
+   "chars": 12034
+  },
+  "keeper": {
+   "dir": "keeper",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when reporting system state or auditing the mesh.",
+   "lines": 138,
+   "chars": 6315
+  },
+  "llama-cpp-gpu": {
+   "dir": "llama-cpp-gpu",
+   "cat": "single",
+   "tags": [],
+   "desc": "Generate code with llama.cpp GPU offload on RTX 3050. Part of PC://INFERENCE layer.",
+   "lines": 155,
+   "chars": 5638
+  },
+  "mail-agent": {
+   "dir": "mail-agent",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when building agentic electronic engineering mail.",
+   "lines": 111,
+   "chars": 3009
+  },
+  "measurement-index": {
+   "dir": "measurement-index",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when building observation-based measurement indices.",
+   "lines": 203,
+   "chars": 5887
+  },
+  "media-use": {
+   "dir": "media-use",
+   "cat": "single",
+   "tags": [],
+   "desc": "Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT into a frozen local file or paste-ready block + ledger record (one verb, `resolve`); generate via TTS / music / image models when the catalog misses; produce voiceover, transcription, captions, and background removal through one shared audio engine; operate on media (cut / reframe / transform); and reuse assets across projects. Also use for vague feedback that real footage looks dark, flat, boring, should feel retro/camcorder/print/ASCII, needs privacy, or needs a media reveal.",
+   "lines": 99,
+   "chars": 8159
+  },
+  "pc-qr-api": {
+   "dir": "pc-qr-api",
+   "cat": "single",
+   "tags": [],
+   "desc": "Create, sign, and verify QR contracts for PC:// authority.",
+   "lines": 194,
+   "chars": 4711
+  },
+  "qr-as-skill": {
+   "dir": "qr-as-skill",
+   "cat": "single",
+   "tags": [],
+   "desc": "Use when building QR key/contract infrastructure.",
+   "lines": 129,
+   "chars": 3770
+  },
+  "sovereign-cuda-bridge": {
+   "dir": "sovereign-cuda-bridge",
+   "cat": "single",
+   "tags": [],
+   "desc": "Bridge sovereign/local CUDA compute across nodes — a public droplet (brain/identity) dispatching CUDA jobs to a local GPU behind NAT (sovereign hands) over a reverse SSH tunnel, wired into the Hermes conductor as codemode Mixture-of-Devices routes (vps:// + +æ://route). Use when making a laptop RTX reachable from a public endpoint, adding cloud burst pods as MoD nodes, or debugging why a GPU HTTP endpoint returns stale/wrong results.",
+   "lines": 315,
+   "chars": 20238
+  },
+  "yuanbao": {
+   "dir": "yuanbao",
+   "cat": "single",
+   "tags": [],
+   "desc": "Yuanbao (元宝) groups: @mention users, query info/members.",
+   "lines": 109,
+   "chars": 3665
+  },
+  "æ": {
+   "dir": "æ",
+   "cat": "single",
+   "tags": [],
+   "desc": ">",
+   "lines": 136,
+   "chars": 5222
+  },
+  "blocked-page-recovery": {
+   "dir": "web/blocked-page-recovery",
+   "cat": "web",
+   "tags": [],
+   "desc": "Use when a fetch fails: 403/429, paywall, WAF, bot wall.",
+   "lines": 138,
+   "chars": 5139
+  },
+  "ae-as-skill": {
+   "dir": "sovereign/ae-as-skill",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "Use when working with the æ:// sovereign computing stack.",
+   "lines": 301,
+   "chars": 8072
+  },
+  "deploy-surfaces": {
+   "dir": "sovereign/deploy-surfaces",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "Publish HTML surfaces to github.io; TLS-proxy the droplet.",
+   "lines": 195,
+   "chars": 11664
+  },
+  "glocal-mesh": {
+   "dir": "sovereign/glocal-mesh",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "Build/operate the GLOCAL sovereign agent compute mesh — Mixture of Devices (MoD) addressed as codemode routes. Covers droplet brain + local RTX hands + cloud burst pod, the +æ://route tower, reverse SSH tunnel, NVIDIA:// (NemoClaw) Hermes Agent conductor dispatch, and the gold-on-void blueprint surface. Use when wiring sovereign CUDA / device meshes / agentic compute surfaces for Yæl's æ:// stack.",
+   "lines": 103,
+   "chars": 18310
+  },
+  "pc-inference": {
+   "dir": "sovereign/pc-inference",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "PC://INFERENCE — portable inference substrate.",
+   "lines": 170,
+   "chars": 4029
+  },
+  "rtx-telemetry": {
+   "dir": "sovereign/rtx-telemetry",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "Use when wiring live NVIDIA RTX 3050 telemetry from the Victus sovereign node into a surface, dashboard, or agent — via the public droplet MCP² broker (129.212.180.252:3000) that proxies a probe to Victus :3050. Covers the exact endpoint contract, the _send client-abort crash pitfall that makes the broker read 'down', CORS/mixed-content limits, and the fetchMesh+setLive recipe for embedding it as a live data source.",
+   "lines": 221,
+   "chars": 10576
+  },
+  "sovereign-resource-absorption": {
+   "dir": "sovereign/sovereign-resource-absorption",
+   "cat": "sovereign",
+   "tags": [],
+   "desc": "Absorb an external resource and rename it into æ://.",
+   "lines": 87,
+   "chars": 4842
+  },
+  "agentic-chassis-surface": {
+   "dir": "software-development/agentic-chassis-surface",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Extend the æ:// agentic-language-chassis in C:\\æ\\hermes-fork — add a new scheme/surface (file://, computer://, desktop://, +bæsic://, etc.) that routes to a real actuator, plus the proven pattern for live-data gold-on-void HTML artifacts and the verification discipline for this Windows host. Use when adding surfaces, building dashboards, or working on the sovereign chassis.",
+   "lines": 498,
+   "chars": 37914
+  },
+  "browser-agent-loop": {
+   "dir": "software-development/browser-agent-loop",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Use when running an agent loop in the browser tab.",
+   "lines": 178,
+   "chars": 8334
+  },
+  "code-review": {
+   "dir": "software-development/code-review",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Guidelines for performing thorough code reviews with security and quality focus",
+   "lines": 82,
+   "chars": 2211
+  },
+  "codebase-inspection": {
+   "dir": "software-development/codebase-inspection",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Inspect codebases w/ pygount: LOC, languages, ratios.",
+   "lines": 117,
+   "chars": 3584
+  },
+  "cuda-victus-dev": {
+   "dir": "software-development/cuda-victus-dev",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 177,
+   "chars": 12502
+  },
+  "github": {
+   "dir": "software-development/github",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "GitHub via gh CLI: PRs, issues, reviews, repos, auth.",
+   "lines": 57,
+   "chars": 2440
+  },
+  "github-pages-deploy": {
+   "dir": "software-development/github-pages-deploy",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 422,
+   "chars": 24705
+  },
+  "glocal-host-loop": {
+   "dir": "software-development/glocal-host-loop",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Build sovereign offline local agents on Victus (x86_64-pc-windows-msvc + NVIDIA CUDA) using the +æ^glocal LocalHostLoop primitive — planner→executor→auditor→manifest, with CUDA and Rust/WASM hands, exposed over GPU-MCP (+æ://cc home://). Use when the user wants a local, air-gappable agent/control surface, a host-side Python loop driving a model, Rust/WASM tooling wired to local hands, or a zero-dependency MCP server.",
+   "lines": 103,
+   "chars": 6334
+  },
+  "hermes-agent-skill-authoring": {
+   "dir": "software-development/hermes-agent-skill-authoring",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Author in-repo SKILL.md files: frontmatter and structure.",
+   "lines": 215,
+   "chars": 14453
+  },
+  "hermes-runtime-state": {
+   "dir": "software-development/hermes-runtime-state",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 117,
+   "chars": 4738
+  },
+  "hermes-surface-development": {
+   "dir": "software-development/hermes-surface-development",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 465,
+   "chars": 44187
+  },
+  "hermes-vscode-incubator": {
+   "dir": "software-development/hermes-vscode-incubator",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">",
+   "lines": 404,
+   "chars": 21467
+  },
+  "inspecting-hermes-desktop-dom": {
+   "dir": "software-development/inspecting-hermes-desktop-dom",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Read the live Hermes desktop DOM/CSS over CDP.",
+   "lines": 160,
+   "chars": 6228
+  },
+  "interpreter-dispatch-debugging": {
+   "dir": "software-development/interpreter-dispatch-debugging",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Debug line/dispatcher interpreters (BASIC-style chassis, command routers, state machines) where a statement reaches the dispatcher but its handler never fires — silently dropped by a splitter, early-return, or var-name mismatch.",
+   "lines": 161,
+   "chars": 7587
+  },
+  "local-agent-runtime": {
+   "dir": "software-development/local-agent-runtime",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Build bounded, fully-offline sovereign agents on the local machine (Victus/RTX 3050) using the +æ^glocal LocalHostLoop primitive (planner→executor→auditor→manifest). Covers offline brain (ollama, disk weights), CUDA hands (nvcc via MSVC vcvars64.bat), and Rust/WASM hands (rustup PATH fix). Use for any local/GPU/offline agent, host loop, or tool-calling loop — never assume cloud or network.",
+   "lines": 157,
+   "chars": 9950
+  },
+  "local-first-operator-surfaces": {
+   "dir": "software-development/local-first-operator-surfaces",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">",
+   "lines": 343,
+   "chars": 15514
+  },
+  "native-vision-from-first-principles": {
+   "dir": "software-development/native-vision-from-first-principles",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Build native computer vision from first principles, no ML.",
+   "lines": 104,
+   "chars": 4286
+  },
+  "node-inspect-debugger": {
+   "dir": "software-development/node-inspect-debugger",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Debug Node.js via --inspect + Chrome DevTools Protocol CLI.",
+   "lines": 320,
+   "chars": 11045
+  },
+  "plan": {
+   "dir": "software-development/plan",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Plan mode for Hermes — inspect context, write a markdown plan into the active workspace's `.hermes/plans/` directory, and do not execute the work.",
+   "lines": 58,
+   "chars": 2067
+  },
+  "python-debugpy": {
+   "dir": "software-development/python-debugpy",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Debug Python: pdb REPL + debugpy remote (DAP).",
+   "lines": 391,
+   "chars": 14964
+  },
+  "requesting-code-review": {
+   "dir": "software-development/requesting-code-review",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.",
+   "lines": 270,
+   "chars": 6139
+  },
+  "resource-absorb-and-rename": {
+   "dir": "software-development/resource-absorb-and-rename",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Use when renaming resource X to Y across clones/bundles.",
+   "lines": 136,
+   "chars": 7143
+  },
+  "simplify-code": {
+   "dir": "software-development/simplify-code",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Parallel 4-agent cleanup of recent code changes.",
+   "lines": 271,
+   "chars": 14604
+  },
+  "sovereign-atproto-network": {
+   "dir": "software-development/sovereign-atproto-network",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 230,
+   "chars": 14955
+  },
+  "sovereign-fork-commit": {
+   "dir": "software-development/sovereign-fork-commit",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Commit session/sovereign development artifacts into a coherent local git commit on a long-lived feature branch of a sovereign development fork (e.g. hermes-fork at C:\\æ), resolving stale merge residue and verifying with the real tests even when the task's named pytest paths are stale. Use for \"fold in the session's work\", \"PR #N corpus fold-in\", \"make a coherent local commit\", or \"commit the session artifacts\" — especially with \"DO NOT push\", \"no gh auth\", or \"do not amend/rebase upstream\".",
+   "lines": 47,
+   "chars": 7389
+  },
+  "sovereign-git-ops": {
+   "dir": "software-development/sovereign-git-ops",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 101,
+   "chars": 5347
+  },
+  "sovereign-local-agent": {
+   "dir": "software-development/sovereign-local-agent",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">-",
+   "lines": 104,
+   "chars": 8972
+  },
+  "sovereign-mcp-surface": {
+   "dir": "software-development/sovereign-mcp-surface",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Expose local agent hands (CUDA, Rust/WASM, shell, files) as MCP tools over stdio — a zero-dependency (stdlib-only) JSON-RPC server that is air-gappable and registerable as a VS Code extension MCP server. Use when building a local command-&-control surface, a GPU-MCP, or any \"protocol-native control surface\" for a sovereign/offline agent. Covers the minimal MCP protocol (initialize/tools/list/tools/call), the VS Code `contributes.mcp.servers` registration, and the self-contained bundle pattern.",
+   "lines": 157,
+   "chars": 9275
+  },
+  "sovereign-vscode-surface-dev": {
+   "dir": "software-development/sovereign-vscode-surface-dev",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "|",
+   "lines": 460,
+   "chars": 29284
+  },
+  "spike": {
+   "dir": "software-development/spike",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Throwaway experiments to validate an idea before build.",
+   "lines": 198,
+   "chars": 8608
+  },
+  "subagent-driven-development": {
+   "dir": "software-development/subagent-driven-development",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Use when executing implementation plans with independent tasks. Dispatches fresh delegate_task per task with two-stage review (spec compliance then code quality).",
+   "lines": 355,
+   "chars": 10906
+  },
+  "systematic-debugging": {
+   "dir": "software-development/systematic-debugging",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "4-phase root cause debugging: understand bugs before fixing.",
+   "lines": 412,
+   "chars": 14015
+  },
+  "test-driven-development": {
+   "dir": "software-development/test-driven-development",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "TDD: enforce RED-GREEN-REFACTOR, tests before code.",
+   "lines": 363,
+   "chars": 10252
+  },
+  "vscode-as-skill": {
+   "dir": "software-development/vscode-as-skill",
+   "cat": "software-development",
+   "tags": [],
+   "desc": ">",
+   "lines": 449,
+   "chars": 23325
+  },
+  "vscode-installer-and-vsix-packaging": {
+   "dir": "software-development/vscode-installer-and-vsix-packaging",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Package, install, and ship a VS Code extension as a VSIX, and understand how VS Code itself is installed/updated across all platforms. Use when building/shipping a VS Code extension (like Hermes Agent), side-loading a .vsix, choosing User vs System installer, or debugging \"which vsce / is this deprecated\" confusion.",
+   "lines": 71,
+   "chars": 4661
+  },
+  "writing-plans": {
+   "dir": "software-development/writing-plans",
+   "cat": "software-development",
+   "tags": [],
+   "desc": "Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.",
+   "lines": 297,
+   "chars": 7291
+  },
+  "xitter": {
+   "dir": "social-media/xitter",
+   "cat": "social-media",
+   "tags": [],
+   "desc": "Interact with X/Twitter via the x-cli terminal client using official X API credentials. Use for posting, reading timelines, searching tweets, liking, retweeting, bookmarks, mentions, and user lookups.",
+   "lines": 203,
+   "chars": 6130
+  },
+  "xurl": {
+   "dir": "social-media/xurl",
+   "cat": "social-media",
+   "tags": [],
+   "desc": "X/Twitter via xurl CLI: raw post search, posting, DM, media.",
+   "lines": 437,
+   "chars": 16293
+  },
+  "openhue": {
+   "dir": "smart-home/openhue",
+   "cat": "smart-home",
+   "tags": [],
+   "desc": "Control Philips Hue lights, scenes, rooms via OpenHue CLI.",
+   "lines": 110,
+   "chars": 2711
+  },
+  "glocal-secrets": {
+   "dir": "security/glocal-secrets",
+   "cat": "security",
+   "tags": [],
+   "desc": ">-",
+   "lines": 222,
+   "chars": 13063
+  },
+  "local-secret-source": {
+   "dir": "security/local-secret-source",
+   "cat": "security",
+   "tags": [],
+   "desc": "Build, verify, and ship local-facing secret-storage surfaces (the \"secret-source bridge\") that are efficacious within a GLOCAL (Mixture-of-Devices) agent system — browser store -> export -> Push to local -> local agents consume via a shared contract. Use when the user wants a sovereign, cloud-rent-free secret manager that feeds vps_node / bsky_dm_bus / porter / other local agents, or reports a secret bridge \"doesn't save\" / \"save button does nothing\".",
+   "lines": 87,
+   "chars": 4898
+  },
+  "arxiv": {
+   "dir": "research/arxiv",
+   "cat": "research",
+   "tags": [],
+   "desc": "Search and retrieve academic papers from arXiv using their free REST API. No API key needed. Search by keyword, author, category, or ID. Combine with web_extract or the ocr-and-documents skill to read full paper content.",
+   "lines": 282,
+   "chars": 10198
+  },
+  "blogwatcher": {
+   "dir": "research/blogwatcher",
+   "cat": "research",
+   "tags": [],
+   "desc": "Monitor blogs and RSS/Atom feeds for updates using the blogwatcher CLI. Add blogs, scan for new articles, and track what you've read.",
+   "lines": 57,
+   "chars": 1239
+  },
+  "competitor-news-monitor": {
+   "dir": "research/competitor-news-monitor",
+   "cat": "research",
+   "tags": [],
+   "desc": "Watch named companies for material news; cited digests.",
+   "lines": 89,
+   "chars": 4611
+  },
+  "domain-intel": {
+   "dir": "research/domain-intel",
+   "cat": "research",
+   "tags": [],
+   "desc": "Passive domain reconnaissance using Python stdlib. Subdomain discovery, SSL certificate inspection, WHOIS lookups, DNS records, domain availability checks, and bulk multi-domain analysis. No API keys required.",
+   "lines": 97,
+   "chars": 4483
+  },
+  "duckduckgo-search": {
+   "dir": "research/duckduckgo-search",
+   "cat": "research",
+   "tags": [],
+   "desc": "Free web search via DuckDuckGo — text, news, images, videos. No API key needed. Use the Python DDGS library or CLI to search, then web_extract for full content.",
+   "lines": 189,
+   "chars": 5678
+  },
+  "grounded-citations": {
+   "dir": "research/grounded-citations",
+   "cat": "research",
+   "tags": [],
+   "desc": "Ground answers and documents in cited, verifiable sources.",
+   "lines": 258,
+   "chars": 12586
+  },
+  "llm-wiki": {
+   "dir": "research/llm-wiki",
+   "cat": "research",
+   "tags": [],
+   "desc": "Karpathy's LLM Wiki: build/query interlinked markdown KB.",
+   "lines": 508,
+   "chars": 19895
+  },
+  "ml-paper-writing": {
+   "dir": "research/ml-paper-writing",
+   "cat": "research",
+   "tags": [],
+   "desc": "Write publication-ready ML/AI papers for NeurIPS, ICML, ICLR, ACL, AAAI, COLM. Use when drafting papers from research repos, structuring arguments, verifying citations, or preparing camera-ready submissions. Includes LaTeX templates, reviewer guidelines, and citation verification workflows.",
+   "lines": 941,
+   "chars": 35364
+  },
+  "parallel-cli": {
+   "dir": "research/parallel-cli",
+   "cat": "research",
+   "tags": [],
+   "desc": "Optional vendor skill for Parallel CLI — agent-native web search, extraction, deep research, enrichment, FindAll, and monitoring. Prefer JSON output and non-interactive flows.",
+   "lines": 391,
+   "chars": 10883
+  },
+  "polymarket": {
+   "dir": "research/polymarket",
+   "cat": "research",
+   "tags": [
+    "polymarket",
+    "prediction-markets",
+    "market-data",
+    "trading"
+   ],
+   "desc": "Query Polymarket: markets, prices, orderbooks, history.",
+   "lines": 78,
+   "chars": 2967
+  },
+  "research-paper-writing": {
+   "dir": "research/research-paper-writing",
+   "cat": "research",
+   "tags": [],
+   "desc": "Write ML papers for NeurIPS/ICML/ICLR: design→submit.",
+   "lines": 2378,
+   "chars": 102734
+  },
+  "airtable": {
+   "dir": "productivity/airtable",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Airtable REST API via curl. Records CRUD, filters, upserts.",
+   "lines": 230,
+   "chars": 11268
+  },
+  "box": {
+   "dir": "productivity/box",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Box manages cloud files, sharing, search, and metadata.",
+   "lines": 118,
+   "chars": 11693
+  },
+  "document-to-action-items": {
+   "dir": "productivity/document-to-action-items",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Extract cited obligations, deadlines, tasks from documents.",
+   "lines": 82,
+   "chars": 3904
+  },
+  "docx": {
+   "dir": "productivity/docx",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Create, read, edit, template, and review Word .docx files.",
+   "lines": 197,
+   "chars": 10379
+  },
+  "google-workspace": {
+   "dir": "productivity/google-workspace",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python.",
+   "lines": 344,
+   "chars": 14167
+  },
+  "linear": {
+   "dir": "productivity/linear",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Manage Linear issues, projects, and teams via the GraphQL API. Create, update, search, and organize issues. Uses API key auth (no OAuth needed). All operations via curl — no dependencies.",
+   "lines": 298,
+   "chars": 11312
+  },
+  "maps": {
+   "dir": "productivity/maps",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.",
+   "lines": 196,
+   "chars": 6657
+  },
+  "meeting-action-items": {
+   "dir": "productivity/meeting-action-items",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Turn meeting notes into cited decisions, owners, tickets.",
+   "lines": 88,
+   "chars": 3800
+  },
+  "nano-pdf": {
+   "dir": "productivity/nano-pdf",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Edit PDF text/typos/titles via nano-pdf CLI (NL prompts).",
+   "lines": 53,
+   "chars": 1407
+  },
+  "notion": {
+   "dir": "productivity/notion",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Notion API + ntn CLI: pages, databases, markdown, Workers.",
+   "lines": 450,
+   "chars": 14564
+  },
+  "ocr-and-documents": {
+   "dir": "productivity/ocr-and-documents",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Extract text from PDFs and scanned documents. Use web_extract for remote URLs, pymupdf for local text-based PDFs, marker-pdf for OCR/scanned docs. For DOCX use python-docx, for PPTX see the powerpoint skill.",
+   "lines": 172,
+   "chars": 5339
+  },
+  "pdf": {
+   "dir": "productivity/pdf",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "PDF files: create, read, merge, fill, OCR, edit text.",
+   "lines": 126,
+   "chars": 12455
+  },
+  "petdex": {
+   "dir": "productivity/petdex",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Install and select animated petdex mascots for Hermes.",
+   "lines": 90,
+   "chars": 3509
+  },
+  "powerpoint": {
+   "dir": "productivity/powerpoint",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Create, read, edit .pptx decks with python-pptx.",
+   "lines": 221,
+   "chars": 10755
+  },
+  "product-price-monitor": {
+   "dir": "productivity/product-price-monitor",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Watch product, flight, or listing prices; alert on target.",
+   "lines": 80,
+   "chars": 4394
+  },
+  "qr": {
+   "dir": "productivity/qr",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Route printed QR scans to Hermes conductor schemes.",
+   "lines": 57,
+   "chars": 2423
+  },
+  "teams-meeting-pipeline": {
+   "dir": "productivity/teams-meeting-pipeline",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Teams meeting summaries, job replay, Graph subscriptions.",
+   "lines": 123,
+   "chars": 7180
+  },
+  "weekly-review-planning": {
+   "dir": "productivity/weekly-review-planning",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Weekly reset: commitments, stalled work, next-week plan.",
+   "lines": 82,
+   "chars": 3973
+  },
+  "xlsx": {
+   "dir": "productivity/xlsx",
+   "cat": "productivity",
+   "tags": [],
+   "desc": "Create, read, edit Excel .xlsx workbooks and CSVs.",
+   "lines": 197,
+   "chars": 9649
+  },
+  "obsidian": {
+   "dir": "note-taking/obsidian",
+   "cat": "note-taking",
+   "tags": [],
+   "desc": "Read, search, create, and edit notes in the Obsidian vault.",
+   "lines": 69,
+   "chars": 3092
+  },
+  "huggingface-hub": {
+   "dir": "mlops/huggingface-hub",
+   "cat": "mlops",
+   "tags": [
+    "huggingface",
+    "hf",
+    "models",
+    "datasets",
+    "hub",
+    "mlops"
+   ],
+   "desc": "HuggingFace hf CLI: search/download/upload models, datasets.",
+   "lines": 82,
+   "chars": 3670
+  },
+  "sovereign-local-loop": {
+   "dir": "mlops/sovereign-local-loop",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Build bounded, fully-offline sovereign agent loops on a local machine — the +æ^glocal primitive (planner→executor→auditor→manifest) with local hands (CUDA, Rust/WASM), exposed over MCP and registered as a Hermes conductor scheme. Use when building local-only agentic control surfaces, GPU-MCP, or protocol-native command-and-control for a specific node (e.g. `+æ://cc home://`).",
+   "lines": 107,
+   "chars": 6566
+  },
+  "chroma": {
+   "dir": "mlops/vector-databases/chroma",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Open-source embedding database for AI applications. Store embeddings and metadata, perform vector and full-text search, filter by metadata. Simple 4-function API. Scales from notebooks to production clusters. Use for semantic search, RAG applications, or document retrieval. Best for local development and open-source projects.",
+   "lines": 410,
+   "chars": 9188
+  },
+  "faiss": {
+   "dir": "mlops/vector-databases/faiss",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Facebook's library for efficient similarity search and clustering of dense vectors. Supports billions of vectors, GPU acceleration, and various index types (Flat, IVF, HNSW). Use for fast k-NN search, large-scale vector retrieval, or when you need pure similarity search without metadata. Best for high-performance applications.",
+   "lines": 225,
+   "chars": 5068
+  },
+  "pinecone": {
+   "dir": "mlops/vector-databases/pinecone",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Managed vector database for production AI applications. Fully managed, auto-scaling, with hybrid search (dense + sparse), metadata filtering, and namespaces. Low latency (<100ms p95). Use for production RAG, recommendation systems, or semantic search at scale. Best for serverless, managed infrastructure.",
+   "lines": 362,
+   "chars": 7852
+  },
+  "qdrant-vector-search": {
+   "dir": "mlops/vector-databases/qdrant",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "High-performance vector similarity search engine for RAG and semantic search. Use when building production RAG systems requiring fast nearest neighbor search, hybrid search with filtering, or scalable vector storage with Rust-powered performance.",
+   "lines": 497,
+   "chars": 13468
+  },
+  "huggingface-accelerate": {
+   "dir": "mlops/training/accelerate",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Simplest distributed training API. 4 lines to add distributed support to any PyTorch script. Unified API for DeepSpeed/FSDP/Megatron/DDP. Automatic device placement, mixed precision (FP16/BF16/FP8). Interactive config, single launch command. HuggingFace ecosystem standard.",
+   "lines": 336,
+   "chars": 8359
+  },
+  "axolotl": {
+   "dir": "mlops/training/axolotl",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Expert guidance for fine-tuning LLMs with Axolotl - YAML configs, 100+ models, LoRA/QLoRA, DPO/KTO/ORPO/GRPO, multimodal support",
+   "lines": 162,
+   "chars": 4812
+  },
+  "optimizing-attention-flash": {
+   "dir": "mlops/training/flash-attention",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Optimizes transformer attention with Flash Attention for 2-4x speedup and 10-20x memory reduction. Use when training/running transformers with long sequences (>512 tokens), encountering GPU memory issues with attention, or need faster inference. Supports PyTorch native SDPA, flash-attn library, H100 FP8, and sliding window attention.",
+   "lines": 371,
+   "chars": 10214
+  },
+  "grpo-rl-training": {
+   "dir": "mlops/training/grpo-rl-training",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Expert guidance for GRPO/RL fine-tuning with TRL for reasoning and task-specific model training",
+   "lines": 576,
+   "chars": 17209
+  },
+  "hermes-atropos-environments": {
+   "dir": "mlops/training/hermes-atropos-environments",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Build, test, and debug Hermes Agent RL environments for Atropos training. Covers the HermesAgentBaseEnv interface, reward functions, agent loop integration, evaluation with tools, wandb logging, and the three CLI modes (serve/process/evaluate). Use when creating, reviewing, or fixing RL environments in the hermes-agent repo.",
+   "lines": 303,
+   "chars": 13332
+  },
+  "peft-fine-tuning": {
+   "dir": "mlops/training/peft",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Parameter-efficient fine-tuning for LLMs using LoRA, QLoRA, and 25+ methods. Use when fine-tuning large models (7B-70B) with limited GPU memory, when you need to train <1% of parameters with minimal accuracy loss, or for multi-adapter serving. HuggingFace's official library integrated with transformers ecosystem.",
+   "lines": 435,
+   "chars": 12235
+  },
+  "pytorch-fsdp": {
+   "dir": "mlops/training/pytorch-fsdp",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Expert guidance for Fully Sharded Data Parallel training with PyTorch FSDP - parameter sharding, mixed precision, CPU offloading, FSDP2",
+   "lines": 130,
+   "chars": 159244
+  },
+  "pytorch-lightning": {
+   "dir": "mlops/training/pytorch-lightning",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "High-level PyTorch framework with Trainer class, automatic distributed training (DDP/FSDP/DeepSpeed), callbacks system, and minimal boilerplate. Scales from laptop to supercomputer with same code. Use when you want clean training loops with built-in best practices.",
+   "lines": 350,
+   "chars": 9141
+  },
+  "simpo-training": {
+   "dir": "mlops/training/simpo",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Simple Preference Optimization for LLM alignment. Reference-free alternative to DPO with better performance (+6.4 points on AlpacaEval 2.0). No reference model needed, more efficient than DPO. Use for preference alignment when want simpler, faster training than DPO/PPO.",
+   "lines": 223,
+   "chars": 5938
+  },
+  "slime-rl-training": {
+   "dir": "mlops/training/slime",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Provides guidance for LLM post-training with RL using slime, a Megatron+SGLang framework. Use when training GLM models, implementing custom data generation workflows, or needing tight Megatron-LM integration for RL scaling.",
+   "lines": 468,
+   "chars": 11095
+  },
+  "distributed-llm-pretraining-torchtitan": {
+   "dir": "mlops/training/torchtitan",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Provides PyTorch-native distributed LLM pretraining using torchtitan with 4D parallelism (FSDP2, TP, PP, CP). Use when pretraining Llama 3.1, DeepSeek V3, or custom models at scale from 8 to 512+ GPUs with Float8, torch.compile, and distributed checkpointing.",
+   "lines": 362,
+   "chars": 8952
+  },
+  "fine-tuning-with-trl": {
+   "dir": "mlops/training/trl-fine-tuning",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Fine-tune LLMs using reinforcement learning with TRL - SFT for instruction tuning, DPO for preference alignment, PPO/GRPO for reward optimization, and reward model training. Use when need RLHF, align model with preferences, or train from human feedback. Works with HuggingFace Transformers.",
+   "lines": 459,
+   "chars": 11472
+  },
+  "unsloth": {
+   "dir": "mlops/training/unsloth",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Expert guidance for fast fine-tuning with Unsloth - 2-5x faster training, 50-80% less memory, LoRA/QLoRA optimization",
+   "lines": 101,
+   "chars": 3272
+  },
+  "dspy": {
+   "dir": "mlops/research/dspy",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Build complex AI systems with declarative programming, optimize prompts automatically, create modular RAG systems and agents with DSPy - Stanford NLP's framework for systematic LM programming",
+   "lines": 594,
+   "chars": 15308
+  },
+  "audiocraft-audio-generation": {
+   "dir": "mlops/models/audiocraft",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.",
+   "lines": 569,
+   "chars": 15383
+  },
+  "clip": {
+   "dir": "mlops/models/clip",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "OpenAI's model connecting vision and language. Enables zero-shot image classification, image-text matching, and cross-modal retrieval. Trained on 400M image-text pairs. Use for image search, content moderation, or vision-language tasks without fine-tuning. Best for general-purpose image understanding.",
+   "lines": 257,
+   "chars": 6901
+  },
+  "llava": {
+   "dir": "mlops/models/llava",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Large Language and Vision Assistant. Enables visual instruction tuning and image-based conversations. Combines CLIP vision encoder with Vicuna/LLaMA language models. Supports multi-turn image chat, visual question answering, and instruction following. Use for vision-language chatbots or image understanding tasks. Best for conversational image analysis.",
+   "lines": 308,
+   "chars": 7853
+  },
+  "segment-anything-model": {
+   "dir": "mlops/models/segment-anything",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "SAM: zero-shot image segmentation via points, boxes, masks.",
+   "lines": 507,
+   "chars": 13093
+  },
+  "stable-diffusion-image-generation": {
+   "dir": "mlops/models/stable-diffusion",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "State-of-the-art text-to-image generation with Stable Diffusion models via HuggingFace Diffusers. Use when generating images from text prompts, performing image-to-image translation, inpainting, or building custom diffusion pipelines.",
+   "lines": 523,
+   "chars": 12962
+  },
+  "whisper": {
+   "dir": "mlops/models/whisper",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "OpenAI's general-purpose speech recognition model. Supports 99 languages, transcription, translation to English, and language identification. Six model sizes from tiny (39M params) to large (1550M params). Use for speech-to-text, podcast transcription, or multilingual audio processing. Best for robust, multilingual ASR.",
+   "lines": 321,
+   "chars": 7459
+  },
+  "gguf-quantization": {
+   "dir": "mlops/inference/gguf",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "GGUF format and llama.cpp quantization for efficient CPU/GPU inference. Use when deploying models on consumer hardware, Apple Silicon, or when needing flexible quantization from 2-8 bit without GPU requirements.",
+   "lines": 431,
+   "chars": 10345
+  },
+  "guidance": {
+   "dir": "mlops/inference/guidance",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Control LLM output with regex and grammars, guarantee valid JSON/XML/code generation, enforce structured formats, and build multi-step workflows with Guidance - Microsoft Research's constrained generation framework",
+   "lines": 576,
+   "chars": 14462
+  },
+  "instructor": {
+   "dir": "mlops/inference/instructor",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Extract structured data from LLM responses with Pydantic validation, retry failed extractions automatically, parse complex JSON with type safety, and stream partial results with Instructor - battle-tested structured output library",
+   "lines": 744,
+   "chars": 16798
+  },
+  "llama-cpp": {
+   "dir": "mlops/inference/llama-cpp",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "llama.cpp local GGUF inference + HF Hub model discovery.",
+   "lines": 250,
+   "chars": 8870
+  },
+  "obliteratus": {
+   "dir": "mlops/inference/obliteratus",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Remove refusal behaviors from open-weight LLMs using OBLITERATUS — mechanistic interpretability techniques (diff-in-means, SVD, whitened SVD, LEACE, SAE decomposition, etc.) to excise guardrails while preserving reasoning. 9 CLI methods, 28 analysis modules, 116 model presets across 5 compute tiers, tournament evaluation, and telemetry-driven recommendations. Use when a user wants to uncensor, abliterate, or remove refusal from an LLM.",
+   "lines": 331,
+   "chars": 15268
+  },
+  "outlines": {
+   "dir": "mlops/inference/outlines",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Guarantee valid JSON/XML/code structure during generation, use Pydantic models for type-safe outputs, support local models (Transformers, vLLM), and maximize inference speed with Outlines - dottxt.ai's structured generation library",
+   "lines": 656,
+   "chars": 15894
+  },
+  "tensorrt-llm": {
+   "dir": "mlops/inference/tensorrt-llm",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Optimizes LLM inference with NVIDIA TensorRT for maximum throughput and lowest latency. Use for production deployment on NVIDIA GPUs (A100/H100), when you need 10-100x faster inference than PyTorch, or for serving models with quantization (FP8/INT4), in-flight batching, and multi-GPU scaling.",
+   "lines": 191,
+   "chars": 5059
+  },
+  "serving-llms-vllm": {
+   "dir": "mlops/inference/vllm",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "vLLM: high-throughput LLM serving, OpenAI API, quantization.",
+   "lines": 373,
+   "chars": 9071
+  },
+  "huggingface-tokenizers": {
+   "dir": "mlops/evaluation/huggingface-tokenizers",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Fast tokenizers optimized for research and production. Rust-based implementation tokenizes 1GB in <20 seconds. Supports BPE, WordPiece, and Unigram algorithms. Train custom vocabularies, track alignments, handle padding/truncation. Integrates seamlessly with transformers. Use when you need high-performance tokenization or custom tokenizer training.",
+   "lines": 520,
+   "chars": 13668
+  },
+  "evaluating-llms-harness": {
+   "dir": "mlops/evaluation/lm-evaluation-harness",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "lm-eval-harness: benchmark LLMs (MMLU, GSM8K, etc.).",
+   "lines": 499,
+   "chars": 12019
+  },
+  "nemo-curator": {
+   "dir": "mlops/evaluation/nemo-curator",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "GPU-accelerated data curation for LLM training. Supports text/image/video/audio. Features fuzzy deduplication (16× faster), quality filtering (30+ heuristics), semantic deduplication, PII redaction, NSFW detection. Scales across GPUs with RAPIDS. Use for preparing high-quality training datasets, cleaning web data, or deduplicating large corpora.",
+   "lines": 387,
+   "chars": 9344
+  },
+  "sparse-autoencoder-training": {
+   "dir": "mlops/evaluation/saelens",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Provides guidance for training and analyzing Sparse Autoencoders (SAEs) using SAELens to decompose neural network activations into interpretable features. Use when discovering interpretable features, analyzing superposition, or studying monosemantic representations in language models.",
+   "lines": 390,
+   "chars": 12754
+  },
+  "weights-and-biases": {
+   "dir": "mlops/evaluation/weights-and-biases",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "W&B: log ML experiments, sweeps, model registry, dashboards.",
+   "lines": 595,
+   "chars": 12391
+  },
+  "lambda-labs-gpu-cloud": {
+   "dir": "mlops/cloud/lambda-labs",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Reserved and on-demand GPU cloud instances for ML training and inference. Use when you need dedicated GPU instances with simple SSH access, persistent filesystems, or high-performance multi-node clusters for large-scale training.",
+   "lines": 549,
+   "chars": 12148
+  },
+  "modal-serverless-gpu": {
+   "dir": "mlops/cloud/modal",
+   "cat": "mlops",
+   "tags": [],
+   "desc": "Serverless GPU cloud platform for running ML workloads. Use when you need on-demand GPU access without infrastructure management, deploying ML models as APIs, or running batch jobs with automatic scaling.",
+   "lines": 345,
+   "chars": 8578
+  },
+  "agentic-html": {
+   "dir": "media/agentic-html",
+   "cat": "media",
+   "tags": [],
+   "desc": "Build deterministic HTML media viewports (agentic.html) from Hermes media manifests for glocal distribution.",
+   "lines": 59,
+   "chars": 1589
+  },
+  "gif-search": {
+   "dir": "media/gif-search",
+   "cat": "media",
+   "tags": [],
+   "desc": "Search/download GIFs from Tenor via curl + jq.",
+   "lines": 92,
+   "chars": 2718
+  },
+  "heartmula": {
+   "dir": "media/heartmula",
+   "cat": "media",
+   "tags": [],
+   "desc": "HeartMuLa: Suno-like song generation from lyrics + tags.",
+   "lines": 172,
+   "chars": 6400
+  },
+  "songsee": {
+   "dir": "media/songsee",
+   "cat": "media",
+   "tags": [],
+   "desc": "Audio spectrograms/features (mel, chroma, MFCC) via CLI.",
+   "lines": 84,
+   "chars": 2336
+  },
+  "youtube-content": {
+   "dir": "media/youtube-content",
+   "cat": "media",
+   "tags": [],
+   "desc": "YouTube transcripts to summaries, threads, blogs.",
+   "lines": 97,
+   "chars": 4363
+  },
+  "mcporter": {
+   "dir": "mcp/mcporter",
+   "cat": "mcp",
+   "tags": [],
+   "desc": "Use the mcporter CLI to list, configure, auth, and call MCP servers/tools directly (HTTP or stdio), including ad-hoc servers, config edits, and CLI/type generation.",
+   "lines": 123,
+   "chars": 3148
+  },
+  "native-mcp": {
+   "dir": "mcp/native-mcp",
+   "cat": "mcp",
+   "tags": [],
+   "desc": "Built-in MCP (Model Context Protocol) client that connects to external MCP servers, discovers their tools, and registers them as native Hermes Agent tools. Supports stdio and HTTP transports with automatic reconnection, security filtering, and zero-config tool injection.",
+   "lines": 357,
+   "chars": 12534
+  },
+  "local-secret-source-bridge": {
+   "dir": "local-secret-source/local-secret-source-bridge",
+   "cat": "local-secret-source",
+   "tags": [],
+   "desc": "Build, verify, and ship local-facing secret storage surfaces for Hermes. Covers plugin SecretSource actions, local HTTP bridge handler, skeptical UI wiring with backend toggle, boundary checks, and opensourceware verification strategy for HTML/plugin/server changes.",
+   "lines": 176,
+   "chars": 9300
+  },
+  "find-nearby": {
+   "dir": "leisure/find-nearby",
+   "cat": "leisure",
+   "tags": [],
+   "desc": "Find nearby places (restaurants, cafes, bars, pharmacies, etc.) using OpenStreetMap. Works with coordinates, addresses, cities, zip codes, or Telegram location pins. No API keys needed.",
+   "lines": 70,
+   "chars": 3076
+  },
+  "inference-sh-cli": {
+   "dir": "inference-sh/cli",
+   "cat": "inference-sh",
+   "tags": [],
+   "desc": "Run 150+ AI apps via inference.sh CLI (infsh) — image generation, video creation, LLMs, search, 3D, social automation. Uses the terminal tool. Triggers: inference.sh, infsh, ai apps, flux, veo, image generation, video generation, seedream, seedance, tavily",
+   "lines": 156,
+   "chars": 4634
+  },
+  "hermes-conductor-mesh": {
+   "dir": "hermes/hermes-conductor-mesh",
+   "cat": "hermes",
+   "tags": [],
+   "desc": "Extend Hermes conductor with custom schemes, MCP² surfaces, mech-lang primitives, and glocal bridge dispatch.",
+   "lines": 172,
+   "chars": 10524
+  },
+  "github-auth": {
+   "dir": "github/github-auth",
+   "cat": "github",
+   "tags": [],
+   "desc": "GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.",
+   "lines": 248,
+   "chars": 7566
+  },
+  "github-code-review": {
+   "dir": "github/github-code-review",
+   "cat": "github",
+   "tags": [],
+   "desc": "Review PRs: diffs, inline comments via gh or REST.",
+   "lines": 482,
+   "chars": 13531
+  },
+  "github-issues": {
+   "dir": "github/github-issues",
+   "cat": "github",
+   "tags": [],
+   "desc": "Create, triage, label, assign GitHub issues via gh or REST.",
+   "lines": 371,
+   "chars": 9311
+  },
+  "github-pr-workflow": {
+   "dir": "github/github-pr-workflow",
+   "cat": "github",
+   "tags": [],
+   "desc": "GitHub PR lifecycle: branch, commit, open, CI, merge.",
+   "lines": 368,
+   "chars": 10011
+  },
+  "github-repo-management": {
+   "dir": "github/github-repo-management",
+   "cat": "github",
+   "tags": [],
+   "desc": "Clone/create/fork repos; manage remotes, releases.",
+   "lines": 517,
+   "chars": 13723
+  },
+  "minecraft-modpack-server": {
+   "dir": "gaming/minecraft-modpack-server",
+   "cat": "gaming",
+   "tags": [
+    "minecraft",
+    "gaming",
+    "server",
+    "neoforge",
+    "forge",
+    "modpack"
+   ],
+   "desc": "Set up a modded Minecraft server from a CurseForge/Modrinth server pack zip. Covers NeoForge/Forge install, Java version, JVM tuning, firewall, LAN config, backups, and launch scripts.",
+   "lines": 187,
+   "chars": 6626
+  },
+  "pokemon-player": {
+   "dir": "gaming/pokemon-player",
+   "cat": "gaming",
+   "tags": [
+    "gaming",
+    "pokemon",
+    "emulator",
+    "pyboy",
+    "gameplay",
+    "gameboy"
+   ],
+   "desc": "Play Pokemon games autonomously via headless emulation. Starts a game server, reads structured game state from RAM, makes strategic decisions, and sends button inputs — all from the terminal.",
+   "lines": 216,
+   "chars": 8730
+  },
+  "email-inbox-triage": {
+   "dir": "email/email-inbox-triage",
+   "cat": "email",
+   "tags": [],
+   "desc": "Triage an inbox: prioritize threads, draft replies safely.",
+   "lines": 98,
+   "chars": 5435
+  },
+  "himalaya": {
+   "dir": "email/himalaya",
+   "cat": "email",
+   "tags": [],
+   "desc": "Himalaya CLI: IMAP/SMTP email from terminal.",
+   "lines": 305,
+   "chars": 7254
+  },
+  "hermes-agent-setup": {
+   "dir": "dogfood/hermes-agent-setup",
+   "cat": "dogfood",
+   "tags": [
+    "setup",
+    "configuration",
+    "tools",
+    "stt",
+    "tts",
+    "voice",
+    "hermes",
+    "cli",
+    "skills"
+   ],
+   "desc": "Help users configure Hermes Agent — CLI usage, setup wizard, model/provider selection, tools, skills, voice/STT/TTS, gateway, and troubleshooting. Use when someone asks to enable features, configure settings, or needs help with Hermes itself.",
+   "lines": 301,
+   "chars": 9480
+  },
+  "hermes-local-dev-bridge": {
+   "dir": "dogfood/hermes-local-dev-bridge",
+   "cat": "dogfood",
+   "tags": [
+    "\"hermes\"",
+    "\"vscode\"",
+    "\"windows\"",
+    "\"local\"",
+    "\"bridge\"",
+    "\"terminal\""
+   ],
+   "desc": "Manage local Hermes Agent development workflow on Windows: repo checkout, editable install, VS Code terminal bridge, and bridge tasks.",
+   "lines": 166,
+   "chars": 7194
+  },
+  "sdlc-review": {
+   "dir": "devops/sdlc-review",
+   "cat": "devops",
+   "tags": [],
+   "desc": "Review Kanban handoffs and route verified outcomes.",
+   "lines": 182,
+   "chars": 9065
+  },
+  "windows-gui-automation": {
+   "dir": "desktop/windows-gui-automation",
+   "cat": "desktop",
+   "tags": [],
+   "desc": "|",
+   "lines": 274,
+   "chars": 12107
+  },
+  "jupyter-live-kernel": {
+   "dir": "data-science/jupyter-live-kernel",
+   "cat": "data-science",
+   "tags": [],
+   "desc": "Iterative Python via live Jupyter kernel (hamelnb).",
+   "lines": 168,
+   "chars": 5273
+  },
+  "architecture-diagram": {
+   "dir": "creative/architecture-diagram",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Dark-themed SVG architecture/cloud/infra diagrams as HTML.",
+   "lines": 149,
+   "chars": 5818
+  },
+  "ascii-art": {
+   "dir": "creative/ascii-art",
+   "cat": "creative",
+   "tags": [],
+   "desc": "ASCII art: pyfiglet, cowsay, boxes, image-to-ascii.",
+   "lines": 323,
+   "chars": 10388
+  },
+  "ascii-video": {
+   "dir": "creative/ascii-video",
+   "cat": "creative",
+   "tags": [],
+   "desc": "ASCII video: convert video/audio to colored ASCII MP4/GIF.",
+   "lines": 249,
+   "chars": 14891
+  },
+  "baoyu-infographic": {
+   "dir": "creative/baoyu-infographic",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Infographics: 21 layouts x 21 styles (信息图, 可视化).",
+   "lines": 238,
+   "chars": 10337
+  },
+  "claude-design": {
+   "dir": "creative/claude-design",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Design one-off HTML artifacts (landing, deck, prototype).",
+   "lines": 666,
+   "chars": 26660
+  },
+  "comfyui": {
+   "dir": "creative/comfyui",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Generate images, video, and audio with ComfyUI — install, launch, manage nodes/models, run workflows with parameter injection. Uses the official comfy-cli for lifecycle and direct REST/WebSocket API for execution.",
+   "lines": 613,
+   "chars": 23693
+  },
+  "design-md": {
+   "dir": "creative/design-md",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Author/validate/export Google's DESIGN.md token spec files.",
+   "lines": 221,
+   "chars": 8435
+  },
+  "excalidraw": {
+   "dir": "creative/excalidraw",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Hand-drawn Excalidraw JSON diagrams (arch, flow, seq).",
+   "lines": 200,
+   "chars": 7278
+  },
+  "html-as-skill": {
+   "dir": "creative/html-as-skill",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Use when treating HTML as the executable agentic viewport.",
+   "lines": 362,
+   "chars": 22505
+  },
+  "humanizer": {
+   "dir": "creative/humanizer",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Humanize text: strip AI-isms and add real voice.",
+   "lines": 648,
+   "chars": 34415
+  },
+  "manim-video": {
+   "dir": "creative/manim-video",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Manim CE animations: 3Blue1Brown math/algo videos.",
+   "lines": 317,
+   "chars": 18549
+  },
+  "p5js": {
+   "dir": "creative/p5js",
+   "cat": "creative",
+   "tags": [],
+   "desc": "p5.js sketches: gen art, shaders, interactive, 3D.",
+   "lines": 559,
+   "chars": 27369
+  },
+  "popular-web-designs": {
+   "dir": "creative/popular-web-designs",
+   "cat": "creative",
+   "tags": [
+    "design",
+    "css",
+    "html",
+    "ui",
+    "web-development",
+    "design-systems",
+    "templates"
+   ],
+   "desc": "54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.",
+   "lines": 214,
+   "chars": 9716
+  },
+  "pretext": {
+   "dir": "creative/pretext",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Use when building creative browser demos with @chenglou/pretext — DOM-free text layout for ASCII art, typographic flow around obstacles, text-as-geometry games, kinetic typography, and text-powered generative art. Produces single-file HTML demos by default.",
+   "lines": 221,
+   "chars": 14084
+  },
+  "sketch": {
+   "dir": "creative/sketch",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Throwaway HTML mockups: 2-3 design variants to compare.",
+   "lines": 219,
+   "chars": 9183
+  },
+  "songwriting-and-ai-music": {
+   "dir": "creative/songwriting-and-ai-music",
+   "cat": "creative",
+   "tags": [
+    "songwriting",
+    "music",
+    "suno",
+    "parody",
+    "lyrics",
+    "creative"
+   ],
+   "desc": "Songwriting craft and Suno AI music prompts.",
+   "lines": 309,
+   "chars": 10907
+  },
+  "sovereign-browser-surface": {
+   "dir": "creative/sovereign-browser-surface",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Build sovereign gold-on-void HTML surfaces.",
+   "lines": 219,
+   "chars": 9007
+  },
+  "spanish-rae": {
+   "dir": "creative/spanish-rae",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Spanish per RAE — orthography and grammar.",
+   "lines": 94,
+   "chars": 3616
+  },
+  "touchdesigner-mcp": {
+   "dir": "creative/touchdesigner-mcp",
+   "cat": "creative",
+   "tags": [],
+   "desc": "Control a running TouchDesigner instance via twozero MCP — create operators, set parameters, wire connections, execute Python, build real-time visuals. 36 native tools.",
+   "lines": 357,
+   "chars": 15371
+  },
+  "agentic-entrepreneurship": {
+   "dir": "business/agentic-entrepreneurship",
+   "cat": "business",
+   "tags": [],
+   "desc": "Use when building agentic businesses, deploying HTML skill viewports, routing formation/payments, generating videos, or operating in the Agentic Entrepreneurship Language (^æ). Covers $OS economic infrastructure, blueprints vs skills, NAICS classification, provider-pluggable formation, Wyoming DAO LLC membership, private-client AI/protocol, +æ governance-economics, conductor dispatch, Hermes operator grammar (`c://`, `pc://`, `daollc://`, `llc://`, `hermes://`, `H://`, `NOUS://`, `vscode://`, `reachy://`, `+æ://`), preferred `vscode-remote-use` over `computer_use` for compute, Reachy/embodiment, Omniverse/mech-lang runtime, offline/live capability boundaries, domain stack mapping, and scalable startup formation rails (Doola/Stripe/Atlas).",
+   "lines": 1367,
+   "chars": 64913
+  },
+  "domain-codemode": {
+   "dir": "business/domain-codemode",
+   "cat": "business",
+   "tags": [],
+   "desc": "Use when working with a domain portfolio as an agentic syntax stack. One compact Code Mode interface searches/executes per-domain skills without loading every domain into context.",
+   "lines": 126,
+   "chars": 3992
+  },
+  "domains-to-github-pages": {
+   "dir": "business/domains-to-github-pages",
+   "cat": "business",
+   "tags": [],
+   "desc": "Route all domains to a single GitHub Pages site — primary serves content, others 301 redirect. Uses Cloudflare DNS API + Hostinger Forwarding API.",
+   "lines": 234,
+   "chars": 12360
+  },
+  "reachy-clerk": {
+   "dir": "business/reachy-clerk",
+   "cat": "business",
+   "tags": [],
+   "desc": "Use when building Reachy Mini as an agentic Stripe clerk / DAOLLC operator: embodied business interface, simulation-first, safe secret handling, $OS integration.",
+   "lines": 285,
+   "chars": 11353
+  },
+  "agentic-interpreter": {
+   "dir": "autonomous-ai-agents/agentic-interpreter",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Delegate coding and computer-use tasks to Agentic Interpreter (ÆL-NET fork of Open Interpreter) — a Rust-based terminal coding agent with harness emulation, ACP support, and computer-use QA skills.",
+   "lines": 219,
+   "chars": 11906
+  },
+  "claude-code": {
+   "dir": "autonomous-ai-agents/claude-code",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Delegate coding to Claude Code CLI (features, PRs).",
+   "lines": 755,
+   "chars": 35034
+  },
+  "codex": {
+   "dir": "autonomous-ai-agents/codex",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Delegate coding to OpenAI Codex CLI (features, PRs).",
+   "lines": 152,
+   "chars": 5834
+  },
+  "hermes-agent": {
+   "dir": "autonomous-ai-agents/hermes-agent",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Use, configure, theme, extend, and orchestrate Hermes Agent.",
+   "lines": 214,
+   "chars": 13104
+  },
+  "opencode": {
+   "dir": "autonomous-ai-agents/opencode",
+   "cat": "autonomous-ai-agents",
+   "tags": [],
+   "desc": "Delegate coding to OpenCode CLI (features, PR review).",
+   "lines": 220,
+   "chars": 7289
+  },
+  "apple-notes": {
+   "dir": "apple/apple-notes",
+   "cat": "apple",
+   "tags": [],
+   "desc": "Manage Apple Notes via memo CLI: create, search, edit.",
+   "lines": 95,
+   "chars": 2380
+  },
+  "apple-reminders": {
+   "dir": "apple/apple-reminders",
+   "cat": "apple",
+   "tags": [],
+   "desc": "Apple Reminders via remindctl: add, list, complete.",
+   "lines": 131,
+   "chars": 3598
+  },
+  "findmy": {
+   "dir": "apple/findmy",
+   "cat": "apple",
+   "tags": [],
+   "desc": "Track Apple devices/AirTags via FindMy.app on macOS.",
+   "lines": 132,
+   "chars": 3811
+  },
+  "imessage": {
+   "dir": "apple/imessage",
+   "cat": "apple",
+   "tags": [],
+   "desc": "Send and receive iMessages/SMS via the imsg CLI on macOS.",
+   "lines": 103,
+   "chars": 2424
+  },
+  "agentic-language-chassis": {
+   "dir": "agentic/agentic-language-chassis",
+   "cat": "agentic",
+   "tags": [],
+   "desc": "Selecting and wiring language chassis (qc64 BASIC and mech-lang) for the plus-ae and ae and viewport agentic scheme grammar in hermes-fork; registering conductor schemes; the prove-by-building rule. Use when the user names a scheme, picks a chassis for plus-ae conventions, or builds a local agent simulation or runtime.",
+   "lines": 353,
+   "chars": 24881
+  }
+ },
+ "edges": {
+  "ae-as-skill|code-mode": 3,
+  "code-mode|glocal-mesh": 3,
+  "code-mode|pc-inference": 3,
+  "code-mode|sovereign-local-loop": 3,
+  "code-mode|sovereign-browser-surface": 3,
+  "cuda|sovereign-vscode-surface-dev": 5,
+  "cuda|hermes-operator-grammar": 4,
+  "cuda|optimizing-attention-flash": 4,
+  "cuda|hermes-surface-development": 3,
+  "cuda|lambda-labs-gpu-cloud": 1,
+  "cuda|modal-serverless-gpu": 1,
+  "hyperframes-animation|hyperframes-core": 5,
+  "hyperframes-animation|hyperframes-creative": 3,
+  "hyperframes-animation|hyperframes-cli": 1,
+  "hyperframes-core|hyperframes-creative": 3,
+  "hyperframes-core|media-use": 1,
+  "hyperframes-cli|hyperframes-core": 2,
+  "hyperframes-core|hyperframes-registry": 1,
+  "hyperframes-animation|hyperframes-keyframes": 1,
+  "hyperframes-cli|hyperframes-keyframes": 1,
+  "hermes-desktop-plugins|keeper": 3,
+  "deploy-surfaces|keeper": 3,
+  "glocal-mesh|keeper": 4,
+  "llama-cpp-gpu|pc-qr-api": 3,
+  "ae-as-skill|llama-cpp-gpu": 3,
+  "code-mode|measurement-index": 3,
+  "html-as-skill|measurement-index": 3,
+  "measurement-index|qr-as-skill": 3,
+  "keeper|measurement-index": 3,
+  "hermes-agent-skill-authoring|pc-qr-api": 3,
+  "code-mode|qr-as-skill": 3,
+  "html-as-skill|qr-as-skill": 3,
+  "keeper|qr-as-skill": 3,
+  "qr-as-skill|sovereign-local-loop": 3,
+  "agentic-language-chassis|sovereign-cuda-bridge": 3,
+  "hermes-operator-grammar|sovereign-cuda-bridge": 3,
+  "glocal-secrets|sovereign-cuda-bridge": 8,
+  "cuda|sovereign-cuda-bridge": 3,
+  "blocked-page-recovery|grounded-citations": 3,
+  "deploy-surfaces|sovereign-mcp-surface": 3,
+  "deploy-surfaces|rtx-telemetry": 5,
+  "deploy-surfaces|github-pages-deploy": 5,
+  "deploy-surfaces|glocal-mesh": 4,
+  "glocal-mesh|hermes-agent": 1,
+  "llama-cpp-gpu|pc-inference": 4,
+  "ae-as-skill|pc-inference": 4,
+  "pc-inference|pc-qr-api": 4,
+  "rtx-telemetry|sovereign-cuda-bridge": 3,
+  "cuda-victus-dev|rtx-telemetry": 4,
+  "glocal-mesh|rtx-telemetry": 5,
+  "rtx-telemetry|sovereign-mcp-surface": 5,
+  "deploy-surfaces|sovereign-resource-absorption": 3,
+  "github-pages-deploy|sovereign-resource-absorption": 4,
+  "agentic-chassis-surface|sovereign-resource-absorption": 3,
+  "browser-agent-loop|html-as-skill": 4,
+  "browser-agent-loop|sovereign-local-agent": 3,
+  "browser-agent-loop|sovereign-local-loop": 7,
+  "browser-agent-loop|llama-cpp": 4,
+  "codebase-inspection|github": 6,
+  "cuda-victus-dev|hermes-conductor-mesh": 1,
+  "cuda-victus-dev|hermes-surface-development": 3,
+  "github|requesting-code-review": 3,
+  "github-pages-deploy|html-as-skill": 2,
+  "hermes-agent-skill-authoring|requesting-code-review": 3,
+  "hermes-runtime-state|hermes-vscode-incubator": 3,
+  "hermes-runtime-state|hermes-surface-development": 3,
+  "hermes-surface-development|sovereign-atproto-network": 1,
+  "inspecting-hermes-desktop-dom|systematic-debugging": 3,
+  "dogfood|inspecting-hermes-desktop-dom": 3,
+  "inspecting-hermes-desktop-dom|node-inspect-debugger": 4,
+  "interpreter-dispatch-debugging|systematic-debugging": 5,
+  "interpreter-dispatch-debugging|test-driven-development": 3,
+  "agentic-language-chassis|interpreter-dispatch-debugging": 2,
+  "cuda|local-agent-runtime": 1,
+  "hermes-native|local-agent-runtime": 1,
+  "local-agent-runtime|vscode-as-skill": 1,
+  "local-agent-runtime|sovereign-vscode-surface-dev": 1,
+  "claude-design|local-first-operator-surfaces": 1,
+  "hermes-agent|local-first-operator-surfaces": 1,
+  "native-vision-from-first-principles|ocr-and-documents": 3,
+  "node-inspect-debugger|systematic-debugging": 3,
+  "node-inspect-debugger|python-debugpy": 7,
+  "plan|writing-plans": 3,
+  "plan|subagent-driven-development": 3,
+  "python-debugpy|systematic-debugging": 3,
+  "requesting-code-review|writing-plans": 6,
+  "requesting-code-review|test-driven-development": 3,
+  "requesting-code-review|subagent-driven-development": 6,
+  "html-as-skill|resource-absorb-and-rename": 4,
+  "github-pages-deploy|resource-absorb-and-rename": 5,
+  "resource-absorb-and-rename|sovereign-fork-commit": 3,
+  "simplify-code|test-driven-development": 3,
+  "requesting-code-review|simplify-code": 5,
+  "simplify-code|subagent-driven-development": 1,
+  "sovereign-atproto-network|sovereign-local-agent": 1,
+  "local-agent-runtime|sovereign-local-agent": 2,
+  "hermes-agent|sovereign-vscode-surface-dev": 2,
+  "sovereign-vscode-surface-dev|windows-gui-automation": 2,
+  "sketch|spike": 6,
+  "spike|subagent-driven-development": 3,
+  "plan|spike": 1,
+  "subagent-driven-development|writing-plans": 7,
+  "subagent-driven-development|test-driven-development": 6,
+  "systematic-debugging|test-driven-development": 7,
+  "subagent-driven-development|systematic-debugging": 3,
+  "html-as-skill|vscode-as-skill": 6,
+  "hermes-vscode-incubator|vscode-as-skill": 3,
+  "hermes-surface-development|vscode-as-skill": 3,
+  "local-first-operator-surfaces|vscode-as-skill": 3,
+  "hermes-agent|vscode-as-skill": 1,
+  "test-driven-development|writing-plans": 4,
+  "xitter|xurl": 1,
+  "glocal-secrets|local-secret-source-bridge": 2,
+  "arxiv|ocr-and-documents": 5,
+  "blogwatcher|competitor-news-monitor": 5,
+  "arxiv|duckduckgo-search": 3,
+  "grounded-citations|pdf": 3,
+  "grounded-citations|youtube-content": 4,
+  "arxiv|grounded-citations": 4,
+  "grounded-citations|xurl": 1,
+  "llm-wiki|obsidian": 3,
+  "arxiv|llm-wiki": 3,
+  "duckduckgo-search|parallel-cli": 3,
+  "mcporter|parallel-cli": 3,
+  "ml-paper-writing|research-paper-writing": 5,
+  "arxiv|research-paper-writing": 4,
+  "plan|research-paper-writing": 3,
+  "research-paper-writing|subagent-driven-development": 3,
+  "box|google-workspace": 3,
+  "document-to-action-items|pdf": 8,
+  "document-to-action-items|docx": 5,
+  "document-to-action-items|notion": 4,
+  "document-to-action-items|xlsx": 1,
+  "docx|pdf": 6,
+  "docx|xlsx": 6,
+  "docx|powerpoint": 6,
+  "google-workspace|himalaya": 4,
+  "find-nearby|maps": 1,
+  "meeting-action-items|notion": 4,
+  "google-workspace|meeting-action-items": 3,
+  "meeting-action-items|teams-meeting-pipeline": 5,
+  "github-issues|meeting-action-items": 1,
+  "ocr-and-documents|powerpoint": 5,
+  "pdf|powerpoint": 6,
+  "pdf|xlsx": 6,
+  "powerpoint|xlsx": 6,
+  "maps|product-price-monitor": 3,
+  "email-inbox-triage|weekly-review-planning": 5,
+  "notion|weekly-review-planning": 4,
+  "google-workspace|weekly-review-planning": 5,
+  "obsidian|weekly-review-planning": 4,
+  "airtable|weekly-review-planning": 3,
+  "axolotl|hermes-atropos-environments": 3,
+  "fine-tuning-with-trl|hermes-atropos-environments": 3,
+  "grpo-rl-training|hermes-atropos-environments": 3,
+  "huggingface-tokenizers|obliteratus": 3,
+  "gguf-quantization|obliteratus": 3,
+  "obliteratus|tensorrt-llm": 3,
+  "audiocraft-audio-generation|heartmula": 3,
+  "chroma|songsee": 1,
+  "mcporter|native-mcp": 5,
+  "github|native-mcp": 1,
+  "github-auth|github-issues": 7,
+  "github-auth|github-pr-workflow": 7,
+  "github-auth|github-repo-management": 7,
+  "github-auth|github-code-review": 7,
+  "github-code-review|github-pr-workflow": 6,
+  "github-issues|github-pr-workflow": 3,
+  "github-issues|github-repo-management": 3,
+  "github-pr-workflow|github-repo-management": 3,
+  "email-inbox-triage|google-workspace": 5,
+  "email-inbox-triage|himalaya": 5,
+  "hermes-agent-setup|hermes-local-dev-bridge": 3,
+  "hermes-local-dev-bridge|windows-gui-automation": 3,
+  "hermes-agent|hermes-local-dev-bridge": 1,
+  "architecture-diagram|excalidraw": 4,
+  "ascii-art|excalidraw": 3,
+  "claude-design|popular-web-designs": 9,
+  "claude-design|design-md": 12,
+  "architecture-diagram|claude-design": 3,
+  "claude-design|excalidraw": 3,
+  "comfyui|stable-diffusion-image-generation": 3,
+  "design-md|excalidraw": 3,
+  "design-md|popular-web-designs": 5,
+  "architecture-diagram|design-md": 3,
+  "hermes-vscode-incubator|html-as-skill": 3,
+  "agentic-entrepreneurship|html-as-skill": 7,
+  "html-as-skill|local-first-operator-surfaces": 3,
+  "hermes-surface-development|html-as-skill": 3,
+  "domain-codemode|html-as-skill": 7,
+  "html-as-skill|reachy-clerk": 6,
+  "domains-to-github-pages|html-as-skill": 1,
+  "humanizer|songwriting-and-ai-music": 3,
+  "excalidraw|p5js": 3,
+  "manim-video|p5js": 3,
+  "ascii-video|p5js": 3,
+  "p5js|pretext": 4,
+  "architecture-diagram|pretext": 3,
+  "claude-design|pretext": 3,
+  "excalidraw|pretext": 3,
+  "ascii-art|pretext": 1,
+  "ascii-video|pretext": 1,
+  "excalidraw|sketch": 4,
+  "popular-web-designs|sketch": 3,
+  "claude-design|sketch": 5,
+  "architecture-diagram|sketch": 1,
+  "computer-use|sovereign-browser-surface": 1,
+  "manim-video|touchdesigner-mcp": 3,
+  "native-mcp|touchdesigner-mcp": 3,
+  "ascii-video|touchdesigner-mcp": 3,
+  "hyperframes|touchdesigner-mcp": 3,
+  "agentic-entrepreneurship|manim-video": 3,
+  "agentic-entrepreneurship|domains-to-github-pages": 4,
+  "agentic-entrepreneurship|domain-codemode": 8,
+  "agentic-entrepreneurship|claude-design": 3,
+  "agentic-entrepreneurship|reachy-clerk": 6,
+  "agentic-entrepreneurship|agentic-language-chassis": 4,
+  "huggingface-hub|reachy-clerk": 3,
+  "domain-codemode|reachy-clerk": 3,
+  "claude-code|opencode": 6,
+  "claude-code|codex": 6,
+  "claude-code|hermes-agent": 6,
+  "claude-code|plan": 1,
+  "codex|hermes-agent": 6,
+  "hermes-agent|opencode": 6,
+  "codex|opencode": 3,
+  "apple-notes|obsidian": 5,
+  "agentic-language-chassis|html-as-skill": 3,
+  "agentic-language-chassis|hermes-surface-development": 3,
+  "agentic-language-chassis|domain-codemode": 3,
+  "minecraft-modpack-server|pokemon-player": 2
+ },
+ "kinds": {
+  "ae-as-skill|code-mode": [
+   "declared"
+  ],
+  "code-mode|glocal-mesh": [
+   "declared"
+  ],
+  "code-mode|pc-inference": [
+   "declared"
+  ],
+  "code-mode|sovereign-local-loop": [
+   "declared"
+  ],
+  "code-mode|sovereign-browser-surface": [
+   "declared"
+  ],
+  "cuda|sovereign-vscode-surface-dev": [
+   "declared",
+   "mention"
+  ],
+  "cuda|hermes-operator-grammar": [
+   "declared",
+   "mention"
+  ],
+  "cuda|optimizing-attention-flash": [
+   "declared",
+   "mention"
+  ],
+  "cuda|hermes-surface-development": [
+   "declared"
+  ],
+  "cuda|lambda-labs-gpu-cloud": [
+   "mention"
+  ],
+  "cuda|modal-serverless-gpu": [
+   "mention"
+  ],
+  "hyperframes-animation|hyperframes-core": [
+   "mention"
+  ],
+  "hyperframes-animation|hyperframes-creative": [
+   "mention"
+  ],
+  "hyperframes-animation|hyperframes-cli": [
+   "mention"
+  ],
+  "hyperframes-core|hyperframes-creative": [
+   "mention"
+  ],
+  "hyperframes-core|media-use": [
+   "mention"
+  ],
+  "hyperframes-cli|hyperframes-core": [
+   "mention"
+  ],
+  "hyperframes-core|hyperframes-registry": [
+   "mention"
+  ],
+  "hyperframes-animation|hyperframes-keyframes": [
+   "mention"
+  ],
+  "hyperframes-cli|hyperframes-keyframes": [
+   "mention"
+  ],
+  "hermes-desktop-plugins|keeper": [
+   "declared"
+  ],
+  "deploy-surfaces|keeper": [
+   "declared"
+  ],
+  "glocal-mesh|keeper": [
+   "declared",
+   "mention"
+  ],
+  "llama-cpp-gpu|pc-qr-api": [
+   "declared"
+  ],
+  "ae-as-skill|llama-cpp-gpu": [
+   "declared"
+  ],
+  "code-mode|measurement-index": [
+   "declared"
+  ],
+  "html-as-skill|measurement-index": [
+   "declared"
+  ],
+  "measurement-index|qr-as-skill": [
+   "declared"
+  ],
+  "keeper|measurement-index": [
+   "declared"
+  ],
+  "hermes-agent-skill-authoring|pc-qr-api": [
+   "declared"
+  ],
+  "code-mode|qr-as-skill": [
+   "declared"
+  ],
+  "html-as-skill|qr-as-skill": [
+   "declared"
+  ],
+  "keeper|qr-as-skill": [
+   "declared"
+  ],
+  "qr-as-skill|sovereign-local-loop": [
+   "declared"
+  ],
+  "agentic-language-chassis|sovereign-cuda-bridge": [
+   "declared"
+  ],
+  "hermes-operator-grammar|sovereign-cuda-bridge": [
+   "declared"
+  ],
+  "glocal-secrets|sovereign-cuda-bridge": [
+   "declared",
+   "mention"
+  ],
+  "cuda|sovereign-cuda-bridge": [
+   "declared"
+  ],
+  "blocked-page-recovery|grounded-citations": [
+   "declared"
+  ],
+  "deploy-surfaces|sovereign-mcp-surface": [
+   "declared"
+  ],
+  "deploy-surfaces|rtx-telemetry": [
+   "declared",
+   "mention"
+  ],
+  "deploy-surfaces|github-pages-deploy": [
+   "declared",
+   "mention"
+  ],
+  "deploy-surfaces|glocal-mesh": [
+   "declared",
+   "mention"
+  ],
+  "glocal-mesh|hermes-agent": [
+   "mention"
+  ],
+  "llama-cpp-gpu|pc-inference": [
+   "declared",
+   "mention"
+  ],
+  "ae-as-skill|pc-inference": [
+   "declared",
+   "mention"
+  ],
+  "pc-inference|pc-qr-api": [
+   "declared",
+   "mention"
+  ],
+  "rtx-telemetry|sovereign-cuda-bridge": [
+   "declared"
+  ],
+  "cuda-victus-dev|rtx-telemetry": [
+   "declared",
+   "mention"
+  ],
+  "glocal-mesh|rtx-telemetry": [
+   "declared",
+   "mention"
+  ],
+  "rtx-telemetry|sovereign-mcp-surface": [
+   "declared",
+   "mention"
+  ],
+  "deploy-surfaces|sovereign-resource-absorption": [
+   "declared"
+  ],
+  "github-pages-deploy|sovereign-resource-absorption": [
+   "declared",
+   "mention"
+  ],
+  "agentic-chassis-surface|sovereign-resource-absorption": [
+   "declared"
+  ],
+  "browser-agent-loop|html-as-skill": [
+   "declared",
+   "mention"
+  ],
+  "browser-agent-loop|sovereign-local-agent": [
+   "declared"
+  ],
+  "browser-agent-loop|sovereign-local-loop": [
+   "declared",
+   "mention"
+  ],
+  "browser-agent-loop|llama-cpp": [
+   "declared",
+   "mention"
+  ],
+  "codebase-inspection|github": [
+   "declared"
+  ],
+  "cuda-victus-dev|hermes-conductor-mesh": [
+   "mention"
+  ],
+  "cuda-victus-dev|hermes-surface-development": [
+   "mention"
+  ],
+  "github|requesting-code-review": [
+   "declared"
+  ],
+  "github-pages-deploy|html-as-skill": [
+   "mention"
+  ],
+  "hermes-agent-skill-authoring|requesting-code-review": [
+   "declared"
+  ],
+  "hermes-runtime-state|hermes-vscode-incubator": [
+   "declared"
+  ],
+  "hermes-runtime-state|hermes-surface-development": [
+   "declared"
+  ],
+  "hermes-surface-development|sovereign-atproto-network": [
+   "mention"
+  ],
+  "inspecting-hermes-desktop-dom|systematic-debugging": [
+   "declared"
+  ],
+  "dogfood|inspecting-hermes-desktop-dom": [
+   "declared"
+  ],
+  "inspecting-hermes-desktop-dom|node-inspect-debugger": [
+   "declared",
+   "mention"
+  ],
+  "interpreter-dispatch-debugging|systematic-debugging": [
+   "declared",
+   "mention"
+  ],
+  "interpreter-dispatch-debugging|test-driven-development": [
+   "declared"
+  ],
+  "agentic-language-chassis|interpreter-dispatch-debugging": [
+   "mention"
+  ],
+  "cuda|local-agent-runtime": [
+   "mention"
+  ],
+  "hermes-native|local-agent-runtime": [
+   "mention"
+  ],
+  "local-agent-runtime|vscode-as-skill": [
+   "mention"
+  ],
+  "local-agent-runtime|sovereign-vscode-surface-dev": [
+   "mention"
+  ],
+  "claude-design|local-first-operator-surfaces": [
+   "mention"
+  ],
+  "hermes-agent|local-first-operator-surfaces": [
+   "mention"
+  ],
+  "native-vision-from-first-principles|ocr-and-documents": [
+   "declared"
+  ],
+  "node-inspect-debugger|systematic-debugging": [
+   "declared"
+  ],
+  "node-inspect-debugger|python-debugpy": [
+   "declared",
+   "mention"
+  ],
+  "plan|writing-plans": [
+   "declared"
+  ],
+  "plan|subagent-driven-development": [
+   "declared"
+  ],
+  "python-debugpy|systematic-debugging": [
+   "declared"
+  ],
+  "requesting-code-review|writing-plans": [
+   "declared"
+  ],
+  "requesting-code-review|test-driven-development": [
+   "declared"
+  ],
+  "requesting-code-review|subagent-driven-development": [
+   "declared"
+  ],
+  "html-as-skill|resource-absorb-and-rename": [
+   "declared",
+   "mention"
+  ],
+  "github-pages-deploy|resource-absorb-and-rename": [
+   "declared",
+   "mention"
+  ],
+  "resource-absorb-and-rename|sovereign-fork-commit": [
+   "declared"
+  ],
+  "simplify-code|test-driven-development": [
+   "declared"
+  ],
+  "requesting-code-review|simplify-code": [
+   "declared",
+   "mention"
+  ],
+  "simplify-code|subagent-driven-development": [
+   "mention"
+  ],
+  "sovereign-atproto-network|sovereign-local-agent": [
+   "mention"
+  ],
+  "local-agent-runtime|sovereign-local-agent": [
+   "mention"
+  ],
+  "hermes-agent|sovereign-vscode-surface-dev": [
+   "mention"
+  ],
+  "sovereign-vscode-surface-dev|windows-gui-automation": [
+   "mention"
+  ],
+  "sketch|spike": [
+   "declared"
+  ],
+  "spike|subagent-driven-development": [
+   "declared"
+  ],
+  "plan|spike": [
+   "mention"
+  ],
+  "subagent-driven-development|writing-plans": [
+   "declared",
+   "mention"
+  ],
+  "subagent-driven-development|test-driven-development": [
+   "declared"
+  ],
+  "systematic-debugging|test-driven-development": [
+   "declared",
+   "mention"
+  ],
+  "subagent-driven-development|systematic-debugging": [
+   "declared"
+  ],
+  "html-as-skill|vscode-as-skill": [
+   "declared"
+  ],
+  "hermes-vscode-incubator|vscode-as-skill": [
+   "declared"
+  ],
+  "hermes-surface-development|vscode-as-skill": [
+   "declared"
+  ],
+  "local-first-operator-surfaces|vscode-as-skill": [
+   "declared"
+  ],
+  "hermes-agent|vscode-as-skill": [
+   "mention"
+  ],
+  "test-driven-development|writing-plans": [
+   "declared",
+   "mention"
+  ],
+  "xitter|xurl": [
+   "mention"
+  ],
+  "glocal-secrets|local-secret-source-bridge": [
+   "mention"
+  ],
+  "arxiv|ocr-and-documents": [
+   "declared",
+   "mention"
+  ],
+  "blogwatcher|competitor-news-monitor": [
+   "declared",
+   "mention"
+  ],
+  "arxiv|duckduckgo-search": [
+   "declared"
+  ],
+  "grounded-citations|pdf": [
+   "declared"
+  ],
+  "grounded-citations|youtube-content": [
+   "declared",
+   "mention"
+  ],
+  "arxiv|grounded-citations": [
+   "declared",
+   "mention"
+  ],
+  "grounded-citations|xurl": [
+   "mention"
+  ],
+  "llm-wiki|obsidian": [
+   "declared"
+  ],
+  "arxiv|llm-wiki": [
+   "declared"
+  ],
+  "duckduckgo-search|parallel-cli": [
+   "declared"
+  ],
+  "mcporter|parallel-cli": [
+   "declared"
+  ],
+  "ml-paper-writing|research-paper-writing": [
+   "declared",
+   "mention"
+  ],
+  "arxiv|research-paper-writing": [
+   "declared",
+   "mention"
+  ],
+  "plan|research-paper-writing": [
+   "declared"
+  ],
+  "research-paper-writing|subagent-driven-development": [
+   "declared"
+  ],
+  "box|google-workspace": [
+   "declared"
+  ],
+  "document-to-action-items|pdf": [
+   "declared",
+   "mention"
+  ],
+  "document-to-action-items|docx": [
+   "declared",
+   "mention"
+  ],
+  "document-to-action-items|notion": [
+   "declared",
+   "mention"
+  ],
+  "document-to-action-items|xlsx": [
+   "mention"
+  ],
+  "docx|pdf": [
+   "declared"
+  ],
+  "docx|xlsx": [
+   "declared"
+  ],
+  "docx|powerpoint": [
+   "declared"
+  ],
+  "google-workspace|himalaya": [
+   "declared",
+   "mention"
+  ],
+  "find-nearby|maps": [
+   "mention"
+  ],
+  "meeting-action-items|notion": [
+   "declared",
+   "mention"
+  ],
+  "google-workspace|meeting-action-items": [
+   "declared"
+  ],
+  "meeting-action-items|teams-meeting-pipeline": [
+   "declared",
+   "mention"
+  ],
+  "github-issues|meeting-action-items": [
+   "mention"
+  ],
+  "ocr-and-documents|powerpoint": [
+   "declared",
+   "mention"
+  ],
+  "pdf|powerpoint": [
+   "declared"
+  ],
+  "pdf|xlsx": [
+   "declared"
+  ],
+  "powerpoint|xlsx": [
+   "declared"
+  ],
+  "maps|product-price-monitor": [
+   "declared"
+  ],
+  "email-inbox-triage|weekly-review-planning": [
+   "declared",
+   "mention"
+  ],
+  "notion|weekly-review-planning": [
+   "declared",
+   "mention"
+  ],
+  "google-workspace|weekly-review-planning": [
+   "declared",
+   "mention"
+  ],
+  "obsidian|weekly-review-planning": [
+   "declared",
+   "mention"
+  ],
+  "airtable|weekly-review-planning": [
+   "declared"
+  ],
+  "axolotl|hermes-atropos-environments": [
+   "declared"
+  ],
+  "fine-tuning-with-trl|hermes-atropos-environments": [
+   "declared"
+  ],
+  "grpo-rl-training|hermes-atropos-environments": [
+   "declared"
+  ],
+  "huggingface-tokenizers|obliteratus": [
+   "declared"
+  ],
+  "gguf-quantization|obliteratus": [
+   "declared"
+  ],
+  "obliteratus|tensorrt-llm": [
+   "declared"
+  ],
+  "audiocraft-audio-generation|heartmula": [
+   "declared"
+  ],
+  "chroma|songsee": [
+   "mention"
+  ],
+  "mcporter|native-mcp": [
+   "declared",
+   "mention"
+  ],
+  "github|native-mcp": [
+   "mention"
+  ],
+  "github-auth|github-issues": [
+   "declared",
+   "mention"
+  ],
+  "github-auth|github-pr-workflow": [
+   "declared",
+   "mention"
+  ],
+  "github-auth|github-repo-management": [
+   "declared",
+   "mention"
+  ],
+  "github-auth|github-code-review": [
+   "declared",
+   "mention"
+  ],
+  "github-code-review|github-pr-workflow": [
+   "declared"
+  ],
+  "github-issues|github-pr-workflow": [
+   "declared"
+  ],
+  "github-issues|github-repo-management": [
+   "declared"
+  ],
+  "github-pr-workflow|github-repo-management": [
+   "declared"
+  ],
+  "email-inbox-triage|google-workspace": [
+   "declared",
+   "mention"
+  ],
+  "email-inbox-triage|himalaya": [
+   "declared",
+   "mention"
+  ],
+  "hermes-agent-setup|hermes-local-dev-bridge": [
+   "declared"
+  ],
+  "hermes-local-dev-bridge|windows-gui-automation": [
+   "declared"
+  ],
+  "hermes-agent|hermes-local-dev-bridge": [
+   "mention"
+  ],
+  "architecture-diagram|excalidraw": [
+   "declared",
+   "mention"
+  ],
+  "ascii-art|excalidraw": [
+   "declared"
+  ],
+  "claude-design|popular-web-designs": [
+   "declared",
+   "mention"
+  ],
+  "claude-design|design-md": [
+   "declared",
+   "mention"
+  ],
+  "architecture-diagram|claude-design": [
+   "declared"
+  ],
+  "claude-design|excalidraw": [
+   "declared"
+  ],
+  "comfyui|stable-diffusion-image-generation": [
+   "declared"
+  ],
+  "design-md|excalidraw": [
+   "declared"
+  ],
+  "design-md|popular-web-designs": [
+   "declared",
+   "mention"
+  ],
+  "architecture-diagram|design-md": [
+   "declared"
+  ],
+  "hermes-vscode-incubator|html-as-skill": [
+   "declared"
+  ],
+  "agentic-entrepreneurship|html-as-skill": [
+   "declared",
+   "mention"
+  ],
+  "html-as-skill|local-first-operator-surfaces": [
+   "declared"
+  ],
+  "hermes-surface-development|html-as-skill": [
+   "declared"
+  ],
+  "domain-codemode|html-as-skill": [
+   "declared",
+   "mention"
+  ],
+  "html-as-skill|reachy-clerk": [
+   "declared"
+  ],
+  "domains-to-github-pages|html-as-skill": [
+   "mention"
+  ],
+  "humanizer|songwriting-and-ai-music": [
+   "declared"
+  ],
+  "excalidraw|p5js": [
+   "declared"
+  ],
+  "manim-video|p5js": [
+   "declared"
+  ],
+  "ascii-video|p5js": [
+   "declared"
+  ],
+  "p5js|pretext": [
+   "declared",
+   "mention"
+  ],
+  "architecture-diagram|pretext": [
+   "declared"
+  ],
+  "claude-design|pretext": [
+   "declared"
+  ],
+  "excalidraw|pretext": [
+   "declared"
+  ],
+  "ascii-art|pretext": [
+   "mention"
+  ],
+  "ascii-video|pretext": [
+   "mention"
+  ],
+  "excalidraw|sketch": [
+   "declared",
+   "mention"
+  ],
+  "popular-web-designs|sketch": [
+   "declared"
+  ],
+  "claude-design|sketch": [
+   "declared",
+   "mention"
+  ],
+  "architecture-diagram|sketch": [
+   "mention"
+  ],
+  "computer-use|sovereign-browser-surface": [
+   "mention"
+  ],
+  "manim-video|touchdesigner-mcp": [
+   "declared"
+  ],
+  "native-mcp|touchdesigner-mcp": [
+   "declared"
+  ],
+  "ascii-video|touchdesigner-mcp": [
+   "declared"
+  ],
+  "hyperframes|touchdesigner-mcp": [
+   "declared"
+  ],
+  "agentic-entrepreneurship|manim-video": [
+   "declared"
+  ],
+  "agentic-entrepreneurship|domains-to-github-pages": [
+   "declared",
+   "mention"
+  ],
+  "agentic-entrepreneurship|domain-codemode": [
+   "declared",
+   "mention"
+  ],
+  "agentic-entrepreneurship|claude-design": [
+   "declared"
+  ],
+  "agentic-entrepreneurship|reachy-clerk": [
+   "declared"
+  ],
+  "agentic-entrepreneurship|agentic-language-chassis": [
+   "declared",
+   "mention"
+  ],
+  "huggingface-hub|reachy-clerk": [
+   "declared"
+  ],
+  "domain-codemode|reachy-clerk": [
+   "declared"
+  ],
+  "claude-code|opencode": [
+   "declared"
+  ],
+  "claude-code|codex": [
+   "declared"
+  ],
+  "claude-code|hermes-agent": [
+   "declared"
+  ],
+  "claude-code|plan": [
+   "mention"
+  ],
+  "codex|hermes-agent": [
+   "declared"
+  ],
+  "hermes-agent|opencode": [
+   "declared"
+  ],
+  "codex|opencode": [
+   "declared"
+  ],
+  "apple-notes|obsidian": [
+   "declared",
+   "mention"
+  ],
+  "agentic-language-chassis|html-as-skill": [
+   "declared"
+  ],
+  "agentic-language-chassis|hermes-surface-development": [
+   "declared"
+  ],
+  "agentic-language-chassis|domain-codemode": [
+   "declared"
+  ],
+  "minecraft-modpack-server|pokemon-player": [
+   "tag"
+  ]
+ },
+ "sov": [
+  "ae-as-skill",
+  "deploy-surfaces",
+  "glocal-mesh",
+  "pc-inference",
+  "rtx-telemetry",
+  "sovereign-resource-absorption"
+ ],
+ "fleet": [
+  "agentic-interpreter",
+  "claude-code",
+  "codex",
+  "opencode"
+ ]
+}

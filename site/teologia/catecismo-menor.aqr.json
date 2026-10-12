@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/catecismo-menor",
+  "region": "es-LATAM",
+  "sha256": "41df530165df46da51b00674734e52cae124073aaebd8e8ba93c505f67d6be05",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-10T03:08:59Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/catecismo-menor|es-LATAM|sha256:41df530165df46da51b00674734e52cae124073aaebd8e8ba93c505f67d6be05|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-catecismo.svg",
+  "html": "C:\\æ\\site\\teologia\\catecismo-menor.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

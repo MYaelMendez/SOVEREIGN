@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>æ:// — cover</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#050505;overflow:hidden;font-family:'JetBrains Mono',monospace}
+  canvas{display:block}
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10;color:#D4AF37}
+  #hud::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 44% 53% at 50% 53%,rgba(5,5,5,.7),transparent 95%)}
+  .top{position:absolute;top:40px;left:0;right:0;text-align:center;
+    font-size:16px;letter-spacing:6px;color:#D4AF37;text-shadow:0 2px 8px #050505}
+  .glyph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-size:180px;font-weight:900;color:#D4AF37;
+    text-shadow:0 0 80px rgba(212,175,55,.6),0 0 200px rgba(212,175,55,.3);
+    font-family:'Orbitron',sans-serif}
+  .cmd{position:absolute;top:calc(50% + 120px);left:0;right:0;text-align:center;
+    font-size:25px;letter-spacing:4px;color:#D4AF37;font-weight:700;text-shadow:0 2px 12px #050505}
+  .sub{position:absolute;top:calc(50% + 162px);left:0;right:0;text-align:center;
+    font-size:18px;letter-spacing:2px;color:#f0ece4;text-shadow:0 2px 12px #050505}
+  .bottom{position:absolute;bottom:40px;left:0;right:0;text-align:center;
+    font-size:16px;letter-spacing:3px;color:#D4AF37;text-shadow:0 2px 12px #050505}
+  .scan{position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="top">æ:// HOMEBASE</div>
+  <div class="glyph">æ</div>
+  <div class="cmd">#OPENSOURCEWARE</div>
+  <div class="sub">GLOBAL SOURCE OF AGENTIC ELECTRONIC ENGINEERING</div>
+  <div class="bottom">SOVEREIGN · LOCAL-FIRST · ZERO CLOUD RENT</div>
+  <div class="scan"></div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1280, H = 720, FPS = 30, DUR = 6, TOTAL = FPS * DUR;
+
+const GOLD = 0xD4AF37, VOID = 0x050505;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(VOID);
+scene.fog = new THREE.FogExp2(VOID, 0.015);
+
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+camera.position.set(0, 0, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x223344, 0.6));
+const l1 = new THREE.PointLight(GOLD, 4, 50); l1.position.set(4, 5, 10); scene.add(l1);
+const l2 = new THREE.PointLight(0x00ff9d, 1.5, 30); l2.position.set(-5, -3, 8); scene.add(l2);
+
+// ── NEURAL MESH — the sovereign network ──
+const MN = 1200;
+const mGeo = new THREE.BufferGeometry();
+const mPos = new Float32Array(MN * 3);
+const mCol = new Float32Array(MN * 3);
+let seed = 42;
+const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+for (let i = 0; i < MN; i++) {
+  mPos[i*3]   = (rnd() - 0.5) * 20;
+  mPos[i*3+1] = (rnd() - 0.5) * 12;
+  mPos[i*3+2] = (rnd() - 0.5) * 16 - 4;
+  const c = new THREE.Color().setHSL(0.12 + rnd()*0.04, 0.7, 0.3 + rnd()*0.3);
+  mCol[i*3] = c.r; mCol[i*3+1] = c.g; mCol[i*3+2] = c.b;
+}
+mGeo.setAttribute('position', new THREE.BufferAttribute(mPos, 3));
+mGeo.setAttribute('color', new THREE.BufferAttribute(mCol, 3));
+const mMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `uniform float uTime; varying vec3 vColor;
+    void main(){ vColor=color; vec3 p=position;
+      p.x += sin(uTime*0.3 + position.y*0.5)*0.3;
+      p.y += cos(uTime*0.2 + position.x*0.4)*0.2;
+      vec4 mv=modelViewMatrix*vec4(p,1.0); gl_PointSize=2.5*(300.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `varying vec3 vColor;
+    void main(){ float d=length(gl_PointCoord-0.5); if(d>0.5)discard; gl_FragColor=vec4(vColor,(1.0-d*2.0)*0.5); }`,
+  vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+scene.add(new THREE.Points(mGeo, mMat));
+
+// ── ORBITING RINGS — the mesh topology ──
+const rings = [];
+for (let r = 0; r < 3; r++) {
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5 + r * 0.8, 0.015, 8, 128),
+    new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.25 - r*0.06 })
+  );
+  ring.rotation.x = Math.PI/2 + r*0.3;
+  ring.rotation.y = r*0.5;
+  scene.add(ring);
+  rings.push(ring);
+}
+
+// ── POST ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.4, 0.85));
+const GradePass = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){ vec2 d=vUv-0.5; float r2=dot(d,d);
+      float ca=0.0015+r2*0.004; vec3 col;
+      col.r=texture2D(tDiffuse,vUv+d*ca).r; col.g=texture2D(tDiffuse,vUv).g; col.b=texture2D(tDiffuse,vUv-d*ca).b;
+      col*=smoothstep(1.1,0.2,r2*2.0);
+      col*=1.0-0.04*step(0.5,fract(vUv.y*uRes.y*0.5));
+      col+=(rand(vUv*uRes+uTime)-0.5)*0.025;
+      gl_FragColor=vec4(col,1.0); }`,
+};
+const gradePass = new ShaderPass(GradePass);
+composer.addPass(gradePass);
+composer.addPass(new OutputPass());
+
+function applyFrame(t) {
+  mMat.uniforms.uTime.value = t;
+  gradePass.uniforms.uTime.value = t;
+
+  rings.forEach((ring, i) => {
+    ring.rotation.z = t * (0.15 + i*0.08);
+    ring.rotation.x = Math.PI/2 + i*0.3 + Math.sin(t*0.2+i)*0.1;
+  });
+
+  camera.position.x = Math.sin(t*0.25) * 0.4;
+  camera.position.y = Math.cos(t*0.2) * 0.25;
+  camera.lookAt(0, 0, 0);
+}
+
+const clock = new THREE.Clock();
+let driven = false;
+function animate() {
+  requestAnimationFrame(animate);
+  if (driven) return;
+  applyFrame(clock.getElapsedTime());
+  composer.render();
+}
+animate();
+
+window.__renderFrame = (i, total) => { driven = true; applyFrame(i / FPS); composer.render(); return true; };
+window.__COVER__ = { ready: true, brand: 'æ://', deterministic: true };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/threejs-curriculo/cover-ae.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>
