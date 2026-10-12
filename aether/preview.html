@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>æ:// schemas — preview pane</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--gold2:#f0d487;--neon:#00ff9d;--cyan:#00eaff;--violet:#8c72ff;--danger:#ff4d5f;--ink:#e8e6df;--muted:#6f6a5c;--border:rgba(212,175,55,.22)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,monospace;min-height:100vh;padding:24px}
+.scan{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.08;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 4px)}
+.vig{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 30%,transparent 20%,rgba(5,5,5,.6) 80%)}
+.container{position:relative;z-index:1;max-width:960px;margin:0 auto}
+h1{font-family:'Orbitron';font-weight:900;font-size:clamp(20px,4vw,36px);color:var(--gold);margin-bottom:8px;letter-spacing:2px}
+.meta{color:var(--muted);font-size:11px;letter-spacing:.14em;margin-bottom:32px;text-transform:uppercase}
+.meta span{color:var(--cyan)}
+.badge{display:inline-block;font-size:8px;letter-spacing:1px;padding:3px 8px;border:1px solid rgba(0,255,157,.3);color:var(--neon);border-radius:999px;text-transform:uppercase;margin-left:8px}
+.badge.warn{border-color:rgba(255,77,95,.3);color:var(--danger)}
+.badge.ok{border-color:rgba(212,175,55,.4);color:var(--gold)}
+.section{margin-bottom:32px}
+.section-title{font-family:'Orbitron';font-weight:700;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{border:1px solid var(--border);background:rgba(8,8,7,.85);padding:16px;transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:var(--gold);box-shadow:0 0 20px rgba(212,175,55,.1)}
+.card .name{font-family:'Orbitron';font-weight:700;font-size:14px;color:var(--gold);margin-bottom:6px}
+.card .desc{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.card .methods{display:flex;flex-wrap:wrap;gap:4px}
+.method{font-size:9px;color:var(--cyan);border:1px solid rgba(0,234,255,.2);padding:2px 6px;border-radius:4px}
+.method.write{color:var(--neon);border-color:rgba(0,255,157,.2)}
+.method.read{color:var(--violet);border-color:rgba(140,114,255,.2)}
+.rec{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid var(--border);background:rgba(8,8,7,.85);margin-bottom:10px}
+.rec .icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.rec .body{flex:1}
+.rec .title{font-family:'Orbitron';font-weight:700;font-size:12px;color:var(--gold);margin-bottom:4px}
+.rec .detail{font-size:11px;color:var(--muted);line-height:1.6}
+.rec .detail code{color:var(--cyan);background:rgba(0,234,255,.08);padding:1px 4px;border-radius:3px}
+.verdict{border:1px solid var(--gold);background:rgba(212,175,55,.05);padding:20px;margin-top:8px}
+.verdict .title{font-family:'Orbitron';font-weight:900;font-size:16px;color:var(--gold);margin-bottom:12px}
+.verdict .body{font-size:12px;line-height:1.8;color:var(--ink)}
+.verdict .body code{color:var(--neon);background:rgba(0,255,157,.08);padding:1px 4px;border-radius:3px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.footer a{color:var(--cyan);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="vig"></div>
+<div class="container">
+
+<h1>æ:// schemas</h1>
+<div class="meta">
+  <span>aether/schemas.py</span> · 13,399 bytes · 8 classes · 2 validators · extracted from kænbæn
+  <span class="badge ok">SPEC</span>
+</div>
+
+<div class="section">
+  <div class="section-title">Standalone-worthy schemas</div>
+  <div class="grid">
+    <div class="card">
+      <div class="name">BaseSchema</div>
+      <div class="desc">Base class with serialization and validation</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+        <span class="method read">to_json</span>
+        <span class="method read">from_json</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">SystemMap</div>
+      <div class="desc">Fleet topology — surfaces, debts, foundation layer</div>
+      <div class="methods">
+        <span class="method write">add_surface</span>
+        <span class="method write">resolve_debt</span>
+        <span class="method write">add_debt</span>
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">Surface</div>
+      <div class="desc">Addressable endpoint — path, status, metadata</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">CapabilityContract</div>
+      <div class="desc">Agent can/cannot list, path, modes</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">VerificationGate</div>
+      <div class="desc">Threshold + command + pass/fail predicate</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">Receipt</div>
+      <div class="desc">Execution receipt — type, sha256, detail, timestamp</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">ChainEntry</div>
+      <div class="desc">Chained entry — receipt ID, prev hash, artifacts</div>
+      <div class="methods">
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">ReceiptChain</div>
+      <div class="desc">Immutable receipt chain — the system's memory</div>
+      <div class="methods">
+        <span class="method write">append_chain</span>
+        <span class="method write">append_receipt</span>
+        <span class="method read">verify_chain</span>
+        <span class="method read">to_dict</span>
+        <span class="method read">from_dict</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Validators</div>
+  <div class="grid">
+    <div class="card">
+      <div class="name">validate_system_map</div>
+      <div class="desc">Validate a system-map dict — returns list of errors</div>
+      <div class="methods">
+        <span class="method read">validate</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">validate_chain</div>
+      <div class="desc">Validate a receipt-chain dict — returns list of errors</div>
+      <div class="methods">
+        <span class="method read">validate</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Coupled — stays in æ://</div>
+  <div class="grid">
+    <div class="card" style="border-color:rgba(255,77,95,.2)">
+      <div class="name" style="color:var(--danger)">Agent names <span class="badge warn">æ://-specific</span></div>
+      <div class="desc">zeus, hermes, conductor, fleet — fleet identity, not schema</div>
+    </div>
+    <div class="card" style="border-color:rgba(255,77,95,.2)">
+      <div class="name" style="color:var(--danger)">sync_live() <span class="badge warn">coupled</span></div>
+      <div class="desc">GitHub Pages /kaenbaen/ write path — deployment concern</div>
+    </div>
+    <div class="card" style="border-color:rgba(255,77,95,.2)">
+      <div class="name" style="color:var(--danger)">JSON data files <span class="badge warn">reference</span></div>
+      <div class="desc">kænbæn's 4 files — the reference implementation, not the spec</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Recommendations</div>
+
+  <div class="rec">
+    <div class="icon">🚀</div>
+    <div class="body">
+      <div class="title">1. Ship aether/ as standalone repo</div>
+      <div class="detail">Pure data shapes, zero coupling. Any fleet can adopt these schemas. Extract from kænbæn, publish as <code>aether</code> package.</div>
+    </div>
+  </div>
+
+  <div class="rec">
+    <div class="icon">📐</div>
+    <div class="body">
+      <div class="title">2. Publish JSON Schema (draft 2020-12)</div>
+      <div class="detail">Machine-readable, language-agnostic. Enables tooling ecosystem — validators, generators, documentation.</div>
+    </div>
+  </div>
+
+  <div class="rec">
+    <div class="icon">🧠</div>
+    <div class="body">
+      <div class="title">3. Keep kænbæn as æ:// subsystem</div>
+      <div class="detail">The reference implementation. <code>aether/</code> is the spec; <code>kænbæn/</code> is the runtime. Separation of concerns.</div>
+    </div>
+  </div>
+
+  <div class="rec">
+    <div class="icon">🧪</div>
+    <div class="body">
+      <div class="title">4. Teknium test</div>
+      <div class="detail">He'd fold the <em>pattern</em> into Hermes' memory layer, not ship a standalone library. The spec travels; the implementation stays sovereign.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <div class="section-title">Verdict</div>
+  <div class="verdict">
+    <div class="title">Worth a repo? Yes — as spec, not implementation.</div>
+    <div class="body">
+      The schemas are <code>language-agnostic</code>, <code>zero-dependency</code>, and <code>immediately usable</code> by any agent fleet.
+      They are the <em>data shapes</em> of sovereign computing — the contract between agent and system.
+      <br><br>
+      What makes them valuable is not the code (13KB) but the <em>pattern</em>: every agent declares capabilities,
+      every action produces a receipt, every artifact passes a gate. That pattern is what Teknium would adopt —
+      folded into Hermes, not shipped standalone.
+      <br><br>
+      <strong>Next step:</strong> publish <code>aether/</code> as a standalone package with JSON Schema export.
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <a href="./schemas.py">schemas.py</a> · <a href="./__init__.py">__init__.py</a> · <a href="../kænbæn/">kænbæn</a> · æ:// sovereign stack
+</div>
+
+</div>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="position:fixed;bottom:16px;right:16px;z-index:99999;width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;background:#050505;padding:4px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.4)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'" onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')" title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=file:///C:/æ/aether/preview.html&color=D4AF37&bgcolor=050505" alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>
