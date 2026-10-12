@@ -154,6 +154,7 @@ def check_inbox() -> list[dict]:
                 raw = raw.decode("utf-8", errors="replace")
 
             import email
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
             msg = email.message_from_string(raw)
             subject = _decode_subject(msg.get("Subject", ""))
 

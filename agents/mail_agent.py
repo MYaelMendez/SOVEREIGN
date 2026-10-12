@@ -33,6 +33,7 @@ from email.header import decode_header
 from dataclasses import dataclass, asdict
 from typing import Optional
 from pathlib import Path
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 # ─── Configuration ───────────────────────────────────────────────
 

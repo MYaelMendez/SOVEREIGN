@@ -20,6 +20,7 @@ import sys
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 # Paths
 KEEPER_DIR = Path("C:/æ/keeper")

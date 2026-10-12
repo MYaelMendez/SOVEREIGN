@@ -93,6 +93,7 @@ def dispatch(op: str, n: int) -> dict:
             import sys
             sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             from gpu_mcp.gpu_agent import GPUAgent  # type: ignore
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
             gpu = GPUAgent()
             probe = gpu.probe_gpu()
             if probe and "name" in probe:

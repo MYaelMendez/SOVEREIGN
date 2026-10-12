@@ -418,6 +418,9 @@ def ledger_append(entry):
 
 if __name__ == "__main__":
     import argparse
+    import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
 
     parser = argparse.ArgumentParser(description="æ://qr_keys - local QR key management")
     subparsers = parser.add_subparsers(dest="command")

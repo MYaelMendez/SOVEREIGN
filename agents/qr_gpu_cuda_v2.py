@@ -221,6 +221,7 @@ def main():
 
 if __name__ == "__main__":
     import sys
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
     if len(sys.argv) > 2 and sys.argv[1] == '--verify':
         verify_file = sys.argv[2]
         with open(verify_file) as f:

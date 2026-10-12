@@ -1,4 +1,5 @@
 import asyncio, json, websockets, urllib.request
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 async def main():
     tabs = json.loads(urllib.request.urlopen('http://127.0.0.1:9333/json/list').read())

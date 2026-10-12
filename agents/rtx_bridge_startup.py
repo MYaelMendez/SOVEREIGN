@@ -14,6 +14,7 @@ Handing bash the native form makes it eat the backslashes and nothing runs.
 Usage: rtx_bridge_startup.py <vbs_output_path> <bash_exe_native> <script_msys>
 """
 import sys
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 vbs_path, bash_exe, script = sys.argv[1], sys.argv[2], sys.argv[3]
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Cloud keeper cron - audit droplet state, write ledger, publish receipts."""
 import json, os, time, urllib.request, hashlib, hmac
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 STORE = '/opt/aevps/store.json'
 SIGN_KEY = os.environ.get('VPS_SIGN_KEY', 'droplet-keeper-key')

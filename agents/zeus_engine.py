@@ -30,6 +30,9 @@ import subprocess
 import cupy as cp
 import numpy as np
 from pathlib import Path
+import sys as _sys
+_sys.path.insert(0, "C:/æ/agents")
+from kænbæn import verify_before_act, load_system_map, get_fleet_targets
 
 # ─── Fix Pattern Library ───
 # Each pattern maps a `: any` anti-pattern to a deterministic fix
@@ -546,12 +549,26 @@ class ZeusEngine:
             ['git', 'commit', '-m', f"{message}\n\n{receipt_url}"],
             cwd=repo
         )
-        
+
+        # Write back to kænbæn — the agent remembers itself
+        try:
+            from kænbæn import append_receipt
+            append_receipt(
+                receipt_type="zeus-self-improvement",
+                sha256=receipt_hash[:16],
+                detail=f"Zeus self-healing cycle: {len(self.fix_log)} files fixed, tsc {'PASS' if all_pass else 'FAIL'}",
+                agent="zeus_engine"
+            )
+        except Exception:
+            pass  # never let receipt write block the commit
+
         return receipt_url
 
 
 def main():
     import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
     
     repo = "C:/æ"
     mode = sys.argv[1] if len(sys.argv) > 1 else "full"

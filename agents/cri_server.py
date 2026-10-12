@@ -41,6 +41,10 @@ SURFACE_FILE = Path(r"C:\æ\github-pages\aipodcast_me\cri_surface.html")
 # Derive from __file__ so this works from any cwd / mount (not just C:\æ\agents).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import sys
+sys.path.insert(0, "C:/æ/kænbæn")
+import kænbæn
+
 from cri_engine import (
     Observation, CRICalculator, ExplainabilityEngine, Release,
     SOURCE_REGISTRY, COMPONENT_FAMILIES

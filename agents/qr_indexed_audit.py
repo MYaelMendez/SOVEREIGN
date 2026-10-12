@@ -3,6 +3,7 @@
 import re, os, json, hashlib, base64, zlib
 from pathlib import Path
 from collections import Counter
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 ROOT = "C:/æ"
 ROOTS = ["C:/æ/site", "C:/æ/agents", "C:/æ/vscoder", "C:/æ/hermes-fork/vscode-remote-use"]

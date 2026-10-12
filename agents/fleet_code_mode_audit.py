@@ -22,6 +22,7 @@ Output: JSON array of {file, line, pattern, severity}
 """
 
 import re, json, sys, os
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 # ── Configuration ──────────────────────────────────────────────────────────
 

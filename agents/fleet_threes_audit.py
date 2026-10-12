@@ -3,6 +3,7 @@
 // Uses æ.storage for file I/O, æ.keeper for audit trail
 
 import re, json, sys, os, hashlib;
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 // Scan all HTML files in the aipodcast_me directory for Three.js imports
 const SCAN_DIR = "C:/æ/site/aipodcast_me/";

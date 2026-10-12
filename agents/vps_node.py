@@ -340,6 +340,7 @@ def run(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
 
 def selftest():
     import os
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
     os.environ["VPS_SIGN_KEY"] = "selftest-key"
     v = {"node": "victus", "route": "pc://mesh/victus/local", "role": "engineering-computer",
          "status": "online", "models": ["local/cuda"], "agents": ["orch"]}

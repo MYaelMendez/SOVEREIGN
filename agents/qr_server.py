@@ -54,6 +54,10 @@ from qr_key_manager import (
     create_key, list_keys, get_key, sign_with_key, verify_signature,
     encode_qr, decode_qr, encode_key_as_qr, decode_qr_to_key
 )
+import sys
+sys.path.insert(0, "C:/æ/kænbæn")
+import kænbæn
+
 from contract_qr import (
     create_contract, sign_contract, verify_contract,
     encode_contract_as_qr, decode_qr_contract, execute_contract,

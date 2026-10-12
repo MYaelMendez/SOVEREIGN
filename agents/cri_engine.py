@@ -545,6 +545,9 @@ class Release:
 
 if __name__ == "__main__":
     import argparse
+    import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
 
     parser = argparse.ArgumentParser(description="CRI:// Consumer Redline Index Engine")
     subparsers = parser.add_subparsers(dest="command")

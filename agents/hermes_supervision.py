@@ -38,6 +38,9 @@ import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
+import sys as _sys
+_sys.path.insert(0, "C:/æ/agents")
+from kænbæn import verify_before_act, load_verification_gates
 
 # ── Gate functions per artifact type ──
 
@@ -278,6 +281,18 @@ def verify_artifact(path: str) -> dict:
     result["sha256"] = sha256_file(p)
     result["verified_at"] = datetime.now(timezone.utc).isoformat()
 
+    # Write back to kænbæn — the agent remembers itself
+    try:
+        from kænbæn import append_receipt
+        append_receipt(
+            receipt_type="hermes-verify",
+            sha256=result["sha256"][:16],
+            detail=f"Hermes verified {p.name}: {'PASS' if result['passed'] else 'FAIL'} ({ext} gate)",
+            agent="hermes_supervision"
+        )
+    except Exception:
+        pass  # never let receipt write block verification
+
     return result
 
 
@@ -328,6 +343,9 @@ def selftest() -> dict:
 
     # Test 1: valid Python
     import tempfile
+    import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, dir=".") as f:
         f.write("def hello():\n    return 'world'\n")
         tmp = f.name

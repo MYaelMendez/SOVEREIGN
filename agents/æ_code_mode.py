@@ -409,6 +409,7 @@ def execute(code: str, timeout: int = TIMEOUT_S):
 
         # Use threading for timeout on Windows
         import threading
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
         result = {"exc": None}
         def _target():
             try:

@@ -44,6 +44,9 @@ import sys
 import subprocess
 import re
 from pathlib import Path
+import sys as _sys
+_sys.path.insert(0, "C:/æ/agents")
+from kænbæn import verify_before_act, load_system_map, get_fleet_targets
 
 try:
     import cupy as cp
@@ -261,7 +264,19 @@ class FleetOrchestrator:
             print(f"  [{imp['priority']}] {imp['target']}: {imp['issue']}")
         
         print(f"\n  Meta-receipt: ae://receipt/{self.receipt_chain[:24]}")
-        
+
+        # Write back to kænbæn — the agent remembers itself
+        try:
+            from kænbæn import append_receipt
+            append_receipt(
+                receipt_type="fleet-self-improvement",
+                sha256=self.receipt_chain[:16],
+                detail=f"Fleet self-improvement: {len(improvements)} improvements planned, {len(audit_results)} targets audited",
+                agent="fleet_orchestrator"
+            )
+        except Exception:
+            pass  # never let receipt write block the cycle
+
         return {
             'audit': audit_results,
             'improvements': improvements,
@@ -311,6 +326,8 @@ class FleetOrchestrator:
 
 def main():
     import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'self-improve'
     target = sys.argv[2] if len(sys.argv) > 2 else 'C:/æ/site'
     

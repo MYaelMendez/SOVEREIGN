@@ -471,6 +471,9 @@ def verify_signature_raw(public_key_hex, message, signature):
 
 if __name__ == "__main__":
     import argparse
+    import sys
+    sys.path.insert(0, "C:/æ/kænbæn")
+    import kænbæn
 
     parser = argparse.ArgumentParser(description="æ://contract_qr - smart contract QR encoding")
     subparsers = parser.add_subparsers(dest="command")

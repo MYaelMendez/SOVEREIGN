@@ -85,6 +85,7 @@ VERBS = {
     "inspect":  {"needs_id": True,  "desc": "show a task (no mutation)"},
     "list":     {"needs_id": False, "desc": "print the whole board"},
     "init":     {"needs_id": False, "desc": "create kanban.db if missing"},
+    "pledge":   {"needs_id": False, "desc": "commit to the agent pledge"},
 }
 
 
@@ -120,8 +121,15 @@ def _kanban_module():
     return None
 
 
-def dispatch(verb: str, task_id: str | None = None, dry: bool = False) -> dict:
+def dispatch(verb: str, task_id: str | None = None, dry: bool = False,
+             card: dict | None = None, require_signature: bool = True,
+             consume: bool = True) -> dict:
     """Run one kanban operation. Never raises — returns a result dict.
+
+    SIGNATURE GATE. When `card` is given and `require_signature` is set, the
+    card must verify (Ed25519 capability, unexpired, nonce unspent) before any
+    board mutation happens. Without this, possession of the bytes is authority:
+    a photograph of someone else's card dispatches the same mutation.
 
     Prefers the in-process `run_slash(rest) -> str` entry (a string in, a
     string out — no subprocess, no argv guessing). Falls back to a shell
@@ -130,8 +138,47 @@ def dispatch(verb: str, task_id: str | None = None, dry: bool = False) -> dict:
     spec = VERBS.get(verb)
     if not spec:
         return {"ok": False, "verb": verb, "error": f"unknown verb '{verb}'"}
+
+    # ── the signature gate runs BEFORE any other validation ──
+    # Ordering matters: an unauthenticated card must be refused for being
+    # unauthenticated, not for a missing argument. Checking `needs_id` first
+    # let a forged card return "needs a task id" — a refusal with the wrong
+    # reason, which reads as a usage error rather than a security event.
+    if require_signature and card is not None:
+        try:
+            import card_signing as cs
+            v = cs.verify_card(card, consume=consume)
+        except Exception as e:
+            return {"ok": False, "verb": verb, "task_id": task_id,
+                    "error": f"cannot verify the card: {type(e).__name__}: {e}",
+                    "refused": True}
+        if not v.get("ok"):
+            return {"ok": False, "verb": verb, "task_id": task_id,
+                    "error": f"REFUSED (unauthenticated card): {v.get('reason')}",
+                    "refused": True, "reason": v.get("reason")}
+        # the signature binds the verb and the target — refuse a mismatch even
+        # though the signature verified, since the caller may have misread it
+        if v.get("verb") and v["verb"] != verb:
+            return {"ok": False, "verb": verb, "task_id": task_id, "refused": True,
+                    "error": f"REFUSED: card authorises '{v['verb']}', not '{verb}'"}
+        if v.get("task_id") and task_id and v["task_id"] != task_id:
+            return {"ok": False, "verb": verb, "task_id": task_id, "refused": True,
+                    "error": f"REFUSED: card authorises '{v['task_id']}', not '{task_id}'"}
+
     if spec["needs_id"] and not task_id:
         return {"ok": False, "verb": verb, "error": f"verb '{verb}' needs a task id"}
+
+    # `pledge` is not a kanban subcommand — it is a commitment, handled here.
+    if verb == "pledge":
+        try:
+            import agent_pledge as ap
+            rec = ap.commit(task_id or os.environ.get("AGENT_ID", "hermes"))
+            return {"ok": True, "verb": "pledge", "pledged": True,
+                    "pledge_hash": rec["pledge_hash"], "signed_at": rec["signed_at"],
+                    "stdout": f"committed to the pledge {rec['pledge_hash'][:16]}\n"}
+        except Exception as e:
+            return {"ok": False, "verb": "pledge",
+                    "error": f"pledge failed: {type(e).__name__}: {e}"}
 
     rest = verb + (f" {task_id}" if task_id else "")
 
@@ -185,12 +232,19 @@ def board() -> list[dict]:
 # ── cards ─────────────────────────────────────────────────────────────────────
 
 def mint_card(verb: str, task_id: str | None, out: str | None = None,
-              supervised: bool = True) -> dict:
+              supervised: bool = True, signed: bool = True,
+              ttl: int = 3600, subject: str | None = None) -> dict:
     """Create a QR card for a verb (+ optional task id).
 
     SUPERVISED BY DEFAULT. The card is rendered, then decoded back through two
     real decoders before it is accepted. If supervision refuses, the card is
     not handed back — a card that does not scan is worse than no card.
+
+    SIGNED BY DEFAULT. The card carries an Ed25519 capability signature binding
+    the verb, the task, a subject, and an expiry. Without it, possession of the
+    bytes is authority: a photograph or printout of someone else's card
+    dispatches the same board mutation. With it, only a holder of the signing
+    key can mint a card the board will honour.
     """
     import qr_envelope as qe
     if verb not in VERBS:
@@ -201,6 +255,25 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
     if task_id:
         payload["task_id"] = task_id
 
+    # sign: the card becomes a capability, not a bare route
+    signed_info = None
+    if signed:
+        try:
+            import card_signing as cs
+            card = cs.sign_card(verb, task_id, ttl=ttl, subject=subject)
+            payload = card
+            signed_info = {"by": card["by"], "expires_at": card["expires_at"],
+                           "subject": card["subject"]}
+        except FileNotFoundError as e:
+            return {"ok": False, "verb": verb, "task_id": task_id,
+                    "error": f"cannot sign the card: {e}"}
+        except Exception as e:
+            return {"ok": False, "verb": verb, "task_id": task_id,
+                    "error": f"signing failed: {type(e).__name__}: {e}"}
+
+    # a signed card is a `capability`; an unsigned one stays a `route`
+    env_kind = "capability" if signed else "route"
+
     dest = pathlib.Path(out) if out else (
         AGENTS / ".." / "secrets" / "qr" / f"card-{verb}-{task_id or 'board'}.png")
     dest = pathlib.Path(os.path.abspath(str(dest)))
@@ -208,10 +281,12 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
     if supervised:
         try:
             import qr_supervision as qs
-            receipt = qs.produce("route", payload, out_path=dest)
+            receipt = qs.produce(env_kind, payload, out_path=dest)
             return {"ok": True, "verb": verb, "task_id": task_id,
                     "envelope": receipt.envelope, "path": str(dest),
                     "supervised": True, "chain": receipt.chain,
+                    "signed": bool(signed_info), "signature": signed_info,
+                    "prev": receipt.prev,
                     "report": receipt.report}
         except ImportError:
             pass  # fall through to unsupervised
@@ -221,7 +296,7 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
             return {"ok": False, "verb": verb, "task_id": task_id,
                     "error": f"supervision refused: {reason}", "supervised": True}
 
-    envelope = qe.encode("route", payload)
+    envelope = qe.encode(env_kind, payload)
     try:
         import qrcode
     except ImportError:
@@ -232,7 +307,27 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
     dest.parent.mkdir(parents=True, exist_ok=True)
     qr.make_image(fill_color="black", back_color="white").save(dest)
     return {"ok": True, "verb": verb, "task_id": task_id, "envelope": envelope,
-            "path": str(dest), "version": qr.version, "supervised": False}
+            "path": str(dest), "version": qr.version, "supervised": False,
+            "signed": bool(signed_info), "signature": signed_info}
+
+
+def require_pledge(agent_id: str | None = None) -> dict:
+    """Gate: refuse to work with an agent that has not committed to the pledge.
+
+    An unpledged agent is refused for that reason — not silently allowed. This
+    is the same ordering rule as the signature gate: authenticate, then act.
+    """
+    try:
+        import agent_pledge as ap
+    except ImportError:
+        return {"ok": False, "error": "agent_pledge not available — cannot check the pledge"}
+    who = agent_id or os.environ.get("AGENT_ID", "hermes")
+    v = ap.verify(who)
+    if not v["ok"]:
+        return {"ok": False, "agent": who, "status": v["status"], "refused": True,
+                "error": f"REFUSED: {who} — {v['reason']}"}
+    return {"ok": True, "agent": who, "status": v["status"],
+            "signed_at": v.get("signed_at")}
 
 
 def read_card(image, upscale: float = 1.5, require_both: bool = False) -> list[dict]:
@@ -244,6 +339,10 @@ def read_card(image, upscale: float = 1.5, require_both: bool = False) -> list[d
     binarizer needs more pixels per module once several QRs share a frame.
     We therefore upscale by default (1.5x) before detection. Measured, not
     guessed — see the note in the module docstring.
+
+    Returns both `route` (unsigned) and `capability` (signed) cards. Each
+    entry carries the full `card` payload so the caller can verify the
+    signature before dispatching.
 
     REQUIRE_BOTH enforces cross-decoder agreement at read time: a card is only
     accepted if cv2 AND pyzbar both return it. This is the read-side mirror of
@@ -298,12 +397,15 @@ def read_card(image, upscale: float = 1.5, require_both: bool = False) -> list[d
             kind, payload = qe.decode(text)
         except ValueError:
             continue
-        if kind != "route":
+        if kind not in ("route", "capability"):
             continue
         cards.append({
             "envelope": text,
+            "kind": kind,
             "verb": payload.get("verb") or payload.get("cmd", "").replace("kanban://", "").split()[0],
             "task_id": payload.get("task_id"),
+            "card": payload,          # the full payload, for signature verification
+            "signed": bool(payload.get("sig")),
             "box": points[i].tolist() if points is not None and i < len(points) else None,
         })
     return cards
@@ -363,7 +465,31 @@ def watch(camera: int, once: bool, execute: bool, dry: bool):
         print(f"  ✗ cannot open camera {camera}")
         return
 
-    last_fire: dict[str, float] = {}
+    # PERSISTENT cooldown. An in-process dict is defeated by a restart and
+    # shares nothing with a second camera. The seen-cards file is the record.
+    SEEN = pathlib.Path(os.environ.get(
+        "VAEULT_SEEN_FILE",
+        str(pathlib.Path(os.environ.get("LOCALAPPDATA", pathlib.Path.home()))
+            / "hermes" / "cache" / "kanban-seen.json")))
+
+    def _load_seen() -> dict:
+        try:
+            return json.loads(SEEN.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    def _save_seen(d: dict):
+        try:
+            SEEN.parent.mkdir(parents=True, exist_ok=True)
+            # keep it bounded — a board does not need a year of history
+            if len(d) > 500:
+                for k in sorted(d, key=lambda x: d[x])[:-500]:
+                    d.pop(k, None)
+            SEEN.write_text(json.dumps(d, indent=1), encoding="utf-8")
+        except Exception:
+            pass
+
+    last_fire: dict[str, float] = _load_seen()
     print(f"  væult kanban supervisor — camera {camera}, cooldown {COOLDOWN}s")
     print(f"  board: {KANBAN_DB}")
     print(f"  supervision {sv.__version__} · cv2 {cv2.__version__}")
@@ -382,13 +508,16 @@ def watch(camera: int, once: bool, execute: bool, dry: bool):
                 if now - last_fire.get(key, 0) < COOLDOWN:
                     continue
                 last_fire[key] = now
+                _save_seen(last_fire)
                 if not execute:
                     print(f"  [seen] {c['verb']} {c.get('task_id') or ''} (dry)")
                     continue
-                r = dispatch(c["verb"], c.get("task_id"), dry=dry)
+                r = dispatch(c["verb"], c.get("task_id"), dry=dry,
+                             card=c.get("card"), consume=execute)
                 mark = "✓" if r.get("ok") else "✗"
                 detail = r.get("stdout") or r.get("error") or r.get("stderr") or ""
-                print(f"  [{mark}] {c['verb']} {c.get('task_id') or ''}  {detail[:60]}")
+                tag = "signed" if c.get("signed") else "UNSIGNED"
+                print(f"  [{mark}] {c['verb']} {c.get('task_id') or ''} [{tag}]  {detail[:60]}")
 
             cv2.imshow("væult kanban supervisor", annotated)
             if once:

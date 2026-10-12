@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Patch vps_node.py with audit endpoint."""
 import sys
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
 
 path = "/opt/aevps/vps_node.py"
 

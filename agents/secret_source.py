@@ -72,6 +72,7 @@ def _vaeult_unlocked():
         return None, None
     try:
         import importlib.util
+import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
         spec = importlib.util.spec_from_file_location("_vaeult_consumer", str(VAEULT_MODULE))
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)  # type: ignore[union-attr]
