@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-glyph="æ">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ:// session receipt — the Doola formation rail</title>
+<meta name="description" content="What was built, what was measured, what is still open. Receipts or it did not happen."/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+:root{
+  --void:#050505; --panel:#0a0a0a; --panel2:#111112;
+  --gold:#D4AF37; --gold-hi:#FFD700; --neon:#00ff9d;
+  --txt:#f0ece4; --muted:rgba(240,236,228,.64); --dim:rgba(240,236,228,.36);
+  --line:rgba(212,175,55,.16); --line-hot:rgba(212,175,55,.5);
+  --red:#ff5a5a; --amber:#ffaa00;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--txt)}
+body{
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13.5px;line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh;
+}
+canvas#mesh{position:fixed;inset:0;z-index:0;pointer-events:none}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px);opacity:.45}
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 38%,transparent 38%,rgba(0,0,0,.74) 100%)}
+.wrap{position:relative;z-index:2;max-width:1020px;margin:0 auto;padding:26px 20px 96px}
+
+/* topbar */
+.topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;
+  border:1px solid var(--line);border-top:2px solid var(--line-hot);background:var(--panel);
+  padding:11px 15px;font-size:10.5px;letter-spacing:2.4px;text-transform:uppercase}
+.topbar .l{color:var(--gold)}
+.topbar .m{color:var(--dim)}
+.live{display:inline-flex;align-items:center;gap:7px;color:var(--neon)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 9px var(--neon);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* command block */
+.cmd{border:1px solid var(--line);border-bottom:0;background:var(--panel2);
+  padding:30px 26px 26px;position:relative;overflow:hidden}
+.cmd::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(212,175,55,.07),transparent 46%,rgba(212,175,55,.05))}
+.prompt{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,5.2vw,42px);
+  letter-spacing:.5px;color:var(--gold);
+  text-shadow:0 0 26px rgba(212,175,55,.42),0 0 62px rgba(212,175,55,.16)}
+.prompt .g{color:var(--txt)}
+.cursor{display:inline-block;width:.55em;height:1.02em;background:var(--gold);
+  vertical-align:-.14em;margin-left:5px;animation:blink 1.05s step-end infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.sub{margin-top:13px;color:var(--muted);font-size:12px;letter-spacing:1.5px}
+
+/* section */
+section{margin-top:34px}
+h2{font-family:'Orbitron',sans-serif;font-weight:700;font-size:15px;letter-spacing:3.4px;
+  text-transform:uppercase;color:var(--gold);padding-bottom:9px;border-bottom:1px solid var(--line)}
+h3{font-size:12.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold-hi);margin:22px 0 10px}
+p{color:var(--muted);margin:11px 0}
+b,strong{color:var(--txt);font-weight:700}
+a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--line-hot)}
+a:hover{color:var(--gold-hi)}
+code{color:var(--gold-hi);background:rgba(212,175,55,.08);padding:1px 5px;font-size:12.5px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--gold);font-size:10.5px;letter-spacing:1.7px;text-transform:uppercase;
+  background:rgba(212,175,55,.05)}
+td.h{color:var(--gold-hi);font-weight:700;white-space:nowrap}
+tr:hover td{background:rgba(212,175,55,.03)}
+
+/* panels */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:16px 0}
+.card{border:1px solid var(--line);background:var(--panel);padding:17px 18px}
+.card .t{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;letter-spacing:2.2px;
+  color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.card .d{color:var(--muted);font-size:12.5px}
+.card ul{margin:9px 0 0 15px;color:var(--muted);font-size:12.5px}
+.card li{margin:4px 0}
+
+pre{background:#060606;border:1px solid var(--line);border-left:2px solid var(--line-hot);
+  padding:15px 17px;overflow-x:auto;font-size:12.5px;color:var(--txt);margin:13px 0;line-height:1.6}
+pre .c{color:var(--dim)}
+pre .g{color:var(--neon)}
+pre .y{color:var(--amber)}
+pre .r{color:var(--red)}
+
+/* ranked inventory */
+.rank{border:1px solid var(--line);border-left:3px solid var(--line-hot);
+  background:var(--panel);padding:16px 18px;margin:12px 0}
+.rank .hdr{display:flex;align-items:baseline;gap:11px;margin-bottom:9px}
+.rank .tag{font-family:'Orbitron',sans-serif;font-weight:900;font-size:12px;letter-spacing:2.4px;
+  padding:3px 9px;border:1px solid currentColor}
+.rank.proven .tag{color:var(--neon)}
+.rank.built  .tag{color:var(--gold)}
+.rank.liab   .tag{color:var(--amber)}
+.rank .cnt{color:var(--dim);font-size:11.5px}
+.rank ul{margin-left:17px;color:var(--muted);font-size:12.5px}
+.rank li{margin:5px 0}
+
+.pill{display:inline-block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:2px 8px;border:1px solid var(--line-hot);color:var(--gold);margin-right:6px}
+.pill.ok{border-color:rgba(0,255,157,.45);color:var(--neon)}
+.pill.warn{border-color:rgba(255,170,0,.45);color:var(--amber)}
+
+/* seal */
+.seal{margin-top:44px;border-top:2px solid var(--line-hot);border-bottom:2px solid var(--line-hot);
+  background:linear-gradient(180deg,rgba(212,175,55,.05),transparent);padding:30px 20px;text-align:center}
+.seal .motto{font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;letter-spacing:4px;color:var(--gold)}
+.seal .s{margin-top:11px;color:var(--muted);font-size:11.5px;letter-spacing:2.1px}
+.seal .doms{margin-top:15px;font-size:11.5px;color:var(--dim)}
+.seal .doms a{border:0;margin:0 3px}
+.hash{margin-top:15px;color:var(--dim);font-size:11px}
+</style>
+</head>
+<body>
+<canvas id="mesh"></canvas>
+<div class="scan"></div>
+<div class="vig"></div>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <span class="l">æ:// SESSION RECEIPT</span>
+    <span class="m">2026-10-12 · C:\æ</span>
+    <span class="live"><span class="dot"></span>MEASURED</span>
+  </div>
+
+  <div class="cmd">
+    <div class="prompt">&gt;_<span class="g">æ:</span>session.receipt<span class="cursor"></span></div>
+    <div class="sub">WHAT WAS BUILT · WHAT WAS MEASURED · WHAT IS STILL OPEN</div>
+  </div>
+
+  <section>
+    <h2>What this is</h2>
+    <p>A receipt for the session that wired the <b>Doola Partner API</b> into
+    <code>#startabusiness</code>. It records the commits, the measurements, and the
+    gaps — because <b>a thing that has not been checked back is not a thing</b>.</p>
+    <p>Everything below is either a measured value or an explicit admission that it
+    is unmeasured. Nothing is asserted because it sounds right.</p>
+  </section>
+
+  <section>
+    <h2>The commits</h2>
+    <p>Eight commits on <code>master</code> (pushed), one on <code>gh-pages</code>
+    (local). Grouped by what each actually changed.</p>
+    <table>
+      <tr><th>Commit</th><th>What it is</th><th>State</th></tr>
+      <tr><td class="h">5c14da5</td><td>command surfaces wired — <code>#startabusiness</code> repointed, <code>#formation</code> added, MCP blueprint names the API</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">015a2cd</td><td>live surface — terminal <code>doola</code> command upgraded to the real flow + API panel + æQR badge</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">a14b99f</td><td>the client (<code>doola_client.py</code>), <code>SKILL.md</code> API phase, template</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">6824008</td><td>æQR badges on new surfaces + source (2,707 files)</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">479e87e</td><td>badge pass on modified surfaces (145/145 verified)</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">13ac47c</td><td>AGENTS.md operator brief + gitignore</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">f85b9ea</td><td>aether — shared schema package (8 classes + 2 validators)</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">73ca5d8</td><td>agents — kænbæn write-back hooks + qr supervision/kanban expansion</td><td><span class="pill ok">pushed</span></td></tr>
+      <tr><td class="h">b11143e</td><td>gh-pages — the deploy copy of the startabusiness surface</td><td><span class="pill warn">local</span></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>The integration — four surfaces</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="t">1 · The client</div>
+        <div class="d"><code>skills/startabusiness/doola_client.py</code> — stdlib-only, 35 KB.</div>
+        <ul>
+          <li>sandbox default; production needs <code>DOOLA_ENV=production</code> AND <code>--live</code></li>
+          <li>key from <code>DOOLA_API_KEY</code> → <code>C:\æ\secrets\doola.json</code></li>
+          <li><code>dk_test_</code> at production refused — and the reverse</li>
+          <li>Idempotency-Key per create; <code>E_IDEMPOTENCY_KEY_REUSED</code> branched on code</li>
+          <li>webhook <code>X-Doola-Signature</code> HMAC-SHA256, constant-time</li>
+          <li>SSN/ITIN redacted from every emitted line</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="t">2 · The skill</div>
+        <div class="d"><code>SKILL.md</code> — the API phase, in the skill's own words.</div>
+        <ul>
+          <li>the 6-step flow: gather → customer → formation → progress → documents → receipt</li>
+          <li>credentials table (sandbox / production, key prefixes)</li>
+          <li>"the rules that bite": idempotency, submission ≠ formation, never poll, entity types, two addresses, SS-4/8821</li>
+          <li>the never-move-a-secret rule, stated as a rule</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="t">3 · The surface</div>
+        <div class="d"><code>site/startabusiness.html</code> + the gh-pages copy.</div>
+        <ul>
+          <li>terminal <code>doola</code> command: was a static affiliate URL, now the real flow</li>
+          <li>new "drive it from the API" panel with the real commands</li>
+          <li>æQR badge added</li>
+          <li>integrity: 1 <code>&lt;/html&gt;</code>, script tags balanced</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="t">4 · The commands</div>
+        <div class="d">The registry and the MCP server.</div>
+        <ul>
+          <li><code>#startabusiness</code> repointed from <code>/ae/</code> to the surface</li>
+          <li>new <code>#formation</code> / <code>#doola</code> command</li>
+          <li><code>mcp/ae_server.py</code> blueprint + <code>Doolaᴰ</code> entry name the API</li>
+          <li><code>node --check</code> OK · <code>py_compile</code> OK</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ranked inventory</h2>
+    <p>The honest sort: what is proven, what is built, what is a liability.</p>
+
+    <div class="rank proven">
+      <div class="hdr"><span class="tag">PROVEN</span><span class="cnt">measured, this session</span></div>
+      <ul>
+        <li><b>13/13</b> — <code>doola_client.py selftest</code>, offline, no credentials, no network</li>
+        <li><b>badge coverage</b> — 145/145 modified HTML, 137 new surfaces patched, 5 no-<code>&lt;/body&gt;</code> fixed, 1 template badged</li>
+        <li><b>no key literal</b> — the selftest greps its own source for <code>dk_live_</code>/<code>dk_test_</code> and fails if found</li>
+        <li><b>HMAC</b> — valid passes; tampered body, wrong secret, empty body, missing signature all fail</li>
+        <li><b>redaction</b> — SSN and ITIN masked, input object not mutated</li>
+        <li><b>JS/Python parse</b> — <code>node --check</code> and <code>py_compile</code> both clean</li>
+      </ul>
+    </div>
+
+    <div class="rank built">
+      <div class="hdr"><span class="tag">BUILT</span><span class="cnt">exists, committed, not yet exercised end-to-end</span></div>
+      <ul>
+        <li>the client's transport layer — request construction is unit-proven; <b>it has never made a live HTTP call</b></li>
+        <li>the formation flow — validated against documented rules, <b>never run against the sandbox</b></li>
+        <li>webhook parsing — envelope handled, <b>no real delivery has ever arrived</b></li>
+        <li>the four surfaces — integrated and committed, <b>the gh-pages copy is not deployed</b></li>
+      </ul>
+    </div>
+
+    <div class="rank liab">
+      <div class="hdr"><span class="tag">LIABILITY</span><span class="cnt">open, and named</span></div>
+      <ul>
+        <li><b>No Doola credentials exist on this machine.</b> <code>status</code> reports <code>api key: ABSENT</code>. Nothing can form until a <code>dk_test_</code> key lands in local custody.</li>
+        <li><b>gh-pages is 1 commit behind local.</b> The live page still serves 31,283 chars, <code>badge=False</code>, <code>api-flow=False</code>. The integration is in source, not yet in "our #startabusiness".</li>
+        <li><b>Vendor break (pre-existing, not from this work):</b> <code>site/vault-layers.html</code> import-maps <code>./vendor/three.module.js</code>, a file that was deleted — and <code>github-pages/vendor</code> never existed.</li>
+        <li><b>CDN lag is ~10 minutes</b> (<code>Cache-Control: max-age=600</code>). A deploy that "did not work" may just be cached.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>The chain it plugs into</h2>
+    <pre><span class="c"># væult — nine links, ordered by data flow</span>
+custody → format → gate → authority → contract → dispatch → publish → delivery → adoption
+  vault   envelope  supervision  signing   pledge    kanban    push      transport   teach
+
+<span class="c"># where doola lands</span>
+formation is the <span class="g">contract</span> link's legal endpoint — an agentic page becomes a registered entity
+  custody   the key never leaves the machine
+  gate      sandbox first, default deny
+  contract  Idempotency-Key, receipts
+  verify    HMAC on every webhook
+
+<span class="c"># and the rule the chain exists to enforce</span>
+where a gate exists, pass through it.
+where one does not, say the check is missing rather than report a pass.</pre>
+  </section>
+
+  <section>
+    <h2>To make it real</h2>
+    <pre><span class="c"># 1. get a sandbox key (never paste it into a chat)</span>
+<span class="c">#    https://www.doola.com/partner-with-us/</span>
+<span class="c">#    drop it in local custody:</span>
+C:\æ\secrets\doola.json     {"apiKey":"dk_test_...","webhookSecret":"..."}
+
+<span class="c"># 2. confirm it reads</span>
+python skills/startabusiness/doola_client.py status      <span class="c"># -> environment: sandbox, api key: present</span>
+
+<span class="c"># 3. prove the logic again, then form in the sandbox</span>
+python skills/startabusiness/doola_client.py selftest    <span class="g"># 13/13</span>
+python skills/startabusiness/doola_client.py playbook    <span class="c"># the wired flow</span></pre>
+    <p>Only then does a live call become possible — and only then is this integration
+    anything more than <b>built</b>.</p>
+  </section>
+
+  <div class="seal">
+    <div class="motto">CTRL+<span style="color:var(--gold)">æ</span></div>
+    <div class="s">SELECT ALL AGENTS · START YOUR BUSINESS</div>
+    <div class="doms">
+      <a href="https://myaelmendez.github.io/startabusiness.html">startabusiness</a> ·
+      <a href="https://myaelmendez.github.io/verify.html">verify</a> ·
+      <a href="https://llm.store">llm.store</a> ·
+      <a href="https://daollc.ai">daollc.ai</a> ·
+      <a href="https://xn--6caaa.com">æææ.com</a>
+    </div>
+    <div class="hash">#hermiphicationisinevitable · æ:// language is compute</div>
+  </div>
+
+</div>
+
+<script>
+/* neural mesh — gold nodes, proximity lines, slow drift */
+(function(){
+  const c = document.getElementById('mesh'), x = c.getContext('2d');
+  let w, h, nodes = [];
+  const N = 68, GOLD = '212,175,55';
+  function size(){
+    w = c.width = innerWidth; h = c.height = innerHeight;
+    nodes = Array.from({length: N}, () => ({
+      x: Math.random()*w, y: Math.random()*h,
+      vx: (Math.random()-.5)*.24, vy: (Math.random()-.5)*.24,
+      r: Math.random()*1.5+.5
+    }));
+  }
+  function frame(){
+    x.clearRect(0,0,w,h);
+    for (const n of nodes){
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+    }
+    for (let i=0;i<N;i++){
+      for (let j=i+1;j<N;j++){
+        const a=nodes[i], b=nodes[j];
+        const d=Math.hypot(a.x-b.x, a.y-b.y);
+        if (d < 132){
+          x.strokeStyle = `rgba(${GOLD},${(1-d/132)*.16})`;
+          x.lineWidth = .6;
+          x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      x.fillStyle = `rgba(${GOLD},.5)`;
+      x.beginPath(); x.arc(n.x,n.y,n.r,0,Math.PI*2); x.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  size(); addEventListener('resize', size); frame();
+})();
+</script>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/session-receipt.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+
+</body>
+</html>
