@@ -23,9 +23,10 @@ import unittest
 
 AGENTS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AGENTS))
+sys.path.insert(0, r"C:/æ/aeqr")
 
-import qr_envelope as qe
-import qr_supervision as qs
+from ae import envelope as qe
+from ae import supervision as qs
 
 
 class TempPNG:

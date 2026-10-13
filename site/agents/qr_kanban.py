@@ -50,6 +50,7 @@ import time
 
 AGENTS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AGENTS))
+sys.path.insert(0, r"C:/æ/aeqr")
 
 # ── config ────────────────────────────────────────────────────────────────────
 
@@ -246,7 +247,7 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
     dispatches the same board mutation. With it, only a holder of the signing
     key can mint a card the board will honour.
     """
-    import qr_envelope as qe
+    from ae import envelope as qe
     if verb not in VERBS:
         return {"ok": False, "error": f"unknown verb '{verb}'"}
 
@@ -280,7 +281,7 @@ def mint_card(verb: str, task_id: str | None, out: str | None = None,
 
     if supervised:
         try:
-            import qr_supervision as qs
+            from ae import supervision as qs
             receipt = qs.produce(env_kind, payload, out_path=dest)
             return {"ok": True, "verb": verb, "task_id": task_id,
                     "envelope": receipt.envelope, "path": str(dest),
@@ -354,7 +355,7 @@ def read_card(image, upscale: float = 1.5, require_both: bool = False) -> list[d
     """
     import cv2
     import numpy as np
-    import qr_envelope as qe
+    from ae import envelope as qe
 
     if isinstance(image, (str, pathlib.Path)):
         img = cv2.imread(str(image))

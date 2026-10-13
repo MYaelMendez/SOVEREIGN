@@ -43,6 +43,7 @@ import uuid
 
 AGENTS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AGENTS))
+sys.path.insert(0, r"C:/æ/aeqr")
 
 VAULT_PATH = pathlib.Path(os.environ.get(
     "VAEULT_PATH", r"C:\æ\secrets\privateclient\privateclient.væult"))
@@ -256,7 +257,7 @@ def _dispatch_send(to: str, body: str) -> dict:
 def send_sms(to: str, key_name: str, value: str, split: bool = False,
              qr_link: bool = False) -> dict:
     """Seal the value, envelope it, and text it. The body is never plaintext."""
-    import qr_envelope as qe
+    from ae import envelope as qe
 
     mod = _load_vault_module()
     vkey, doc = _unlock(mod)
@@ -293,7 +294,7 @@ def send_sms(to: str, key_name: str, value: str, split: bool = False,
 
 def check_inbox() -> list[dict]:
     """Read SMS from a tethered Android and import every envelope found."""
-    import qr_envelope as qe
+    from ae import envelope as qe
 
     if not _adb_available():
         raise RuntimeError("qr_sms: adb not available (no tethered Android)")
@@ -397,7 +398,7 @@ def main(argv: list[str]) -> None:
         if len(argv) < 3:
             print("usage: qr_sms.py decode '<body>'")
             return
-        import qr_envelope as qe
+        from ae import envelope as qe
         body = reassemble([argv[2]]) if CHUNK_RE.match(argv[2]) else argv[2]
         kind, payload = qe.decode(body)
         print(json.dumps({"type": kind, "payload": payload}, indent=2, ensure_ascii=False))

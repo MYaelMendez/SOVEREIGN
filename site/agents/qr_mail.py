@@ -43,6 +43,7 @@ from email.message import EmailMessage
 
 AGENTS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AGENTS))
+sys.path.insert(0, r"C:/æ/aeqr")
 
 VAULT_PATH = pathlib.Path(os.environ.get(
     "VAEULT_PATH", r"C:\æ\secrets\privateclient\privateclient.væult"))
@@ -117,7 +118,7 @@ def render_qr_png(envelope: str) -> bytes:
     scanned is worse than no attachment.
     """
     try:
-        import qr_supervision as qs
+        from ae import supervision as qs
         return qs.render_verified(envelope)
     except ImportError:
         pass  # gate unavailable — fall through to an ungated render
@@ -139,7 +140,7 @@ def render_qr_png(envelope: str) -> bytes:
 
 def send_mail(to: str, key_name: str, value: str, attach_qr: bool = False) -> dict:
     """Seal the value, envelope it, and mail it. The body is never plaintext."""
-    import qr_envelope as qe
+    from ae import envelope as qe
 
     mod = _load_vault_module()
     vkey, doc = _unlock(mod)
@@ -247,7 +248,7 @@ def _ensure_folder(mail, name: str):
 
 def check_inbox() -> list[dict]:
     """Scan the inbox for [væult] mail, decode every envelope, import each."""
-    import qr_envelope as qe
+    from ae import envelope as qe
 
     if not VAULT_PATH.exists():
         return []
@@ -308,7 +309,7 @@ def check_inbox() -> list[dict]:
 
 def decode_file(path: str) -> list[dict]:
     """Decode envelopes from an .eml file (offline, no mailbox needed)."""
-    import qr_envelope as qe
+    from ae import envelope as qe
     raw = pathlib.Path(path).read_bytes()
     msg = email.message_from_bytes(raw)
     out = []

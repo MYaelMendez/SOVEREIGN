@@ -215,7 +215,7 @@ def encode_qr_image(data, filepath=None):
     try:
         import sys as _s
         _s.path.insert(0, str(Path(__file__).resolve().parent))
-        import qr_supervision as _qs
+        from ae import supervision as _qs
         _rep = _qs.supervise_raw(str(filepath), data)
         if not _rep.passed:
             raise RuntimeError(f"contract_qr: supervision refused — {_rep.reason()}")
