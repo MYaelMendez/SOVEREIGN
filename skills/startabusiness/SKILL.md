@@ -108,11 +108,83 @@ The canonical reference is `templates/clillc-banner.html` (Yæl's CLI.LLC banner
 
 After generating, guide the user to:
 
-1. **Form the DAOLLC** → https://partnersps.doola.com/hhsoqhb23250 (Wyoming DAO LLC via Doola)
+1. **Form the company** → two paths, pick one:
+   - **Hand-off (default)** → https://partnersps.doola.com/hhsoqhb23250 (Wyoming DAO LLC via Doola)
+   - **Programmatic** → `doola_client.py`, the Doola Partner API client (see below)
 2. **Activate Stripe** → Set up Stripe account for payment rails
 3. **Deploy the page** → Host at their domain or æ.store
 4. **Install Hermes skills** → Configure their agent roster
 5. **Join the community** → X community "æ store LLM store"
+
+## Doola Partner API — programmatic formation
+
+`doola_client.py` (in this skill) turns the CTA into a real formation flow. It is
+stdlib-only, sandbox-first, and carries the same custody rules as the rest of the chain.
+
+### The flow
+
+```
+1. GATHER     founder + company facts, collected LOCALLY
+2. CUSTOMER   POST /v1/partner/customers        -> doolaCustomerId
+3. FORMATION  POST /v1/partner/companies        -> starts the filing
+4. WEBHOOK    verify X-Doola-Signature, react   -> never poll
+5. DOCUMENTS  on document_* -> short-lived download URL
+6. RECEIPT    append the formation receipt to kænbæn
+```
+
+### Commands
+
+```bash
+python doola_client.py status        # environment + credential presence (never the values)
+python doola_client.py selftest      # 13 offline checks, no credentials, no network
+python doola_client.py playbook      # print the wired flow
+
+python doola_client.py create-customer --email jane@example.com --first Jane --last Doe
+python doola_client.py create-company --file formation.json
+python doola_client.py get-company --company-id cmp_123
+python doola_client.py verify-webhook --body-file hook.json --signature <hex>
+```
+
+### Credentials — custody
+
+The key is read from `DOOLA_API_KEY`, then `C:\æ\secrets\doola.json`
+(`{"apiKey": "dk_test_...", "webhookSecret": "..."}`). It is never hardcoded, never
+printed, never placed in a page, a URL, or a QR.
+
+| Environment | Base URL | Key prefix |
+|---|---|---|
+| Sandbox (default) | `https://api.test.doola.com` | `dk_test_` |
+| Production | `https://api.doola.com` | `dk_live_` |
+
+Production needs **both** `DOOLA_ENV=production` **and** `--live`. A `dk_test_` key
+aimed at production is refused, and so is a `dk_live_` key aimed at sandbox.
+
+### Rules that bite
+
+- **Idempotency-Key is required** on both creates. One key per logical operation. Same
+  key + same body replays the original result; it never duplicates. After a success,
+  reusing the key with a different body returns `409 E_IDEMPOTENCY_KEY_REUSED`.
+- **Submission status is not formation.** `formationSubmissionStatus` (`PENDING` →
+  `SUBMITTED`/`FAILED`) says what doola is doing with your request. Whether the company
+  is actually formed lives on the **Formation service** (`InProgress` → `Completed`).
+  Confusing the two is the documented most-common integration mistake.
+- **Never poll.** Subscribe to webhooks; delivery is at-least-once with retries at
+  1m / 15m / 1h / 12h / 24h, then the endpoint is auto-disabled.
+- **`entityType`** defaults to `LLC`. An LLC takes `members`; a CCorp takes
+  `executiveMembers` (President, Secretary, Treasurer, Director — the first three once
+  each) plus `ccorpValuation`.
+- **Exactly two addresses**: one `mailing`, one `business`. A `registeredAgent` entry
+  omits the address object entirely.
+- **Non-US founders**: when nobody supplies a valid US tax ID, the IRS needs a signed
+  SS-4 before the EIN — and Form 8821 for an expedited EIN. An ITIN does not waive
+  signing. Read `signatureRequirements` on the company.
+- **Expedited EIN**: `requestedServices: [{"service": "EinCreation", "variant": "Expedite"}]`.
+
+### Never move a secret
+
+SSN and ITIN values are collected locally, sent straight to the API, and redacted from
+every line the client emits (`redact()`, `assert_no_secret_leak()`). They never enter a
+chat transcript, a URL, a QR payload, or a public surface.
 
 ## Key Concepts
 
@@ -131,7 +203,10 @@ After generating, guide the user to:
 - The CTA must link to Doola (affiliate link) — the whole point is real LLC formation
 - Every page must feel like a boot sequence, not a marketing site
 - The glyph is personal — never default to æ (that's Yæl's). Ask the user for theirs.
-- Use the GOLD design system, never the deprecated cyan one. Yæl's brand is gold-on-void with Orbitron + mesh canvas. The cyan terminal palette was an early draft.
+- Use the GOLD design system, never the deprecated cyan one.
+- Never route an SSN/ITIN through chat, a URL, a QR payload, or a published page. Local custody only.
+- Never let the CTA submit a real formation without the human's explicit go — default-deny, sandbox first.
+- Never poll Doola. Webhooks are the contract; polling is the anti-pattern the docs name. Yæl's brand is gold-on-void with Orbitron + mesh canvas. The cyan terminal palette was an early draft.
 
 ## Nous-style distribution (>link)
 
@@ -150,6 +225,8 @@ Once Yæl's `stripeskills` GitHub repo is populated, any Hermes agent on earth c
 - Confirm Stripe block shows 6 cards
 - Confirm terminal log animates line by line
 - Confirm CTA links to Doola
+- Run `python doola_client.py selftest` — expect 13/13
+- Confirm every surface carries its æQR badge
 - Confirm responsive on mobile viewport
 
 ## Reference Implementation
