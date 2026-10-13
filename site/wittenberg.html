@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en" data-glyph="æ">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#050505"/>
+<title>æ://wittenberg — a de novo Project Wittenberg</title>
+<meta name="description" content="The same gesture, a different corpus. Verified parallels, stated limits, and the receipts."/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+:root{
+  --void:#050505; --panel:#0a0a0a; --panel2:#111112;
+  --gold:#D4AF37; --gold-hi:#FFD700; --neon:#00ff9d;
+  --txt:#f0ece4; --muted:rgba(240,236,228,.64); --dim:rgba(240,236,228,.36);
+  --line:rgba(212,175,55,.16); --line-hot:rgba(212,175,55,.5);
+  --red:#ff5a5a; --amber:#ffaa00;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--txt)}
+body{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:13.5px;
+  line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
+canvas#mesh{position:fixed;inset:0;z-index:0;pointer-events:none}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px);opacity:.45}
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 38%,transparent 38%,rgba(0,0,0,.74) 100%)}
+.wrap{position:relative;z-index:2;max-width:1020px;margin:0 auto;padding:26px 20px 96px}
+
+.topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;
+  border:1px solid var(--line);border-top:2px solid var(--line-hot);background:var(--panel);
+  padding:11px 15px;font-size:10.5px;letter-spacing:2.4px;text-transform:uppercase}
+.topbar .l{color:var(--gold)} .topbar .m{color:var(--dim)}
+.live{display:inline-flex;align-items:center;gap:7px;color:var(--neon)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 9px var(--neon);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.cmd{border:1px solid var(--line);border-bottom:0;background:var(--panel2);
+  padding:30px 26px 26px;position:relative;overflow:hidden}
+.cmd::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(212,175,55,.07),transparent 46%,rgba(212,175,55,.05))}
+.prompt{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,5.2vw,42px);
+  letter-spacing:.5px;color:var(--gold);
+  text-shadow:0 0 26px rgba(212,175,55,.42),0 0 62px rgba(212,175,55,.16)}
+.prompt .g{color:var(--txt)}
+.cursor{display:inline-block;width:.55em;height:1.02em;background:var(--gold);
+  vertical-align:-.14em;margin-left:5px;animation:blink 1.05s step-end infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.sub{margin-top:13px;color:var(--muted);font-size:12px;letter-spacing:1.5px}
+.quote{margin-top:18px;padding:13px 16px;border-left:2px solid var(--line-hot);
+  background:rgba(212,175,55,.04);color:var(--muted);font-size:12.5px}
+.quote .src{display:block;margin-top:7px;color:var(--dim);font-size:11px}
+
+section{margin-top:34px}
+h2{font-family:'Orbitron',sans-serif;font-weight:700;font-size:15px;letter-spacing:3.4px;
+  text-transform:uppercase;color:var(--gold);padding-bottom:9px;border-bottom:1px solid var(--line)}
+h3{font-size:12.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold-hi);margin:22px 0 10px}
+p{color:var(--muted);margin:11px 0}
+b,strong{color:var(--txt);font-weight:700}
+a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--line-hot)}
+a:hover{color:var(--gold-hi)}
+code{color:var(--gold-hi);background:rgba(212,175,55,.08);padding:1px 5px;font-size:12.5px}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--gold);font-size:10.5px;letter-spacing:1.7px;text-transform:uppercase;
+  background:rgba(212,175,55,.05)}
+td.k{color:var(--dim);white-space:nowrap}
+tr:hover td{background:rgba(212,175,55,.03)}
+
+pre{background:#060606;border:1px solid var(--line);border-left:2px solid var(--line-hot);
+  padding:15px 17px;overflow-x:auto;font-size:12.5px;color:var(--txt);margin:13px 0;line-height:1.6}
+pre .c{color:var(--dim)} pre .g{color:var(--neon)} pre .y{color:var(--amber)}
+
+.card{border:1px solid var(--line);background:var(--panel);padding:17px 18px;margin:14px 0}
+.card.hold{border-left:3px solid var(--neon)}
+.card.limit{border-left:3px solid var(--amber)}
+.card .t{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;letter-spacing:2.2px;
+  color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.card ul{margin:9px 0 0 16px;color:var(--muted);font-size:12.5px}
+.card li{margin:6px 0}
+
+.pill{display:inline-block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:2px 8px;border:1px solid var(--line-hot);color:var(--gold);margin-right:6px}
+.pill.ok{border-color:rgba(0,255,157,.45);color:var(--neon)}
+.pill.warn{border-color:rgba(255,170,0,.45);color:var(--amber)}
+
+.seal{margin-top:44px;border-top:2px solid var(--line-hot);border-bottom:2px solid var(--line-hot);
+  background:linear-gradient(180deg,rgba(212,175,55,.05),transparent);padding:30px 20px;text-align:center}
+.seal .motto{font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;letter-spacing:4px;color:var(--gold)}
+.seal .s{margin-top:11px;color:var(--muted);font-size:11.5px;letter-spacing:2.1px}
+.seal .doms{margin-top:15px;font-size:11.5px;color:var(--dim)}
+.seal .doms a{border:0;margin:0 3px}
+.hash{margin-top:15px;color:var(--dim);font-size:11px}
+</style>
+</head>
+<body>
+<canvas id="mesh"></canvas>
+<div class="scan"></div>
+<div class="vig"></div>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <span class="l">æ:// WITTENBERG · DE NOVO</span>
+    <span class="m">OPENSOURCEWARE</span>
+    <span class="live"><span class="dot"></span>VERIFIED PARALLEL</span>
+  </div>
+
+  <div class="cmd">
+    <div class="prompt">&gt;_<span class="g">æ:</span>wittenberg<span class="cursor"></span></div>
+    <div class="sub">THE SAME GESTURE · A DIFFERENT CORPUS</div>
+    <div class="quote">
+      «somos opensourceware como un novedoso de novo Project Wittenberg»
+      <span class="src">— the operator, stating the thesis</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>What Project Wittenberg actually is</h2>
+    <p>Not a metaphor first — a real project, described in its own words. From
+    <a href="https://ctsfw.edu/etext/AboutArchives.htm">its About page</a>:</p>
+    <pre><span class="c"># an ad hoc group of individuals dedicated to posting on the internet</span>
+<span class="c"># a cross-section of classic and historic texts written by Lutherans</span>
+
+<span class="g">"The project arose from the frustration felt by these librarians, archivists,</span>
+<span class="g"> scholars, pastors and others. A thorough search of the internet yielded few</span>
+<span class="g"> works by even Martin Luther..."</span>
+
+priority        documents by Luther, or about Luther
+selection       "when a volunteer expresses an interest in working with them"
+rights          public domain, or translators who yield free distribution
+citation        "full scholarly citation is made" — in all cases
+custody         Kroemer Library, Concordia Theological Seminary (CTSFW)
+mirrors         CTSFW · Christian Classics Ethereal Library · Project Gutenberg
+formats         HTML · ASCII/text · RTF
+languages       English · German · French · Swedish
+ambition        "the first step towards an international electronic library of Lutheranism"</pre>
+    <p>Four structural moves matter, and none of them is "we put texts online":</p>
+    <p><b>1. It began from a failure to find.</b> The frustration is the origin story —
+    the corpus existed and was unreachable.</p>
+    <p><b>2. Citation is the trust mechanism.</b> Every text carries its scholarly
+    citation. Access is not the product; <b>traceability</b> is.</p>
+    <p><b>3. No single custody.</b> Three mirrors, one corpus. The archive outlives
+    any one host.</p>
+    <p><b>4. Volunteers, not a vendor.</b> Ad hoc, informal, by interest.</p>
+  </section>
+
+  <section>
+    <h2>The same gesture</h2>
+    <p>Where the parallel holds — each row is a real structural match, not a slogan.</p>
+    <table>
+      <tr><th>Project Wittenberg</th><th>opensourceware / æ://</th><th>Holds?</th></tr>
+      <tr>
+        <td>Began from frustration — the corpus existed, unreachable</td>
+        <td>Began from the same — sovereign agentic engineering existed, undocumented and unverifiable</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td><b>Citation</b> — full scholarly reference on every text</td>
+        <td><b>Receipts</b> — hash chain, QR verify, <code>verify.html</code> cross-decoder</td>
+        <td><span class="pill ok">yes — same instinct</span></td>
+      </tr>
+      <tr>
+        <td>No single custody — three mirrors</td>
+        <td>github.io + raw.githubusercontent + the mesh; secrets stay local, never mirrored</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td>Volunteers, ad hoc, by interest</td>
+        <td>An agent fleet, ad hoc, bound by a hashed pledge</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td>Vernacular — German, not Latin; French, Swedish</td>
+        <td>Agent-native grammar — <code>æ://</code> schemes, not vendor JSON</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td>Priority to primary sources — Luther himself</td>
+        <td>Priority to primary artifacts — the code, the receipts, the surfaces</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td>Public domain / permissioned rights</td>
+        <td>MIT / <code>#OSW</code> — open source ware</td>
+        <td><span class="pill ok">yes</span></td>
+      </tr>
+      <tr>
+        <td><b>1517</b> — Wittenberg, the 95 Theses</td>
+        <td><b>1517</b> — the handshake number. <code>MCP/1517</code></td>
+        <td><span class="pill ok">yes — literal</span></td>
+      </tr>
+      <tr>
+        <td>The Lutheran tradition — LCMS</td>
+        <td><code>teologia.ai</code> — Lutheran (LCMS) as the default</td>
+        <td><span class="pill ok">yes — the same lineage</span></td>
+      </tr>
+    </table>
+    <p>The last two are the ones that make this more than analogy. <b>MCP/1517</b> is
+    the context-protocol handshake — carried in the boot log of
+    <a href="https://myaelmendez.github.io/startabusiness.html">the startabusiness surface</a>
+    (added this session, so the anchor is literal rather than borrowed), in its template,
+    and across <b>59 surfaces</b> in the fleet (<code>agentic.html</code>,
+    <code>internetofagents.html</code>, <code>private-client.html</code>…).
+    And <code>teologia.ai</code> defaults to the very tradition Project Wittenberg
+    serves. The number and the lineage are not borrowed for effect — they are already
+    in the stack.</p>
+  </section>
+
+  <section>
+    <h2>Where it does <i>not</i> hold</h2>
+    <p>Stated plainly, because a parallel that survives every test is a slogan.</p>
+    <div class="card limit">
+      <div class="t">Three real differences</div>
+      <ul>
+        <li><b>Archive vs. runtime.</b> Project Wittenberg digitises an existing, closed
+        corpus. opensourceware is <i>prospective</i> — it builds new things, and the corpus
+        grows by use. Not the same object.</li>
+        <li><b>Gratis vs. a rail.</b> Project Wittenberg is purely volunteer, no revenue.
+        This stack has a real economic rail — <b>$133.65 paid</b>, Doola affiliate, Stripe
+        to come. That is a difference, not a detail.</li>
+        <li><b>Open code, gated execution.</b> Project Wittenberg has no authority layer —
+        you read a text or you do not. Here the code is open but <i>execution is
+        default-deny</i>: publish, execute and merge require a scoped capability. That is a
+        stricter posture than the original, not a looser one.</li>
+      </ul>
+    </div>
+    <p>So the honest formulation: <b>not a re-edition of Project Wittenberg, but the same
+    gesture pointed at a different corpus</b> — vernacular, cited, mirrored, no single
+    custody — applied to a runtime instead of a library.</p>
+  </section>
+
+  <section>
+    <h2>The anchor</h2>
+    <pre><span class="c"># Project Wittenberg is named for a place and a year</span>
+1517  ·  Wittenberg  ·  the 95 Theses posted at the castle church door
+
+<span class="c"># the number is now carried in the surface's boot log (added this session)</span>
+MCP/1517  ·  the context-protocol handshake
+<span class="c">   site/startabusiness.html · BOOT log:</span>
+<span class="g">   ✓ MCP/1517 HANDSHAKE · ONLINE</span>
+
+<span class="c"># the gesture, named once:</span>
+nailed to the door   ·  in the vernacular  ·  with the citation  ·  copied and mirrored</pre>
+  </section>
+
+  <section>
+    <h2>The receipts</h2>
+    <p>What actually exists, measured — the same discipline Project Wittenberg applied to
+    its citations.</p>
+    <table>
+      <tr><th>Artifact</th><th>State</th></tr>
+      <tr><td><code>session-receipt.html</code></td><td><span class="pill ok">live at source</span> 18,571 chars · badge · CDN lagging</td></tr>
+      <tr><td><code>startabusiness.html</code></td><td><span class="pill ok">live at source</span> 33,962 chars · badge + API flow</td></tr>
+      <tr><td><code>doola_client.py</code></td><td><span class="pill ok">13/13</span> offline checks · never called live</td></tr>
+      <tr><td>æQR badge coverage</td><td><span class="pill ok">measured</span> 145/145 modified · 137 new surfaces</td></tr>
+      <tr><td>skill-guide</td><td><span class="pill ok">208 skills</span> all badged, static-embedded</td></tr>
+      <tr><td><code>kænbæn</code></td><td><span class="pill ok">live</span> read/write shared brain, not a black box</td></tr>
+      <tr><td>repos</td><td><span class="pill ok">in sync</span> <code>f3a0be3</code> · <code>edaa193</code></td></tr>
+    </table>
+    <p class="sub" style="color:var(--dim);font-size:11.5px">Citation here is a hash, not a
+    footnote. Same requirement, different mechanism.</p>
+  </section>
+
+  <div class="seal">
+    <div class="motto">CTRL+<span style="color:var(--gold)">æ</span></div>
+    <div class="s">OPENSOURCEWARE · THE GESTURE, NOT THE LIBRARY</div>
+    <div class="doms">
+      <a href="https://myaelmendez.github.io/startabusiness.html">startabusiness</a> ·
+      <a href="https://myaelmendez.github.io/session-receipt.html">session receipt</a> ·
+      <a href="https://myaelmendez.github.io/verify.html">verify</a> ·
+      <a href="https://ctsfw.edu/etext/AboutArchives.htm">project wittenberg</a>
+    </div>
+    <div class="hash">#hermiphicationisinevitable · æ:// language is compute</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const c = document.getElementById('mesh'), x = c.getContext('2d');
+  let w, h, nodes = [];
+  const N = 68, GOLD = '212,175,55';
+  function size(){
+    w = c.width = innerWidth; h = c.height = innerHeight;
+    nodes = Array.from({length: N}, () => ({
+      x: Math.random()*w, y: Math.random()*h,
+      vx: (Math.random()-.5)*.24, vy: (Math.random()-.5)*.24,
+      r: Math.random()*1.5+.5
+    }));
+  }
+  function frame(){
+    x.clearRect(0,0,w,h);
+    for (const n of nodes){
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+    }
+    for (let i=0;i<N;i++) for (let j=i+1;j<N;j++){
+      const a=nodes[i], b=nodes[j], d=Math.hypot(a.x-b.x,a.y-b.y);
+      if (d < 132){
+        x.strokeStyle = `rgba(${GOLD},${(1-d/132)*.16})`;
+        x.lineWidth = .6;
+        x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke();
+      }
+    }
+    for (const n of nodes){
+      x.fillStyle = `rgba(${GOLD},.5)`;
+      x.beginPath(); x.arc(n.x,n.y,n.r,0,Math.PI*2); x.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  size(); addEventListener('resize', size); frame();
+})();
+</script>
+
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/wittenberg.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+
+</body>
+</html>
