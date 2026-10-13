@@ -435,6 +435,108 @@ class _Æ:
         self.video = _Video()
         self.kanban = _Kanban()
 
+    # ── discovery — the catalog is DERIVED from the bindings, never written ──
+
+    @staticmethod
+    def _sig(meth):
+        import inspect
+        try:
+            params = list(inspect.signature(meth).parameters.values())[1:]  # drop self
+            return "(" + ", ".join(str(p) for p in params) + ")"
+        except Exception:
+            return "(...)"
+
+    def _iter_caps(self):
+        import inspect
+        for bname, bobj in sorted(vars(self).items()):
+            if bname.startswith("_"):
+                continue
+            cls = type(bobj)
+            if not isinstance(cls, type):
+                continue
+            for mname, meth in inspect.getmembers(cls, inspect.isfunction):
+                if mname.startswith("_"):
+                    continue
+                yield bname, mname, meth
+
+    def manifest(self, q: str = None, mesh: str = None):
+        """List every capability the DSL exposes: name, signature, doc, hash, source line.
+
+        Derived from the live bindings, so the catalog cannot drift from the code.
+        """
+        import inspect, hashlib
+        caps = []
+        for bname, mname, meth in self._iter_caps():
+            if mesh and bname != mesh:
+                continue
+            doc = (inspect.getdoc(meth) or "").split("\n")[0]
+            try:
+                src = inspect.getsource(meth)
+                h = hashlib.sha256(src.encode()).hexdigest()[:12]
+                line = inspect.getsourcelines(meth)[1]
+            except Exception:
+                h, line = "", 0
+            caps.append({"name": f"æ.{bname}.{mname}", "sig": self._sig(meth),
+                         "doc": doc, "hash": h, "line": line, "mesh": bname})
+        if q:
+            ql = q.lower()
+            caps = [c for c in caps if ql in c["name"].lower() or ql in c["doc"].lower()]
+        return caps
+
+    def help(self, name: str):
+        """Full documentation for one capability: signature, doc, source."""
+        import inspect
+        for bname, mname, meth in self._iter_caps():
+            if name in (f"æ.{bname}.{mname}", f"{bname}.{mname}", mname):
+                try:
+                    src = inspect.getsource(meth).strip()[:1200]
+                except Exception:
+                    src = ""
+                return {"name": f"æ.{bname}.{mname}", "sig": self._sig(meth),
+                        "doc": inspect.getdoc(meth) or "", "source": src}
+        return {"error": f"no capability named '{name}'"}
+
+    def skills(self, q: str = None, limit: int = 60):
+        """List æ skills from SKILL.md frontmatter (name, description, tags, path).
+
+        The skill half of the catalog — procedures, not bindings.
+        """
+        import re as _re
+        roots = [Path(r"C:/æ/skills"),
+                 Path(os.environ.get("LOCALAPPDATA", "")) / "hermes" / "skills"]
+        out = []
+        for root in roots:
+            if not root.exists():
+                continue
+            for f in sorted(root.rglob("SKILL.md")):
+                try:
+                    text = f.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    continue
+                m = _re.match(r"^---\n(.*?)\n---", text, _re.S)
+                if not m:
+                    continue
+                fm = m.group(1)
+                nm = _re.search(r"^name:\s*(.+)$", fm, _re.M)
+                de = _re.search(r"^description:\s*(.+)$", fm, _re.M)
+                tg = _re.search(r"tags:\s*\[(.*?)\]", fm, _re.M)
+                out.append({
+                    "name": (nm.group(1).strip().strip('"') if nm else f.parent.name),
+                    "description": (de.group(1).strip().strip('"') if de else ""),
+                    "tags": [t.strip() for t in tg.group(1).split(",")] if tg else [],
+                    "path": str(f),
+                })
+        if q:
+            ql = q.lower()
+            out = [s for s in out
+                   if ql in s["name"].lower() or ql in s["description"].lower()
+                   or any(ql in t.lower() for t in s["tags"])]
+        return out[:limit]
+
+    def find(self, q: str):
+        """Search capabilities AND skills in one call — the single discovery surface."""
+        return {"capabilities": self.manifest(q=q), "skills": self.skills(q=q)}
+
 
 # ══════════════════════════════════════════════════════════════
 # EXECUTION
@@ -604,6 +706,31 @@ def run_tests():
     code = "b = æ.kanban.board()\nprint(æ.kanban.inspect(b[0]['id'])['id'] if b else 'no tasks')"
     out, _, rc = execute(code)
     check("æ.kanban.inspect() runs", rc == 0 and (out.strip().startswith("t_") or out.strip() == "no tasks"), out.strip())
+
+    # 13. æ.manifest() enumerates every binding — the catalog derived from code
+    code = "print(len(æ.manifest()))"
+    out, _, rc = execute(code)
+    check("æ.manifest() enumerates bindings", rc == 0 and out.strip().isdigit() and int(out.strip()) >= 30, out.strip())
+
+    # 14. æ.manifest(q=) filters by name/doc
+    code = "print([c['name'] for c in æ.manifest(q='kanban')])"
+    out, _, rc = execute(code)
+    check("æ.manifest(q=) filters", rc == 0 and "æ.kanban.board" in out, out.strip())
+
+    # 15. æ.help() returns one capability's signature
+    code = "print(æ.help('æ.kanban.dispatch')['sig'])"
+    out, _, rc = execute(code)
+    check("æ.help() returns a capability", rc == 0 and "verb" in out, out.strip())
+
+    # 16. æ.skills(q=) searches the frontmatter index
+    code = "print(len(æ.skills(q='qr')))"
+    out, _, rc = execute(code)
+    check("æ.skills(q=) searches frontmatter", rc == 0 and out.strip().isdigit() and int(out.strip()) > 0, out.strip())
+
+    # 17. æ.find() searches both halves in one call
+    code = "r = æ.find('kanban'); print(len(r['capabilities']), len(r['skills']))"
+    out, _, rc = execute(code)
+    check("æ.find() searches both halves", rc == 0 and out.strip().split()[0].isdigit(), out.strip())
 
     print(f"\n══ {passed} passed, {failed} failed ══")
     return 0 if failed == 0 else 1
