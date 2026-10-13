@@ -46,24 +46,31 @@ def load_substrate():
     return mod
 
 
-def build() -> dict:
-    """Build the manifest payload. Deterministic — no timestamp, so --check is a byte compare."""
+def build(with_skills: bool = False) -> dict:
+    """Build the manifest payload.
+
+    Deterministic: no timestamp, and capabilities only by default. The skill half
+    is machine-local (it reads the local skills dirs), so embedding it would make
+    --check fail on any other machine. Skills stay a live query (æ.skills()); the
+    committed manifest is the machine-independent capability surface.
+    """
     mod = load_substrate()
     æ = mod._Æ()  # constructor instantiates bindings only — no I/O
     caps = æ.manifest()
-    skills = æ.skills(limit=1000)
     src = SUBSTRATE.read_bytes()
-    return {
+    payload = {
         "scheme": "æ://capabilities",
         "generated_from": "agents/æ_code_mode.py",
         "source_sha256": hashlib.sha256(src).hexdigest(),
         "count": len(caps),
-        "skills_count": len(skills),
         "capabilities": caps,
-        # the skill half — procedures, not bindings. Compact: no absolute paths.
-        "skills": [{"name": s["name"], "description": s["description"], "tags": s["tags"]}
-                   for s in skills],
     }
+    if with_skills:
+        skills = æ.skills(limit=1000)
+        payload["skills_count"] = len(skills)
+        payload["skills"] = [{"name": s["name"], "description": s["description"], "tags": s["tags"]}
+                             for s in skills]
+    return payload
 
 
 def render(payload: dict) -> str:
@@ -73,9 +80,11 @@ def render(payload: dict) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="generate the æ capability manifest")
     ap.add_argument("--check", action="store_true", help="fail if the committed manifest is stale")
+    ap.add_argument("--with-skills", action="store_true",
+                    help="also embed the local skill index (machine-local; not for the gated file)")
     args = ap.parse_args(argv)
 
-    payload = build()
+    payload = build(with_skills=args.with_skills)
     text = render(payload)
 
     # secret gate — the manifest must never carry a credential
@@ -93,12 +102,13 @@ def main(argv=None) -> int:
             print(f"STALE: {OUT.name} differs from the bindings — regenerate and commit",
                   file=sys.stderr)
             return 1
-        print(f"OK: {OUT.name} is current ({payload['count']} capabilities, "
-              f"{payload['skills_count']} skills)")
+        extra = f", {payload['skills_count']} skills" if "skills_count" in payload else ""
+        print(f"OK: {OUT.name} is current ({payload['count']} capabilities{extra})")
         return 0
 
     OUT.write_text(text, encoding="utf-8")
-    print(f"wrote {OUT} — {payload['count']} capabilities, {payload['skills_count']} skills, "
+    extra = f", {payload['skills_count']} skills" if "skills_count" in payload else ""
+    print(f"wrote {OUT} — {payload['count']} capabilities{extra}, "
           f"source {payload['source_sha256'][:12]}")
     return 0
 

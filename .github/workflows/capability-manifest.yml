@@ -1,0 +1,33 @@
+name: capability-manifest
+
+# The capability catalog is DERIVED from the bindings in agents/æ_code_mode.py,
+# never hand-written. This gate makes drift a build failure: change a binding
+# without regenerating capability-manifest.json and the job fails. The schema
+# and the behavior are the same file, so they cannot diverge in silence.
+
+on:
+  push:
+    paths:
+      - "agents/æ_code_mode.py"
+      - "capability-manifest.json"
+      - "tools/gen_capability_manifest.py"
+  pull_request:
+    paths:
+      - "agents/æ_code_mode.py"
+      - "capability-manifest.json"
+      - "tools/gen_capability_manifest.py"
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: the manifest must match the bindings
+        run: python tools/gen_capability_manifest.py --check
+
+      - name: the sandbox tests must pass
+        run: python agents/æ_code_mode.py --test
