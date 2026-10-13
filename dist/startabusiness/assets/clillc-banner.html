@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#050505"/>
+<title>CLI.LLC • #STARTABUSINESS • DAOLLC.AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#050505;--gold:#D4AF37;--gold-dim:rgba(212,175,55,.1);
+  --gold-glow:rgba(212,175,55,.32);--neon:#00ff9d;
+  --ink:#f0ece4;--muted:rgba(240,236,228,.38);
+  --border:rgba(212,175,55,.16);--border-hot:rgba(212,175,55,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  width:100%;height:100dvh;overflow:hidden;
+  background:var(--void);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+}
+
+canvas#mesh{position:fixed;inset:0;z-index:0;}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(212,175,55,.012) 2px 4px);}
+.vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(5,5,5,.9) 100%);}
+
+/* ── BANNER CHASSIS ── */
+.banner{
+  position:relative;z-index:10;
+  width:min(100vw,640px);
+  /* 16:5 banner ratio */
+  aspect-ratio:16/5;
+  background:rgba(5,5,5,.82);
+  border:1px solid var(--border-hot);
+  border-radius:0;
+  overflow:hidden;
+  display:flex;
+  align-items:stretch;
+  box-shadow:0 0 60px rgba(212,175,55,.12),inset 0 0 80px rgba(212,175,55,.03);
+}
+/* inner scanlines */
+.banner::before{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(212,175,55,.018) 2px,rgba(212,175,55,.018) 3px);
+}
+/* gold top/bottom borders glow */
+.banner::after{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  border-top:1px solid rgba(212,175,55,.6);
+  border-bottom:1px solid rgba(212,175,55,.6);
+}
+
+/* ── LEFT: IDENTITY ── */
+.b-left{
+  flex-shrink:0;
+  width:22%;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 10px;gap:4px;
+  background:linear-gradient(135deg,rgba(212,175,55,.06),transparent);
+  position:relative;z-index:1;
+}
+.b-glyph{
+  font-size:clamp(22px,4vw,38px);
+  filter:drop-shadow(0 0 10px var(--gold-glow));
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.b-name{
+  font-family:'Orbitron',sans-serif;font-size:clamp(10px,1.8vw,16px);font-weight:900;
+  letter-spacing:2px;color:var(--gold);
+  text-shadow:0 0 10px var(--gold-glow);
+  text-align:center;line-height:1.1;
+}
+.b-sub{
+  font-size:clamp(6px,1vw,8px);letter-spacing:2px;color:var(--muted);
+  text-transform:uppercase;text-align:center;
+}
+.live-chip{
+  display:flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:999px;
+  border:1px solid rgba(0,255,157,.2);
+  font-size:clamp(6px,.9vw,7.5px);letter-spacing:1px;
+  color:var(--neon);
+}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);box-shadow:0 0 6px var(--neon);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── CENTER: HEADLINE ── */
+.b-center{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 clamp(8px,2vw,20px);gap:clamp(3px,.8vh,7px);
+  text-align:center;
+  position:relative;z-index:1;
+}
+.b-title{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(20px,4.5vw,42px);
+  letter-spacing:clamp(2px,.5vw,5px);
+  line-height:1;color:var(--gold);
+  text-shadow:0 0 22px var(--gold-glow),0 0 60px rgba(212,175,55,.08);
+}
+.b-tagline{
+  font-size:clamp(9px,1.6vw,14px);
+  line-height:1.3;color:var(--ink);
+  letter-spacing:.5px;
+}
+.b-tagline em{font-style:normal;color:var(--gold);text-shadow:0 0 8px var(--gold-glow);}
+.b-pills{
+  display:flex;gap:clamp(4px,.8vw,8px);flex-wrap:wrap;justify-content:center;
+}
+.b-pill{
+  font-size:clamp(6px,.9vw,8px);letter-spacing:1.5px;
+  padding:2px 8px;border-radius:999px;
+  border:1px solid var(--border);
+  color:var(--muted);text-transform:uppercase;
+}
+.b-pill.hot{border-color:rgba(212,175,55,.35);color:var(--gold);}
+
+/* ── RIGHT: CTA ── */
+.b-right{
+  flex-shrink:0;
+  width:24%;
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 clamp(8px,1.5vw,16px);gap:clamp(4px,.8vh,8px);
+  background:linear-gradient(225deg,rgba(212,175,55,.07),transparent);
+  position:relative;z-index:1;
+}
+.cta-main{
+  display:block;width:100%;
+  padding:clamp(8px,1.5vh,14px) clamp(6px,1vw,12px);
+  background:var(--gold);color:#000;
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(7px,1.1vw,10px);
+  letter-spacing:clamp(1px,.2vw,2px);
+  text-align:center;text-decoration:none;
+  border-radius:6px;
+  box-shadow:0 0 20px rgba(212,175,55,.25);
+  transition:all .2s;
+  line-height:1.3;
+}
+.cta-main:hover{background:#e8c547;box-shadow:0 0 35px rgba(212,175,55,.4);transform:translateY(-1px);}
+.cta-main:active{transform:translateY(1px) scale(.97);}
+.cta-label{font-size:clamp(5.5px,.8vw,7.5px);letter-spacing:1.5px;color:rgba(212,175,55,.35);text-transform:uppercase;text-align:center;}
+.cta-links{display:flex;gap:clamp(3px,.5vw,6px);}
+.cta-link{
+  flex:1;padding:clamp(4px,.7vh,7px) clamp(2px,.4vw,6px);text-align:center;
+  border:1px solid var(--border);border-radius:4px;
+  color:var(--muted);font-size:clamp(5px,.75vw,7px);letter-spacing:.5px;
+  text-decoration:none;transition:all .15s;
+}
+.cta-link:hover{border-color:var(--border-hot);color:var(--gold);}
+
+/* LOG STRIP inside banner */
+.b-log{
+  position:absolute;bottom:0;left:22%;right:24%;
+  height:clamp(18px,3vh,24px);
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,.5);
+  overflow:hidden;display:flex;align-items:center;
+  padding:0 12px;z-index:2;
+}
+.log-ticker{
+  display:flex;gap:32px;white-space:nowrap;
+  font-size:clamp(7px,.9vw,9px);color:rgba(212,175,55,.4);letter-spacing:1px;
+  animation:ticker 28s linear infinite;
+}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.log-ticker span{color:var(--neon);}
+.log-ticker b{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<canvas id="mesh"></canvas>
+<div class="scan"></div>
+<div class="vig"></div>
+
+<div class="banner">
+
+  <!-- LEFT: IDENTITY -->
+  <div class="b-left">
+    <div class="b-glyph">🦬</div>
+    <div class="b-name">DAOLLC<br/>.AI</div>
+    <div class="b-sub">SOVEREIGN<br/>INFRA</div>
+    <div class="live-chip"><span class="live-dot"></span>2026</div>
+  </div>
+
+  <!-- CENTER: HEADLINE -->
+  <div class="b-center">
+    <div class="b-title">CLI.LLC</div>
+    <div class="b-tagline">One Person. <em>Full Agency.</em><br/>Wyoming DAO LLC — Instant Formation</div>
+    <div class="b-pills">
+      <div class="b-pill hot">LLM.STORE</div>
+      <div class="b-pill hot">MCP/1517</div>
+      <div class="b-pill">NEUROMITOSIS</div>
+      <div class="b-pill">MOLT CYCLE</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: CTA -->
+  <div class="b-right">
+    <div class="cta-label">SOVEREIGN ENTITY</div>
+    <a class="cta-main" href="https://partnersps.doola.com/hhsoqhb23250" target="_blank" rel="noopener">
+      #START<br/>ABUSINESS
+    </a>
+    <div class="cta-links">
+      <a class="cta-link" href="https://llm.store" target="_blank" rel="noopener">LLM<br/>.STORE</a>
+      <a class="cta-link" href="https://daollc.ai" target="_blank" rel="noopener">DAO<br/>LLC</a>
+    </div>
+  </div>
+
+  <!-- TICKER LOG -->
+  <div class="b-log">
+    <div class="log-ticker">
+      <span>DAOLLC.AI</span> &nbsp;•&nbsp; ONE PERSON &nbsp;•&nbsp; <b>FULL AGENCY</b> &nbsp;•&nbsp; WYOMING DAO LLC &nbsp;•&nbsp; LLM STORE: <span>9 MODELS ACTIVE</span> &nbsp;•&nbsp; MCP HANDSHAKE: <b>VERIFIED</b> &nbsp;•&nbsp; NEUROMITOSIS: <span>HUMAN + ROBOT + DAO</span> &nbsp;•&nbsp; MOLT CYCLE: DISCOVER → STEEP → SERVE → <b>MOLT</b> → GARDEN → ∞ &nbsp;•&nbsp; <span>#STARTABUSINESS</span> &nbsp;•&nbsp; INTERNET OF AGENTS: <b>THE NETWORK IS THE SINGULARITY</b> &nbsp;•&nbsp;
+      <!-- repeat for seamless loop -->
+      <span>DAOLLC.AI</span> &nbsp;•&nbsp; ONE PERSON &nbsp;•&nbsp; <b>FULL AGENCY</b> &nbsp;•&nbsp; WYOMING DAO LLC &nbsp;•&nbsp; LLM STORE: <span>9 MODELS ACTIVE</span> &nbsp;•&nbsp; MCP HANDSHAKE: <b>VERIFIED</b> &nbsp;•&nbsp; NEUROMITOSIS: <span>HUMAN + ROBOT + DAO</span> &nbsp;•&nbsp; MOLT CYCLE: DISCOVER → STEEP → SERVE → <b>MOLT</b> → GARDEN → ∞ &nbsp;•&nbsp; <span>#STARTABUSINESS</span> &nbsp;•&nbsp; INTERNET OF AGENTS: <b>THE NETWORK IS THE SINGULARITY</b> &nbsp;•&nbsp;
+    </div>
+  </div>
+
+</div>
+
+<script>
+const cvs=document.getElementById('mesh'),ctx=cvs.getContext('2d');
+const DPR=Math.min(devicePixelRatio||1,2);
+let W,H,nodes=[];
+function resize(){W=cvs.width=Math.floor(innerWidth*DPR);H=cvs.height=Math.floor(innerHeight*DPR);cvs.style.width=innerWidth+'px';cvs.style.height=innerHeight+'px';}
+function init(){resize();const c=Math.floor(W*H/18000)+24;nodes=Array.from({length:c},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3*DPR,vy:(Math.random()-.5)*.3*DPR,r:(1+Math.random()*1.6)*DPR,ph:Math.random()*Math.PI*2}));}
+init();addEventListener('resize',init);
+const CD=85*DPR;
+function draw(now){
+  ctx.fillStyle='rgba(5,5,5,0.14)';ctx.fillRect(0,0,W,H);
+  const t=now*.001;
+  nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;});
+  ctx.lineWidth=.4*DPR;
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
+    if(Math.abs(dx)>CD||Math.abs(dy)>CD)continue;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if(d<CD){ctx.strokeStyle=`rgba(212,175,55,${(1-d/CD)*.13})`;ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.stroke();}
+  }
+  nodes.forEach(n=>{const p=.55+Math.sin(t*1.5+n.ph)*.45;ctx.fillStyle=`rgba(212,175,55,${.18+p*.28})`;ctx.beginPath();ctx.arc(n.x,n.y,n.r*p,0,Math.PI*2);ctx.fill();});
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

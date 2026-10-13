@@ -42,7 +42,11 @@ node_modules/
 
 # Compiled output
 out/
-dist/
+dist/*
+# Exception: the startabusiness Agent Skills bundle (a distributable skill
+# package) is source, not build output — keep it tracked.
+!dist/startabusiness/
+!dist/startabusiness.zip
 
 # Sovereign local-custody secret files — never commit
 secrets.json

@@ -1,0 +1,34 @@
+# Agent Skills package metadata for the startabusiness skill.
+# Optional file per the Agent Skills open standard (agents/openai.yaml):
+# appearance and dependency hints for ChatGPT / Codex hosts.
+
+name: startabusiness
+display_name: "#startabusiness — one command, one person, full agency"
+version: 1.1.0
+license: MIT
+author: "Yæl Méndez × Hermes Agent"
+homepage: https://llm.store
+
+appearance:
+  emoji: "æ"
+  accent: "#D4AF37"
+  background: "#050505"
+
+invocation:
+  explicit: "@startabusiness"
+  implicit: true
+
+dependencies:
+  python: ">=3.9"
+  packages: []          # doola_client.py is stdlib-only
+  network: optional     # required only for live/sandbox API calls
+
+entry_points:
+  instructions: SKILL.md
+  scripts:
+    - scripts/doola_client.py
+  references:
+    - references/doola-api.md
+  assets:
+    - assets/startabusiness.html
+    - assets/clillc-banner.html
