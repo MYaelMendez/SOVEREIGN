@@ -77,6 +77,16 @@ class _Keeper:
                     issues.append({"check": "broker", "verdict": "degraded", "evidence": f"GET / → {data}"})
             except Exception as e:
                 issues.append({"check": "broker", "verdict": "down", "evidence": str(e)})
+        elif target == "kanban":
+            kb = _Kanban()
+            db = kb._db()
+            if not db.exists():
+                issues.append({"check": "kanban", "verdict": "down",
+                               "evidence": f"db missing: {db}"})
+            else:
+                rows = kb.board()
+                issues.append({"check": "kanban", "verdict": "ok",
+                               "evidence": f"{db} -> {len(rows)} tasks"})
         else:
             issues.append({"check": target, "verdict": "unknown", "evidence": f"no probe for {target}"})
         return {"verdict": "ok" if all(i["verdict"] == "ok" for i in issues) else "issues",
@@ -291,6 +301,71 @@ class _Social:
         return {"ok": True, "subject": subject}
 
 
+class _Kanban:
+    """Kanban bindings — the physical board, read + dispatch.
+
+    The board is a SQLite DB. Reads go straight to the DB (read-only URI, no
+    CLI). Mutations delegate to qr_kanban.dispatch(), which runs the card
+    signature gate BEFORE any board write — a photograph of someone else's
+    card is refused. This binding runs in the executor (trusted): the sandbox
+    only constrains the model's own code, not these method calls.
+    """
+
+    def _db(self):
+        for env in ("HERMES_KANBAN_DB", "VAEULT_KANBAN_DB"):
+            v = os.environ.get(env)
+            if v:
+                return Path(v)
+        la = os.environ.get("LOCALAPPDATA")
+        if la:
+            p = Path(la) / "hermes" / "kanban.db"
+            if p.exists():
+                return p
+        return Path.home() / ".hermes" / "kanban.db"
+
+    def board(self):
+        """Read the board (read-only). Returns a list of task dicts."""
+        import sqlite3
+        db = self._db()
+        if not db.exists():
+            return []
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        con.row_factory = sqlite3.Row
+        rows = con.execute(
+            "SELECT id, title, status, assignee, priority FROM tasks "
+            "WHERE status NOT IN ('archived') ORDER BY priority DESC, created_at"
+        ).fetchall()
+        con.close()
+        return [dict(r) for r in rows]
+
+    def inspect(self, task_id: str):
+        """Read one task (read-only). Returns a dict or None."""
+        import sqlite3
+        db = self._db()
+        if not db.exists():
+            return None
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        con.row_factory = sqlite3.Row
+        row = con.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        con.close()
+        return dict(row) if row else None
+
+    def verbs(self):
+        """List the card vocabulary (verb -> spec)."""
+        return self._qr().VERBS
+
+    def dispatch(self, verb: str, task_id: str = None, dry: bool = False):
+        """Run one kanban verb. Mutations pass through the signature gate."""
+        return self._qr().dispatch(verb, task_id, dry=dry)
+
+    def _qr(self):
+        import importlib
+        p = r"C:/æ/site/agents"
+        if p not in sys.path:
+            sys.path.insert(0, p)
+        return importlib.import_module("qr_kanban")
+
+
 class _Storage:
     """Storage bindings — filesystem access within sandbox."""
     def read(self, path: str):
@@ -358,6 +433,7 @@ class _Æ:
         self.social = _Social()
         self.storage = _Storage()
         self.video = _Video()
+        self.kanban = _Kanban()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -409,7 +485,6 @@ def execute(code: str, timeout: int = TIMEOUT_S):
 
         # Use threading for timeout on Windows
         import threading
-import sys; sys.path.insert(0, "C:/æ/kænbæn"); import kænbæn
         result = {"exc": None}
         def _target():
             try:
@@ -519,6 +594,16 @@ def run_tests():
     code = "æ.storage.write('/tmp/code_mode_test.txt', 'hello'); print(æ.storage.read('/tmp/code_mode_test.txt'))"
     out, _, rc = execute(code)
     check("storage write/read roundtrip", rc == 0 and "hello" in out.strip(), out.strip())
+
+    # 11. æ.kanban.board() reads the live board
+    code = "b = æ.kanban.board(); print(len(b))"
+    out, _, rc = execute(code)
+    check("æ.kanban.board() runs", rc == 0 and out.strip().isdigit(), out.strip())
+
+    # 12. æ.kanban.inspect() resolves a real task id
+    code = "b = æ.kanban.board()\nprint(æ.kanban.inspect(b[0]['id'])['id'] if b else 'no tasks')"
+    out, _, rc = execute(code)
+    check("æ.kanban.inspect() runs", rc == 0 and (out.strip().startswith("t_") or out.strip() == "no tasks"), out.strip())
 
     print(f"\n══ {passed} passed, {failed} failed ══")
     return 0 if failed == 0 else 1
