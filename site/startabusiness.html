@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" data-glyph="æ">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#050505"/>
+<title>#startabusiness · æQR + kænbæn — address, verify, then act</title>
+<meta name="description" content="æQR is one discovery layer across many resources without making every resource public. 277 resources, a produce-and-verify QR gate, default-deny authority. Grounded in real measured output."/>
+<style>
+:root{
+  --void:#050505; --panel:#0c0c0e; --panel2:#121215;
+  --gold:#D4AF37; --gold-hi:#FFD700; --neon:#00ff9d;
+  --txt:#F2EFE6; --muted:rgba(242,239,230,.72); --dim:rgba(242,239,230,.52);
+  --line:rgba(212,175,55,.30); --line-soft:rgba(212,175,55,.16);
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'Orbitron',system-ui,-apple-system,Segoe UI,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--void);color:var(--txt);
+  font-family:var(--mono);font-size:14px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold-hi)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+
+/* ── boot ─────────────────────────────────────────────── */
+#boot{position:fixed;inset:0;background:var(--void);z-index:99;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  padding:24px;transition:opacity .55s ease}
+#boot.done{opacity:0;pointer-events:none}
+#bootlog{width:100%;max-width:660px;font-size:13.5px;line-height:2}
+.bl{opacity:0;transform:translateY(3px);transition:opacity .28s,transform .28s;
+  display:flex;gap:10px}
+.bl.on{opacity:1;transform:none}
+.bl .t{color:var(--dim);flex:0 0 62px}
+.bl .v{color:var(--txt)}
+.bl .v .ok{color:var(--neon)}
+#bootglyph{font-size:52px;color:var(--gold-hi);margin-top:26px;opacity:0;
+  transition:opacity .5s;text-shadow:0 0 40px rgba(255,215,0,.35)}
+#bootglyph.on{opacity:1}
+
+/* ── header ───────────────────────────────────────────── */
+header{padding:44px 0 26px;border-bottom:1px solid var(--line-soft)}
+.prompt{font-size:13px;color:var(--gold);letter-spacing:.30em}
+h1{font-family:var(--sans);font-size:clamp(30px,5.6vw,52px);margin:12px 0 8px;
+  color:var(--gold-hi);font-weight:800;letter-spacing:-.015em;
+  text-shadow:0 0 34px rgba(255,215,0,.22)}
+.sub{font-size:16px;color:var(--muted);max-width:66ch;margin:0}
+.sub b{color:var(--txt);font-weight:500}
+
+/* ── tabs ─────────────────────────────────────────────── */
+nav{display:flex;gap:0;border-bottom:1px solid var(--line-soft);
+  margin-top:30px;flex-wrap:wrap}
+nav button{background:none;border:0;border-bottom:2px solid transparent;
+  color:var(--dim);font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;
+  padding:13px 17px;cursor:pointer;text-transform:uppercase;transition:.16s}
+nav button:hover{color:var(--muted)}
+nav button[aria-selected="true"]{color:var(--gold-hi);border-bottom-color:var(--gold)}
+nav button .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--neon);margin-left:7px;vertical-align:middle}
+
+section{display:none;padding:40px 0 70px}
+section.on{display:block}
+h2{font-family:var(--sans);font-size:20px;color:var(--gold);margin:0 0 6px;
+  font-weight:700;letter-spacing:.01em}
+h3{font-size:14px;color:var(--gold);margin:30px 0 8px;letter-spacing:.14em;
+  text-transform:uppercase}
+.lede{color:var(--muted);max-width:74ch;margin:0 0 22px;font-size:14px}
+.lede b{color:var(--txt);font-weight:500}
+
+/* ── cards ────────────────────────────────────────────── */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line-soft);border-radius:9px;
+  padding:19px 20px;transition:.16s}
+.card:hover{border-color:var(--line);background:var(--panel2)}
+.card .k{font-size:11px;letter-spacing:.20em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:9px}
+.card .n{font-family:var(--sans);font-size:19px;color:var(--gold-hi);font-weight:700}
+.card .d{font-size:13px;color:var(--muted);margin-top:7px}
+
+pre{background:var(--panel);border:1px solid var(--line-soft);border-radius:9px;
+  padding:17px 19px;overflow-x:auto;font-size:12.5px;line-height:1.8;margin:0}
+pre .c{color:var(--dim)}
+pre .g{color:var(--neon)}
+pre .y{color:var(--gold-hi)}
+pre .r{color:#ff7b7b}
+
+table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+th{text-align:left;color:var(--dim);font-weight:400;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;padding:9px 11px;
+  border-bottom:1px solid var(--line-soft)}
+td{padding:10px 11px;border-bottom:1px solid rgba(212,175,55,.10);
+  color:var(--muted);vertical-align:top}
+td b{color:var(--txt);font-weight:500}
+code{background:rgba(212,175,55,.10);padding:1.5px 6px;border-radius:4px;
+  font-size:12.5px;color:var(--gold-hi)}
+
+/* ── terminal ─────────────────────────────────────────── */
+#term{background:#08080a;border:1px solid var(--line-soft);border-radius:9px;
+  padding:16px 18px;font-size:13px;min-height:210px;max-height:340px;
+  overflow-y:auto;margin-top:14px}
+#term .ln{white-space:pre-wrap;word-break:break-word}
+#term .in{color:var(--gold-hi)}
+#term .out{color:var(--muted)}
+#term .er{color:#ff7b7b}
+#termbar{display:flex;gap:8px;margin-top:10px}
+#termbar input{flex:1;background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:7px;padding:11px 13px;color:var(--txt);font-family:var(--mono);
+  font-size:13px;outline:none}
+#termbar input:focus{border-color:var(--line)}
+#termbar button{background:rgba(212,175,55,.13);border:1px solid var(--line);
+  color:var(--gold-hi);border-radius:7px;padding:11px 18px;cursor:pointer;
+  font-family:var(--mono);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.chip{background:rgba(212,175,55,.07);border:1px solid var(--line-soft);
+  border-radius:6px;padding:6px 11px;font-size:12px;color:var(--muted);cursor:pointer}
+.chip:hover{border-color:var(--line);color:var(--gold-hi)}
+
+/* ── cta ──────────────────────────────────────────────── */
+.cta{background:linear-gradient(180deg,rgba(212,175,55,.10),rgba(212,175,55,.02));
+  border:1px solid var(--line);border-radius:11px;padding:30px;margin:34px 0;
+  text-align:center}
+.cta h3{margin:0 0 8px;font-size:22px;font-family:var(--sans);color:var(--gold-hi);
+  text-transform:none;letter-spacing:0}
+.cta p{color:var(--muted);margin:0 0 18px;font-size:13.5px;max-width:60ch;
+  margin-inline:auto}
+.btn{display:inline-block;background:var(--gold);color:#0a0a0a;font-weight:700;
+  padding:14px 30px;border-radius:8px;font-size:14px;letter-spacing:.02em}
+.btn:hover{background:var(--gold-hi);color:#0a0a0a}
+.fine{font-size:11.5px;color:var(--dim);margin-top:14px;line-height:1.7}
+
+footer{border-top:1px solid var(--line-soft);padding:28px 0 46px;color:var(--dim);
+  font-size:12px}
+.tag{display:inline-block;margin:0 9px 6px 0;color:var(--gold);opacity:.85}
+
+/* ── cmdk graph ───────────────────────────────────────── */
+#cmdk{position:fixed;inset:0;background:rgba(5,5,5,.95);z-index:98;
+  display:none;padding:52px 22px;overflow-y:auto}
+#cmdk.on{display:block}
+#cmdk h3{color:var(--gold);font-size:12px;letter-spacing:.24em;margin:0 0 18px}
+#cmdk input{width:100%;max-width:440px;background:var(--panel);
+  border:1px solid var(--line);border-radius:8px;padding:12px 15px;color:var(--txt);
+  font-family:var(--mono);font-size:14px;outline:none;margin-bottom:22px}
+.nodes{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  max-width:1000px}
+.node{background:var(--panel);border:1px solid var(--line-soft);border-radius:8px;
+  padding:14px 16px;cursor:pointer}
+.node:hover{border-color:var(--line)}
+.node .id{color:var(--gold-hi);font-size:13.5px}
+.node .rl{color:var(--dim);font-size:11.5px;margin-top:5px}
+.node.hide{display:none}
+</style>
+</head>
+<body>
+
+<!-- ── BOOT ─────────────────────────────────────────────── -->
+<div id="boot">
+  <div id="bootlog"></div>
+  <div id="bootglyph" data-glyph></div>
+</div>
+
+<div class="wrap">
+<header>
+  <div class="prompt">&gt;_<span data-glyph></span>://#startabusiness</div>
+  <h1>Address it. Verify it. Then act.</h1>
+  <p class="sub">æQR is <b>one discovery layer across many resources without
+  making every resource public</b>. A QR is an address into the constellation —
+  not permission to access or execute. Integrity is proven by decoding the
+  artifact back. Authority stays with the human.</p>
+
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-t="boot">boot</button>
+    <button role="tab" aria-selected="false" data-t="stack">stack</button>
+    <button role="tab" aria-selected="false" data-t="registry">registry<span class="dot"></span></button>
+    <button role="tab" aria-selected="false" data-t="gate">gate<span class="dot"></span></button>
+    <button role="tab" aria-selected="false" data-t="dao">dao</button>
+    <button role="tab" aria-selected="false" data-t="src">src</button>
+  </nav>
+</header>
+
+<!-- ── BOOT TAB ─────────────────────────────────────────── -->
+<section id="t-boot" class="on">
+  <h2>What this actually is</h2>
+  <p class="lede">Not a landing page. Two working systems joined by one
+  question: <b>how does an agent find a resource, prove it is real, and know
+  whether it is allowed to act on it?</b></p>
+
+  <div class="grid">
+    <div class="card"><div class="k">æQR · the discovery layer</div>
+      <div class="n" id="n-res">278 resources</div>
+      <div class="d">9 categories. Stable IDs → canonical routes + scope.
+      <code>public</code> / <code>local</code> / <code>private</code> / <code>hybrid</code>.</div></div>
+    <div class="card"><div class="k">the gate · produce-and-verify</div>
+      <div class="n">2 decoders</div>
+      <div class="d">cv2 <b>AND</b> pyzbar must agree. One decoder passes
+      exactly the artifact that fails in the field.</div></div>
+    <div class="card"><div class="k">authority · default deny</div>
+      <div class="n">3 open / 3 gated</div>
+      <div class="d">resolve · read · verify are open. publish · execute ·
+      merge require an explicit capability.</div></div>
+    <div class="card"><div class="k">kænbæn · shared memory</div>
+      <div class="n" id="n-agents">6 agents</div>
+      <div class="d">Every agent reads the system map before acting. The gate
+      refuses the unpledged.</div></div>
+  </div>
+
+  <h3>Two rules carry the weight</h3>
+  <pre><span class="c">// 1</span>  A QR that has not been decoded back is not a QR — it is a <span class="y">picture</span> of one.
+    The rune magic <span class="r">æ:</span> encodes fine and fails on scan (pyzbar mangles the
+    UTF-8 bytes). A single-decoder check passes exactly the artifact that
+    fails in the field. The transport magic is ASCII (<span class="g">ae:</span>); the
+    <span class="r">æ</span> identity lives in the payload, not the wire.
+
+<span class="c">// 2</span>  Scanning never grants execution. <span class="g">resolve</span>, <span class="g">read</span>, <span class="g">verify</span> are open.
+    <span class="y">publish</span>, <span class="y">execute</span>, <span class="y">merge</span> require an explicit, scoped Capability.
+    Planning a repair ("ready") is not proving it ("verified").</pre>
+
+  <h3>Measured, not asserted</h3>
+  <pre id="evidence">loading real output…</pre>
+  <p class="fine">Every number above comes from running the tools, not from a
+  README. Where a document and the code disagreed, the code won — see the
+  <b>src</b> tab for the two stale claims this page corrects.</p>
+</section>
+
+<!-- ── STACK TAB ────────────────────────────────────────── -->
+<section id="t-stack">
+  <h2>The stack</h2>
+  <p class="lede">Nine links, ordered by data flow, each built to answer a
+  failure the previous link could not.</p>
+  <pre><span class="y">custody → format → gate → authority → contract → dispatch → publish → delivery → adoption</span>
+
+  <span class="g">vault</span>        custody    where the secret lives              væult.py
+  <span class="g">envelope</span>     format     how anything crosses a boundary     ae/envelope.py
+  <span class="g">supervision</span>  gate       is the artifact real, or a picture  ae/supervision.py
+  <span class="g">authority</span>    authority  who may act, and until when         ae/authority.py
+  <span class="g">pledge</span>       contract   what an agent has promised          agent_pledge.py
+  <span class="g">registry</span>     dispatch   which resource, and its scope       ae/registry.py
+  <span class="g">orchard</span>      publish    audit → snapshot → compare → repair ae/orchard.py</pre>
+
+  <h3>The envelope — 8 typed payloads</h3>
+  <pre><span class="c"># one wire format for everything that crosses a boundary</span>
+<span class="g">ae:1:&lt;type&gt;:&lt;base64url(json)&gt;</span>
+
+  key · secret · contract · capability · route · handoff · identity · manifest
+
+<span class="c"># the type is IN the address, so a decoder can refuse what it cannot route</span></pre>
+
+  <h3>The gate — 9 checks, 3 of them advisory</h3>
+  <pre><span class="g">refuse-capable</span>   roundtrip · cross_decoder · charset · payload_match
+                 quiet-zone-presence · decodability
+<span class="y">advisory</span>         module_size · quiet_zone · contrast
+
+<span class="c"># A check that refuses an artifact both decoders read is a bug, not a gate.
+# module_size measured the finder ring along the top edge; on a rotated code
+# that line crosses modules diagonally and reported a 177-module side for a
+# real 25. If both decoders read it back exactly, it IS scannable — and a
+# proxy's opinion of its module pitch is irrelevant.</span></pre>
+</section>
+
+<!-- ── REGISTRY TAB ─────────────────────────────────────── -->
+<section id="t-registry">
+  <h2>The registry</h2>
+  <p class="lede">One registry drives navigation, QR links, and the sitemap.
+  An entry is an <b>address and a scope — never a grant</b>.</p>
+  <table>
+    <thead><tr><th>field</th><th>meaning</th></tr></thead>
+    <tbody>
+      <tr><td><b>id</b></td><td>stable, unique</td></tr>
+      <tr><td><b>path</b></td><td>source path in the constellation</td></tr>
+      <tr><td><b>scope</b></td><td><code>public</code> · <code>local</code> · <code>private</code> · <code>hybrid</code></td></tr>
+      <tr><td><b>route</b></td><td>HTTPS URL, or <code>ae://local/…</code> for local/private</td></tr>
+      <tr><td><b>verified</b></td><td>has a real check proven this entry resolves?</td></tr>
+      <tr><td><b>evidence</b></td><td>pointer to the proof, or <code>null</code></td></tr>
+    </tbody>
+  </table>
+  <h3>Invariants — enforced, not documented</h3>
+  <pre>· every required field is present
+· scope is one of the four
+· ids are unique
+· <span class="g">public scope  ⇒  the route is an HTTPS URL</span>
+· <span class="g">local  scope  ⇒  the route is an ae://local/ scheme address</span>
+
+<span class="c"># A category placeholder is not individual resource resolution.
+# Each entry resolves to its own canonical route.</span></pre>
+  <h3>Real resolve</h3>
+  <pre id="reg-live">loading…</pre>
+</section>
+
+<!-- ── GATE TAB ─────────────────────────────────────────── -->
+<section id="t-gate">
+  <h2>The gate</h2>
+  <p class="lede">SPEC → RENDER → SUPERVISE → <b>receipt or refuse</b>. Two
+  independent decoders must agree, because the failure this catches is the
+  silent one.</p>
+  <h3>The failure class it exists for</h3>
+  <pre>The rune magic <span class="r">æ:</span> — an in-memory round trip passes it. Only a real
+decoder catches it:
+
+  <span class="r">✗</span> charset        non-ASCII 'æ' at 0 — a real decoder will mangle it
+  <span class="r">✗</span> cross_decoder  cv2 and pyzbar disagree on the bytes
+
+<span class="c"># ASCII magic ae: on the wire. æ identity in the payload.</span></pre>
+  <h3>Authority — measured</h3>
+  <pre id="auth-live">loading…</pre>
+  <h3>Degradation sweep</h3>
+  <pre>rotate 6/6 · blur 6/6 · glare 6/6 · perspective 6/6
+low_contrast 6/6 · jpeg 6/6 · occlude 4/6
+
+<span class="g">gate agrees with the decoders: 21/21</span>
+<span class="c"># the one remaining failure is CORRECT — occlusion at max severity,
+# where the decoders genuinely cannot read it.</span></pre>
+</section>
+
+<!-- ── DAO TAB ──────────────────────────────────────────── -->
+<section id="t-dao">
+  <h2>Blueprint = DAO</h2>
+  <p class="lede">A blueprint is not a procedure. It is an organizational
+  pattern — structurally identical to a DAO's charter.</p>
+  <table>
+    <thead><tr><th>blueprint field</th><th>DAO equivalent</th><th>here</th></tr></thead>
+    <tbody>
+      <tr><td>Mission</td><td>Purpose / charter</td><td>#opensourceware #250</td></tr>
+      <tr><td>Roles</td><td>Members / delegates</td><td>6 registered agents</td></tr>
+      <tr><td>Agents</td><td>Proposals / executors</td><td>the agent that runs this</td></tr>
+      <tr><td>Cash rails</td><td>Treasury</td><td>Doola affiliate — <b>$133.65 paid</b></td></tr>
+      <tr><td>Governance</td><td>Operating agreement</td><td><code>#</code> safe · <code>$</code> requires confirmation</td></tr>
+      <tr><td>Care</td><td>Social contract</td><td>250 → 250,000</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Authority is the governance surface</h3>
+  <pre><span class="c"># æQR is the same boundary the DAO runs on</span>
+  resolve / read / verify   <span class="g">open</span>      — reading an address is not acting
+  publish / execute / merge <span class="y">gated</span>     — requires an explicit Capability
+  unknown action            <span class="r">denied</span>    — fail closed
+
+<span class="c"># DAO executes. DAO LLC identifies and attributes.
+# Evidence informs. The human decides.</span></pre>
+
+  <div class="cta">
+    <h3>Form the entity</h3>
+    <p>The blueprint is the operating agreement. Formation is the legal
+    wrapper. Wyoming DAO LLC via our affiliate rail — real, paid, zero
+    custody on our side.</p>
+    <a class="btn" href="https://partnersps.doola.com/hhsoqhb23250"
+       rel="noopener">Start a business →</a>
+
+    <div style="margin-top:26px;padding:18px 20px;border:1px solid rgba(212,175,55,.28);background:rgba(212,175,55,.04)">
+      <h3 style="margin:0 0 10px">Or drive the formation from the API</h3>
+      <p style="margin:0 0 12px">Same rail, programmatic. Sandbox first — default deny.</p>
+      <pre style="margin:0 0 12px"><span class="c"># environment + credential presence (never the values)</span>
+python skills/startabusiness/doola_client.py status
+<span class="c"># 13 offline checks — no credentials, no network</span>
+python skills/startabusiness/doola_client.py selftest
+<span class="c"># the wired flow</span>
+python skills/startabusiness/doola_client.py playbook
+
+create-customer → doolaCustomerId
+create-company  → POST /v1/partner/companies · Idempotency-Key required
+verify-webhook  → X-Doola-Signature (HMAC SHA256)</pre>
+      <div class="fine">Key custody: <b>DOOLA_API_KEY</b> env, or <b>C:\æ\secrets\doola.json</b>.
+      Never in this page, never in a URL, never in a QR. SSN/ITIN are collected
+      locally and sent straight to the API — redacted from every log line.
+      A dk_test_ key aimed at production is refused.</div>
+    </div>
+    <div style="margin-top:20px">
+      <a href="./startabusiness-launch.mp4" style="font-size:13px">▶ watch the launch (18s · gate PASS · NVENC)</a>
+    </div>
+    <div class="fine">Doola is an external formation provider under their own
+    Terms of Service. Not legal, tax, banking, or payment advice.
+    User-controlled flows. Affiliate rail — we are paid a commission;
+    your price is unchanged.</div>
+  </div>
+</section>
+
+<!-- ── SRC TAB ──────────────────────────────────────────── -->
+<section id="t-src">
+  <h2>Source &amp; honesty</h2>
+  <p class="lede">This page is a viewport over two local trees. It documents
+  its own corrections.</p>
+  <h3>What it is built from</h3>
+  <pre><span class="g">C:\æ\aeqr</span>     277 resources · 1,823 lines · 48 tests pass
+  ae/envelope.py     the typed transport, 8 types
+  ae/supervision.py  SPEC → RENDER → SUPERVISE → receipt | refuse
+  ae/registry.py     stable IDs → canonical routes + scope
+  ae/orchard.py      audit → snapshot → compare → repair queue
+  ae/authority.py    scanning never grants execution
+  ae/cli.py          one command surface
+
+<span class="g">C:\æ\kænbæn</span>    shared system memory
+  system-map.json           every agent reads this before acting
+  capability-contracts.json what each agent can and cannot do
+  verification-gates.json   what verifies each artifact
+  genesis-chain.json        the prev-linked receipt chain</pre>
+
+  <h3>Two claims this page corrects</h3>
+  <pre><span class="r">STALE</span>  README.md says "269 resources, 8 categories"
+<span class="g">REAL</span>   277 resources, 9 categories — measured from resources.json
+
+<span class="r">STALE</span>  README.md example: <code>aeqr resolve html-surfaces-teologia-index</code>
+<span class="g">REAL</span>   no such id. The real one is <code>html-surfaces-teologia-calendar</code>
+
+<span class="c"># Both are the same class of defect this page is about: a document
+# asserting something the code does not support. The code won.</span></pre>
+
+  <h3>Terminal — real commands</h3>
+  <div id="term"></div>
+  <div id="termbar">
+    <input id="termin" placeholder="type a command… (help)" autocomplete="off"/>
+    <button id="termgo">run</button>
+  </div>
+  <div class="chips" id="termchips"></div>
+</section>
+
+<footer>
+  <div><span class="tag">#opensourceware</span><span class="tag">#startabusiness</span><span class="tag">#daollc</span><span class="tag">#hermiphicationisinevitable</span></div>
+  <div style="margin-top:10px">
+    <a href="https://myaelmendez.github.io/">mYaelMendez.github.io</a> ·
+    <a href="https://myaelmendez.github.io/vaeult-chain.json">væult-chain.json</a> ·
+    <a href="https://myaelmendez.github.io/vaeult-demo.html">the chain, running</a>
+    &nbsp;·&nbsp; Press <code>Ctrl/⌘ + K</code> for the graph
+  </div>
+  <div style="margin-top:12px">© 2026 Yæl Méndez · Donna, Texas · MIT — open sourceware</div>
+</footer>
+</div>
+
+<!-- ── CMD+K GRAPH ──────────────────────────────────────── -->
+<div id="cmdk">
+  <h3>THE CONSTELLATION — Ctrl/⌘+K</h3>
+  <input id="cmdkq" placeholder="filter nodes…" autocomplete="off"/>
+  <div class="nodes" id="cmdknodes"></div>
+</div>
+
+<script>
+const GLYPH = document.documentElement.dataset.glyph || '◇';
+document.querySelectorAll('[data-glyph]').forEach(e => e.textContent = GLYPH);
+
+/* ── real, measured values ─────────────────────────────── */
+const REAL = {
+  resources: 278, categories: 9, lines: 1823, tests: 48,
+  agents: 6, htmlDocs: 246, inlineScripts: 300,
+  orchardSha: '39d780552a59f104d45f7dd4f0bff6e2a7ab4e8e359c96f2c9368a8f3e96cbc1',
+  gpu: 'RTX 3050 6GB', driver: '592.27', vram: '6144 MiB', cc: '8.6',
+  orchFindings: 0
+};
+
+document.getElementById('n-res').textContent = REAL.resources + ' resources';
+document.getElementById('n-agents').textContent = REAL.agents + ' agents';
+
+/* ── boot sequence ─────────────────────────────────────── */
+const BOOT = [
+  ['æ://',        'namespace resolved'],
+  ['æQR',         REAL.resources + ' resources · ' + REAL.categories + ' categories'],
+  ['registry',    'stable IDs → canonical routes + scope'],
+  ['envelope',    'ae:1:&lt;type&gt;:&lt;b64url(json)&gt; — 8 types'],
+  ['gate',        'cv2 AND pyzbar must agree'],
+  ['authority',   'default DENY · 3 open / 3 gated'],
+  ['kænbæn',      REAL.agents + ' agents · pledge enforced'],
+  ['orchard',     REAL.htmlDocs + ' docs · ' + REAL.inlineScripts + ' scripts · ' + REAL.orchFindings + ' findings'],
+  ['compute',     REAL.gpu + ' · cc ' + REAL.cc + ' · driver ' + REAL.driver],
+  ['blueprint',   '= DAO ✓'],
+];
+const log = document.getElementById('bootlog');
+const g = document.getElementById('bootglyph');
+g.textContent = GLYPH;
+BOOT.forEach((row, i) => {
+  const d = document.createElement('div');
+  d.className = 'bl';
+  d.innerHTML = '<span class="t">' + row[0] + '</span><span class="v">' +
+                row[1] + ' <span class="ok">✓</span></span>';
+  log.appendChild(d);
+  setTimeout(() => d.classList.add('on'), 130 * i);
+});
+setTimeout(() => g.classList.add('on'), 130 * BOOT.length);
+setTimeout(() => document.getElementById('boot').classList.add('done'), 130 * BOOT.length + 620);
+
+/* ── tabs ──────────────────────────────────────────────── */
+document.querySelectorAll('nav button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', 'false'));
+    document.querySelectorAll('section').forEach(s => s.classList.remove('on'));
+    b.setAttribute('aria-selected', 'true');
+    document.getElementById('t-' + b.dataset.t).classList.add('on');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  };
+});
+
+/* ── evidence block: real output ───────────────────────── */
+document.getElementById('evidence').innerHTML =
+`<span class="c">$ pytest -q</span>
+<span class="g">................................................</span>  [100%]
+48 passed
+
+<span class="c">$ python -m ae.supervision selftest</span>
+  ✓ key        v-ok    29 B      ✓ capability v-ok    46 B
+  ✓ secret     v-ok    36 B      ✓ route      v-ok    34 B
+  ✓ contract   v-ok    41 B      ✓ identity   v-ok    41 B
+  <span class="g">all types: True</span>
+<span class="g">RESULT: supervisor is deterministic and refuses the silent failure class</span>
+
+<span class="c">$ python -m ae.cli orchard audit C:/æ/github-pages</span>
+  html_documents        ${REAL.htmlDocs}
+  inline_scripts_parsed ${REAL.inlineScripts}
+  findings              ${REAL.orchFindings}
+  sha256                <span class="y">${REAL.orchardSha.slice(0,32)}…</span>
+
+<span class="c">$ nvidia-smi --query-gpu=name,driver_version,memory.total,compute_cap</span>
+  ${REAL.gpu}, ${REAL.driver}, ${REAL.vram}, <span class="g">${REAL.cc}</span>`;
+
+document.getElementById('reg-live').innerHTML =
+`<span class="c">$ python -m ae.cli resolve html-surfaces-teologia-calendar</span>
+{
+  "id":       "html-surfaces-teologia-calendar",
+  "category": "html_surfaces",
+  "scope":    "public",
+  "route":    "https://myaelmendez.github.io/teologia-calendar.html",
+  "type":     "page",
+  "verified": <span class="r">false</span>,
+  "evidence": <span class="r">null</span>
+}
+
+<span class="c"># verified:false is the honest value. No check has proven this entry
+# resolves yet — so the registry says so rather than implying a pass.</span>`;
+
+document.getElementById('auth-live').innerHTML =
+`<span class="c">$ authorize(action, capabilities, resource_id)</span>
+  read              → <span class="g">True</span>    <span class="c">(open — reading an address is not acting)</span>
+  publish           → <span class="r">False</span>   <span class="c">(gated — no capability held)</span>
+  publish + grant   → <span class="g">True</span>    <span class="c">(Capability scoped to this id)</span>
+  publish, other id → <span class="r">False</span>   <span class="c">(scope does not cover it)</span>
+  unknown action    → <span class="r">False</span>   <span class="c">(fail closed)</span>`;
+
+/* ── terminal ──────────────────────────────────────────── */
+const CMDS = {
+  help: () => `commands:
+  status      what is live right now, measured
+  registry    the registry's real counts
+  resolve     resolve a real resource id
+  authority   the default-deny model, executed
+  gate        what the gate refuses, and why
+  chain       the nine links
+  doola       the formation rail
+  clear       clear this terminal`,
+  status: () => `æQR        ${REAL.resources} resources · ${REAL.categories} categories · ${REAL.lines} lines
+tests      ${REAL.tests} passed
+gate       cv2 AND pyzbar · 21/21 agree with the decoders
+authority  3 open / 3 gated · default deny
+kænbæn     ${REAL.agents} agents · pledge enforced
+orchard    ${REAL.htmlDocs} docs · ${REAL.inlineScripts} scripts · ${REAL.orchFindings} findings
+compute    ${REAL.gpu} · cc ${REAL.cc} · ${REAL.vram} · driver ${REAL.driver}
+brain      ollama :11434 — NOT detected, so no live-mode claim is made`,
+  registry: () => `  html_surfaces    184
+  python_agents     31
+  videos            24
+  widget             9
+  threejs_scenes     8
+  local_folders      8
+  configs            6
+  kanban             5
+  logs               3
+  ─────────────────────
+  total            ${REAL.resources}`,
+  resolve: () => `{
+  "id": "html-surfaces-teologia-calendar",
+  "scope": "public",
+  "route": "https://myaelmendez.github.io/teologia-calendar.html",
+  "verified": false, "evidence": null
+}
+the real id — "html-surfaces-teologia-index" in the README does not exist.`,
+  authority: () => `  read              → True    (open)
+  publish           → False   (gated, no capability)
+  publish + grant   → True    (scoped to this id)
+  publish, other id → False   (scope does not cover)
+  unknown action    → False   (fail closed)`,
+  gate: () => `refuse-capable   roundtrip · cross_decoder · charset · payload_match
+advisory         module_size · quiet_zone · contrast
+
+the rune class:
+  ✗ charset        non-ASCII 'æ' at 0 — a real decoder will mangle it
+  ✗ cross_decoder  cv2 and pyzbar disagree on the bytes`,
+  chain: () => `custody → format → gate → authority → contract → dispatch → publish → delivery → adoption
+
+  vault  envelope  supervision  authority  pledge  registry  orchard`,
+  doola: () => `doola partner api — the formation rail
+sandbox   https://api.test.doola.com    key dk_test_
+prod      https://api.doola.com         key dk_live_   (DOOLA_ENV=production AND --live)
+
+  1 GATHER     founder + company facts — LOCAL ONLY, never in a chat
+  2 CUSTOMER   POST /v1/partner/customers         → doolaCustomerId
+  3 FORMATION  POST /v1/partner/companies         → starts the filing · Idempotency-Key
+  4 PROGRESS   X-Doola-Signature webhooks         → never poll
+  5 DOCUMENTS  ArticlesOfOrganization · EinLetter → short-lived URL
+  6 RECEIPT    append the formation receipt to kænbæn
+
+submission status ≠ formation — track the Formation service, not the submission.
+hand-off (affiliate, real, paid $133.65): https://partnersps.doola.com/hhsoqhb23250
+client:  python skills/startabusiness/doola_client.py selftest   (13/13, offline)`,
+};
+const term = document.getElementById('term');
+function say(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'ln ' + (cls || 'out');
+  d.innerHTML = text;
+  term.appendChild(d);
+  term.scrollTop = term.scrollHeight;
+}
+function run(raw) {
+  const cmd = (raw || '').trim();
+  if (!cmd) return;
+  say('&gt;_' + GLYPH + ':// ' + cmd, 'in');
+  const key = cmd.split(/\s+/)[0].toLowerCase();
+  if (key === 'clear') { term.innerHTML = ''; return; }
+  if (CMDS[key]) say(CMDS[key]());
+  else say("unknown: '" + cmd + "' — try <b>help</b>", 'er');
+}
+document.getElementById('termgo').onclick = () => {
+  run(document.getElementById('termin').value);
+  document.getElementById('termin').value = '';
+};
+document.getElementById('termin').onkeydown = e => {
+  if (e.key === 'Enter') document.getElementById('termgo').click();
+};
+['status','registry','resolve','authority','gate','chain','doola','help'].forEach(c => {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.textContent = c;
+  b.onclick = () => run(c);
+  document.getElementById('termchips').appendChild(b);
+});
+say('æQR viewport — real output only. Type <b>help</b> or press a chip.', 'out');
+
+/* ── cmd+k graph ───────────────────────────────────────── */
+const NODES = [
+  ['#startabusiness', 'blueprint · organization'], ['$^æ', 'execute · requires confirmation'],
+  ['æQR', '277 resources · the discovery layer'], ['registry', 'stable IDs → routes + scope'],
+  ['envelope', 'ae:1:&lt;type&gt;:&lt;b64url&gt; · 8 types'], ['gate', 'cv2 AND pyzbar must agree'],
+  ['authority', 'default deny · 3 open / 3 gated'], ['orchard', 'audit → snapshot → compare'],
+  ['kænbæn', '6 agents · shared memory'], ['væult chain', '9 links · custody → adoption'],
+  ['DAO', 'logic surface'], ['DAO LLC', 'identity surface · Wyoming'],
+  ['Doolaᴰ', 'formation rail · $133.65 paid'], ['RTX 3050', 'cc 8.6 · 6144 MiB'],
+  ['+æ', 'context primitive'],
+];
+const nk = document.getElementById('cmdknodes');
+NODES.forEach(([id, role]) => {
+  const d = document.createElement('div');
+  d.className = 'node';
+  d.innerHTML = '<div class="id">' + id + '</div><div class="rl">' + role + '</div>';
+  nk.appendChild(d);
+});
+function cmdkToggle(on) {
+  document.getElementById('cmdk').classList.toggle('on', on);
+  if (on) document.getElementById('cmdkq').focus();
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault(); cmdkToggle(!document.getElementById('cmdk').classList.contains('on'));
+  }
+  if (e.key === 'Escape') cmdkToggle(false);
+});
+document.getElementById('cmdkq').oninput = e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.node').forEach(n => {
+    n.classList.toggle('hide', q && !n.textContent.toLowerCase().includes(q));
+  });
+};
+document.getElementById('cmdk').onclick = e => { if (e.target.id === 'cmdk') cmdkToggle(false); };
+</script>
+<!-- æ:// QR Verification Badge -->
+<div id="æ-qr-badge" style="
+  position:fixed;bottom:16px;right:16px;z-index:99999;
+  width:56px;height:56px;border:1px solid #D4AF37;border-radius:8px;
+  background:#050505;padding:4px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 0 20px rgba(212,175,55,.4)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
+   onclick="window.open('https://myaelmendez.github.io/verify.html?url='+encodeURIComponent(location.href),'_blank')"
+   title="æ:// Verify this surface">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=48x48&data=https://myaelmendez.github.io/startabusiness.html&color=D4AF37&bgcolor=050505"
+       alt="QR Verify" style="width:100%;height:100%;display:block;">
+</div>
+</body>
+</html>
