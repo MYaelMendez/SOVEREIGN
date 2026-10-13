@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A la nobleza cristiana · teologia.ai</title>
+<meta name="description" content="A la nobleza cristiana de la nación alemana (1520): el programa político de la Reforma. Edición LATAM, modo tú.">
+<style>
+:root{
+  --void:#050505; --gold:#D4AF37; --gold2:#f0d487; --emerald:#00ff9d;
+  --cyan:#00eaff; --violet:#8c72ff; --red:#ff4d5f;
+  --ink:#e8e6df; --muted:#6f6a5c; --line:rgba(212,175,55,.22);
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --display:"Orbitron",sans-serif;
+  --glyph:"Segoe UI Symbol","Noto Sans Symbols2","DejaVu Sans",var(--display);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void); color:var(--ink);
+  font-family:var(--mono); font-size:15px; line-height:1.75;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:100;
+  background:repeating-linear-gradient(0deg,rgba(212,175,55,.028) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:99;
+  background:radial-gradient(ellipse at 50% 0%,transparent 35%,rgba(0,0,0,.75) 100%);
+}
+
+.wrap{position:relative;z-index:2;max-width:780px;margin:0 auto;padding:72px 28px 120px}
+
+.boot{
+  font-size:11px;letter-spacing:.18em;color:var(--muted);
+  border-left:2px solid var(--gold);padding-left:14px;margin-bottom:40px;
+}
+.boot b{color:var(--gold);font-weight:400}
+.boot .ok{color:var(--emerald)}
+
+h1{
+  font-family:var(--display);font-weight:900;
+  font-size:clamp(28px,5.8vw,50px);line-height:1.06;
+  letter-spacing:-.01em;color:var(--gold);margin-bottom:18px;
+}
+h1 .sub{display:block;font-size:.42em;font-weight:400;letter-spacing:.28em;color:var(--muted);margin-top:14px}
+.byline{
+  font-size:12px;color:var(--muted);letter-spacing:.12em;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:12px 0;margin-bottom:34px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.byline em{color:var(--gold2);font-style:normal}
+
+/* ---- æqr badge row ---- */
+.badgerow{
+  display:flex;align-items:center;gap:26px;flex-wrap:wrap;
+  border:1px solid var(--line);background:rgba(212,175,55,.035);
+  padding:20px 22px;margin-bottom:52px;
+}
+.aqrbox{flex:none;display:flex;flex-direction:column;align-items:center;gap:9px}
+.aqr{width:152px;height:152px;color:var(--gold);display:block}
+.aqr rect{fill:currentColor}
+.aqr .frame{fill:none;stroke:currentColor;stroke-width:.8;opacity:.45}
+.aqrcap{font-size:9px;letter-spacing:.24em;color:var(--muted);text-align:center}
+.aqrcap b{color:var(--gold);font-weight:400}
+.dlcol{flex:1;min-width:210px;display:flex;flex-direction:column;gap:13px}
+.dl{
+  display:inline-block;font-family:var(--display);font-weight:700;font-size:13px;
+  letter-spacing:.14em;text-decoration:none;color:var(--void);
+  background:var(--gold);padding:14px 22px;text-align:center;
+  border:1px solid var(--gold);transition:background .15s,border-color .15s;
+}
+.dl:hover{background:var(--gold2);border-color:var(--gold2)}
+.hashline{font-size:10px;letter-spacing:.06em;color:var(--muted);line-height:1.95;word-break:break-all}
+.hashline b{color:var(--gold2);font-weight:400}
+
+.dedic{
+  background:rgba(212,175,55,.04);border:1px solid var(--line);
+  padding:22px 24px;margin-bottom:52px;font-size:14px;color:#cfc9ba;
+}
+.dedic b{color:var(--gold);font-weight:400}
+
+/* ---- sections ---- */
+.part{
+  margin-bottom:56px;
+  border-top:1px solid var(--line);
+  padding-top:36px;
+}
+.part-head{
+  display:flex;align-items:baseline;gap:18px;margin-bottom:28px;flex-wrap:wrap;
+}
+.part-num{
+  font-family:var(--display);font-weight:900;font-size:32px;
+  color:var(--gold);opacity:.85;line-height:1;flex:none;
+}
+.part-title{
+  font-family:var(--display);font-weight:700;font-size:19px;
+  letter-spacing:.05em;color:var(--gold2);
+}
+.part-sub{
+  font-size:11px;letter-spacing:.16em;color:var(--muted);margin-top:4px;
+}
+
+/* ---- Q&A blocks ---- */
+.qa{
+  margin-bottom:26px;
+  padding-left:20px;
+  border-left:1px solid rgba(212,175,55,.15);
+}
+.qa:last-child{margin-bottom:0}
+.q{
+  font-size:15px;color:var(--gold2);margin-bottom:8px;font-weight:400;
+}
+.q .qnum{
+  font-family:var(--display);font-weight:700;font-size:12px;
+  color:var(--gold);opacity:.7;margin-right:10px;letter-spacing:.08em;
+}
+.a{
+  font-size:14px;color:#d6d1c4;line-height:1.8;
+}
+.a b{color:var(--gold2);font-weight:400}
+.a i{color:var(--muted)}
+.a .scripture{
+  display:block;margin-top:8px;font-size:12px;color:var(--muted);
+  font-style:italic;padding-left:14px;border-left:1px solid rgba(212,175,55,.2);
+}
+
+/* ---- article labels ---- */
+.label{
+  font-family:var(--display);font-weight:700;font-size:13px;
+  letter-spacing:.1em;color:var(--gold);margin-bottom:6px;
+}
+.label small{
+  display:block;font-family:var(--mono);font-weight:300;font-size:10px;
+  letter-spacing:.14em;color:var(--muted);margin-top:3px;
+}
+
+/* ---- colophon ---- */
+.colophon{
+  margin-top:66px;padding-top:26px;border-top:1px solid var(--line);
+  font-size:11px;letter-spacing:.1em;color:var(--muted);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.colophon a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(212,175,55,.3)}
+.colophon a:hover{border-bottom-color:var(--gold)}
+.seal{margin-top:38px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.seal .glyph{font-family:var(--glyph);font-size:46px;color:var(--gold);line-height:1}
+.seal .txt{font-size:11px;letter-spacing:.14em;color:var(--muted);line-height:1.9}
+.seal .txt b{color:var(--gold);font-weight:400;display:block;letter-spacing:.2em}
+
+/* ---- print ---- */
+@media print{
+  @page{size:A4;margin:15mm 14mm}
+  body{background:#fff;color:#111;font-size:10pt;line-height:1.6}
+  body::before,body::after,canvas#mesh,.dlcol .hashline{display:none}
+  .wrap{max-width:none;padding:0}
+  .boot{border-left-color:#8a6d1f;color:#555;margin-bottom:14px;font-size:8pt}
+  .boot b{color:#8a6d1f}
+  h1{color:#8a6d1f;font-size:22pt;margin-bottom:8px}
+  h1 .sub{color:#666}
+  .byline{border-color:#ccc;color:#555;margin-bottom:12px;padding:8px 0}
+  .byline em{color:#5c4a14}
+  .badgerow{border-color:#ccc;background:none;padding:11px 12px;margin-bottom:14px;gap:16px;page-break-inside:avoid}
+  .aqr{width:100px;height:100px;color:#14110a}
+  .aqrcap{color:#555}
+  .aqrcap b{color:#5c4a14}
+  .dl{background:#f2ecd8;color:#3a2f10;border-color:#8a6d1f;font-size:9pt;padding:9px 14px}
+  .dedic{background:#faf7ee;border-color:#ddd;color:#333;margin-bottom:14px;padding:12px 14px;font-size:9pt}
+  .dedic b{color:#8a6d1f}
+  .part{border-color:#ddd;padding-top:18px;margin-bottom:22px;page-break-inside:avoid}
+  .part-num{color:#8a6d1f;font-size:22pt}
+  .part-title{color:#5c4a14;font-size:13pt}
+  .part-sub{color:#777}
+  .qa{padding-left:14px;border-left-color:#ddd;margin-bottom:14px;page-break-inside:avoid}
+  .q{color:#5c4a14;font-size:10pt}
+  .q .qnum{color:#8a6d1f}
+  .a{color:#222;font-size:9.5pt}
+  .a b{color:#5c4a14}
+  .a i{color:#777}
+  .a .scripture{color:#777;font-size:8.5pt}
+  .label{color:#8a6d1f;font-size:10pt}
+  .label small{color:#777}
+  .colophon{border-color:#ddd;color:#666;margin-top:18px;padding-top:10pt;font-size:8pt}
+  .colophon a{color:#8a6d1f;border-bottom:none}
+  .seal{margin-top:12px}
+  .seal .glyph{color:#8a6d1f;font-size:26pt}
+  .seal .txt{color:#666}
+  .seal .txt b{color:#8a6d1f}
+}
+@media(max-width:520px){
+  .wrap{padding:48px 20px 80px}
+  .part-num{font-size:24px}
+  .part-title{font-size:16px}
+  .badgerow{gap:18px}
+  .aqr{width:126px;height:126px}
+}
+</style>
+</head>
+<div class="wrap">
+
+  <div class="boot">
+    <b>teologia.ai</b> · a la nobleza cristiana 1520 · edición LATAM<br>
+    <span class="ok">▸</span> un archivo · sin servidor · sin llave · <span id="probe">sondeando…</span>
+  </div>
+
+  <h1>A la Nobleza Cristiana
+    <span class="sub">EL PROGRAMA DE LA REFORMA</span>
+  </h1>
+
+  <div class="byline">
+    <span>por <em>Martín Lutero</em></span>
+    <span>Wittenberg · <em>1520</em></span>
+    <span>edición <em>LATAM</em> · modo tú</span>
+  </div>
+
+  <!--badgerow:start-->
+  <div class="badgerow">
+    <div class="aqrbox">
+      <svg class="aqr" viewBox="0 0 212 212" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="æqr verification badge"><title>æqr://v1|teologia.ai/nobleza|es-LATAM|sha256:c722e7ed589adbf5a8e7601f0e038f2ec89d2be53c924ff7316e924c72ccf277|issuer:☺://cc</title><rect x="8" y="8" width="4" height="4"/><rect x="12" y="8" width="4" height="4"/><rect x="16" y="8" width="4" height="4"/><rect x="20" y="8" width="4" height="4"/><rect x="24" y="8" width="4" height="4"/><rect x="28" y="8" width="4" height="4"/><rect x="32" y="8" width="4" height="4"/><rect x="44" y="8" width="4" height="4"/><rect x="52" y="8" width="4" height="4"/><rect x="60" y="8" width="4" height="4"/><rect x="64" y="8" width="4" height="4"/><rect x="68" y="8" width="4" height="4"/><rect x="72" y="8" width="4" height="4"/><rect x="76" y="8" width="4" height="4"/><rect x="80" y="8" width="4" height="4"/><rect x="96" y="8" width="4" height="4"/><rect x="100" y="8" width="4" height="4"/><rect x="112" y="8" width="4" height="4"/><rect x="116" y="8" width="4" height="4"/><rect x="120" y="8" width="4" height="4"/><rect x="128" y="8" width="4" height="4"/><rect x="132" y="8" width="4" height="4"/><rect x="136" y="8" width="4" height="4"/><rect x="144" y="8" width="4" height="4"/><rect x="148" y="8" width="4" height="4"/><rect x="152" y="8" width="4" height="4"/><rect x="168" y="8" width="4" height="4"/><rect x="176" y="8" width="4" height="4"/><rect x="180" y="8" width="4" height="4"/><rect x="184" y="8" width="4" height="4"/><rect x="188" y="8" width="4" height="4"/><rect x="192" y="8" width="4" height="4"/><rect x="196" y="8" width="4" height="4"/><rect x="200" y="8" width="4" height="4"/><rect x="8" y="12" width="4" height="4"/><rect x="32" y="12" width="4" height="4"/><rect x="56" y="12" width="4" height="4"/><rect x="60" y="12" width="4" height="4"/><rect x="68" y="12" width="4" height="4"/><rect x="72" y="12" width="4" height="4"/><rect x="80" y="12" width="4" height="4"/><rect x="84" y="12" width="4" height="4"/><rect x="88" y="12" width="4" height="4"/><rect x="92" y="12" width="4" height="4"/><rect x="100" y="12" width="4" height="4"/><rect x="108" y="12" width="4" height="4"/><rect x="116" y="12" width="4" height="4"/><rect x="120" y="12" width="4" height="4"/><rect x="144" y="12" width="4" height="4"/><rect x="148" y="12" width="4" height="4"/><rect x="160" y="12" width="4" height="4"/><rect x="164" y="12" width="4" height="4"/><rect x="168" y="12" width="4" height="4"/><rect x="176" y="12" width="4" height="4"/><rect x="200" y="12" width="4" height="4"/><rect x="8" y="16" width="4" height="4"/><rect x="16" y="16" width="4" height="4"/><rect x="20" y="16" width="4" height="4"/><rect x="24" y="16" width="4" height="4"/><rect x="32" y="16" width="4" height="4"/><rect x="48" y="16" width="4" height="4"/><rect x="60" y="16" width="4" height="4"/><rect x="64" y="16" width="4" height="4"/><rect x="72" y="16" width="4" height="4"/><rect x="76" y="16" width="4" height="4"/><rect x="92" y="16" width="4" height="4"/><rect x="96" y="16" width="4" height="4"/><rect x="104" y="16" width="4" height="4"/><rect x="112" y="16" width="4" height="4"/><rect x="116" y="16" width="4" height="4"/><rect x="136" y="16" width="4" height="4"/><rect x="140" y="16" width="4" height="4"/><rect x="144" y="16" width="4" height="4"/><rect x="148" y="16" width="4" height="4"/><rect x="164" y="16" width="4" height="4"/><rect x="168" y="16" width="4" height="4"/><rect x="176" y="16" width="4" height="4"/><rect x="184" y="16" width="4" height="4"/><rect x="188" y="16" width="4" height="4"/><rect x="192" y="16" width="4" height="4"/><rect x="200" y="16" width="4" height="4"/><rect x="8" y="20" width="4" height="4"/><rect x="16" y="20" width="4" height="4"/><rect x="20" y="20" width="4" height="4"/><rect x="24" y="20" width="4" height="4"/><rect x="32" y="20" width="4" height="4"/><rect x="44" y="20" width="4" height="4"/><rect x="48" y="20" width="4" height="4"/><rect x="52" y="20" width="4" height="4"/><rect x="64" y="20" width="4" height="4"/><rect x="76" y="20" width="4" height="4"/><rect x="80" y="20" width="4" height="4"/><rect x="92" y="20" width="4" height="4"/><rect x="96" y="20" width="4" height="4"/><rect x="100" y="20" width="4" height="4"/><rect x="108" y="20" width="4" height="4"/><rect x="112" y="20" width="4" height="4"/><rect x="116" y="20" width="4" height="4"/><rect x="128" y="20" width="4" height="4"/><rect x="144" y="20" width="4" height="4"/><rect x="164" y="20" width="4" height="4"/><rect x="176" y="20" width="4" height="4"/><rect x="184" y="20" width="4" height="4"/><rect x="188" y="20" width="4" height="4"/><rect x="192" y="20" width="4" height="4"/><rect x="200" y="20" width="4" height="4"/><rect x="8" y="24" width="4" height="4"/><rect x="16" y="24" width="4" height="4"/><rect x="20" y="24" width="4" height="4"/><rect x="24" y="24" width="4" height="4"/><rect x="32" y="24" width="4" height="4"/><rect x="44" y="24" width="4" height="4"/><rect x="48" y="24" width="4" height="4"/><rect x="52" y="24" width="4" height="4"/><rect x="56" y="24" width="4" height="4"/><rect x="64" y="24" width="4" height="4"/><rect x="68" y="24" width="4" height="4"/><rect x="72" y="24" width="4" height="4"/><rect x="76" y="24" width="4" height="4"/><rect x="80" y="24" width="4" height="4"/><rect x="84" y="24" width="4" height="4"/><rect x="88" y="24" width="4" height="4"/><rect x="96" y="24" width="4" height="4"/><rect x="100" y="24" width="4" height="4"/><rect x="104" y="24" width="4" height="4"/><rect x="108" y="24" width="4" height="4"/><rect x="112" y="24" width="4" height="4"/><rect x="116" y="24" width="4" height="4"/><rect x="120" y="24" width="4" height="4"/><rect x="124" y="24" width="4" height="4"/><rect x="128" y="24" width="4" height="4"/><rect x="132" y="24" width="4" height="4"/><rect x="140" y="24" width="4" height="4"/><rect x="152" y="24" width="4" height="4"/><rect x="176" y="24" width="4" height="4"/><rect x="184" y="24" width="4" height="4"/><rect x="188" y="24" width="4" height="4"/><rect x="192" y="24" width="4" height="4"/><rect x="200" y="24" width="4" height="4"/><rect x="8" y="28" width="4" height="4"/><rect x="32" y="28" width="4" height="4"/><rect x="40" y="28" width="4" height="4"/><rect x="48" y="28" width="4" height="4"/><rect x="52" y="28" width="4" height="4"/><rect x="68" y="28" width="4" height="4"/><rect x="72" y="28" width="4" height="4"/><rect x="80" y="28" width="4" height="4"/><rect x="88" y="28" width="4" height="4"/><rect x="92" y="28" width="4" height="4"/><rect x="96" y="28" width="4" height="4"/><rect x="112" y="28" width="4" height="4"/><rect x="128" y="28" width="4" height="4"/><rect x="136" y="28" width="4" height="4"/><rect x="140" y="28" width="4" height="4"/><rect x="144" y="28" width="4" height="4"/><rect x="148" y="28" width="4" height="4"/><rect x="160" y="28" width="4" height="4"/><rect x="176" y="28" width="4" height="4"/><rect x="200" y="28" width="4" height="4"/><rect x="8" y="32" width="4" height="4"/><rect x="12" y="32" width="4" height="4"/><rect x="16" y="32" width="4" height="4"/><rect x="20" y="32" width="4" height="4"/><rect x="24" y="32" width="4" height="4"/><rect x="28" y="32" width="4" height="4"/><rect x="32" y="32" width="4" height="4"/><rect x="40" y="32" width="4" height="4"/><rect x="48" y="32" width="4" height="4"/><rect x="56" y="32" width="4" height="4"/><rect x="64" y="32" width="4" height="4"/><rect x="72" y="32" width="4" height="4"/><rect x="80" y="32" width="4" height="4"/><rect x="88" y="32" width="4" height="4"/><rect x="96" y="32" width="4" height="4"/><rect x="104" y="32" width="4" height="4"/><rect x="112" y="32" width="4" height="4"/><rect x="120" y="32" width="4" height="4"/><rect x="128" y="32" width="4" height="4"/><rect x="136" y="32" width="4" height="4"/><rect x="144" y="32" width="4" height="4"/><rect x="152" y="32" width="4" height="4"/><rect x="160" y="32" width="4" height="4"/><rect x="168" y="32" width="4" height="4"/><rect x="176" y="32" width="4" height="4"/><rect x="180" y="32" width="4" height="4"/><rect x="184" y="32" width="4" height="4"/><rect x="188" y="32" width="4" height="4"/><rect x="192" y="32" width="4" height="4"/><rect x="196" y="32" width="4" height="4"/><rect x="200" y="32" width="4" height="4"/><rect x="44" y="36" width="4" height="4"/><rect x="48" y="36" width="4" height="4"/><rect x="56" y="36" width="4" height="4"/><rect x="60" y="36" width="4" height="4"/><rect x="64" y="36" width="4" height="4"/><rect x="68" y="36" width="4" height="4"/><rect x="72" y="36" width="4" height="4"/><rect x="76" y="36" width="4" height="4"/><rect x="80" y="36" width="4" height="4"/><rect x="96" y="36" width="4" height="4"/><rect x="112" y="36" width="4" height="4"/><rect x="124" y="36" width="4" height="4"/><rect x="136" y="36" width="4" height="4"/><rect x="144" y="36" width="4" height="4"/><rect x="148" y="36" width="4" height="4"/><rect x="152" y="36" width="4" height="4"/><rect x="156" y="36" width="4" height="4"/><rect x="8" y="40" width="4" height="4"/><rect x="20" y="40" width="4" height="4"/><rect x="28" y="40" width="4" height="4"/><rect x="32" y="40" width="4" height="4"/><rect x="40" y="40" width="4" height="4"/><rect x="44" y="40" width="4" height="4"/><rect x="52" y="40" width="4" height="4"/><rect x="56" y="40" width="4" height="4"/><rect x="64" y="40" width="4" height="4"/><rect x="76" y="40" width="4" height="4"/><rect x="84" y="40" width="4" height="4"/><rect x="88" y="40" width="4" height="4"/><rect x="92" y="40" width="4" height="4"/><rect x="96" y="40" width="4" height="4"/><rect x="100" y="40" width="4" height="4"/><rect x="104" y="40" width="4" height="4"/><rect x="108" y="40" width="4" height="4"/><rect x="112" y="40" width="4" height="4"/><rect x="120" y="40" width="4" height="4"/><rect x="124" y="40" width="4" height="4"/><rect x="132" y="40" width="4" height="4"/><rect x="144" y="40" width="4" height="4"/><rect x="152" y="40" width="4" height="4"/><rect x="156" y="40" width="4" height="4"/><rect x="160" y="40" width="4" height="4"/><rect x="172" y="40" width="4" height="4"/><rect x="180" y="40" width="4" height="4"/><rect x="12" y="44" width="4" height="4"/><rect x="16" y="44" width="4" height="4"/><rect x="24" y="44" width="4" height="4"/><rect x="44" y="44" width="4" height="4"/><rect x="48" y="44" width="4" height="4"/><rect x="56" y="44" width="4" height="4"/><rect x="60" y="44" width="4" height="4"/><rect x="64" y="44" width="4" height="4"/><rect x="68" y="44" width="4" height="4"/><rect x="72" y="44" width="4" height="4"/><rect x="80" y="44" width="4" height="4"/><rect x="92" y="44" width="4" height="4"/><rect x="132" y="44" width="4" height="4"/><rect x="140" y="44" width="4" height="4"/><rect x="156" y="44" width="4" height="4"/><rect x="172" y="44" width="4" height="4"/><rect x="176" y="44" width="4" height="4"/><rect x="180" y="44" width="4" height="4"/><rect x="188" y="44" width="4" height="4"/><rect x="200" y="44" width="4" height="4"/><rect x="12" y="48" width="4" height="4"/><rect x="16" y="48" width="4" height="4"/><rect x="20" y="48" width="4" height="4"/><rect x="32" y="48" width="4" height="4"/><rect x="36" y="48" width="4" height="4"/><rect x="40" y="48" width="4" height="4"/><rect x="52" y="48" width="4" height="4"/><rect x="56" y="48" width="4" height="4"/><rect x="60" y="48" width="4" height="4"/><rect x="76" y="48" width="4" height="4"/><rect x="80" y="48" width="4" height="4"/><rect x="96" y="48" width="4" height="4"/><rect x="104" y="48" width="4" height="4"/><rect x="108" y="48" width="4" height="4"/><rect x="116" y="48" width="4" height="4"/><rect x="136" y="48" width="4" height="4"/><rect x="140" y="48" width="4" height="4"/><rect x="144" y="48" width="4" height="4"/><rect x="148" y="48" width="4" height="4"/><rect x="152" y="48" width="4" height="4"/><rect x="164" y="48" width="4" height="4"/><rect x="168" y="48" width="4" height="4"/><rect x="172" y="48" width="4" height="4"/><rect x="180" y="48" width="4" height="4"/><rect x="192" y="48" width="4" height="4"/><rect x="196" y="48" width="4" height="4"/><rect x="200" y="48" width="4" height="4"/><rect x="8" y="52" width="4" height="4"/><rect x="12" y="52" width="4" height="4"/><rect x="24" y="52" width="4" height="4"/><rect x="40" y="52" width="4" height="4"/><rect x="44" y="52" width="4" height="4"/><rect x="48" y="52" width="4" height="4"/><rect x="60" y="52" width="4" height="4"/><rect x="68" y="52" width="4" height="4"/><rect x="80" y="52" width="4" height="4"/><rect x="84" y="52" width="4" height="4"/><rect x="88" y="52" width="4" height="4"/><rect x="92" y="52" width="4" height="4"/><rect x="100" y="52" width="4" height="4"/><rect x="104" y="52" width="4" height="4"/><rect x="112" y="52" width="4" height="4"/><rect x="120" y="52" width="4" height="4"/><rect x="124" y="52" width="4" height="4"/><rect x="132" y="52" width="4" height="4"/><rect x="152" y="52" width="4" height="4"/><rect x="160" y="52" width="4" height="4"/><rect x="168" y="52" width="4" height="4"/><rect x="172" y="52" width="4" height="4"/><rect x="176" y="52" width="4" height="4"/><rect x="180" y="52" width="4" height="4"/><rect x="8" y="56" width="4" height="4"/><rect x="16" y="56" width="4" height="4"/><rect x="24" y="56" width="4" height="4"/><rect x="32" y="56" width="4" height="4"/><rect x="36" y="56" width="4" height="4"/><rect x="56" y="56" width="4" height="4"/><rect x="60" y="56" width="4" height="4"/><rect x="64" y="56" width="4" height="4"/><rect x="72" y="56" width="4" height="4"/><rect x="88" y="56" width="4" height="4"/><rect x="92" y="56" width="4" height="4"/><rect x="104" y="56" width="4" height="4"/><rect x="108" y="56" width="4" height="4"/><rect x="116" y="56" width="4" height="4"/><rect x="120" y="56" width="4" height="4"/><rect x="124" y="56" width="4" height="4"/><rect x="128" y="56" width="4" height="4"/><rect x="136" y="56" width="4" height="4"/><rect x="148" y="56" width="4" height="4"/><rect x="152" y="56" width="4" height="4"/><rect x="156" y="56" width="4" height="4"/><rect x="160" y="56" width="4" height="4"/><rect x="164" y="56" width="4" height="4"/><rect x="172" y="56" width="4" height="4"/><rect x="180" y="56" width="4" height="4"/><rect x="184" y="56" width="4" height="4"/><rect x="196" y="56" width="4" height="4"/><rect x="8" y="60" width="4" height="4"/><rect x="12" y="60" width="4" height="4"/><rect x="20" y="60" width="4" height="4"/><rect x="28" y="60" width="4" height="4"/><rect x="36" y="60" width="4" height="4"/><rect x="40" y="60" width="4" height="4"/><rect x="56" y="60" width="4" height="4"/><rect x="68" y="60" width="4" height="4"/><rect x="72" y="60" width="4" height="4"/><rect x="76" y="60" width="4" height="4"/><rect x="84" y="60" width="4" height="4"/><rect x="88" y="60" width="4" height="4"/><rect x="100" y="60" width="4" height="4"/><rect x="104" y="60" width="4" height="4"/><rect x="120" y="60" width="4" height="4"/><rect x="124" y="60" width="4" height="4"/><rect x="132" y="60" width="4" height="4"/><rect x="144" y="60" width="4" height="4"/><rect x="152" y="60" width="4" height="4"/><rect x="164" y="60" width="4" height="4"/><rect x="168" y="60" width="4" height="4"/><rect x="172" y="60" width="4" height="4"/><rect x="180" y="60" width="4" height="4"/><rect x="192" y="60" width="4" height="4"/><rect x="196" y="60" width="4" height="4"/><rect x="200" y="60" width="4" height="4"/><rect x="8" y="64" width="4" height="4"/><rect x="32" y="64" width="4" height="4"/><rect x="40" y="64" width="4" height="4"/><rect x="44" y="64" width="4" height="4"/><rect x="68" y="64" width="4" height="4"/><rect x="80" y="64" width="4" height="4"/><rect x="88" y="64" width="4" height="4"/><rect x="104" y="64" width="4" height="4"/><rect x="108" y="64" width="4" height="4"/><rect x="112" y="64" width="4" height="4"/><rect x="116" y="64" width="4" height="4"/><rect x="120" y="64" width="4" height="4"/><rect x="136" y="64" width="4" height="4"/><rect x="156" y="64" width="4" height="4"/><rect x="160" y="64" width="4" height="4"/><rect x="164" y="64" width="4" height="4"/><rect x="168" y="64" width="4" height="4"/><rect x="172" y="64" width="4" height="4"/><rect x="184" y="64" width="4" height="4"/><rect x="188" y="64" width="4" height="4"/><rect x="192" y="64" width="4" height="4"/><rect x="196" y="64" width="4" height="4"/><rect x="12" y="68" width="4" height="4"/><rect x="16" y="68" width="4" height="4"/><rect x="44" y="68" width="4" height="4"/><rect x="56" y="68" width="4" height="4"/><rect x="60" y="68" width="4" height="4"/><rect x="72" y="68" width="4" height="4"/><rect x="80" y="68" width="4" height="4"/><rect x="88" y="68" width="4" height="4"/><rect x="96" y="68" width="4" height="4"/><rect x="100" y="68" width="4" height="4"/><rect x="104" y="68" width="4" height="4"/><rect x="108" y="68" width="4" height="4"/><rect x="116" y="68" width="4" height="4"/><rect x="128" y="68" width="4" height="4"/><rect x="132" y="68" width="4" height="4"/><rect x="144" y="68" width="4" height="4"/><rect x="148" y="68" width="4" height="4"/><rect x="156" y="68" width="4" height="4"/><rect x="184" y="68" width="4" height="4"/><rect x="200" y="68" width="4" height="4"/><rect x="20" y="72" width="4" height="4"/><rect x="32" y="72" width="4" height="4"/><rect x="36" y="72" width="4" height="4"/><rect x="40" y="72" width="4" height="4"/><rect x="44" y="72" width="4" height="4"/><rect x="56" y="72" width="4" height="4"/><rect x="68" y="72" width="4" height="4"/><rect x="100" y="72" width="4" height="4"/><rect x="104" y="72" width="4" height="4"/><rect x="108" y="72" width="4" height="4"/><rect x="116" y="72" width="4" height="4"/><rect x="120" y="72" width="4" height="4"/><rect x="144" y="72" width="4" height="4"/><rect x="148" y="72" width="4" height="4"/><rect x="164" y="72" width="4" height="4"/><rect x="168" y="72" width="4" height="4"/><rect x="172" y="72" width="4" height="4"/><rect x="176" y="72" width="4" height="4"/><rect x="180" y="72" width="4" height="4"/><rect x="184" y="72" width="4" height="4"/><rect x="188" y="72" width="4" height="4"/><rect x="192" y="72" width="4" height="4"/><rect x="200" y="72" width="4" height="4"/><rect x="8" y="76" width="4" height="4"/><rect x="16" y="76" width="4" height="4"/><rect x="40" y="76" width="4" height="4"/><rect x="48" y="76" width="4" height="4"/><rect x="52" y="76" width="4" height="4"/><rect x="64" y="76" width="4" height="4"/><rect x="68" y="76" width="4" height="4"/><rect x="80" y="76" width="4" height="4"/><rect x="88" y="76" width="4" height="4"/><rect x="96" y="76" width="4" height="4"/><rect x="100" y="76" width="4" height="4"/><rect x="112" y="76" width="4" height="4"/><rect x="116" y="76" width="4" height="4"/><rect x="120" y="76" width="4" height="4"/><rect x="124" y="76" width="4" height="4"/><rect x="128" y="76" width="4" height="4"/><rect x="132" y="76" width="4" height="4"/><rect x="144" y="76" width="4" height="4"/><rect x="152" y="76" width="4" height="4"/><rect x="160" y="76" width="4" height="4"/><rect x="164" y="76" width="4" height="4"/><rect x="180" y="76" width="4" height="4"/><rect x="200" y="76" width="4" height="4"/><rect x="12" y="80" width="4" height="4"/><rect x="16" y="80" width="4" height="4"/><rect x="24" y="80" width="4" height="4"/><rect x="28" y="80" width="4" height="4"/><rect x="32" y="80" width="4" height="4"/><rect x="36" y="80" width="4" height="4"/><rect x="40" y="80" width="4" height="4"/><rect x="48" y="80" width="4" height="4"/><rect x="60" y="80" width="4" height="4"/><rect x="68" y="80" width="4" height="4"/><rect x="76" y="80" width="4" height="4"/><rect x="84" y="80" width="4" height="4"/><rect x="88" y="80" width="4" height="4"/><rect x="92" y="80" width="4" height="4"/><rect x="96" y="80" width="4" height="4"/><rect x="104" y="80" width="4" height="4"/><rect x="116" y="80" width="4" height="4"/><rect x="128" y="80" width="4" height="4"/><rect x="132" y="80" width="4" height="4"/><rect x="144" y="80" width="4" height="4"/><rect x="148" y="80" width="4" height="4"/><rect x="164" y="80" width="4" height="4"/><rect x="172" y="80" width="4" height="4"/><rect x="184" y="80" width="4" height="4"/><rect x="196" y="80" width="4" height="4"/><rect x="200" y="80" width="4" height="4"/><rect x="8" y="84" width="4" height="4"/><rect x="20" y="84" width="4" height="4"/><rect x="40" y="84" width="4" height="4"/><rect x="52" y="84" width="4" height="4"/><rect x="56" y="84" width="4" height="4"/><rect x="64" y="84" width="4" height="4"/><rect x="68" y="84" width="4" height="4"/><rect x="72" y="84" width="4" height="4"/><rect x="76" y="84" width="4" height="4"/><rect x="88" y="84" width="4" height="4"/><rect x="96" y="84" width="4" height="4"/><rect x="104" y="84" width="4" height="4"/><rect x="108" y="84" width="4" height="4"/><rect x="112" y="84" width="4" height="4"/><rect x="128" y="84" width="4" height="4"/><rect x="132" y="84" width="4" height="4"/><rect x="136" y="84" width="4" height="4"/><rect x="140" y="84" width="4" height="4"/><rect x="152" y="84" width="4" height="4"/><rect x="156" y="84" width="4" height="4"/><rect x="164" y="84" width="4" height="4"/><rect x="168" y="84" width="4" height="4"/><rect x="184" y="84" width="4" height="4"/><rect x="192" y="84" width="4" height="4"/><rect x="12" y="88" width="4" height="4"/><rect x="16" y="88" width="4" height="4"/><rect x="24" y="88" width="4" height="4"/><rect x="32" y="88" width="4" height="4"/><rect x="36" y="88" width="4" height="4"/><rect x="40" y="88" width="4" height="4"/><rect x="60" y="88" width="4" height="4"/><rect x="64" y="88" width="4" height="4"/><rect x="72" y="88" width="4" height="4"/><rect x="84" y="88" width="4" height="4"/><rect x="88" y="88" width="4" height="4"/><rect x="96" y="88" width="4" height="4"/><rect x="104" y="88" width="4" height="4"/><rect x="112" y="88" width="4" height="4"/><rect x="120" y="88" width="4" height="4"/><rect x="124" y="88" width="4" height="4"/><rect x="140" y="88" width="4" height="4"/><rect x="144" y="88" width="4" height="4"/><rect x="148" y="88" width="4" height="4"/><rect x="152" y="88" width="4" height="4"/><rect x="164" y="88" width="4" height="4"/><rect x="172" y="88" width="4" height="4"/><rect x="176" y="88" width="4" height="4"/><rect x="188" y="88" width="4" height="4"/><rect x="200" y="88" width="4" height="4"/><rect x="12" y="92" width="4" height="4"/><rect x="16" y="92" width="4" height="4"/><rect x="24" y="92" width="4" height="4"/><rect x="28" y="92" width="4" height="4"/><rect x="44" y="92" width="4" height="4"/><rect x="48" y="92" width="4" height="4"/><rect x="52" y="92" width="4" height="4"/><rect x="60" y="92" width="4" height="4"/><rect x="68" y="92" width="4" height="4"/><rect x="72" y="92" width="4" height="4"/><rect x="84" y="92" width="4" height="4"/><rect x="92" y="92" width="4" height="4"/><rect x="112" y="92" width="4" height="4"/><rect x="120" y="92" width="4" height="4"/><rect x="148" y="92" width="4" height="4"/><rect x="152" y="92" width="4" height="4"/><rect x="172" y="92" width="4" height="4"/><rect x="180" y="92" width="4" height="4"/><rect x="184" y="92" width="4" height="4"/><rect x="188" y="92" width="4" height="4"/><rect x="200" y="92" width="4" height="4"/><rect x="8" y="96" width="4" height="4"/><rect x="12" y="96" width="4" height="4"/><rect x="16" y="96" width="4" height="4"/><rect x="24" y="96" width="4" height="4"/><rect x="28" y="96" width="4" height="4"/><rect x="32" y="96" width="4" height="4"/><rect x="36" y="96" width="4" height="4"/><rect x="40" y="96" width="4" height="4"/><rect x="52" y="96" width="4" height="4"/><rect x="68" y="96" width="4" height="4"/><rect x="72" y="96" width="4" height="4"/><rect x="80" y="96" width="4" height="4"/><rect x="96" y="96" width="4" height="4"/><rect x="100" y="96" width="4" height="4"/><rect x="104" y="96" width="4" height="4"/><rect x="108" y="96" width="4" height="4"/><rect x="112" y="96" width="4" height="4"/><rect x="132" y="96" width="4" height="4"/><rect x="136" y="96" width="4" height="4"/><rect x="144" y="96" width="4" height="4"/><rect x="152" y="96" width="4" height="4"/><rect x="156" y="96" width="4" height="4"/><rect x="164" y="96" width="4" height="4"/><rect x="168" y="96" width="4" height="4"/><rect x="172" y="96" width="4" height="4"/><rect x="176" y="96" width="4" height="4"/><rect x="180" y="96" width="4" height="4"/><rect x="184" y="96" width="4" height="4"/><rect x="188" y="96" width="4" height="4"/><rect x="192" y="96" width="4" height="4"/><rect x="200" y="96" width="4" height="4"/><rect x="16" y="100" width="4" height="4"/><rect x="24" y="100" width="4" height="4"/><rect x="40" y="100" width="4" height="4"/><rect x="48" y="100" width="4" height="4"/><rect x="52" y="100" width="4" height="4"/><rect x="56" y="100" width="4" height="4"/><rect x="60" y="100" width="4" height="4"/><rect x="64" y="100" width="4" height="4"/><rect x="72" y="100" width="4" height="4"/><rect x="84" y="100" width="4" height="4"/><rect x="88" y="100" width="4" height="4"/><rect x="92" y="100" width="4" height="4"/><rect x="96" y="100" width="4" height="4"/><rect x="112" y="100" width="4" height="4"/><rect x="116" y="100" width="4" height="4"/><rect x="120" y="100" width="4" height="4"/><rect x="124" y="100" width="4" height="4"/><rect x="132" y="100" width="4" height="4"/><rect x="152" y="100" width="4" height="4"/><rect x="156" y="100" width="4" height="4"/><rect x="160" y="100" width="4" height="4"/><rect x="164" y="100" width="4" height="4"/><rect x="168" y="100" width="4" height="4"/><rect x="184" y="100" width="4" height="4"/><rect x="200" y="100" width="4" height="4"/><rect x="8" y="104" width="4" height="4"/><rect x="24" y="104" width="4" height="4"/><rect x="32" y="104" width="4" height="4"/><rect x="40" y="104" width="4" height="4"/><rect x="44" y="104" width="4" height="4"/><rect x="48" y="104" width="4" height="4"/><rect x="52" y="104" width="4" height="4"/><rect x="64" y="104" width="4" height="4"/><rect x="68" y="104" width="4" height="4"/><rect x="76" y="104" width="4" height="4"/><rect x="88" y="104" width="4" height="4"/><rect x="96" y="104" width="4" height="4"/><rect x="104" y="104" width="4" height="4"/><rect x="112" y="104" width="4" height="4"/><rect x="116" y="104" width="4" height="4"/><rect x="120" y="104" width="4" height="4"/><rect x="132" y="104" width="4" height="4"/><rect x="136" y="104" width="4" height="4"/><rect x="140" y="104" width="4" height="4"/><rect x="144" y="104" width="4" height="4"/><rect x="148" y="104" width="4" height="4"/><rect x="152" y="104" width="4" height="4"/><rect x="168" y="104" width="4" height="4"/><rect x="176" y="104" width="4" height="4"/><rect x="184" y="104" width="4" height="4"/><rect x="196" y="104" width="4" height="4"/><rect x="200" y="104" width="4" height="4"/><rect x="16" y="108" width="4" height="4"/><rect x="24" y="108" width="4" height="4"/><rect x="40" y="108" width="4" height="4"/><rect x="52" y="108" width="4" height="4"/><rect x="60" y="108" width="4" height="4"/><rect x="64" y="108" width="4" height="4"/><rect x="76" y="108" width="4" height="4"/><rect x="80" y="108" width="4" height="4"/><rect x="84" y="108" width="4" height="4"/><rect x="96" y="108" width="4" height="4"/><rect x="112" y="108" width="4" height="4"/><rect x="116" y="108" width="4" height="4"/><rect x="120" y="108" width="4" height="4"/><rect x="124" y="108" width="4" height="4"/><rect x="132" y="108" width="4" height="4"/><rect x="140" y="108" width="4" height="4"/><rect x="144" y="108" width="4" height="4"/><rect x="152" y="108" width="4" height="4"/><rect x="164" y="108" width="4" height="4"/><rect x="168" y="108" width="4" height="4"/><rect x="184" y="108" width="4" height="4"/><rect x="192" y="108" width="4" height="4"/><rect x="200" y="108" width="4" height="4"/><rect x="8" y="112" width="4" height="4"/><rect x="24" y="112" width="4" height="4"/><rect x="28" y="112" width="4" height="4"/><rect x="32" y="112" width="4" height="4"/><rect x="36" y="112" width="4" height="4"/><rect x="40" y="112" width="4" height="4"/><rect x="80" y="112" width="4" height="4"/><rect x="92" y="112" width="4" height="4"/><rect x="96" y="112" width="4" height="4"/><rect x="100" y="112" width="4" height="4"/><rect x="104" y="112" width="4" height="4"/><rect x="108" y="112" width="4" height="4"/><rect x="112" y="112" width="4" height="4"/><rect x="140" y="112" width="4" height="4"/><rect x="152" y="112" width="4" height="4"/><rect x="156" y="112" width="4" height="4"/><rect x="160" y="112" width="4" height="4"/><rect x="168" y="112" width="4" height="4"/><rect x="172" y="112" width="4" height="4"/><rect x="176" y="112" width="4" height="4"/><rect x="180" y="112" width="4" height="4"/><rect x="184" y="112" width="4" height="4"/><rect x="188" y="112" width="4" height="4"/><rect x="192" y="112" width="4" height="4"/><rect x="200" y="112" width="4" height="4"/><rect x="8" y="116" width="4" height="4"/><rect x="12" y="116" width="4" height="4"/><rect x="20" y="116" width="4" height="4"/><rect x="28" y="116" width="4" height="4"/><rect x="48" y="116" width="4" height="4"/><rect x="52" y="116" width="4" height="4"/><rect x="60" y="116" width="4" height="4"/><rect x="68" y="116" width="4" height="4"/><rect x="76" y="116" width="4" height="4"/><rect x="80" y="116" width="4" height="4"/><rect x="92" y="116" width="4" height="4"/><rect x="108" y="116" width="4" height="4"/><rect x="116" y="116" width="4" height="4"/><rect x="120" y="116" width="4" height="4"/><rect x="124" y="116" width="4" height="4"/><rect x="128" y="116" width="4" height="4"/><rect x="132" y="116" width="4" height="4"/><rect x="136" y="116" width="4" height="4"/><rect x="148" y="116" width="4" height="4"/><rect x="152" y="116" width="4" height="4"/><rect x="156" y="116" width="4" height="4"/><rect x="176" y="116" width="4" height="4"/><rect x="180" y="116" width="4" height="4"/><rect x="184" y="116" width="4" height="4"/><rect x="8" y="120" width="4" height="4"/><rect x="20" y="120" width="4" height="4"/><rect x="24" y="120" width="4" height="4"/><rect x="32" y="120" width="4" height="4"/><rect x="40" y="120" width="4" height="4"/><rect x="44" y="120" width="4" height="4"/><rect x="56" y="120" width="4" height="4"/><rect x="64" y="120" width="4" height="4"/><rect x="68" y="120" width="4" height="4"/><rect x="72" y="120" width="4" height="4"/><rect x="80" y="120" width="4" height="4"/><rect x="88" y="120" width="4" height="4"/><rect x="92" y="120" width="4" height="4"/><rect x="96" y="120" width="4" height="4"/><rect x="104" y="120" width="4" height="4"/><rect x="108" y="120" width="4" height="4"/><rect x="112" y="120" width="4" height="4"/><rect x="116" y="120" width="4" height="4"/><rect x="124" y="120" width="4" height="4"/><rect x="128" y="120" width="4" height="4"/><rect x="136" y="120" width="4" height="4"/><rect x="144" y="120" width="4" height="4"/><rect x="148" y="120" width="4" height="4"/><rect x="152" y="120" width="4" height="4"/><rect x="168" y="120" width="4" height="4"/><rect x="184" y="120" width="4" height="4"/><rect x="192" y="120" width="4" height="4"/><rect x="196" y="120" width="4" height="4"/><rect x="16" y="124" width="4" height="4"/><rect x="24" y="124" width="4" height="4"/><rect x="28" y="124" width="4" height="4"/><rect x="36" y="124" width="4" height="4"/><rect x="40" y="124" width="4" height="4"/><rect x="64" y="124" width="4" height="4"/><rect x="68" y="124" width="4" height="4"/><rect x="72" y="124" width="4" height="4"/><rect x="80" y="124" width="4" height="4"/><rect x="84" y="124" width="4" height="4"/><rect x="88" y="124" width="4" height="4"/><rect x="92" y="124" width="4" height="4"/><rect x="96" y="124" width="4" height="4"/><rect x="100" y="124" width="4" height="4"/><rect x="104" y="124" width="4" height="4"/><rect x="112" y="124" width="4" height="4"/><rect x="116" y="124" width="4" height="4"/><rect x="136" y="124" width="4" height="4"/><rect x="140" y="124" width="4" height="4"/><rect x="160" y="124" width="4" height="4"/><rect x="168" y="124" width="4" height="4"/><rect x="176" y="124" width="4" height="4"/><rect x="180" y="124" width="4" height="4"/><rect x="188" y="124" width="4" height="4"/><rect x="8" y="128" width="4" height="4"/><rect x="12" y="128" width="4" height="4"/><rect x="16" y="128" width="4" height="4"/><rect x="20" y="128" width="4" height="4"/><rect x="24" y="128" width="4" height="4"/><rect x="32" y="128" width="4" height="4"/><rect x="36" y="128" width="4" height="4"/><rect x="44" y="128" width="4" height="4"/><rect x="48" y="128" width="4" height="4"/><rect x="56" y="128" width="4" height="4"/><rect x="60" y="128" width="4" height="4"/><rect x="76" y="128" width="4" height="4"/><rect x="84" y="128" width="4" height="4"/><rect x="88" y="128" width="4" height="4"/><rect x="92" y="128" width="4" height="4"/><rect x="96" y="128" width="4" height="4"/><rect x="108" y="128" width="4" height="4"/><rect x="112" y="128" width="4" height="4"/><rect x="116" y="128" width="4" height="4"/><rect x="124" y="128" width="4" height="4"/><rect x="136" y="128" width="4" height="4"/><rect x="140" y="128" width="4" height="4"/><rect x="148" y="128" width="4" height="4"/><rect x="164" y="128" width="4" height="4"/><rect x="168" y="128" width="4" height="4"/><rect x="176" y="128" width="4" height="4"/><rect x="196" y="128" width="4" height="4"/><rect x="8" y="132" width="4" height="4"/><rect x="40" y="132" width="4" height="4"/><rect x="48" y="132" width="4" height="4"/><rect x="52" y="132" width="4" height="4"/><rect x="56" y="132" width="4" height="4"/><rect x="60" y="132" width="4" height="4"/><rect x="76" y="132" width="4" height="4"/><rect x="92" y="132" width="4" height="4"/><rect x="104" y="132" width="4" height="4"/><rect x="108" y="132" width="4" height="4"/><rect x="112" y="132" width="4" height="4"/><rect x="120" y="132" width="4" height="4"/><rect x="124" y="132" width="4" height="4"/><rect x="132" y="132" width="4" height="4"/><rect x="140" y="132" width="4" height="4"/><rect x="144" y="132" width="4" height="4"/><rect x="176" y="132" width="4" height="4"/><rect x="188" y="132" width="4" height="4"/><rect x="192" y="132" width="4" height="4"/><rect x="196" y="132" width="4" height="4"/><rect x="200" y="132" width="4" height="4"/><rect x="32" y="136" width="4" height="4"/><rect x="36" y="136" width="4" height="4"/><rect x="44" y="136" width="4" height="4"/><rect x="56" y="136" width="4" height="4"/><rect x="68" y="136" width="4" height="4"/><rect x="72" y="136" width="4" height="4"/><rect x="76" y="136" width="4" height="4"/><rect x="80" y="136" width="4" height="4"/><rect x="88" y="136" width="4" height="4"/><rect x="96" y="136" width="4" height="4"/><rect x="100" y="136" width="4" height="4"/><rect x="108" y="136" width="4" height="4"/><rect x="120" y="136" width="4" height="4"/><rect x="128" y="136" width="4" height="4"/><rect x="140" y="136" width="4" height="4"/><rect x="144" y="136" width="4" height="4"/><rect x="148" y="136" width="4" height="4"/><rect x="152" y="136" width="4" height="4"/><rect x="156" y="136" width="4" height="4"/><rect x="160" y="136" width="4" height="4"/><rect x="168" y="136" width="4" height="4"/><rect x="180" y="136" width="4" height="4"/><rect x="184" y="136" width="4" height="4"/><rect x="188" y="136" width="4" height="4"/><rect x="8" y="140" width="4" height="4"/><rect x="12" y="140" width="4" height="4"/><rect x="28" y="140" width="4" height="4"/><rect x="44" y="140" width="4" height="4"/><rect x="48" y="140" width="4" height="4"/><rect x="52" y="140" width="4" height="4"/><rect x="64" y="140" width="4" height="4"/><rect x="68" y="140" width="4" height="4"/><rect x="72" y="140" width="4" height="4"/><rect x="76" y="140" width="4" height="4"/><rect x="92" y="140" width="4" height="4"/><rect x="96" y="140" width="4" height="4"/><rect x="108" y="140" width="4" height="4"/><rect x="112" y="140" width="4" height="4"/><rect x="124" y="140" width="4" height="4"/><rect x="140" y="140" width="4" height="4"/><rect x="156" y="140" width="4" height="4"/><rect x="176" y="140" width="4" height="4"/><rect x="180" y="140" width="4" height="4"/><rect x="188" y="140" width="4" height="4"/><rect x="200" y="140" width="4" height="4"/><rect x="16" y="144" width="4" height="4"/><rect x="20" y="144" width="4" height="4"/><rect x="24" y="144" width="4" height="4"/><rect x="32" y="144" width="4" height="4"/><rect x="40" y="144" width="4" height="4"/><rect x="64" y="144" width="4" height="4"/><rect x="84" y="144" width="4" height="4"/><rect x="88" y="144" width="4" height="4"/><rect x="100" y="144" width="4" height="4"/><rect x="108" y="144" width="4" height="4"/><rect x="112" y="144" width="4" height="4"/><rect x="124" y="144" width="4" height="4"/><rect x="128" y="144" width="4" height="4"/><rect x="132" y="144" width="4" height="4"/><rect x="136" y="144" width="4" height="4"/><rect x="140" y="144" width="4" height="4"/><rect x="152" y="144" width="4" height="4"/><rect x="156" y="144" width="4" height="4"/><rect x="160" y="144" width="4" height="4"/><rect x="172" y="144" width="4" height="4"/><rect x="176" y="144" width="4" height="4"/><rect x="180" y="144" width="4" height="4"/><rect x="184" y="144" width="4" height="4"/><rect x="188" y="144" width="4" height="4"/><rect x="196" y="144" width="4" height="4"/><rect x="200" y="144" width="4" height="4"/><rect x="8" y="148" width="4" height="4"/><rect x="12" y="148" width="4" height="4"/><rect x="16" y="148" width="4" height="4"/><rect x="20" y="148" width="4" height="4"/><rect x="24" y="148" width="4" height="4"/><rect x="36" y="148" width="4" height="4"/><rect x="52" y="148" width="4" height="4"/><rect x="56" y="148" width="4" height="4"/><rect x="60" y="148" width="4" height="4"/><rect x="68" y="148" width="4" height="4"/><rect x="72" y="148" width="4" height="4"/><rect x="76" y="148" width="4" height="4"/><rect x="96" y="148" width="4" height="4"/><rect x="116" y="148" width="4" height="4"/><rect x="120" y="148" width="4" height="4"/><rect x="124" y="148" width="4" height="4"/><rect x="128" y="148" width="4" height="4"/><rect x="140" y="148" width="4" height="4"/><rect x="148" y="148" width="4" height="4"/><rect x="152" y="148" width="4" height="4"/><rect x="160" y="148" width="4" height="4"/><rect x="168" y="148" width="4" height="4"/><rect x="172" y="148" width="4" height="4"/><rect x="176" y="148" width="4" height="4"/><rect x="180" y="148" width="4" height="4"/><rect x="196" y="148" width="4" height="4"/><rect x="200" y="148" width="4" height="4"/><rect x="28" y="152" width="4" height="4"/><rect x="32" y="152" width="4" height="4"/><rect x="44" y="152" width="4" height="4"/><rect x="48" y="152" width="4" height="4"/><rect x="52" y="152" width="4" height="4"/><rect x="60" y="152" width="4" height="4"/><rect x="64" y="152" width="4" height="4"/><rect x="84" y="152" width="4" height="4"/><rect x="100" y="152" width="4" height="4"/><rect x="112" y="152" width="4" height="4"/><rect x="116" y="152" width="4" height="4"/><rect x="120" y="152" width="4" height="4"/><rect x="124" y="152" width="4" height="4"/><rect x="136" y="152" width="4" height="4"/><rect x="140" y="152" width="4" height="4"/><rect x="144" y="152" width="4" height="4"/><rect x="152" y="152" width="4" height="4"/><rect x="156" y="152" width="4" height="4"/><rect x="160" y="152" width="4" height="4"/><rect x="168" y="152" width="4" height="4"/><rect x="172" y="152" width="4" height="4"/><rect x="176" y="152" width="4" height="4"/><rect x="180" y="152" width="4" height="4"/><rect x="188" y="152" width="4" height="4"/><rect x="200" y="152" width="4" height="4"/><rect x="12" y="156" width="4" height="4"/><rect x="16" y="156" width="4" height="4"/><rect x="20" y="156" width="4" height="4"/><rect x="24" y="156" width="4" height="4"/><rect x="28" y="156" width="4" height="4"/><rect x="40" y="156" width="4" height="4"/><rect x="44" y="156" width="4" height="4"/><rect x="52" y="156" width="4" height="4"/><rect x="64" y="156" width="4" height="4"/><rect x="68" y="156" width="4" height="4"/><rect x="72" y="156" width="4" height="4"/><rect x="80" y="156" width="4" height="4"/><rect x="92" y="156" width="4" height="4"/><rect x="96" y="156" width="4" height="4"/><rect x="100" y="156" width="4" height="4"/><rect x="108" y="156" width="4" height="4"/><rect x="112" y="156" width="4" height="4"/><rect x="116" y="156" width="4" height="4"/><rect x="120" y="156" width="4" height="4"/><rect x="132" y="156" width="4" height="4"/><rect x="136" y="156" width="4" height="4"/><rect x="140" y="156" width="4" height="4"/><rect x="144" y="156" width="4" height="4"/><rect x="156" y="156" width="4" height="4"/><rect x="168" y="156" width="4" height="4"/><rect x="172" y="156" width="4" height="4"/><rect x="176" y="156" width="4" height="4"/><rect x="188" y="156" width="4" height="4"/><rect x="196" y="156" width="4" height="4"/><rect x="200" y="156" width="4" height="4"/><rect x="12" y="160" width="4" height="4"/><rect x="28" y="160" width="4" height="4"/><rect x="32" y="160" width="4" height="4"/><rect x="36" y="160" width="4" height="4"/><rect x="40" y="160" width="4" height="4"/><rect x="48" y="160" width="4" height="4"/><rect x="68" y="160" width="4" height="4"/><rect x="72" y="160" width="4" height="4"/><rect x="80" y="160" width="4" height="4"/><rect x="100" y="160" width="4" height="4"/><rect x="104" y="160" width="4" height="4"/><rect x="108" y="160" width="4" height="4"/><rect x="116" y="160" width="4" height="4"/><rect x="120" y="160" width="4" height="4"/><rect x="124" y="160" width="4" height="4"/><rect x="148" y="160" width="4" height="4"/><rect x="160" y="160" width="4" height="4"/><rect x="164" y="160" width="4" height="4"/><rect x="172" y="160" width="4" height="4"/><rect x="176" y="160" width="4" height="4"/><rect x="180" y="160" width="4" height="4"/><rect x="192" y="160" width="4" height="4"/><rect x="200" y="160" width="4" height="4"/><rect x="12" y="164" width="4" height="4"/><rect x="16" y="164" width="4" height="4"/><rect x="20" y="164" width="4" height="4"/><rect x="40" y="164" width="4" height="4"/><rect x="48" y="164" width="4" height="4"/><rect x="52" y="164" width="4" height="4"/><rect x="60" y="164" width="4" height="4"/><rect x="72" y="164" width="4" height="4"/><rect x="76" y="164" width="4" height="4"/><rect x="80" y="164" width="4" height="4"/><rect x="84" y="164" width="4" height="4"/><rect x="92" y="164" width="4" height="4"/><rect x="100" y="164" width="4" height="4"/><rect x="108" y="164" width="4" height="4"/><rect x="112" y="164" width="4" height="4"/><rect x="120" y="164" width="4" height="4"/><rect x="132" y="164" width="4" height="4"/><rect x="136" y="164" width="4" height="4"/><rect x="140" y="164" width="4" height="4"/><rect x="144" y="164" width="4" height="4"/><rect x="152" y="164" width="4" height="4"/><rect x="156" y="164" width="4" height="4"/><rect x="176" y="164" width="4" height="4"/><rect x="180" y="164" width="4" height="4"/><rect x="196" y="164" width="4" height="4"/><rect x="8" y="168" width="4" height="4"/><rect x="12" y="168" width="4" height="4"/><rect x="16" y="168" width="4" height="4"/><rect x="32" y="168" width="4" height="4"/><rect x="36" y="168" width="4" height="4"/><rect x="44" y="168" width="4" height="4"/><rect x="48" y="168" width="4" height="4"/><rect x="52" y="168" width="4" height="4"/><rect x="60" y="168" width="4" height="4"/><rect x="68" y="168" width="4" height="4"/><rect x="72" y="168" width="4" height="4"/><rect x="76" y="168" width="4" height="4"/><rect x="88" y="168" width="4" height="4"/><rect x="92" y="168" width="4" height="4"/><rect x="96" y="168" width="4" height="4"/><rect x="100" y="168" width="4" height="4"/><rect x="104" y="168" width="4" height="4"/><rect x="108" y="168" width="4" height="4"/><rect x="112" y="168" width="4" height="4"/><rect x="124" y="168" width="4" height="4"/><rect x="128" y="168" width="4" height="4"/><rect x="136" y="168" width="4" height="4"/><rect x="152" y="168" width="4" height="4"/><rect x="156" y="168" width="4" height="4"/><rect x="168" y="168" width="4" height="4"/><rect x="172" y="168" width="4" height="4"/><rect x="176" y="168" width="4" height="4"/><rect x="180" y="168" width="4" height="4"/><rect x="184" y="168" width="4" height="4"/><rect x="192" y="168" width="4" height="4"/><rect x="40" y="172" width="4" height="4"/><rect x="44" y="172" width="4" height="4"/><rect x="52" y="172" width="4" height="4"/><rect x="56" y="172" width="4" height="4"/><rect x="72" y="172" width="4" height="4"/><rect x="76" y="172" width="4" height="4"/><rect x="80" y="172" width="4" height="4"/><rect x="88" y="172" width="4" height="4"/><rect x="92" y="172" width="4" height="4"/><rect x="96" y="172" width="4" height="4"/><rect x="112" y="172" width="4" height="4"/><rect x="124" y="172" width="4" height="4"/><rect x="136" y="172" width="4" height="4"/><rect x="140" y="172" width="4" height="4"/><rect x="148" y="172" width="4" height="4"/><rect x="160" y="172" width="4" height="4"/><rect x="164" y="172" width="4" height="4"/><rect x="168" y="172" width="4" height="4"/><rect x="184" y="172" width="4" height="4"/><rect x="188" y="172" width="4" height="4"/><rect x="8" y="176" width="4" height="4"/><rect x="12" y="176" width="4" height="4"/><rect x="16" y="176" width="4" height="4"/><rect x="20" y="176" width="4" height="4"/><rect x="24" y="176" width="4" height="4"/><rect x="28" y="176" width="4" height="4"/><rect x="32" y="176" width="4" height="4"/><rect x="44" y="176" width="4" height="4"/><rect x="48" y="176" width="4" height="4"/><rect x="52" y="176" width="4" height="4"/><rect x="60" y="176" width="4" height="4"/><rect x="76" y="176" width="4" height="4"/><rect x="84" y="176" width="4" height="4"/><rect x="88" y="176" width="4" height="4"/><rect x="92" y="176" width="4" height="4"/><rect x="96" y="176" width="4" height="4"/><rect x="104" y="176" width="4" height="4"/><rect x="112" y="176" width="4" height="4"/><rect x="120" y="176" width="4" height="4"/><rect x="140" y="176" width="4" height="4"/><rect x="148" y="176" width="4" height="4"/><rect x="152" y="176" width="4" height="4"/><rect x="164" y="176" width="4" height="4"/><rect x="168" y="176" width="4" height="4"/><rect x="176" y="176" width="4" height="4"/><rect x="184" y="176" width="4" height="4"/><rect x="188" y="176" width="4" height="4"/><rect x="196" y="176" width="4" height="4"/><rect x="200" y="176" width="4" height="4"/><rect x="8" y="180" width="4" height="4"/><rect x="32" y="180" width="4" height="4"/><rect x="40" y="180" width="4" height="4"/><rect x="52" y="180" width="4" height="4"/><rect x="56" y="180" width="4" height="4"/><rect x="64" y="180" width="4" height="4"/><rect x="68" y="180" width="4" height="4"/><rect x="72" y="180" width="4" height="4"/><rect x="76" y="180" width="4" height="4"/><rect x="80" y="180" width="4" height="4"/><rect x="92" y="180" width="4" height="4"/><rect x="96" y="180" width="4" height="4"/><rect x="112" y="180" width="4" height="4"/><rect x="116" y="180" width="4" height="4"/><rect x="124" y="180" width="4" height="4"/><rect x="136" y="180" width="4" height="4"/><rect x="144" y="180" width="4" height="4"/><rect x="148" y="180" width="4" height="4"/><rect x="152" y="180" width="4" height="4"/><rect x="168" y="180" width="4" height="4"/><rect x="184" y="180" width="4" height="4"/><rect x="188" y="180" width="4" height="4"/><rect x="192" y="180" width="4" height="4"/><rect x="8" y="184" width="4" height="4"/><rect x="16" y="184" width="4" height="4"/><rect x="20" y="184" width="4" height="4"/><rect x="24" y="184" width="4" height="4"/><rect x="32" y="184" width="4" height="4"/><rect x="44" y="184" width="4" height="4"/><rect x="52" y="184" width="4" height="4"/><rect x="56" y="184" width="4" height="4"/><rect x="64" y="184" width="4" height="4"/><rect x="68" y="184" width="4" height="4"/><rect x="76" y="184" width="4" height="4"/><rect x="96" y="184" width="4" height="4"/><rect x="100" y="184" width="4" height="4"/><rect x="104" y="184" width="4" height="4"/><rect x="108" y="184" width="4" height="4"/><rect x="112" y="184" width="4" height="4"/><rect x="116" y="184" width="4" height="4"/><rect x="120" y="184" width="4" height="4"/><rect x="124" y="184" width="4" height="4"/><rect x="132" y="184" width="4" height="4"/><rect x="140" y="184" width="4" height="4"/><rect x="152" y="184" width="4" height="4"/><rect x="156" y="184" width="4" height="4"/><rect x="160" y="184" width="4" height="4"/><rect x="168" y="184" width="4" height="4"/><rect x="172" y="184" width="4" height="4"/><rect x="176" y="184" width="4" height="4"/><rect x="180" y="184" width="4" height="4"/><rect x="184" y="184" width="4" height="4"/><rect x="188" y="184" width="4" height="4"/><rect x="196" y="184" width="4" height="4"/><rect x="200" y="184" width="4" height="4"/><rect x="8" y="188" width="4" height="4"/><rect x="16" y="188" width="4" height="4"/><rect x="20" y="188" width="4" height="4"/><rect x="24" y="188" width="4" height="4"/><rect x="32" y="188" width="4" height="4"/><rect x="40" y="188" width="4" height="4"/><rect x="44" y="188" width="4" height="4"/><rect x="48" y="188" width="4" height="4"/><rect x="56" y="188" width="4" height="4"/><rect x="64" y="188" width="4" height="4"/><rect x="68" y="188" width="4" height="4"/><rect x="72" y="188" width="4" height="4"/><rect x="80" y="188" width="4" height="4"/><rect x="88" y="188" width="4" height="4"/><rect x="96" y="188" width="4" height="4"/><rect x="100" y="188" width="4" height="4"/><rect x="104" y="188" width="4" height="4"/><rect x="108" y="188" width="4" height="4"/><rect x="116" y="188" width="4" height="4"/><rect x="120" y="188" width="4" height="4"/><rect x="124" y="188" width="4" height="4"/><rect x="132" y="188" width="4" height="4"/><rect x="136" y="188" width="4" height="4"/><rect x="140" y="188" width="4" height="4"/><rect x="152" y="188" width="4" height="4"/><rect x="156" y="188" width="4" height="4"/><rect x="164" y="188" width="4" height="4"/><rect x="168" y="188" width="4" height="4"/><rect x="172" y="188" width="4" height="4"/><rect x="184" y="188" width="4" height="4"/><rect x="188" y="188" width="4" height="4"/><rect x="192" y="188" width="4" height="4"/><rect x="200" y="188" width="4" height="4"/><rect x="8" y="192" width="4" height="4"/><rect x="16" y="192" width="4" height="4"/><rect x="20" y="192" width="4" height="4"/><rect x="24" y="192" width="4" height="4"/><rect x="32" y="192" width="4" height="4"/><rect x="44" y="192" width="4" height="4"/><rect x="52" y="192" width="4" height="4"/><rect x="56" y="192" width="4" height="4"/><rect x="68" y="192" width="4" height="4"/><rect x="76" y="192" width="4" height="4"/><rect x="84" y="192" width="4" height="4"/><rect x="92" y="192" width="4" height="4"/><rect x="100" y="192" width="4" height="4"/><rect x="104" y="192" width="4" height="4"/><rect x="112" y="192" width="4" height="4"/><rect x="124" y="192" width="4" height="4"/><rect x="140" y="192" width="4" height="4"/><rect x="144" y="192" width="4" height="4"/><rect x="148" y="192" width="4" height="4"/><rect x="180" y="192" width="4" height="4"/><rect x="184" y="192" width="4" height="4"/><rect x="192" y="192" width="4" height="4"/><rect x="196" y="192" width="4" height="4"/><rect x="200" y="192" width="4" height="4"/><rect x="8" y="196" width="4" height="4"/><rect x="32" y="196" width="4" height="4"/><rect x="44" y="196" width="4" height="4"/><rect x="60" y="196" width="4" height="4"/><rect x="80" y="196" width="4" height="4"/><rect x="96" y="196" width="4" height="4"/><rect x="108" y="196" width="4" height="4"/><rect x="112" y="196" width="4" height="4"/><rect x="116" y="196" width="4" height="4"/><rect x="124" y="196" width="4" height="4"/><rect x="128" y="196" width="4" height="4"/><rect x="132" y="196" width="4" height="4"/><rect x="136" y="196" width="4" height="4"/><rect x="144" y="196" width="4" height="4"/><rect x="164" y="196" width="4" height="4"/><rect x="168" y="196" width="4" height="4"/><rect x="172" y="196" width="4" height="4"/><rect x="180" y="196" width="4" height="4"/><rect x="192" y="196" width="4" height="4"/><rect x="8" y="200" width="4" height="4"/><rect x="12" y="200" width="4" height="4"/><rect x="16" y="200" width="4" height="4"/><rect x="20" y="200" width="4" height="4"/><rect x="24" y="200" width="4" height="4"/><rect x="28" y="200" width="4" height="4"/><rect x="32" y="200" width="4" height="4"/><rect x="40" y="200" width="4" height="4"/><rect x="44" y="200" width="4" height="4"/><rect x="48" y="200" width="4" height="4"/><rect x="72" y="200" width="4" height="4"/><rect x="80" y="200" width="4" height="4"/><rect x="84" y="200" width="4" height="4"/><rect x="92" y="200" width="4" height="4"/><rect x="96" y="200" width="4" height="4"/><rect x="100" y="200" width="4" height="4"/><rect x="108" y="200" width="4" height="4"/><rect x="112" y="200" width="4" height="4"/><rect x="116" y="200" width="4" height="4"/><rect x="132" y="200" width="4" height="4"/><rect x="148" y="200" width="4" height="4"/><rect x="184" y="200" width="4" height="4"/><rect x="196" y="200" width="4" height="4"/><rect x="200" y="200" width="4" height="4"/><rect class="frame" x="0.5" y="0.5" width="211" height="211"/></svg>
+      <svg class="aqr" viewBox="0 0 212 212" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="æqr verification badge"><title>æqr://v1|teologia.ai/a-la-nobleza-cristiana|es-LATAM|sha256:pendiente|issuer:☺://cc</title><rect class="frame" x="2" y="2" width="208" height="208"/><rect x="64" y="64" width="4" height="4"/><rect x="68" y="64" width="4" height="4"/><rect x="72" y="64" width="4" height="4"/><rect x="76" y="64" width="4" height="4"/><rect x="80" y="64" width="4" height="4"/><rect x="84" y="64" width="4" height="4"/><rect x="88" y="64" width="4" height="4"/><rect x="64" y="68" width="4" height="4"/><rect x="88" y="68" width="4" height="4"/><rect x="64" y="72" width="4" height="4"/><rect x="72" y="72" width="4" height="4"/><rect x="76" y="72" width="4" height="4"/><rect x="80" y="72" width="4" height="4"/><rect x="88" y="72" width="4" height="4"/><rect x="64" y="76" width="4" height="4"/><rect x="72" y="76" width="4" height="4"/><rect x="76" y="76" width="4" height="4"/><rect x="80" y="76" width="4" height="4"/><rect x="88" y="76" width="4" height="4"/><rect x="64" y="80" width="4" height="4"/><rect x="72" y="80" width="4" height="4"/><rect x="76" y="80" width="4" height="4"/><rect x="80" y="80" width="4" height="4"/><rect x="88" y="80" width="4" height="4"/><rect x="64" y="84" width="4" height="4"/><rect x="88" y="84" width="4" height="4"/><rect x="64" y="88" width="4" height="4"/><rect x="68" y="88" width="4" height="4"/><rect x="72" y="88" width="4" height="4"/><rect x="76" y="88" width="4" height="4"/><rect x="80" y="88" width="4" height="4"/><rect x="84" y="88" width="4" height="4"/><rect x="88" y="88" width="4" height="4"/><rect x="120" y="64" width="4" height="4"/><rect x="124" y="64" width="4" height="4"/><rect x="128" y="64" width="4" height="4"/><rect x="132" y="64" width="4" height="4"/><rect x="136" y="64" width="4" height="4"/><rect x="140" y="64" width="4" height="4"/><rect x="144" y="64" width="4" height="4"/><rect x="120" y="68" width="4" height="4"/><rect x="144" y="68" width="4" height="4"/><rect x="120" y="72" width="4" height="4"/><rect x="128" y="72" width="4" height="4"/><rect x="132" y="72" width="4" height="4"/><rect x="136" y="72" width="4" height="4"/><rect x="144" y="72" width="4" height="4"/><rect x="120" y="76" width="4" height="4"/><rect x="128" y="76" width="4" height="4"/><rect x="132" y="76" width="4" height="4"/><rect x="136" y="76" width="4" height="4"/><rect x="144" y="76" width="4" height="4"/><rect x="120" y="80" width="4" height="4"/><rect x="128" y="80" width="4" height="4"/><rect x="132" y="80" width="4" height="4"/><rect x="136" y="80" width="4" height="4"/><rect x="144" y="80" width="4" height="4"/><rect x="120" y="84" width="4" height="4"/><rect x="144" y="84" width="4" height="4"/><rect x="120" y="88" width="4" height="4"/><rect x="124" y="88" width="4" height="4"/><rect x="128" y="88" width="4" height="4"/><rect x="132" y="88" width="4" height="4"/><rect x="136" y="88" width="4" height="4"/><rect x="140" y="88" width="4" height="4"/><rect x="144" y="88" width="4" height="4"/><rect x="64" y="120" width="4" height="4"/><rect x="68" y="120" width="4" height="4"/><rect x="72" y="120" width="4" height="4"/><rect x="76" y="120" width="4" height="4"/><rect x="80" y="120" width="4" height="4"/><rect x="84" y="120" width="4" height="4"/><rect x="88" y="120" width="4" height="4"/><rect x="64" y="124" width="4" height="4"/><rect x="88" y="124" width="4" height="4"/><rect x="64" y="128" width="4" height="4"/><rect x="72" y="128" width="4" height="4"/><rect x="76" y="128" width="4" height="4"/><rect x="80" y="128" width="4" height="4"/><rect x="88" y="128" width="4" height="4"/><rect x="64" y="132" width="4" height="4"/><rect x="72" y="132" width="4" height="4"/><rect x="76" y="132" width="4" height="4"/><rect x="80" y="132" width="4" height="4"/><rect x="88" y="132" width="4" height="4"/><rect x="64" y="136" width="4" height="4"/><rect x="72" y="136" width="4" height="4"/><rect x="76" y="136" width="4" height="4"/><rect x="80" y="136" width="4" height="4"/><rect x="88" y="136" width="4" height="4"/><rect x="64" y="140" width="4" height="4"/><rect x="88" y="140" width="4" height="4"/><rect x="64" y="144" width="4" height="4"/><rect x="68" y="144" width="4" height="4"/><rect x="72" y="144" width="4" height="4"/><rect x="76" y="144" width="4" height="4"/><rect x="80" y="144" width="4" height="4"/><rect x="84" y="144" width="4" height="4"/><rect x="88" y="144" width="4" height="4"/><rect x="92" y="64" width="4" height="4"/><rect x="100" y="64" width="4" height="4"/><rect x="104" y="64" width="4" height="4"/><rect x="116" y="64" width="4" height="4"/><rect x="92" y="68" width="4" height="4"/><rect x="96" y="68" width="4" height="4"/><rect x="100" y="68" width="4" height="4"/><rect x="112" y="68" width="4" height="4"/><rect x="96" y="72" width="4" height="4"/><rect x="104" y="72" width="4" height="4"/><rect x="100" y="76" width="4" height="4"/><rect x="108" y="76" width="4" height="4"/><rect x="112" y="76" width="4" height="4"/><rect x="96" y="80" width="4" height="4"/><rect x="100" y="80" width="4" height="4"/><rect x="104" y="80" width="4" height="4"/><rect x="108" y="80" width="4" height="4"/><rect x="112" y="80" width="4" height="4"/><rect x="116" y="80" width="4" height="4"/><rect x="96" y="84" width="4" height="4"/><rect x="104" y="84" width="4" height="4"/><rect x="112" y="84" width="4" height="4"/><rect x="116" y="84" width="4" height="4"/><rect x="100" y="88" width="4" height="4"/><rect x="104" y="88" width="4" height="4"/><rect x="112" y="88" width="4" height="4"/><rect x="116" y="88" width="4" height="4"/><rect x="72" y="92" width="4" height="4"/><rect x="80" y="92" width="4" height="4"/><rect x="92" y="92" width="4" height="4"/><rect x="96" y="92" width="4" height="4"/><rect x="100" y="92" width="4" height="4"/><rect x="108" y="92" width="4" height="4"/><rect x="120" y="92" width="4" height="4"/><rect x="128" y="92" width="4" height="4"/><rect x="136" y="92" width="4" height="4"/><rect x="144" y="92" width="4" height="4"/><rect x="68" y="96" width="4" height="4"/><rect x="76" y="96" width="4" height="4"/><rect x="80" y="96" width="4" height="4"/><rect x="84" y="96" width="4" height="4"/><rect x="120" y="96" width="4" height="4"/><rect x="140" y="96" width="4" height="4"/><rect x="64" y="100" width="4" height="4"/><rect x="72" y="100" width="4" height="4"/><rect x="76" y="100" width="4" height="4"/><rect x="104" y="100" width="4" height="4"/><rect x="128" y="100" width="4" height="4"/><rect x="132" y="100" width="4" height="4"/><rect x="64" y="104" width="4" height="4"/><rect x="68" y="104" width="4" height="4"/><rect x="80" y="104" width="4" height="4"/><rect x="84" y="104" width="4" height="4"/><rect x="92" y="104" width="4" height="4"/><rect x="96" y="104" width="4" height="4"/><rect x="104" y="104" width="4" height="4"/><rect x="108" y="104" width="4" height="4"/><rect x="112" y="104" width="4" height="4"/><rect x="120" y="104" width="4" height="4"/><rect x="128" y="104" width="4" height="4"/><rect x="136" y="104" width="4" height="4"/><rect x="140" y="104" width="4" height="4"/><rect x="64" y="108" width="4" height="4"/><rect x="72" y="108" width="4" height="4"/><rect x="88" y="108" width="4" height="4"/><rect x="92" y="108" width="4" height="4"/><rect x="96" y="108" width="4" height="4"/><rect x="116" y="108" width="4" height="4"/><rect x="132" y="108" width="4" height="4"/><rect x="136" y="108" width="4" height="4"/><rect x="144" y="108" width="4" height="4"/><rect x="72" y="112" width="4" height="4"/><rect x="76" y="112" width="4" height="4"/><rect x="80" y="112" width="4" height="4"/><rect x="88" y="112" width="4" height="4"/><rect x="96" y="112" width="4" height="4"/><rect x="100" y="112" width="4" height="4"/><rect x="104" y="112" width="4" height="4"/><rect x="112" y="112" width="4" height="4"/><rect x="120" y="112" width="4" height="4"/><rect x="136" y="112" width="4" height="4"/><rect x="140" y="112" width="4" height="4"/><rect x="64" y="116" width="4" height="4"/><rect x="72" y="116" width="4" height="4"/><rect x="84" y="116" width="4" height="4"/><rect x="88" y="116" width="4" height="4"/><rect x="96" y="116" width="4" height="4"/><rect x="132" y="116" width="4" height="4"/><rect x="144" y="116" width="4" height="4"/><rect x="96" y="120" width="4" height="4"/><rect x="100" y="120" width="4" height="4"/><rect x="120" y="120" width="4" height="4"/><rect x="124" y="120" width="4" height="4"/><rect x="128" y="120" width="4" height="4"/><rect x="132" y="120" width="4" height="4"/><rect x="144" y="120" width="4" height="4"/><rect x="112" y="124" width="4" height="4"/><rect x="120" y="124" width="4" height="4"/><rect x="144" y="124" width="4" height="4"/><rect x="92" y="128" width="4" height="4"/><rect x="96" y="128" width="4" height="4"/><rect x="120" y="128" width="4" height="4"/><rect x="136" y="128" width="4" height="4"/><rect x="140" y="128" width="4" height="4"/><rect x="96" y="132" width="4" height="4"/><rect x="108" y="132" width="4" height="4"/><rect x="112" y="132" width="4" height="4"/><rect x="124" y="132" width="4" height="4"/><rect x="128" y="132" width="4" height="4"/><rect x="136" y="132" width="4" height="4"/><rect x="144" y="132" width="4" height="4"/><rect x="92" y="136" width="4" height="4"/><rect x="96" y="136" width="4" height="4"/><rect x="104" y="136" width="4" height="4"/><rect x="128" y="136" width="4" height="4"/><rect x="144" y="136" width="4" height="4"/><rect x="100" y="140" width="4" height="4"/><rect x="108" y="140" width="4" height="4"/><rect x="128" y="140" width="4" height="4"/><rect x="132" y="140" width="4" height="4"/><rect x="136" y="140" width="4" height="4"/><rect x="144" y="140" width="4" height="4"/><rect x="96" y="144" width="4" height="4"/><rect x="100" y="144" width="4" height="4"/><rect x="112" y="144" width="4" height="4"/><rect x="120" y="144" width="4" height="4"/><rect x="124" y="144" width="4" height="4"/><rect x="140" y="144" width="4" height="4"/><rect x="144" y="144" width="4" height="4"/></svg>
+      <div class="aqrcap"><b>æqr</b> · escanea para verificar</div>
+    </div>
+    <div class="dlcol">
+      <a class="dl" href="a-la-nobleza-cristiana.pdf" download="a-la-nobleza-cristiana.pdf">&#10515;&nbsp; DESCARGAR PDF</a>
+      <div class="hashline">
+        <b>sha256</b> · <span id="hash">c722e7ed589adbf5a8e7601f0e038f2ec89d2be53c924ff7316e924c72ccf277</span><br>
+        <b>issuer</b> · ☺://cc &nbsp;·&nbsp; <b>v</b> · 1
+      </div>
+    </div>
+  </div>
+  <!--badgerow:end-->
+
+  <div class="dedic">
+    <b>Nota del impresor.</b> A la nobleza cristiana de la nación alemana es el
+    primero de los tres grandes escritos reformadores de 1520, junto con La
+    cautividad babilónica de la iglesia y La libertad del cristiano. Lutero,
+    ya condenado por la bula Exsurge Domine, dirige la Reforma al poder
+    secular: derriba las tres murallas que la jerarquía levantó —la
+    superioridad del poder espiritual, el monopolio papal de la Escritura y
+    el derecho exclusivo de convocar concilios— y ofrece un programa
+    concreto que toca las annatas, las peregrinaciones, los ayunos, los
+    conventos, el celibato, la usura y las universidades.
+    <br><br>
+    Esta edición neutraliza regionalismos (modo «tú», LATAM amplio) y mantiene
+    el resto intacto. El æqr verifica el texto exacto de esta edición.
+  </div>
+
+  <!--MURALLAS-->
+  <section class="part" id="murallas">
+    <div class="part-head">
+      <div class="part-num">I</div>
+      <div>
+        <div class="part-title">Las Tres Murallas</div>
+        <div class="part-sub">EL ARGUMENTO CENTRAL</div>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La primera muralla<small>EL PODER ESPIRITUAL SOBRE EL TEMPORAL</small></div>
+      <div class="a">La jerarquía sostenía que el poder espiritual está por encima
+      del temporal: papa, obispos y sacerdotes formarían un orden superior,
+      exento de la espada. Lutero la derriba con una sola idea: todos los
+      cristianos son del mismo estado espiritual y la diferencia es de oficio,
+      no de dignidad. El papa y el príncipe, el sacerdote y el campesino, son
+      iguales ante el bautismo; ninguno tiene más autoridad espiritual que otro.
+      Si la iglesia entera es un solo cuerpo, la espada temporal no puede ser
+      menos que el ministerio.
+      <span class="scripture">Ro. 12:5; 1 Co. 12:12-13</span></div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La segunda muralla<small>SOLO EL PAPA INTERPRETA LA ESCRITURA</small></div>
+      <div class="a">Que solo el Papa puede interpretar la Escritura. Lutero la
+      derriba: la Escritura es clara y accesible a todo cristiano; el mismo
+      Espíritu que la dictó la da a conocer. Nadie puede ser forzado a creer:
+      la fe nace de la Palabra, no del mandato. Todo cristiano puede leer,
+      interpretar y discernir; la prueba de toda interpretación es la Palabra
+      misma, no la cátedra de Roma.
+      <span class="scripture">2 Ti. 3:15-17; 1 Jn. 2:27</span></div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La tercera muralla<small>SOLO EL PAPA CONVOCA EL CONCILIO</small></div>
+      <div class="a">Que solo el Papa puede convocar un concilio. Lutero la
+      derriba: cuando la fe está en peligro, cualquier cristiano puede llamar a
+      corrección; y la autoridad temporal, que es miembro de la misma
+      comunidad cristiana, debe hacerlo. Jesús mandó que las disputas se
+      sometan a la iglesia local (Mt. 18:15-17) y Pablo manda juzgar a los de
+      dentro (1 Co. 5:12-13). El concilio no es prerrogativa romana: es
+      derecho y deber del pueblo cristiano entero.
+      <span class="scripture">Mt. 18:15-17; 1 Co. 5:12-13</span></div>
+    </div>
+  </section>
+
+  <!--SACERDOCIO-->
+  <section class="part" id="sacerdocio">
+    <div class="part-head">
+      <div class="part-num">II</div>
+      <div>
+        <div class="part-title">El Sacerdocio de Todos los Creyentes</div>
+        <div class="part-sub">LA REVOLUCIÓN DEL BAUTISMO</div>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="label">Todo cristiano es sacerdote<small>EL BAUTISMO NOS CONSAGRA</small></div>
+      <div class="a">Por el bautismo, todo cristiano es consagrado sacerdote ante
+      Dios: puede presentar oración, alabanza y sacrificio espiritual, y
+      ofrecerse a sí mismo. No necesita mediador humano sino a Cristo. El
+      bautismo nos hace «linaje escogido, sacerdocio real, nación santa»
+      (1 P. 2:9).
+      <span class="scripture">1 P. 2:9; Ap. 1:6; Ro. 12:1</span></div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La distinción de estados<small>OFICIOS, NO CASTAS</small></div>
+      <div class="a">Sí, hay diferencia entre cristianos: unos enseñan, otros
+      aprenden; unos son maestros, otros discípulos. Pero la diferencia es
+      funcional, no jerárquica: el que predica lo hace por delegación de la
+      comunidad, no por superioridad de naturaleza. Los dones son diversos para
+      el servicio de todos (1 Co. 12:4-7).
+      <span class="scripture">1 Co. 12:4-7; Ef. 4:11-12</span></div>
+    </div>
+
+    <div class="doc">
+      <div class="label">El oficio del ministerio<small>UN SERVICIO, NO UNA CASTA</small></div>
+      <div class="a">El ministerio de la Palabra es un servicio encomendado por la
+      comunidad cristiana; quien predica lo hace por encargo y puede ser
+      examinado por la misma comunidad. La vocación es del pueblo; el oficio,
+      de servicio. El pastor no es señor de la grey, sino su servidor.
+      <span class="scripture">1 P. 5:1-3</span></div>
+    </div>
+  </section>
+
+  <!--PROGRAMA-->
+  <section class="part" id="programa">
+    <div class="part-head">
+      <div class="part-num">III</div>
+      <div>
+        <div class="part-title">El Programa de Reforma</div>
+        <div class="part-sub">OCHO PROPUESTAS CONCRETAS</div>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="label">01 · La reforma de Roma<small>REDUCIR LA CORTE PAPAL</small></div>
+      <div class="a">Lutero pide desmantelar la burocracia de Roma: suprimir las
+      annatas (el primer año de todo beneficio eclesiástico que iba a la corte
+      papal), acabar con la venta de beneficios y con la apelación a Roma como
+      última instancia. La iglesia nacional debe bastarse a sí misma.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">02 · Los pobres<small>LIMOSNA PARA LOS PROPIOS</small></div>
+      <div class="a">Cada ciudad debe hacerse cargo de sus propios pobres. Los
+      conventos no han de repartir limosna por las calles: la caridad se
+      organiza en la comunidad, y los monjes que no trabajan deben volver al
+      trabajo o volver al siglo.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">03 · Las peregrinaciones<small>ABOLIR LAS PEREGRINACIONES</small></div>
+      <div class="a">Lutero las llama ocasión de superstición, pereza y abandono
+      del propio oficio. El cristiano sirve a Dios en su casa, en su trabajo
+      y en su prójimo, no yendo de santuario en santuario.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">04 · Los ayunos<small>LIBERTAD CRISTIANA</small></div>
+      <div class="a">El evangelio no impone ayunos legales; la conciencia no debe
+      ser oprimida por mandamientos humanos. El ayuno es bueno cuando es libre
+      y voluntario, no cuando se impone como ley para vender mérito.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">05 · Los conventos<small>DISOLVER LOS CONVENTOS</small></div>
+      <div class="a">La mayoría de las órdenes deben desaparecer; sus bienes
+      vuelven al uso común y a la educación de los jóvenes. El monacato no es
+      superior al matrimonio ni al trabajo: toda vocación honesta es servicio
+      a Dios.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">06 · El celibato<small>SACERDOTES CASADOS</small></div>
+      <div class="a">El celibato forzado produce escándalo y suciedad; los
+      sacerdotes deben poder casarse sin afrenta. El matrimonio es honorable
+      para todos, y quien lo prohíbe manda cosas ajenas al evangelio.
+      <span class="scripture">1 Ti. 4:1-3</span></div>
+    </div>
+
+    <div class="doc">
+      <div class="label">07 · La usura<small>TASA JUSTA</small></div>
+      <div class="a">La usura desmedida es pecado contra el prójimo; el préstamo
+      debe servir, no explotar. El magistrado debe fijar límites y castigar la
+      avaricia, para que el rico no devore al pobre.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">08 · Las universidades<small>REDUCIR LAS UNIVERSIDADES</small></div>
+      <div class="a">Lutero pide quedarse con unas pocas y reformar su plan: leer
+      las Escrituras en hebreo y griego, desterrar la escolástica que oscurece
+      la Palabra y enseñar a los jóvenes a pensar, no a repetir.</div>
+    </div>
+  </section>
+
+  <!--HISTORIA-->
+  <section class="part" id="historia">
+    <div class="part-head">
+      <div class="part-num">IV</div>
+      <div>
+        <div class="part-title">Historia</div>
+        <div class="part-sub">DE WITTENBERG A WORMS</div>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="label">1520: la redacción<small>VERANO DE 1520</small></div>
+      <div class="a">En el verano de 1520, después de que la bula Exsurge Domine
+      (15 de junio) condenara sus escritos. Lutero, ya excomulgado, cambia de
+      interlocutor: si Roma no reforma, debe hacerlo el imperio. Es el primer
+      programa político de la Reforma y el escrito más leído de su época.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La difusión<small>EL PRIMER BEST SELLER DE LA REFORMA</small></div>
+      <div class="a">En quince días circularon 4 000 ejemplares; en pocas semanas
+      había traducciones al holandés y al inglés. El panfleto convirtió la
+      Reforma en movimiento de masas: la nobleza, las ciudades y los campesinos
+      lo adoptaron como programa de acción.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">La respuesta de Roma<small>DE LA BULA AL EDICTO</small></div>
+      <div class="a">La condena cayó y Lutero respondió quemando la bula en
+      Wittenberg (10 de diciembre de 1520). El edicto de Worms (1521) lo declaró
+      proscrito, pero el elector Federico lo protegió en el castillo de
+      Wartburg. El intento de Roma de aislarlo solo amplificó su mensaje.</div>
+    </div>
+  </section>
+
+  <!--LEGADO-->
+  <section class="part" id="legado">
+    <div class="part-head">
+      <div class="part-num">V</div>
+      <div>
+        <div class="part-title">Legado</div>
+        <div class="part-sub">EL MANIFIESTO DEL LAICISMO</div>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="label">El sacerdote universal<small>FUNDAMENTO DEL LAICISMO PROTESTANTE</small></div>
+      <div class="a">Porque traslada la Reforma del monasterio al mundo: el
+      cristiano es sacerdote en su oficio, el magistrado es responsable de la
+      fe, la Escritura es de todos. De aquí nacen la teología laica, la
+      libertad de conciencia y la separación entre Iglesia y Estado.</div>
+    </div>
+
+    <div class="doc">
+      <div class="label">El profeta y el político<small>DE LA DENUNCIA AL PROGRAMA</small></div>
+      <div class="a">Las guerras de los campesinos (1524-1525) y el edicto de la
+      Dieta mostraron el límite de la vía política; Lutero se retiró de la
+      denuncia social. Pero el escrito quedó como el manifiesto del laicismo
+      protestante y del derecho de las naciones a disentir de Roma.</div>
+    </div>
+  </section>
+
+  <div class="dedic" style="margin-top:60px">
+    <b>El escrito en síntesis.</b> Tres murallas derribadas, un sacerdocio
+    universal restaurado y ocho reformas concretas: A la nobleza cristiana
+    convierte la fe en programa público. No es solo teología: es la primera
+    vez que la Reforma sale del claustro y llama a la puerta del mundo.
+  </div>
+
+  <div class="seal">
+    <div class="glyph">&#x263A;</div>
+    <div class="txt">
+      <b>teologia.ai</b>
+      sola scriptura · sola fide · sola gratia<br>
+      un archivo · se copia · se pasa · no se pide permiso
+    </div>
+  </div>
+
+  <div class="colophon">
+    <span>æ:// — la plataforma es la superficie distribuible</span>
+    <span><a href="index.html">← Volver a teologia.ai</a></span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var p = document.getElementById('probe');
+  if (navigator.gpu) {
+    p.textContent = 'webgpu ✓';
+    p.style.color = '#00ff9d';
+  } else {
+    p.textContent = 'webgpu ✗';
+    p.style.color = '#ff4d5f';
+  }
+})();
+</script>
+
+</body></html>

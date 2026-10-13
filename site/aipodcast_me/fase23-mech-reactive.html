@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>æ:// mech W23-Mecha — reactive dataflow</title>
+<style>
+  :root {
+    --mech-gold: #D4AF37;
+    --mech-voa: #050505;
+    --mech-cyan: #00FFFF;
+    --mech-green: #00FF00;
+    --mech-purple: #FF00FF;
+    --mech-white: #FFFFFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #050505;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: #D4AF37;
+    cursor: crosshair;
+  }
+  #c { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: block; }
+  .ui { position: fixed; z-index: 100; pointer-events: none; }
+  .header {
+    position: absolute; top: 0; left: 0; right: 0; padding: 12px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: auto;
+  }
+  .title {
+    font-family: 'Orbitron', sans-serif; font-weight: 700;
+    font-size: clamp(14px, 2.5vw, 22px); letter-spacing: 2px;
+    color: #D4AF37; text-shadow: 0 0 12px rgba(212,175,55,0.4);
+  }
+  .tabs {
+    display: flex; gap: 6px;
+  }
+  .tab {
+    padding: 4px 16px; border-radius: 6px; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace; color: #050505;
+    background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.3);
+  }
+  .tab.active { background: #D4AF37; color: #050505; border-color: #D4AF37; }
+  .dag-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: clamp(280px, 35vw, 400px);
+    background: rgba(0,0,0,0.7); border: 1px solid rgba(212,175,55,0.3);
+    padding: 16px; overflow-y: auto; font-size: clamp(10px, 1.8vw, 14px);
+    line-height: 1.6; pointer-events: auto;
+  }
+  .dag-panel h3 {
+    margin: 0 0 10px; font-family: 'Orbitron', sans-serif; font-size: clamp(14px,2vw,18px);
+    color: #D4AF37; text-shadow: 0 0 8px rgba(212,175,55,0.3);
+  }
+  .dag-line { color: #00FFFF; margin: 2px 0; }
+  .dag-node { color: #D4AF37; font-weight: bold; }
+  .dag-edge { color: #00FFFF; }
+  .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed rgba(212,175,55,0.2); }
+  .stat-label { color: #050505; }
+  .stat-value { color: #D4AF37; font-family: 'JetBrains Mono', monospace; }
+  .footer {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 20px;
+    font-size: 11px; color: #050505; font-family: 'JetBrains Mono', monospace;
+  }
+  .footer span { color: #D4AF37; }
+  .scanlines {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(212,175,55,0.02) 2px, rgba(212,175,55,0.02) 4px);
+    pointer-events: none; z-index: 0;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="scanlines"></div>
+<canvas id="c"></canvas>
+
+<div class="ui header">
+  <div class="title">&#128203; æ:// mech W23-Mecha — reactive dataflow</div>
+  <div class="tabs">
+    <span class="tab active">mech</span>
+    <span class="tab">three.js</span>
+    <span class="tab">RTX 3050</span>
+  </div>
+</div>
+
+<div class="dag-panel">
+  <h3>&#128203; Reactive dataflow</h3>
+  <div class="dag-line"><span class="dag-node">idle</span> <span class="dag-edge">→</span> <span class="dag-node">plan</span></div>
+<div class="dag-line"><span class="dag-node">plan</span> <span class="dag-edge">→</span> <span class="dag-node">exec</span></div>
+<div class="dag-line"><span class="dag-node">exec</span> <span class="dag-edge">→</span> <span class="dag-node">audit</span></div>
+<div class="dag-line"><span class="dag-node">audit</span> <span class="dag-edge">→</span> <span class="dag-node">sealed</span></div>
+  <div class="stat-row"><span class="stat-label">states</span><span class="stat-value">5</span></div>
+  <div class="stat-row"><span class="stat-label">transitions</span><span class="stat-value">4</span></div>
+  <div class="stat-row"><span class="stat-label">sha256</span><span class="stat-value">w23-mach-2026101</span></div>
+</div>
+
+<div class="ui footer">
+  <span>&#128203; mech</span> &nbsp;&#128203; &nbsp;<a href="https://myaelmendez.github.io/mech-3d-webgl-engine.html">three.js</a> &nbsp;&#128203; &nbsp;RTX 3050 &nbsp;&#128203; &nbsp;<a href="https://myaelmendez.github.io/mech-3d-os.html">mech-3d-os</a>
+</div>
+
+<script>
+const { WebGLRenderer, Scene, PerspectiveCamera, Color, Vector3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial } = window THREE = window THREE || {};
+const renderer = new WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(new THREE.Color({ r:0, g:0, b:0 }));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 180);
+
+const nodeColors = {
+  'idle': '#D4AF37',
+  'plan': '#00FFFF',
+  'exec': '#00FF00',
+  'audit': '#FF00FF',
+  'sealed': '#FFFFFF',
+};
+
+const nodes = {};
+const idleMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({ color: new THREE.Color(nodeColors['idle']), emissive: new THREE.Color(nodeColors['idle']), emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+scene.add(idleMesh);
+nodes["idle"] = idleMesh;
+const planMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({ color: new THREE.Color(nodeColors['plan']), emissive: new THREE.Color(nodeColors['plan']), emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+scene.add(planMesh);
+nodes["plan"] = planMesh;
+const execMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({ color: new THREE.Color(nodeColors['exec']), emissive: new THREE.Color(nodeColors['exec']), emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+scene.add(execMesh);
+nodes["exec"] = execMesh;
+const auditMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({ color: new THREE.Color(nodeColors['audit']), emissive: new THREE.Color(nodeColors['audit']), emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+scene.add(auditMesh);
+nodes["audit"] = auditMesh;
+const sealedMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({ color: new THREE.Color(nodeColors['sealed']), emissive: new THREE.Color(nodeColors['sealed']), emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.7 });
+scene.add(sealedMesh);
+nodes["sealed"] = sealedMesh;
+
+const lineMat = new THREE.LineBasicMaterial({ color: 0x808080, transparent: true, opacity: 0.25 });
+const lines = [];
+lines.push(new THREE.LineSegments(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 120)
+  ]), lineMat);
+lines.push(new THREE.LineSegments(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 120)
+  ]), lineMat);
+lines.push(new THREE.LineSegments(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 120)
+  ]), lineMat);
+lines.push(new THREE.LineSegments(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 120)
+  ]), lineMat);
+
+const particleCount = 300;
+const positions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  positions[i*3] = (Math.random() - 0.5) * 360;
+  positions[i*3+1] = (Math.random() - 0.5) * 360;
+  positions[i*3+2] = Math.random() * 170 + 10;
+}
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const particleMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.5, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+const particles = new THREE.Points(particleGeo, particleMat);
+
+const amb = new THREE.AmbientLight({ color: new THREE.Color(0xD4AF37), intensity: 0.2 });
+scene.add(amb);
+const dir = new THREE.DirectionalLight({ color: new THREE.Color(0xD4AF37), intensity: 0.6, position: new THREE.Vector3(50, 80, 60) });
+dir.castShadow = true;
+scene.add(dir);
+const key = new THREE.DirectionalLight({ color: new THREE.Color(0x00FF00), intensity: 0.3, position: new THREE.Vector3(-40, 20, -30) });
+scene.add(key);
+const fill = new THREE.DirectionalLight({ color: new THREE.Color(0x00FFFF), intensity: 0.25, position: new THREE.Vector3(30, -20, 40) });
+scene.add(fill);
+
+const gridHelper = new THREE.GridHelper(280, 30, 0xD4AF37, 0x00FFFF);
+scene.add(gridHelper);
+
+// ── Render loop ──
+let frame = 0;
+window.__renderFrame = function(i, total) {
+  frame = i;
+  const time = i / (total - 1) * 6; // 6 second cycle
+  // Reactive dataflow: node positions follow Mech signals
+  for (const stage of Object.keys(nodes)) {
+    const mesh = nodes[stage];
+    mesh.rotation.x += 0.01;
+    mesh.position.y = 15 + 12 * Math.sin(time * 0.8 + 4.8);
+    mesh.material.color.setHex(0xFFFFFF);
+    mesh.material.emissive.setHex(0xFFFFFF);
+  }
+
+  renderer.setClearColor(new THREE.Color(0x050505));
+  renderer.render(scene, camera);
+}
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+})
+</script>
+</body>
+</html>

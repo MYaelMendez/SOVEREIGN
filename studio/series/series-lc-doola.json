@@ -1,0 +1,63 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "doola · business in a box · formation to compliance",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "3-doola",
+      "title": "DOOLA",
+      "subtitle": "business in a box · formation to compliance",
+      "phases": ["what", "stack", "reach"],
+      "titles": ["DOOLA", "THE STACK", "BUILT FOR FOUNDERS"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "DOOLA",
+          "lines": [
+            ["BUSINESS IN A BOX", "#FFD700", "900", 48, 92],
+            ["formation → compliance", "#00ff9d", "700", 36, 68],
+            ["48+ lectures · 9 categories", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["form", "LLC or C-Corp · any state"],
+            ["agent", "registered agent service"],
+            ["tax", "EIN · ITIN · SSN · sales tax"],
+            ["book", "bookkeeping + dashboard"],
+            ["bank", "US business bank account"],
+            ["analytics", "e-commerce growth dashboard"]
+          ],
+          "footer": "one platform, not a checklist"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["FORMATION", "#FFD700", "LLC · C-Corp · DAO LLC"],
+            ["COMPLIANCE", "#00e8ff", "tax · sales tax · ECI"],
+            ["FINANCIALS", "#00ff9d", "banking · bookkeeping"],
+            ["GROWTH", "#D4AF37", "analytics · affiliate program"]
+          ],
+          "closer": "from dream idea to dream business",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["DOOLA", "#FFD700", "900", 52, 80],
+            ["we intend to partner with them", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

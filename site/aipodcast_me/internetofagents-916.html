@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — #internetofagents #onepersoncompany</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:46px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:21px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æ://</div>
+  <h1 id="ttl">@yaelmendez</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">donna, texas · one human</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">#internetofagents &nbsp;·&nbsp; #onepersoncompany</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">operator</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — #internetofagents #onepersoncompany
+   9:16 · 1080x1920 · Canvas 2D only (the producer rejects modules).
+   Deterministic: seeded PRNG, every value a pure function of t.
+
+   The warm wash is baked in from the start. Pure void (#050505) is
+   luminance 5; the gate needs a mean above 20. A sparse gold-on-black
+   frame scores ~6 and is refused — correctly, because it has no mass.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the mesh backdrop */
+const MESH = (() => {
+  const rnd = mulberry32(11), out = [];
+  for (let i = 0; i < 58; i++) out.push({ x: rnd()*W, y: rnd()*H, vx:(rnd()-.5)*9, vy:(rnd()-.5)*9 });
+  return out;
+})();
+
+/* agents as business nodes — a vertical column, so it reads on a phone */
+const N_AGENTS = 24;
+const AGENTS = (() => {
+  const rnd = mulberry32(2026), out = [];
+  for (let i = 0; i < N_AGENTS; i++){
+    const side = i % 2 ? 1 : -1;
+    out.push({
+      y: 470 + i * 52,
+      x: W/2 + side * (150 + rnd()*230),
+      s: 3.2 + rnd()*3.4,
+      ph: rnd()*Math.PI*2,
+      hue: rnd() < 0.3 ? CYAN : GOLD,
+    });
+  }
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+
+  /* the warm wash — mass for the gate, and it still reads as gold in the dark */
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  // moving grid
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+
+  // mesh
+  for (const m of MESH){
+    m.x += m.vx*0.016; m.y += m.vy*0.016;
+    if (m.x < 0) m.x = W; if (m.x > W) m.x = 0;
+    if (m.y < 0) m.y = H; if (m.y > H) m.y = 0;
+  }
+  cx.lineWidth = 1.3;
+  for (let i = 0; i < MESH.length; i++)
+    for (let j = i+1; j < MESH.length; j++){
+      const a = MESH[i], b = MESH[j], dx = a.x-b.x, dy = a.y-b.y, d2 = dx*dx+dy*dy;
+      if (d2 < 42000){
+        const o = (1 - d2/42000) * 0.28;
+        cx.strokeStyle = 'rgba(0,234,255,' + o.toFixed(3) + ')';
+        cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+      }
+    }
+  for (const m of MESH){
+    cx.fillStyle = 'rgba(212,175,55,0.72)';
+    cx.beginPath(); cx.arc(m.x,m.y,2.3,0,7); cx.fill();
+  }
+}
+
+function phaseAt(t){
+  if (t < 3.5)  return ['operator', 'donna, texas · one human'];
+  if (t < 7.5)  return ['lineage',  'the words came first'];
+  if (t < 11.5) return ['one',      '一人公司 · one-person company'];
+  if (t < 15)   return ['network',  'every agent a business node'];
+  return ['launch', 'point your agents at me'];
+}
+function titleAt(t){
+  if (t < 3.5)  return '@yaelmendez';
+  if (t < 7.5)  return 'THE WORDS';
+  if (t < 11.5) return 'ONE PERSON';
+  if (t < 15)   return 'MANY AGENTS';
+  return '#STARTABUSINESS';
+}
+
+/* ── act 1: the operator ───────────────────────────────── */
+function drawOperator(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 900;
+  cx.globalAlpha = ease(on);
+
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.30*(0.7+0.3*pulse(t,2.4))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 190px "Orbitron", sans-serif';
+  cx.globalAlpha = ease(on) * ease(seg(t,0.3,1.1));
+  cx.fillText('æ', cxp, cyp + 66);
+
+  const lines = [
+    ['one human',              GOLD,  0.9],
+    ['one company',            GOLD,  1.1],
+    ['one intent',             CYAN,  1.3],
+  ];
+  cx.font = '700 40px "JetBrains Mono", monospace';
+  for (let i = 0; i < lines.length; i++){
+    const [txt, col, at] = lines[i];
+    cx.globalAlpha = ease(on) * ease(seg(t, at, at + 0.5));
+    cx.fillStyle = col;
+    cx.fillText(txt, cxp, cyp + 190 + i*62);
+  }
+  cx.restore();
+}
+
+/* ── act 2: the lineage ────────────────────────────────── */
+function drawLineage(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  const rows = [
+    ['#promptification', 'the act — shaping AI through language', 3.7],
+    ['#hermiphication',  'the carriers — agents carry human intent', 4.9],
+    ['#internetofagents','the network — every agent a business node', 6.1],
+  ];
+  cx.textAlign = 'center';
+  for (let i = 0; i < rows.length; i++){
+    const [tag, desc, at] = rows[i];
+    const a = ease(seg(t, at, at + 0.6));
+    const y = 700 + i*250;
+    cx.globalAlpha = ease(on) * a;
+
+    const bw = 760, bh = 150;
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.34*a).toFixed(3) + ')';
+    cx.lineWidth = 1.5;
+    cx.strokeRect(cxp - bw/2, y - 74, bw, bh);
+    cx.fillStyle = 'rgba(212,175,55,0.06)';
+    cx.fillRect(cxp - bw/2, y - 74, bw, bh);
+
+    cx.fillStyle = GOLDHI;
+    cx.font = '900 46px "Orbitron", sans-serif';
+    cx.fillText(tag, cxp, y - 12);
+    cx.fillStyle = CYAN;
+    cx.font = '400 20px "JetBrains Mono", monospace';
+    cx.fillText(desc, cxp, y + 38);
+
+    if (i < rows.length - 1){
+      const aa = ease(seg(t, at + 0.5, at + 0.9));
+      cx.globalAlpha = ease(on) * aa;
+      cx.strokeStyle = GOLD; cx.lineWidth = 2;
+      cx.beginPath(); cx.moveTo(cxp, y + 84); cx.lineTo(cxp, y + 152); cx.stroke();
+      cx.beginPath(); cx.moveTo(cxp - 12, y + 136); cx.lineTo(cxp, y + 154);
+      cx.lineTo(cxp + 12, y + 136); cx.stroke();
+    }
+  }
+  cx.restore();
+}
+
+/* ── act 3: one person, many agents ────────────────────── */
+function drawOneMany(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 7.6, 8.3));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 96px "Orbitron", sans-serif';
+  cx.fillText('一人公司', cxp, 700);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.2, 8.9));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('ONE-PERSON COMPANY', cxp, 770);
+
+  // the org chart: one human at the top, agents fanning out below
+  const hub = { x: cxp, y: 950 };
+  const rnd = mulberry32(99);
+  const leaf = [];
+  for (let i = 0; i < 11; i++){
+    const ang = (-0.5 + i/10) * Math.PI * 1.0 + Math.PI*0.5;
+    const r = 300 + rnd()*90;
+    leaf.push({ x: hub.x + Math.cos(ang)*r*1.15, y: hub.y + Math.abs(Math.sin(ang))*r*1.25 });
+  }
+  const app = ease(seg(t, 8.8, 10.6));
+  for (let i = 0; i < leaf.length; i++){
+    const l = leaf[i];
+    const la = clamp(app*leaf.length - i, 0, 1);
+    if (la <= 0) continue;
+    cx.globalAlpha = ease(on) * la * 0.85;
+    cx.strokeStyle = 'rgba(0,234,255,0.55)'; cx.lineWidth = 1.6;
+    cx.beginPath(); cx.moveTo(hub.x, hub.y); cx.lineTo(l.x, l.y); cx.stroke();
+    cx.fillStyle = CYAN;
+    cx.beginPath(); cx.arc(l.x, l.y, 9, 0, 7); cx.fill();
+    cx.globalAlpha = ease(on) * la * 0.55;
+    cx.fillStyle = 'rgba(0,234,255,0.5)';
+    cx.beginPath(); cx.arc(l.x, l.y, 17, 0, 7); cx.fill();
+  }
+  // the human
+  cx.globalAlpha = ease(on);
+  const hp = 0.7 + 0.3*pulse(t, 3);
+  const hg = cx.createRadialGradient(hub.x, hub.y, 0, hub.x, hub.y, 96);
+  hg.addColorStop(0, 'rgba(255,215,0,' + (0.65*hp) + ')');
+  hg.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = hg; cx.beginPath(); cx.arc(hub.x, hub.y, 96, 0, 7); cx.fill();
+  cx.fillStyle = GOLDHI;
+  cx.beginPath(); cx.arc(hub.x, hub.y, 34, 0, 7); cx.fill();
+  cx.fillStyle = '#0a0a0a';
+  cx.font = '900 34px "Orbitron", sans-serif';
+  cx.fillText('æ', hub.x, hub.y + 12);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.2, 10.9));
+  cx.fillStyle = GOLD;
+  cx.font = '700 30px "JetBrains Mono", monospace';
+  cx.fillText('the human holds authority', cxp, 1660);
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.6, 11.2));
+  cx.fillStyle = CYAN;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('context may propagate · authority does not', cxp, 1712);
+  cx.restore();
+}
+
+/* ── act 4: the network ────────────────────────────────── */
+function drawNetwork(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = H*0.52;
+  cx.globalAlpha = ease(on);
+  const shown = Math.floor(N_AGENTS * ease(seg(t, 11.6, 14.2)));
+  const rot = (t - 11.5) * 0.5;
+
+  // the spine
+  cx.strokeStyle = 'rgba(212,175,55,0.22)'; cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(cxp, 420); cx.lineTo(cxp, 1580); cx.stroke();
+
+  for (let i = 0; i < shown; i++){
+    const a = AGENTS[i];
+    const y = a.y + Math.sin(t*1.6 + a.ph) * 9;
+    const x = cxp + (a.x - cxp) * (0.55 + 0.45*Math.abs(Math.cos(rot + a.ph)));
+    const tw = 0.55 + 0.45*Math.sin(t*2.4 + a.ph);
+    cx.globalAlpha = ease(on) * tw;
+    cx.strokeStyle = 'rgba(0,234,255,0.42)'; cx.lineWidth = 1.3;
+    cx.beginPath(); cx.moveTo(cxp, y); cx.lineTo(x, y); cx.stroke();
+    cx.fillStyle = a.hue;
+    cx.beginPath(); cx.arc(x, y, a.s, 0, 7); cx.fill();
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.6, 14.3));
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 74px "Orbitron", sans-serif';
+  cx.fillText('INTERNET', cxp, 700);
+  cx.fillText('OF AGENTS', cxp, 786);
+  cx.fillStyle = CYAN;
+  cx.font = '400 27px "JetBrains Mono", monospace';
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.1, 14.7));
+  cx.fillText('every agent a business node', cxp, 850);
+  cx.restore();
+}
+
+/* ── act 5: launch ─────────────────────────────────────── */
+function drawLaunch(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 880;
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.24)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 168px "Orbitron", sans-serif';
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.1, 15.7));
+  cx.fillText('æ', cxp, cyp + 58);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.5, 16.1));
+  cx.font = '900 54px "Orbitron", sans-serif';
+  cx.fillStyle = TXT;
+  cx.fillText('#STARTABUSINESS', cxp, cyp + 150);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.0, 16.6));
+  cx.font = '400 28px "JetBrains Mono", monospace';
+  cx.fillStyle = CYAN;
+  cx.fillText('point your agents at me', cxp, cyp + 218);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.4, 17.0));
+  cx.fillStyle = GOLD;
+  cx.font = '700 25px "JetBrains Mono", monospace';
+  cx.fillText('partnersps.doola.com/hhsoqhb23250', cxp, cyp + 286);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.8, 17.4));
+  cx.fillStyle = TXT;
+  cx.font = '700 34px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, cyp + 372);
+  cx.globalAlpha = ease(on) * ease(seg(t, 17.1, 17.7));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, cyp + 424);
+  cx.restore();
+}
+
+/* ── HUD ───────────────────────────────────────────────── */
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+/* ── the frame ─────────────────────────────────────────── */
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+
+  drawOperator(t, ease(seg(t,0,0.6)) * (1 - ease(seg(t,3.2,3.8))));
+  drawLineage(t, ease(seg(t,3.5,4.1)) * (1 - ease(seg(t,7.2,7.8))));
+  drawOneMany(t, ease(seg(t,7.5,8.1)) * (1 - ease(seg(t,11.2,11.8))));
+  drawNetwork(t, ease(seg(t,11.5,12.1)) * (1 - ease(seg(t,14.7,15.2))));
+  drawLaunch(t, ease(seg(t,15.0,15.7)));
+}
+
+/* ── the external frame hook ───────────────────────────── */
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

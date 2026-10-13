@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — æææ:/// the namespace, layer by layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:46px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:21px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">æææ:///</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">the agentic systems root index</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">root</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — æææ:/// the namespace, layer by layer
+   9:16 · 1080x1920 · Canvas 2D only.
+
+   LEARNED FROM THE SURFACE (aea-index.html), not invented. The real roster is
+   12 categories, 00 → 11, running from ROOT (the human principal) to PLACE
+   (local intelligence). The node names below are read from that index.
+
+   The warm wash is written in from the first line: gold on void #050505 is
+   luminance 5, and the gate refuses a frame with no mass.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* ── THE ROSTER — read from aea-index.html, not invented ── */
+const LAYERS = [
+  ['00','ROOT',        'HUMAN PRINCIPAL',        ['æææ.com','HUMAN://ROOT']],
+  ['01','SELF',        'IDENTITY · PRESENCE',    ['Yæl.com','æl.net','Æ.me']],
+  ['02','PUBLIC',      'PRIVATE · SOVEREIGN',    ['PUBLIC://','PrivateClient.ai','Soværeign.com','Omarchy']],
+  ['03','INTENT',      'INVOCATION · COMMAND',   ['CommandPrompt.ai','CLI.LLC']],
+  ['04','INTELLIGENCE','MODELS · AGENTS',        ['LLM.store','Hermes','OpenClaw']],
+  ['05','CAPABILITY',  'TOOLS · PROTOCOLS',      ['æ.store','MCP','A2A','AG-UI']],
+  ['06','COGNITION',   'ONTOLOGY · DISTRIBUTION',['Neuromitosis.com','Neural Ontology','Agentic NN']],
+  ['07','EVOLUTION',   'LINEAGE · MOLT',         ['Molt.earth','MoltContextProtocol','Enchiridion 64']],
+  ['08','ECONOMICS',   'ORGANIZATION · VALUE',   ['DAOLLC.ai','#startabusiness','Consumer Redline']],
+  ['09','KNOWLEDGE',   'THEOLOGY · EDUCATION',   ['Teologia.ai','Teología.org','Molt School']],
+  ['10','NETWORK',     'INTERNET OF AGENTS',     ['Internet of Agents','Command Line Internet']],
+  ['11','PLACE',       'LOCAL INTELLIGENCE',     ['Zacapa.ai  ·  LOCAL → GLOBAL']],
+];
+const CATS = LAYERS.length;
+
+/* the mesh backdrop */
+const MESH = (() => {
+  const rnd = mulberry32(88), out = [];
+  for (let i = 0; i < 52; i++) out.push({ x: rnd()*W, y: rnd()*H, vx:(rnd()-.5)*8, vy:(rnd()-.5)*8 });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+
+  for (const m of MESH){
+    m.x += m.vx*0.016; m.y += m.vy*0.016;
+    if (m.x < 0) m.x = W; if (m.x > W) m.x = 0;
+    if (m.y < 0) m.y = H; if (m.y > H) m.y = 0;
+  }
+  cx.lineWidth = 1.2;
+  for (let i = 0; i < MESH.length; i++)
+    for (let j = i+1; j < MESH.length; j++){
+      const a = MESH[i], b = MESH[j], dx = a.x-b.x, dy = a.y-b.y, d2 = dx*dx+dy*dy;
+      if (d2 < 40000){
+        cx.strokeStyle = 'rgba(0,234,255,' + ((1-d2/40000)*0.26).toFixed(3) + ')';
+        cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+      }
+    }
+  for (const m of MESH){
+    cx.fillStyle = 'rgba(212,175,55,0.70)';
+    cx.beginPath(); cx.arc(m.x,m.y,2.2,0,7); cx.fill();
+  }
+}
+
+function phaseAt(t){
+  if (t < 3.0)  return ['root',    'one principal at the root'];
+  if (t < 11.6) return ['layers',  'twelve categories · 00 → 11'];
+  if (t < 14.6) return ['chain',   'human → ontology → compute → agency → receipt'];
+  return ['mark', 'the namespace is the runtime'];
+}
+function titleAt(t){
+  if (t < 3.0)  return 'HUMAN://ROOT';
+  if (t < 11.6) return 'THE NAMESPACE';
+  if (t < 14.6) return 'THE ORDER';
+  return 'æææ:///';
+}
+
+/* ── act 1: the root ───────────────────────────────────── */
+function drawRoot(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 930;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.32*(0.7+0.3*pulse(t,2.5))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 118px "Orbitron", sans-serif';
+  cx.fillText('æææ', cxp, cyp + 34);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.0, 1.6));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('HUMAN://ROOT', cxp, cyp + 150);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.5, 2.1));
+  cx.fillStyle = CYAN;
+  cx.font = '400 27px "JetBrains Mono", monospace';
+  cx.fillText('ONE PRINCIPAL', cxp, cyp + 206);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.0, 2.6));
+  cx.fillStyle = GOLD;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('everything below is addressed from here', cxp, cyp + 272);
+  cx.restore();
+}
+
+/* ── act 2: the twelve layers scroll past ──────────────── */
+function drawLayers(t, on){
+  if (on <= 0) return;
+  cx.save();
+
+  const per = (11.6 - 3.0) / CATS;      // time each layer owns
+  const top = 380, rowH = 118;
+  const first = Math.max(0, Math.floor((t - 3.0) / per) - 1);
+
+  for (let i = first; i < Math.min(CATS, first + 6); i++){
+    const [num, name, sub, nodes] = LAYERS[i];
+    const at = 3.0 + i * per;
+    const a = ease(seg(t, at, at + per*0.55));
+    const y = top + (i - first) * rowH;
+
+    cx.globalAlpha = ease(on) * a;
+
+    // the row plate
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.34*a).toFixed(3) + ')';
+    cx.lineWidth = 1.5;
+    cx.strokeRect(72, y - 44, 936, 96);
+    cx.fillStyle = 'rgba(212,175,55,0.07)';
+    cx.fillRect(72, y - 44, 936, 96);
+
+    // the number
+    cx.textAlign = 'left';
+    cx.fillStyle = GOLD;
+    cx.font = '900 46px "Orbitron", sans-serif';
+    cx.fillText(num, 100, y + 16);
+
+    // the name
+    cx.fillStyle = GOLDHI;
+    cx.font = '900 38px "Orbitron", sans-serif';
+    cx.fillText(name, 200, y + 4);
+
+    // the sub-line
+    cx.fillStyle = CYAN;
+    cx.font = '400 19px "JetBrains Mono", monospace';
+    cx.fillText(sub, 200, y + 34);
+
+    // the nodes — the actual contents
+    cx.fillStyle = 'rgba(242,239,230,0.62)';
+    cx.font = '400 17px "JetBrains Mono", monospace';
+    cx.textAlign = 'right';
+    cx.fillText(nodes.join('  ·  '), 986, y + 4);
+
+    // a rail on the left, so the column reads as one stack
+    cx.globalAlpha = ease(on) * a * 0.6;
+    cx.strokeStyle = GOLD; cx.lineWidth = 2;
+    cx.beginPath(); cx.moveTo(58, y - 44); cx.lineTo(58, y + 52); cx.stroke();
+  }
+  cx.restore();
+}
+
+/* ── act 3: the order ──────────────────────────────────── */
+function drawOrder(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.7, 12.3));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 54px "Orbitron", sans-serif';
+  cx.fillText('THE ORDER', cxp, 720);
+
+  const steps = ['HUMAN', 'ONTOLOGY', 'COMPUTE', 'AGENCY', 'RECEIPT'];
+  for (let i = 0; i < steps.length; i++){
+    const at = 12.4 + i * 0.42;
+    const a = ease(seg(t, at, at + 0.4));
+    const y = 860 + i * 170;
+    cx.globalAlpha = ease(on) * a;
+
+    const bw = 560, bh = 104;
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.40*a).toFixed(3) + ')';
+    cx.lineWidth = 1.6;
+    cx.strokeRect(cxp - bw/2, y - 30, bw, bh);
+    cx.fillStyle = 'rgba(212,175,55,0.08)';
+    cx.fillRect(cxp - bw/2, y - 30, bw, bh);
+
+    cx.fillStyle = i === 0 ? GOLDHI : (i === steps.length-1 ? NEON : TXT);
+    cx.font = '900 42px "Orbitron", sans-serif';
+    cx.fillText(steps[i], cxp, y + 30);
+
+    if (i < steps.length - 1){
+      cx.globalAlpha = ease(on) * a * ease(seg(t, at + 0.3, at + 0.6));
+      cx.strokeStyle = GOLD; cx.lineWidth = 2.4;
+      cx.beginPath(); cx.moveTo(cxp, y + 76); cx.lineTo(cxp, y + 132); cx.stroke();
+      cx.beginPath(); cx.moveTo(cxp-13, y+116); cx.lineTo(cxp, y+134);
+      cx.lineTo(cxp+13, y+116); cx.stroke();
+    }
+  }
+  cx.restore();
+}
+
+/* ── act 4: the mark ───────────────────────────────────── */
+function drawMark(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 900;
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.24)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.7, 15.3));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 130px "Orbitron", sans-serif';
+  cx.fillText('æææ', cxp, cyp + 30);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.1, 15.7));
+  cx.fillStyle = TXT;
+  cx.font = '900 60px "Orbitron", sans-serif';
+  cx.fillText('THE NAMESPACE', cxp, cyp + 128);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.5, 16.1));
+  cx.fillStyle = CYAN;
+  cx.font = '400 27px "JetBrains Mono", monospace';
+  cx.fillText('twelve layers · one principal', cxp, cyp + 186);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.9, 16.5));
+  cx.fillStyle = GOLD;
+  cx.font = '700 25px "JetBrains Mono", monospace';
+  cx.fillText('æææ.com', cxp, cyp + 250);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.3, 16.9));
+  cx.fillStyle = TXT;
+  cx.font = '700 40px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, cyp + 336);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.7, 17.3));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('partnersps.doola.com/hhsoqhb23250', cxp, cyp + 396);
+  cx.globalAlpha = ease(on) * ease(seg(t, 17.0, 17.6));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, cyp + 450);
+  cx.restore();
+}
+
+/* ── HUD ───────────────────────────────────────────────── */
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+/* ── the frame ─────────────────────────────────────────── */
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+
+  drawRoot(t,   ease(seg(t,0,0.5))    * (1 - ease(seg(t,2.8,3.2))));
+  drawLayers(t, ease(seg(t,3.0,3.4))  * (1 - ease(seg(t,11.4,11.8))));
+  drawOrder(t,  ease(seg(t,11.7,12.1)) * (1 - ease(seg(t,14.4,14.8))));
+  drawMark(t,   ease(seg(t,14.7,15.3)));
+}
+
+/* ── the external frame hook ───────────────────────────── */
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

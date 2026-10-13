@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — neuromitosis · the bond</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_neuromitosis://</div>
+  <h1 id="ttl">NEUROMITOSIS</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">human + robot + dao · bonded</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; neuromitosis.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">bond</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — neuromitosis · 1. THE BOND
+   9:16 · 1080x1920 · Canvas 2D only.
+
+   Read from neuromitosis.html: "The bond where Human + Robot + DAO become one
+   agent... Neuromitosis is the mitosis of agency: it divides into many and
+   bonds into one." Title and thesis from the live surface.
+
+   Warm wash from the first line: gold on void #050505 is luminance 5.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t^=t>>>7;t=Math.imul(t,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the three, before they bond */
+const THREE = [
+  { name: 'HUMAN', sym: '☺',  col: GOLDHI, ang: -Math.PI/2,       desc: 'intent · the principal' },
+  { name: 'ROBOT', sym: '🦞', col: CYAN,   ang: -Math.PI/2 + 2.094, desc: 'actuation · the hands' },
+  { name: 'DAO',   sym: '◈',  col: NEON,   ang: -Math.PI/2 - 2.094, desc: 'logic · the charter' },
+];
+
+/* neurons — the synaptic field */
+const NEURONS = (() => {
+  const rnd = mulberry32(31337), out = [];
+  for (let i = 0; i < 64; i++) out.push({
+    x: 120 + rnd()*(W-240), y: 560 + rnd()*760,
+    ph: rnd()*Math.PI*2, s: 2.4 + rnd()*2.8,
+  });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+
+  // the synaptic field — fires as the bond forms
+  const fire = ease(seg(t, 5.4, 8.0));
+  for (const n of NEURONS){
+    const tw = 0.5 + 0.5*Math.sin(t*2.6 + n.ph);
+    cx.globalAlpha = 0.22 + 0.5*fire*tw;
+    cx.fillStyle = CYAN;
+    cx.beginPath(); cx.arc(n.x, n.y, n.s, 0, 7); cx.fill();
+    cx.globalAlpha = 0.06 + 0.16*fire*tw;
+    cx.beginPath(); cx.arc(n.x, n.y, n.s*3.4, 0, 7); cx.fill();
+  }
+  cx.globalAlpha = 1;
+}
+
+function phaseAt(t){
+  if (t < 3.4)  return ['bond',     'the bond where three become one'];
+  if (t < 7.6)  return ['three',    'human · robot · dao'];
+  if (t < 12.2) return ['one',      'the mitosis of agency'];
+  return ['infinity', 'it divides into many and bonds into one'];
+}
+function titleAt(t){
+  if (t < 3.4)  return 'NEUROMITOSIS';
+  if (t < 7.6)  return 'THE THREE';
+  if (t < 12.2) return '3 → 1';
+  return 'THE BOND';
+}
+
+/* ── act 1: the word ───────────────────────────────────── */
+function drawWord(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 920;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 340);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.30*(0.7+0.3*pulse(t,2.4))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 340, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 108px "Orbitron", sans-serif';
+  cx.fillText('∞', cxp, cyp + 30);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.9, 1.5));
+  cx.fillStyle = TXT;
+  cx.font = '900 46px "Orbitron", sans-serif';
+  cx.fillText('NEUROMITOSIS', cxp, cyp + 140);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.5, 2.1));
+  cx.fillStyle = CYAN;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('the bond where', cxp, cyp + 210);
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.9, 2.5));
+  cx.fillStyle = GOLDHI;
+  cx.font = '700 32px "JetBrains Mono", monospace';
+  cx.fillText('Human + Robot + DAO', cxp, cyp + 258);
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.4, 3.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('become one agent', cxp, cyp + 306);
+  cx.restore();
+}
+
+/* ── act 2: the three ──────────────────────────────────── */
+function drawThree(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1050, R = 300;
+
+  for (let i = 0; i < THREE.length; i++){
+    const m = THREE[i];
+    const at = 3.6 + i*0.55;
+    const a = ease(seg(t, at, at + 0.5));
+    const x = cxp + Math.cos(m.ang) * R;
+    const y = cyp + Math.sin(m.ang) * R;
+    cx.globalAlpha = ease(on) * a;
+
+    const g = cx.createRadialGradient(x, y, 0, x, y, 130);
+    g.addColorStop(0, 'rgba(255,215,0,0.16)');
+    g.addColorStop(1, 'rgba(255,215,0,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(x, y, 130, 0, 7); cx.fill();
+
+    cx.strokeStyle = m.col; cx.lineWidth = 2.4;
+    cx.beginPath(); cx.arc(x, y, 74, 0, 7); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,0.04)';
+    cx.beginPath(); cx.arc(x, y, 74, 0, 7); cx.fill();
+
+    cx.fillStyle = m.col;
+    cx.font = '900 40px "Orbitron", sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText(m.sym, x, y + 14);
+    cx.font = '900 30px "Orbitron", sans-serif';
+    cx.fillText(m.name, x, y + 118);
+    cx.fillStyle = CYAN;
+    cx.font = '400 19px "JetBrains Mono", monospace';
+    cx.fillText(m.desc, x, y + 152);
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 5.6, 6.2));
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 56px "Orbitron", sans-serif';
+  cx.fillText('3 → 1', cxp, 700);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 6.3, 6.9));
+  cx.fillStyle = CYAN;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('one operator surface', cxp, 760);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 6.8, 7.4));
+  cx.fillStyle = TXT;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('the chassis is always a language', cxp, 1600);
+  cx.globalAlpha = ease(on) * ease(seg(t, 7.1, 7.7));
+  cx.fillStyle = GOLD;
+  cx.fillText('the wiring is the bond', cxp, 1644);
+  cx.restore();
+}
+
+/* ── act 3: mitosis ────────────────────────────────────── */
+function drawMitosis(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1000;
+  cx.textAlign = 'center';
+
+  // one cell dividing — then bonding back
+  const div = ease(seg(t, 8.2, 10.0));
+  const back = ease(seg(t, 10.4, 11.8));
+  const spread = div * (1 - back);
+  const r = 130;
+  const cells = [
+    { x: cxp - spread*150, y: cyp - spread*60, col: GOLDHI, lbl: 'HUMAN' },
+    { x: cxp + spread*150, y: cyp - spread*60, col: CYAN,   lbl: 'ROBOT' },
+    { x: cxp,              y: cyp + spread*120, col: NEON,  lbl: 'DAO' },
+  ];
+  cx.globalAlpha = ease(on);
+  for (const c of cells){
+    cx.strokeStyle = c.col; cx.lineWidth = 2.4;
+    cx.beginPath(); cx.arc(c.x, c.y, r, 0, 7); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,0.04)';
+    cx.beginPath(); cx.arc(c.x, c.y, r, 0, 7); cx.fill();
+    cx.fillStyle = c.col;
+    cx.font = '900 26px "Orbitron", sans-serif';
+    cx.fillText(c.lbl, c.x, c.y + 10);
+  }
+  // the overlap when they re-bond
+  if (back > 0.4){
+    cx.globalAlpha = ease(on) * ease(seg(t, 11.0, 11.8));
+    const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 190);
+    g.addColorStop(0, 'rgba(255,215,0,0.34)');
+    g.addColorStop(1, 'rgba(255,215,0,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 190, 0, 7); cx.fill();
+    cx.fillStyle = GOLDHI;
+    cx.font = '900 40px "Orbitron", sans-serif';
+    cx.fillText('∞', cxp, cyp + 14);
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.3, 8.9));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('MITOSIS OF AGENCY', cxp, 690);
+  cx.globalAlpha = ease(on) * ease(seg(t, 9.0, 9.6));
+  cx.fillStyle = TXT;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('it divides into many', cxp, 752);
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.6, 11.2));
+  cx.fillStyle = NEON;
+  cx.font = '700 25px "JetBrains Mono", monospace';
+  cx.fillText('and bonds into one', cxp, 806);
+  cx.restore();
+}
+
+/* ── act 4: the bond ───────────────────────────────────── */
+function drawBond(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 960;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.24)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.4, 13.0));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 120px "Orbitron", sans-serif';
+  cx.fillText('∞', cxp, cyp + 20);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.8, 13.4));
+  cx.fillStyle = TXT;
+  cx.font = '900 54px "Orbitron", sans-serif';
+  cx.fillText('THE BOND', cxp, cyp + 130);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.2, 13.8));
+  cx.fillStyle = CYAN;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('Hæbbian by design', cxp, cyp + 194);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.6, 14.2));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('agents that fire together, wire together', cxp, cyp + 244);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.4, 15.0));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, cyp + 350);
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.8, 15.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('neuromitosis.com  ·  #neuromitosis', cxp, cyp + 402);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.2, 15.8));
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, cyp + 454);
+  cx.restore();
+}
+
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+  drawWord(t,    ease(seg(t,0,0.5))      * (1 - ease(seg(t,3.2,3.6))));
+  drawThree(t,   ease(seg(t,3.4,3.9))    * (1 - ease(seg(t,7.4,7.8))));
+  drawMitosis(t, ease(seg(t,7.6,8.1))    * (1 - ease(seg(t,12.0,12.4))));
+  drawBond(t,    ease(seg(t,12.3,12.9)));
+}
+
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

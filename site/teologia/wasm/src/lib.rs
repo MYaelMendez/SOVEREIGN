@@ -168,6 +168,76 @@ pub fn artifacts() -> Vec<Artifact> {
             3,
             "Eclesiología luterana: el primado papal no es de derecho divino, 1537.",
         ),
+        artifact(
+            "tesis",
+            "Las 95 Tesis",
+            1517,
+            "b287d6c4",
+            90_355,
+            287_072,
+            3,
+            "El documento que inició la Reforma: indulgencias, penitencia y autoridad papal, 1517.",
+        ),
+        artifact(
+            "nobleza",
+            "A la Nobleza Cristiana",
+            1520,
+            "c722e7ed",
+            84_320,
+            138_697,
+            5,
+            "El programa de la Reforma: las tres murallas del papado, 1520.",
+        ),
+        artifact(
+            "cautividad",
+            "La Cautividad Babilónica",
+            1520,
+            "da576932",
+            73_069,
+            140_526,
+            4,
+            "La teología sacramental: solo dos sacramentos tienen base bíblica, 1520.",
+        ),
+        artifact(
+            "libertad",
+            "La Libertad Cristiana",
+            1520,
+            "c8629a8c",
+            73_780,
+            152_648,
+            5,
+            "Libre señor de todo, servidor de todos: la fe que obra por el amor, 1520.",
+        ),
+        artifact(
+            "apostolico",
+            "Credo Apostólico",
+            390,
+            "749dd538",
+            76_944,
+            135_444,
+            4,
+            "La fe bautismal de la Iglesia: doce artículos sobre la Trinidad.",
+        ),
+        artifact(
+            "niceno",
+            "Credo Niceno",
+            325,
+            "8dc9fb1c",
+            78_446,
+            138_920,
+            4,
+            "La fe de los concilios de Nicea y Constantinopla: la divinidad de Cristo, 325 y 381.",
+        ),
+        artifact(
+            "atanasio",
+            "Credo Atanasiano",
+            500,
+            "4c006f18",
+            80_085,
+            262_535,
+            5,
+            "La fe trinitaria y cristológica: la Quicumque, tres personas una sustancia.",
+        ),
     ]
 }
 
@@ -253,8 +323,8 @@ mod tests {
     }
 
     #[test]
-    fn ten_artifacts() {
-        assert_eq!(artifacts().len(), 10);
+    fn seventeen_artifacts() {
+        assert_eq!(artifacts().len(), 17);
         let ids: Vec<_> = artifacts().into_iter().map(|a| a.id).collect();
         assert!(ids.contains(&"formula".to_string()));
         assert!(ids.contains(&"libro".to_string()));
@@ -262,6 +332,13 @@ mod tests {
         assert!(ids.contains(&"apologia".to_string()));
         assert!(ids.contains(&"smalcalda".to_string()));
         assert!(ids.contains(&"tratado".to_string()));
+        assert!(ids.contains(&"tesis".to_string()));
+        assert!(ids.contains(&"nobleza".to_string()));
+        assert!(ids.contains(&"cautividad".to_string()));
+        assert!(ids.contains(&"libertad".to_string()));
+        assert!(ids.contains(&"apostolico".to_string()));
+        assert!(ids.contains(&"niceno".to_string()));
+        assert!(ids.contains(&"atanasio".to_string()));
     }
 
     #[test]

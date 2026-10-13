@@ -51,7 +51,7 @@ print("  three importmap  :", has_three)
 print("  cdn refs         :", n_cdn)
 print("  unclosed divs    :", n_div)
 
-ok = (n_badge == 1 and n_cards == 17 and n_ask == 17
+ok = (n_badge == 1 and n_cards == 20 and n_ask == 17
       and has_wgsl and has_webllm and has_three and n_cdn == 0 and n_div == 0)
 print("\n  RESULT           :", "PASS" if ok else "FAIL")
 sys.exit(0 if ok else 2)

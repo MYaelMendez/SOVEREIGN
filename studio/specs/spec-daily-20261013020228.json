@@ -1,0 +1,18 @@
+{
+  "title": "\u00e6:// Daily Pod \u2014 daily philosophy gathering",
+  "subtitle": "Semana 23 \u00b7 2026-10-13 \u00b7 0 X posts \u00b7 0 Bluesky posts",
+  "scene_guide": "daily gathering from #schoolofhermes",
+  "themes": [
+    "daily gathering from #schoolofhermes"
+  ],
+  "source_feed": "24c70931651875ad9dac429ec5ec7cd45adfd02932b2ef8ac531eaa76e1afd2b",
+  "source_files": [
+    "feeds-2026-10-13.json"
+  ],
+  "duration": 15,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "demo-series-montage.html",
+  "spec_number": 2026101302
+}

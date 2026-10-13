@@ -1,0 +1,63 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "render pipeline · first principles · deterministic",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "5-render",
+      "title": "HOW WE RENDER",
+      "subtitle": "code to pixels to verified video",
+      "phases": ["pipeline", "principles", "verified"],
+      "titles": ["THE PIPELINE", "FIRST PRINCIPLES", "VERIFIED"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "HOW WE RENDER",
+          "lines": [
+            ["CODE → PIXELS → VIDEO", "#FFD700", "900", 44, 92],
+            ["no camera · no ML · no cloud", "#00ff9d", "700", 32, 68],
+            ["deterministic · local · verified", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["scene", "HTML + Canvas 2D · 1080x1920"],
+            ["capture", "Chrome CDP · __renderFrame(i, total)"],
+            ["encode", "ffmpeg 7.1 · h264_nvenc · driver 592.27"],
+            ["gate", "lum > 20 · con > 8 · mov > 0.5 · 0 black"],
+            ["deploy", "github.io · sha256 byte-identical"],
+            ["verify", "serve + hash + compare, not hope"]
+          ],
+          "footer": "draw a frame, repeat 30 times per second"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["NO CAMERA", "#FFD700", "pure code → pixels"],
+            ["NO ML", "#00e8ff", "deterministic Canvas 2D"],
+            ["NO CLOUD", "#00ff9d", "local RTX 3050"],
+            ["NO TRUST", "#D4AF37", "gate PASS or refuse"]
+          ],
+          "closer": "rendering is just drawing, repeated",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["HOW WE RENDER", "#FFD700", "900", 48, 76],
+            ["first principles · deterministic · local", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

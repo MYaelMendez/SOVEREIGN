@@ -1,1 +1,126 @@
-{"artifact": "teologia.ai/platform", "artifacts": [{"bytes": 65341, "file": "una-manera-sencilla-de-orar.html", "sha256": "47f2930f87440f0f07cb31b678144462f7506cfbba8d235170bbf90a4e20f1f7", "sha256_prefix": "47f2930f87440f0f"}, {"bytes": 102723, "file": "catecismo-menor.html", "sha256": "61257812a13d9151b286b253c9671c62b8782444b663356a764d9f15a7d248b8", "sha256_prefix": "61257812a13d9151"}, {"bytes": 77499, "file": "enchiridion.html", "sha256": "d93724e28f74f7cf791c3ff0eca9c16746fcc83804e5157daf432730c0d4ca8f", "sha256_prefix": "d93724e28f74f7cf"}, {"bytes": 86923, "file": "catecismo-mayor.html", "sha256": "30a9a8ddda3d65975b2c3f3d83cbd4cf0a925452bba8660fb1a1f780183af412", "sha256_prefix": "30a9a8ddda3d6597"}, {"bytes": 84679, "file": "formula-de-concordia.html", "sha256": "dc8fd685d10fc40745cc8b3c41c30bba0c605a233c6d9abe40def669c2a82066", "sha256_prefix": "dc8fd685d10fc407"}, {"bytes": 75294, "file": "libro-de-concordia.html", "sha256": "f2072f2208c03eac8af5179a6856c2a30ffea037117eb59c6b6722cc3d532888", "sha256_prefix": "f2072f2208c03eac"}, {"bytes": 88670, "file": "confesion-de-augsburgo.html", "sha256": "af4111c740b123f79eef187bd0bf02ff2e3139cf6784791d614d1d9841893423", "sha256_prefix": "af4111c740b123f7"}, {"bytes": 82380, "file": "apologia-de-la-confesion.html", "sha256": "35729ba245f98e3b5a92a88f7b9ae6f5f9741a0c3e584862156525b1f6421f0e", "sha256_prefix": "35729ba245f98e3b"}, {"bytes": 88588, "file": "articulos-de-smalcalda.html", "sha256": "2c21a1cf50e106cda2541f4c77af8ca820315d6c388c670e2ab5edd1336dc0c7", "sha256_prefix": "2c21a1cf50e106cd"}, {"bytes": 71583, "file": "tratado-del-primado.html", "sha256": "5946a5ea11b88b375c136b5e764ab062ead7a60d7c5f94a2577f22d60a075fdf", "sha256_prefix": "5946a5ea11b88b37"}], "issuer": "☺://cc", "region": "es-LATAM"}
+{
+  "artifact": "teologia.ai/platform",
+  "artifact_hash": "a73f9ea3e81d1374cb776776ee49b1ca2113787e4439bb0a2ef807a12144d0fc",
+  "artifacts": [
+    {
+      "file": "a-la-nobleza-cristiana.html",
+      "bytes": 84979,
+      "sha256": "1081904809036e6d937ef446cbd16aade2def71f79869a31b6287fc7ae5dfb52",
+      "sha256_prefix": "1081904809036e6d"
+    },
+    {
+      "file": "apologia-de-la-confesion.html",
+      "bytes": 83260,
+      "sha256": "be93e58d6dae0d53a384a96567bf2d913a16bcd38a3889bc5be07fcf2c8baf7e",
+      "sha256_prefix": "be93e58d6dae0d53"
+    },
+    {
+      "file": "articulos-de-smalcalda.html",
+      "bytes": 89466,
+      "sha256": "a4c3e0c2546ee14486c4d31897ce47619843ea9eaf332bd51ab53d1aee74fc3b",
+      "sha256_prefix": "a4c3e0c2546ee144"
+    },
+    {
+      "file": "catecismo-mayor.html",
+      "bytes": 87794,
+      "sha256": "96be2eade4eff892132384537a779b8185557b943b3ff100215cf2c3eebeec7f",
+      "sha256_prefix": "96be2eade4eff892"
+    },
+    {
+      "file": "catecismo-menor.html",
+      "bytes": 103594,
+      "sha256": "763421ab26364378fdab8958a6e63fa0cc599257b443455c800ab2669982732d",
+      "sha256_prefix": "763421ab26364378"
+    },
+    {
+      "file": "confesion-de-augsburgo.html",
+      "bytes": 89548,
+      "sha256": "839d2463014331686de1ea95e06b732473502532669a033e4b1dafcf008e4dc3",
+      "sha256_prefix": "839d246301433168"
+    },
+    {
+      "file": "credo-apostolico.html",
+      "bytes": 77795,
+      "sha256": "7eec9b966f40be89720c3fc0e10d81c189467a09d486ca781be4503f251f79c7",
+      "sha256_prefix": "7eec9b966f40be89"
+    },
+    {
+      "file": "credo-atanasio.html",
+      "bytes": 80946,
+      "sha256": "25bb7e76e2d1feddb8c16de7bd6a18fde0f8ecdd4395ca71012d0fdb1fbbe3a7",
+      "sha256_prefix": "25bb7e76e2d1fedd"
+    },
+    {
+      "file": "credo-niceno.html",
+      "bytes": 79374,
+      "sha256": "c847785b551b8cf1aa9cfc68c7fbdf7de590205e7834823c26ee96b55fb0ccb0",
+      "sha256_prefix": "c847785b551b8cf1"
+    },
+    {
+      "file": "enchiridion.html",
+      "bytes": 78366,
+      "sha256": "56fdb22bb3ce88914ec969c879007ca792813c5644e6f83f06fe5f77dfd3368e",
+      "sha256_prefix": "56fdb22bb3ce8891"
+    },
+    {
+      "file": "formula-de-concordia.html",
+      "bytes": 85555,
+      "sha256": "10bc260506297a87f38ee5eba44beb8b4bfb40ecbc3c15282a02a651fa4dee5b",
+      "sha256_prefix": "10bc260506297a87"
+    },
+    {
+      "file": "heidelberg.html",
+      "bytes": 2477,
+      "sha256": "9e901d720c24dd3e4aa55c558f322e3f99c48eea7cbba3031f0986e0ca4b814d",
+      "sha256_prefix": "9e901d720c24dd3e"
+    },
+    {
+      "file": "la-cautividad-babilonica.html",
+      "bytes": 73783,
+      "sha256": "eece8f0b45a47ff34c6b0dfcbe0a72ce145bce198ec251aaf7b6b6f02d76308c",
+      "sha256_prefix": "eece8f0b45a47ff3"
+    },
+    {
+      "file": "la-libertad-cristiana.html",
+      "bytes": 74516,
+      "sha256": "7ff667317f871b04ade2086429f3aeb67060b406133189abdc80893b47e5a415",
+      "sha256_prefix": "7ff667317f871b04"
+    },
+    {
+      "file": "lauterbuch.html",
+      "bytes": 2139,
+      "sha256": "6be89381b59f80897a250ea8cb6eca0a37d6adf1aa6f7ce84df49097d4b8536e",
+      "sha256_prefix": "6be89381b59f8089"
+    },
+    {
+      "file": "libro-de-concordia.html",
+      "bytes": 76168,
+      "sha256": "0057c8d277ad9820ba36f7c0f18eb5be4f43754fe54dfafca72f66c74acc1722",
+      "sha256_prefix": "0057c8d277ad9820"
+    },
+    {
+      "file": "los-dos-tipos-de-justicia.html",
+      "bytes": 2320,
+      "sha256": "98e54f25689f811d0158b8be7607db53802f1bf9ce0c556c5eccf7dc10c4142b",
+      "sha256_prefix": "98e54f25689f811d"
+    },
+    {
+      "file": "noventa-y-cinco-tesis.html",
+      "bytes": 90960,
+      "sha256": "565549eebe9fa7b8c8b6c834637f1eeda35ed4935fc651e52cd2e5c77d402500",
+      "sha256_prefix": "565549eebe9fa7b8"
+    },
+    {
+      "file": "tratado-del-primado.html",
+      "bytes": 72458,
+      "sha256": "c354a5916a953d46c4aa828bbafe7e783be21419b3bf2ed6689e6a9e52da18c1",
+      "sha256_prefix": "c354a5916a953d46"
+    },
+    {
+      "file": "una-manera-sencilla-de-orar.html",
+      "bytes": 66224,
+      "sha256": "79bc487b34350b6ef43f8848db3e2862fa3add24569f756716e979cdd95fa2a7",
+      "sha256_prefix": "79bc487b34350b6e"
+    }
+  ]
+}

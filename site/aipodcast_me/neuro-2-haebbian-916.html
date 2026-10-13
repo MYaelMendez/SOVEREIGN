@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — neuromitosis · hæbbian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_hæbbian://</div>
+  <h1 id="ttl">HÆBBIAN</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">fire together · wire together</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; neuromitosis.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">haebbian</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — neuromitosis · 2. HÆBBIAN
+   9:16 · 1080x1920 · Canvas 2D only.
+
+   Read from neuromitosis.html: "Hæbbian plasticity. Co-fired surfaces
+   (file://, computer://, desktop://, +bæsic://, æ://) wire into a persistent
+   map — surviving resets." and "Hæbbian:// == neuromitosis://".
+
+   The edges shown are the six from /wiring.json, which this session created —
+   the page declared "its surface is /wiring.json" and the file did not exist.
+
+   Warm wash from the first line.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t^=t>>>7;t=Math.imul(t,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the five chassis surfaces, laid out as a ring */
+const NODES = [
+  { id: 'file://',     ang: -Math.PI/2,           col: GOLD },
+  { id: 'computer://', ang: -Math.PI/2 + 1.257,   col: CYAN },
+  { id: 'desktop://',  ang: -Math.PI/2 + 2.513,   col: GOLD },
+  { id: '+bæsic://',   ang: -Math.PI/2 + 3.770,   col: NEON },
+  { id: 'æ://',        ang: -Math.PI/2 + 5.027,   col: GOLDHI },
+];
+
+/* the six wiring edges from /wiring.json */
+const EDGES = [
+  [0, 1, 3, 'the agent writes; the file persists'],
+  [0, 2, 3, 'the agent acts; the human sees'],
+  [1, 4, 2, 'the host runs the namespace'],
+  [3, 4, 2, 'the verified chassis under the runtime'],
+  [0, 4, 1, 'the work lands on the machine'],
+  [2, 4, 1, 'the surface is drawn by the host'],
+];
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+}
+
+function phaseAt(t){
+  if (t < 3.4)  return ['haebbian', 'the rule, from the surface'];
+  if (t < 8.0)  return ['chassis',  'five surfaces that co-fire'];
+  if (t < 12.4) return ['wiring',   'the bond map · six edges'];
+  return ['persist', 'surviving resets'];
+}
+function titleAt(t){
+  if (t < 3.4)  return 'HÆBBIAN';
+  if (t < 8.0)  return 'THE CHASSIS';
+  if (t < 12.4) return 'THE WIRING';
+  return 'PERSISTENT';
+}
+
+/* ── act 1: the rule ───────────────────────────────────── */
+function drawRule(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 940;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.30*(0.7+0.3*pulse(t,2.4))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 96px "Orbitron", sans-serif';
+  cx.fillText('HÆBBIAN', cxp, cyp);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.0, 1.6));
+  cx.fillStyle = TXT;
+  cx.font = '700 34px "JetBrains Mono", monospace';
+  cx.fillText('agents that fire together', cxp, cyp + 100);
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.5, 2.1));
+  cx.fillStyle = NEON;
+  cx.fillText('wire together', cxp, cyp + 152);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.2, 2.8));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('Hæbbian://  ==  neuromitosis://', cxp, cyp + 240);
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.7, 3.3));
+  cx.fillStyle = CYAN;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('plasticity, applied to a machine', cxp, cyp + 288);
+  cx.restore();
+}
+
+/* ── act 2: the five chassis surfaces ──────────────────── */
+function drawChassis(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1080, R = 330;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.5, 4.1));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 48px "Orbitron", sans-serif';
+  cx.fillText('THE CHASSIS', cxp, 660);
+  cx.globalAlpha = ease(on) * ease(seg(t, 4.0, 4.6));
+  cx.fillStyle = CYAN;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('the chassis is always a language', cxp, 712);
+
+  // the ring
+  cx.globalAlpha = ease(on) * ease(seg(t, 4.4, 5.0)) * 0.4;
+  cx.strokeStyle = GOLD; cx.lineWidth = 1.6;
+  cx.beginPath(); cx.arc(cxp, cyp, R, 0, 7); cx.stroke();
+
+  for (let i = 0; i < NODES.length; i++){
+    const n = NODES[i];
+    const at = 4.6 + i*0.5;
+    const a = ease(seg(t, at, at + 0.45));
+    const x = cxp + Math.cos(n.ang)*R;
+    const y = cyp + Math.sin(n.ang)*R;
+    cx.globalAlpha = ease(on) * a;
+
+    cx.fillStyle = n.col;
+    cx.beginPath(); cx.arc(x, y, 13, 0, 7); cx.fill();
+    cx.globalAlpha = ease(on) * a * 0.22;
+    cx.beginPath(); cx.arc(x, y, 34, 0, 7); cx.fill();
+
+    cx.globalAlpha = ease(on) * a;
+    cx.fillStyle = n.col;
+    cx.font = '700 24px "JetBrains Mono", monospace';
+    const lx = cxp + Math.cos(n.ang)*(R + 96);
+    cx.fillText(n.id, lx, y + 8);
+  }
+  cx.restore();
+}
+
+/* ── act 3: the wiring edges ───────────────────────────── */
+function drawWiring(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1080, R = 330;
+
+  // the ring, dim
+  cx.globalAlpha = ease(on) * 0.22;
+  cx.strokeStyle = GOLD; cx.lineWidth = 1.6;
+  cx.beginPath(); cx.arc(cxp, cyp, R, 0, 7); cx.stroke();
+
+  // the edges draw in, weight = thickness
+  for (let i = 0; i < EDGES.length; i++){
+    const [a, b, w, why] = EDGES[i];
+    const at = 8.2 + i*0.45;
+    const ap = ease(seg(t, at, at + 0.45));
+    const A = NODES[a], B = NODES[b];
+    const ax = cxp + Math.cos(A.ang)*R, ay = cyp + Math.sin(A.ang)*R;
+    const bx = cxp + Math.cos(B.ang)*R, by = cyp + Math.sin(B.ang)*R;
+
+    cx.globalAlpha = ease(on) * ap * 0.85;
+    cx.strokeStyle = i < 2 ? GOLDHI : CYAN;
+    cx.lineWidth = 1.4 + w*1.1;
+    cx.beginPath(); cx.moveTo(ax, ay); cx.lineTo(bx, by); cx.stroke();
+
+    // the midpoint label for the two strongest
+    if (i < 2){
+      cx.globalAlpha = ease(on) * ap * 0.9;
+      cx.textAlign = 'center';
+      cx.fillStyle = GOLDHI;
+      cx.font = '400 18px "JetBrains Mono", monospace';
+      cx.fillText(why, cxp, cyp - 40 + i*34);
+    }
+  }
+
+  // nodes on top
+  for (const n of NODES){
+    const x = cxp + Math.cos(n.ang)*R, y = cyp + Math.sin(n.ang)*R;
+    cx.globalAlpha = ease(on);
+    cx.fillStyle = n.col;
+    cx.beginPath(); cx.arc(x, y, 12, 0, 7); cx.fill();
+    cx.textAlign = 'center';
+    cx.font = '700 23px "JetBrains Mono", monospace';
+    cx.fillText(n.id, cxp + Math.cos(n.ang)*(R + 96), y + 8);
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.3, 8.9));
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 48px "Orbitron", sans-serif';
+  cx.fillText('THE WIRING', cxp, 660);
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.4, 11.0));
+  cx.fillStyle = CYAN;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('the bond map · six edges', cxp, 712);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.4, 12.0));
+  cx.fillStyle = GOLD;
+  cx.font = '400 20px "JetBrains Mono", monospace';
+  cx.fillText('/wiring.json  ·  only the bond map crosses', cxp, 1680);
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.8, 12.3));
+  cx.fillStyle = TXT;
+  cx.font = '400 19px "JetBrains Mono", monospace';
+  cx.fillText('weight is declared, not yet measured', cxp, 1720);
+  cx.restore();
+}
+
+/* ── act 4: persist ────────────────────────────────────── */
+function drawPersist(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 950;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.22)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.6, 13.2));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 54px "Orbitron", sans-serif';
+  cx.fillText('SURVIVING RESETS', cxp, 850);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.1, 13.7));
+  cx.fillStyle = TXT;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('a co-fired map outlives the session', cxp, 920);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.6, 14.2));
+  cx.fillStyle = NEON;
+  cx.font = '700 32px "JetBrains Mono", monospace';
+  cx.fillText('🦞 → 🐚➗ → 💧', cxp, 1000);
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.0, 14.6));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('structure survives', cxp, 1050);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.8, 15.4));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, 1200);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.2, 15.8));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('neuromitosis.com  ·  #neuromitosis', cxp, 1252);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.6, 16.2));
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, 1304);
+  cx.restore();
+}
+
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+  drawRule(t,    ease(seg(t,0,0.5))      * (1 - ease(seg(t,3.2,3.6))));
+  drawChassis(t, ease(seg(t,3.4,3.9))    * (1 - ease(seg(t,7.8,8.2))));
+  drawWiring(t,  ease(seg(t,8.0,8.5))    * (1 - ease(seg(t,12.2,12.6))));
+  drawPersist(t, ease(seg(t,12.5,13.1)));
+}
+
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

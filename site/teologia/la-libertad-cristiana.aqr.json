@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/la",
+  "region": "es-LATAM",
+  "sha256": "c8629a8ce666ad26fa345f4cc9586c581ecc7c2098525a2f3ea3b92d2a3a1e92",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T05:33:39Z",
+  "qr_version": 7,
+  "qr_modules": 45,
+  "payload": "æqr://v1|teologia.ai/la|es-LATAM|sha256:c8629a8ce666ad26fa345f4cc9586c581ecc7c2098525a2f3ea3b92d2a3a1e92|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "cv2 box=8 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-la.svg",
+  "html": "C:\\æ\\site\\teologia\\la-libertad-cristiana.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

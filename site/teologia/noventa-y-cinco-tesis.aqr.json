@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/noventa",
+  "region": "es-LATAM",
+  "sha256": "ddbb79f269c0c8bc7e6997511927398fad06ccfb605b275e71d7029d76f89aaf",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T05:33:37Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/noventa|es-LATAM|sha256:ddbb79f269c0c8bc7e6997511927398fad06ccfb605b275e71d7029d76f89aaf|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "cv2 box=8 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-noventa.svg",
+  "html": "C:\\æ\\site\\teologia\\noventa-y-cinco-tesis.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

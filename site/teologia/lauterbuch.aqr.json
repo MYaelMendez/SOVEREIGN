@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/lauterbuch",
+  "region": "es-LATAM",
+  "sha256": "6be89381b59f80897a250ea8cb6eca0a37d6adf1aa6f7ce84df49097d4b8536e",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:40:52Z",
+  "qr_version": 7,
+  "qr_modules": 45,
+  "payload": "æqr://v1|teologia.ai/lauterbuch|es-LATAM|sha256:6be89381b59f80897a250ea8cb6eca0a37d6adf1aa6f7ce84df49097d4b8536e|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

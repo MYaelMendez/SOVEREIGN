@@ -1,0 +1,62 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "LONGCAT 2.5 · PREVIEW · FREE",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "1-ad",
+      "title": "LONGCAT 2.5 PREVIEW",
+      "subtitle": "FREE AT NOUS PORTAL",
+      "phases": ["intro", "does", "ships"],
+      "titles": ["LONGCAT 2.5", "WHAT IT DOES", "THE MODEL THAT SHIPS"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "LONGCAT 2.5",
+          "lines": [
+            ["PREVIEW · FREE", "#FFD700", "900", 50, 96],
+            ["AT NOUS PORTAL", "#00ff9d", "700", 40, 80],
+            ["the model that ships", "#F2EFE6", "400", 28, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["3", "sovereign videos built + gated + deployed"],
+            ["1", "series engine — JSON to scene to render"],
+            ["17/17", "artifacts sha256-verified"],
+            ["pass", "QR produce-and-verify passed"],
+            ["88", "VLC playlist entries admitted"]
+          ],
+          "footer": "measured this session — not claimed"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["WRITES CODE", "#FFD700", "series engine, scenes, gates"],
+            ["BUILDS SYSTEMS", "#00e8ff", "registry, chain, deployment"],
+            ["VERIFIES ARTIFACTS", "#00ff9d", "sha256 local == served"],
+            ["DEPLOYS SURFACES", "#D4AF37", "github.io truth surface"]
+          ],
+          "closer": "this ad was made by the model it advertises",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["LONGCAT 2.5 PREVIEW", "#FFD700", "900", 42, 70],
+            ["FREE AT NOUS PORTAL", "#00ff9d", "700", 32, 60],
+            ["the model that ships", "#F2EFE6", "400", 28, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

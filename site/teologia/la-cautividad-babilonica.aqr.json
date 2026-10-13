@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/la",
+  "region": "es-LATAM",
+  "sha256": "da576932705f8d8e6093bfe3476736f55fafb610c0ca96ba61a1900f331193d2",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T05:33:38Z",
+  "qr_version": 7,
+  "qr_modules": 45,
+  "payload": "æqr://v1|teologia.ai/la|es-LATAM|sha256:da576932705f8d8e6093bfe3476736f55fafb610c0ca96ba61a1900f331193d2|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "cv2 box=8 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-la.svg",
+  "html": "C:\\æ\\site\\teologia\\la-cautividad-babilonica.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

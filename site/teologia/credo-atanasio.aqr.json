@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/credo",
+  "region": "es-LATAM",
+  "sha256": "4c006f185d7038c164a983a1418b498be5a35d1134fdc12cfeb41514e51583b3",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T05:33:41Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/credo|es-LATAM|sha256:4c006f185d7038c164a983a1418b498be5a35d1134fdc12cfeb41514e51583b3|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "pyzbar box=10 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-credo.svg",
+  "html": "C:\\æ\\site\\teologia\\credo-atanasio.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}

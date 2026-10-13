@@ -1,0 +1,63 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "cloudflare code mode · 2 tools · 99.9% less tokens",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "6-codemode",
+      "title": "CLOUDFLARE CODE MODE",
+      "subtitle": "2 tools replace 2,594 endpoints",
+      "phases": ["problem", "pattern", "sandbox"],
+      "titles": ["THE PROBLEM", "THE PATTERN", "THE SANDBOX"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "CODE MODE",
+          "lines": [
+            ["CLOUDFLARE", "#FFD700", "900", 52, 92],
+            ["2 tools · 2,594 endpoints", "#00ff9d", "700", 36, 68],
+            ["99.9% fewer tokens", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["problem", "OpenAPI spec = 2M tokens"],
+            ["native MCP", "2,594 tools = 1.17M tokens"],
+            ["code mode", "search + execute = ~1K tokens"],
+            ["sandbox", "Dynamic Worker · V8 isolate"],
+            ["security", "no filesystem · no env leaks"],
+            ["pattern", "write code, execute, return data"]
+          ],
+          "footer": "the spec lives on the server, not in context"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["SEARCH", "#FFD700", "write JS → query spec.paths"],
+            ["EXECUTE", "#00e8ff", "write JS → cloudflare.request()"],
+            ["ISOLATE", "#00ff9d", "V8 sandbox · no env vars"],
+            ["SDK", "#D4AF37", "open-sourced · typed · composable"]
+          ],
+          "closer": "the model writes code, not tool calls",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["CLOUDFLARE CODE MODE", "#FFD700", "900", 38, 70],
+            ["1,100 tokens vs 1,170,523", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — public · private · soværeign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">THREE SCOPES</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">one principal · three boundaries</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">scopes</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — public · private · soværeign
+   9:16 · 1080x1920 · Canvas 2D only.
+
+   READ FROM aea-index.html, category "02 · PUBLIC · PRIVATE · SOVEREIGN":
+       PUBLIC://        SHARED CONTEXT
+       PrivateClient.ai >_æ://private_client
+       Soværeign.com    >_soværeign://
+       Omarchy Linux    LOCAL HOST
+   and the rule our own surfaces state: "the tool is open, the secrets are not".
+
+   The warm wash is written in from the first line: gold on void #050505 is
+   luminance 5, and the gate refuses a frame with no mass.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6', RED = '#ff6b6b';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the public field — many published things */
+const PUB = (() => {
+  const rnd = mulberry32(1701), out = [];
+  for (let i = 0; i < 96; i++) out.push({
+    x: 130 + rnd()*(W-260), y: 620 + rnd()*680,
+    s: 3.0 + rnd()*3.4, ph: rnd()*Math.PI*2,
+  });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+}
+
+function phaseAt(t){
+  if (t < 2.6)  return ['scopes', 'one principal · three boundaries'];
+  if (t < 7.0)  return ['public', 'published · anyone can read'];
+  if (t < 11.4) return ['private','custody · sealed, not readable'];
+  if (t < 15.0) return ['sovereign', 'owned compute · no rent'];
+  return ['rule', 'the tool is open · the secrets are not'];
+}
+function titleAt(t){
+  if (t < 2.6)  return 'THREE SCOPES';
+  if (t < 7.0)  return 'PUBLIC';
+  if (t < 11.4) return 'PRIVATE';
+  if (t < 15.0) return 'SOVÆREIGN';
+  return 'THE BOUNDARY';
+}
+
+/* ── act 1: the three scopes, named ────────────────────── */
+function drawScopes(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+  const rows = [
+    ['PUBLIC',     '⚪', GOLD, 0.3],
+    ['PRIVATE',    '🟢', CYAN, 0.8],
+    ['SOVÆREIGN',  '◉',  NEON, 1.3],
+  ];
+  for (let i = 0; i < rows.length; i++){
+    const [name, mark, col, at] = rows[i];
+    const a = ease(seg(t, at, at + 0.5));
+    const y = 800 + i*180;
+    cx.globalAlpha = ease(on) * a;
+    cx.fillStyle = col;
+    cx.font = '900 62px "Orbitron", sans-serif';
+    cx.fillText(name, cxp, y);
+    cx.globalAlpha = ease(on) * a * 0.55;
+    cx.font = '400 22px "JetBrains Mono", monospace';
+    cx.fillText('scope 0' + (i+1), cxp, y + 40);
+  }
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.9, 2.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('02 · PUBLIC · PRIVATE · SOVEREIGN', cxp, 1520);
+  cx.restore();
+}
+
+/* ── act 2: PUBLIC — the published field ───────────────── */
+function drawPublic(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const app = ease(seg(t, 2.6, 6.0));
+  const shown = Math.floor(PUB.length * app);
+  for (let i = 0; i < shown; i++){
+    const p = PUB[i];
+    const tw = 0.5 + 0.5*Math.sin(t*2.5 + p.ph);
+    cx.globalAlpha = ease(on) * tw * 0.92;
+    cx.fillStyle = GOLD;
+    cx.beginPath(); cx.arc(p.x, p.y, p.s, 0, 7); cx.fill();
+    cx.globalAlpha = ease(on) * tw * 0.16;
+    cx.beginPath(); cx.arc(p.x, p.y, p.s*3.2, 0, 7); cx.fill();
+  }
+  cx.globalAlpha = ease(on);
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 84px "Orbitron", sans-serif';
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.4, 4.0));
+  cx.fillText('PUBLIC://', W/2, 760);
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.9, 4.5));
+  cx.fillStyle = CYAN;
+  cx.font = '400 28px "JetBrains Mono", monospace';
+  cx.fillText('SHARED CONTEXT', W/2, 822);
+  cx.globalAlpha = ease(on) * ease(seg(t, 4.4, 5.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('the surface · anyone can read it', W/2, 880);
+  cx.globalAlpha = ease(on) * ease(seg(t, 5.0, 5.6));
+  cx.fillStyle = GOLD;
+  cx.font = '700 22px "JetBrains Mono", monospace';
+  cx.fillText('github.io — 278 resources addressed', W/2, 1440);
+  cx.restore();
+}
+
+/* ── act 3: PRIVATE — sealed ───────────────────────────── */
+function drawPrivate(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1000;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+
+  // the envelope: closed. A seal, not a window.
+  const bw = 460, bh = 300;
+  const open = ease(seg(t, 9.6, 10.4));   // it stays shut — the seal is the point
+  cx.strokeStyle = CYAN; cx.lineWidth = 2.4;
+  cx.strokeRect(cxp - bw/2, cyp - bh/2, bw, bh);
+  cx.fillStyle = 'rgba(0,234,255,0.07)';
+  cx.fillRect(cxp - bw/2, cyp - bh/2, bw, bh);
+
+  // the flap
+  cx.strokeStyle = 'rgba(0,234,255,0.55)'; cx.lineWidth = 2;
+  cx.beginPath();
+  cx.moveTo(cxp - bw/2, cyp - bh/2);
+  cx.lineTo(cxp, cyp + 10);
+  cx.lineTo(cxp + bw/2, cyp - bh/2);
+  cx.stroke();
+
+  // the seal — pulsing, and never opening
+  const sp = 0.6 + 0.4*pulse(t, 3.2);
+  cx.globalAlpha = ease(on) * sp;
+  cx.fillStyle = GOLDHI;
+  cx.beginPath(); cx.arc(cxp, cyp + 10, 30, 0, 7); cx.fill();
+  cx.fillStyle = '#0a0a0a';
+  cx.font = '900 30px "Orbitron", sans-serif';
+  cx.fillText('æ', cxp, cyp + 22);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 7.6, 8.2));
+  cx.fillStyle = CYAN;
+  cx.font = '900 74px "Orbitron", sans-serif';
+  cx.fillText('PRIVATE', cxp, 700);
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.1, 8.7));
+  cx.fillStyle = TXT;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('custody — sealed, not readable', cxp, 762);
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.6, 9.2));
+  cx.fillStyle = GOLD;
+  cx.font = '700 23px "JetBrains Mono", monospace';
+  cx.fillText('PrivateClient.ai  ·  >_æ://private_client', cxp, 820);
+
+  // the refusal — a read that is not granted
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.2, 10.8));
+  cx.fillStyle = RED;
+  cx.font = '700 22px "JetBrains Mono", monospace';
+  cx.fillText('no plaintext on the wire', cxp, 1320);
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.6, 11.1));
+  cx.fillStyle = CYAN;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('possession of the transport ≠ possession of the secret', cxp, 1364);
+  cx.restore();
+}
+
+/* ── act 4: SOVÆREIGN — owned compute ──────────────────── */
+function drawSovereign(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1010;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 340);
+  g.addColorStop(0, 'rgba(0,255,157,' + (0.26*(0.7+0.3*pulse(t,2.8))) + ')');
+  g.addColorStop(1, 'rgba(0,255,157,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 340, 0, 7); cx.fill();
+
+  // the local host — a solid core, not a cloud
+  cx.strokeStyle = NEON; cx.lineWidth = 2.6;
+  cx.beginPath(); cx.arc(cxp, cyp, 120, 0, 7); cx.stroke();
+  cx.fillStyle = 'rgba(0,255,157,0.10)';
+  cx.beginPath(); cx.arc(cxp, cyp, 120, 0, 7); cx.fill();
+
+  // the chip: a die with pins — silicon, owned
+  cx.strokeStyle = NEON; cx.lineWidth = 2.2;
+  cx.strokeRect(cxp - 58, cyp - 58, 116, 116);
+  cx.fillStyle = NEON;
+  cx.font = '900 40px "Orbitron", sans-serif';
+  cx.fillText('RTX', cxp, cyp + 2);
+  cx.font = '400 17px "JetBrains Mono", monospace';
+  cx.fillText('3050 · cc 8.6', cxp, cyp + 30);
+  // pins
+  cx.strokeStyle = 'rgba(0,255,157,0.7)'; cx.lineWidth = 2;
+  for (let i = -2; i <= 2; i++){
+    const o = i * 26;
+    cx.beginPath(); cx.moveTo(cxp+o, cyp-58); cx.lineTo(cxp+o, cyp-82); cx.stroke();
+    cx.beginPath(); cx.moveTo(cxp+o, cyp+58); cx.lineTo(cxp+o, cyp+82); cx.stroke();
+    cx.beginPath(); cx.moveTo(cxp-58, cyp+o); cx.lineTo(cxp-82, cyp+o); cx.stroke();
+    cx.beginPath(); cx.moveTo(cxp+58, cyp+o); cx.lineTo(cxp+82, cyp+o); cx.stroke();
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.5, 12.1));
+  cx.fillStyle = NEON;
+  cx.font = '900 72px "Orbitron", sans-serif';
+  cx.fillText('SOVÆREIGN', cxp, 700);
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.0, 12.6));
+  cx.fillStyle = TXT;
+  cx.font = '400 26px "JetBrains Mono", monospace';
+  cx.fillText('owned compute — no rent', cxp, 762);
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.5, 13.1));
+  cx.fillStyle = GOLD;
+  cx.font = '700 23px "JetBrains Mono", monospace';
+  cx.fillText('Soværeign.com  ·  >_soværeign://', cxp, 820);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.4, 14.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('Omarchy Linux  ·  LOCAL HOST', cxp, 1380);
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.8, 14.4));
+  cx.fillStyle = CYAN;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('the machine is the business', cxp, 1424);
+  cx.restore();
+}
+
+/* ── act 5: the boundary rule ──────────────────────────── */
+function drawRule(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 940;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.22)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.1, 15.7));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 58px "Orbitron", sans-serif';
+  cx.fillText('THE BOUNDARY', cxp, 800);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.5, 16.1));
+  cx.fillStyle = TXT;
+  cx.font = '700 34px "JetBrains Mono", monospace';
+  cx.fillText('the tool is open.', cxp, 890);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.9, 16.5));
+  cx.fillStyle = NEON;
+  cx.font = '700 34px "JetBrains Mono", monospace';
+  cx.fillText('the secrets are not.', cxp, 946);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.4, 17.0));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('public = the surface   ·   private = the custody   ·   sovereign = the compute', cxp, 1030);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.8, 17.4));
+  cx.fillStyle = TXT;
+  cx.font = '700 40px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, 1150);
+  cx.globalAlpha = ease(on) * ease(seg(t, 17.1, 17.7));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, 1204);
+  cx.restore();
+}
+
+/* ── HUD ───────────────────────────────────────────────── */
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+/* ── the frame ─────────────────────────────────────────── */
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+
+  drawScopes(t,    ease(seg(t,0,0.5))    * (1 - ease(seg(t,2.4,2.8))));
+  drawPublic(t,    ease(seg(t,2.6,3.1))  * (1 - ease(seg(t,6.8,7.2))));
+  drawPrivate(t,   ease(seg(t,7.0,7.5))  * (1 - ease(seg(t,11.1,11.5))));
+  drawSovereign(t, ease(seg(t,11.3,11.8)) * (1 - ease(seg(t,14.7,15.1))));
+  drawRule(t,      ease(seg(t,15.0,15.6)));
+}
+
+/* ── the external frame hook ───────────────────────────── */
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

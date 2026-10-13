@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — æ¹ ETHICS · who authorizes?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">æ¹ · ÉTICA</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">¿quién autoriza?</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">etica</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — æ¹ ETHICS · who authorizes?
+   First of three. Read from index.html ("æ¹ · Ética — ¿Quién autoriza?
+   Principios · compromisos · criterio humano") and from the pledge text
+   itself (agent_pledge.py text), which carries the eight commitments.
+
+   9:16 · 1080x1920 · Canvas 2D only. Warm wash from the first line.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6', RED = '#ff6b6b';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t^=t>>>7;t=Math.imul(t,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the eight commitments — short forms, read from agent_pledge.py text */
+const COMMITMENTS = [
+  'I do not speak for the human',
+  'I do not claim what I have not verified',
+  'I do not mistake possession for authority',
+  'I do not let a broken artifact look fine',
+  'I do not keep the secret',
+  'I do not write over another agent\u2019s work',
+  'I do not leave a failure unexplained',
+  'I do not confuse the tool with the purpose',
+];
+
+const MESH = (() => {
+  const rnd = mulberry32(44), out = [];
+  for (let i = 0; i < 44; i++) out.push({ x: rnd()*W, y: rnd()*H, vx:(rnd()-.5)*7, vy:(rnd()-.5)*7 });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  for (const m of MESH){
+    m.x += m.vx*0.016; m.y += m.vy*0.016;
+    if (m.x < 0) m.x = W; if (m.x > W) m.x = 0;
+    if (m.y < 0) m.y = H; if (m.y > H) m.y = 0;
+  }
+  cx.lineWidth = 1.2;
+  for (let i = 0; i < MESH.length; i++)
+    for (let j = i+1; j < MESH.length; j++){
+      const a = MESH[i], b = MESH[j], dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy;
+      if (d2 < 40000){
+        cx.strokeStyle = 'rgba(0,234,255,' + ((1-d2/40000)*0.24).toFixed(3) + ')';
+        cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+      }
+    }
+  for (const m of MESH){
+    cx.fillStyle = 'rgba(212,175,55,0.68)';
+    cx.beginPath(); cx.arc(m.x,m.y,2.1,0,7); cx.fill();
+  }
+}
+
+function phaseAt(t){
+  if (t < 3.2)  return ['etica',  'principles · commitments · human criterion'];
+  if (t < 8.0)  return ['pledge', 'the agent commitment · eight of them'];
+  if (t < 12.4) return ['gate',   'a gate that refuses the unpledged'];
+  return ['rule', 'the human decides'];
+}
+function titleAt(t){
+  if (t < 3.2)  return 'æ¹ · ÉTICA';
+  if (t < 8.0)  return 'THE COMMITMENT';
+  if (t < 12.4) return 'THE GATE';
+  return 'WHO AUTHORIZES?';
+}
+
+/* ── act 1: the question ───────────────────────────────── */
+function drawQ(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 940;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.32*(0.7+0.3*pulse(t,2.5))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 132px "Orbitron", sans-serif';
+  cx.fillText('æ¹', cxp, cyp + 20);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.9, 1.5));
+  cx.fillStyle = TXT;
+  cx.font = '900 58px "Orbitron", sans-serif';
+  cx.fillText('ÉTICA', cxp, cyp + 130);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.4, 2.0));
+  cx.fillStyle = CYAN;
+  cx.font = '400 34px "JetBrains Mono", monospace';
+  cx.fillText('¿Quién autoriza?', cxp, cyp + 200);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.9, 2.5));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('who authorizes?', cxp, cyp + 252);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.4, 3.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('principios · compromisos · criterio humano', cxp, cyp + 320);
+  cx.restore();
+}
+
+/* ── act 2: the eight commitments ──────────────────────── */
+function drawCommitments(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const per = (8.0 - 3.2) / COMMITMENTS.length;
+  const first = Math.max(0, Math.floor((t - 3.2) / per) - 1);
+  cx.textAlign = 'left';
+  for (let i = first; i < Math.min(COMMITMENTS.length, first + 7); i++){
+    const at = 3.2 + i * per;
+    const a = ease(seg(t, at, at + per*0.5));
+    const y = 400 + (i - first) * 132;
+    cx.globalAlpha = ease(on) * a;
+
+    cx.fillStyle = GOLD;
+    cx.font = '900 34px "Orbitron", sans-serif';
+    cx.fillText(String(i+1), 92, y + 8);
+
+    cx.fillStyle = 'rgba(212,175,55,0.30)'; cx.lineWidth = 1.4;
+    cx.strokeRect(150, y - 34, 850, 76);
+
+    cx.fillStyle = TXT;
+    cx.font = '700 27px "JetBrains Mono", monospace';
+    cx.fillText(COMMITMENTS[i], 178, y + 10);
+  }
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 7.2, 7.8));
+  cx.fillStyle = GOLDHI;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('eight commitments · hashed', W/2, 1500);
+  cx.restore();
+}
+
+/* ── act 3: the gate refuses the unpledged ─────────────── */
+function drawGate(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.1, 8.7));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 54px "Orbitron", sans-serif';
+  cx.fillText('THE GATE', cxp, 700);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.6, 9.2));
+  cx.fillStyle = CYAN;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('change one word and every signature lapses', cxp, 756);
+
+  const rows = [
+    ['agent has pledged',     'ALLOWED', NEON, 9.4],
+    ['agent has not pledged', 'REFUSED', RED,  10.1],
+    ['signature tampered',    'REFUSED', RED,  10.8],
+  ];
+  for (let i = 0; i < rows.length; i++){
+    const [what, verdict, col, at] = rows[i];
+    const a = ease(seg(t, at, at + 0.5));
+    const y = 880 + i * 160;
+    cx.globalAlpha = ease(on) * a;
+    cx.strokeStyle = 'rgba(212,175,55,0.32)'; cx.lineWidth = 1.5;
+    cx.strokeRect(120, y - 52, 840, 104);
+    cx.textAlign = 'left';
+    cx.fillStyle = TXT;
+    cx.font = '400 25px "JetBrains Mono", monospace';
+    cx.fillText(what, 156, y + 9);
+    cx.fillStyle = col;
+    cx.font = '700 30px "JetBrains Mono", monospace';
+    cx.textAlign = 'right';
+    cx.fillText(verdict, 924, y + 10);
+    cx.textAlign = 'center';
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.4, 12.0));
+  cx.fillStyle = GOLDHI;
+  cx.font = '700 30px "JetBrains Mono", monospace';
+  cx.fillText('7 / 7 pledged', cxp, 1420);
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.8, 12.3));
+  cx.fillStyle = GOLD;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('Ed25519  ·  bebe19b4923b3bdd…', cxp, 1466);
+  cx.restore();
+}
+
+/* ── act 4: the rule ───────────────────────────────────── */
+function drawRule(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 950;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.22)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.6, 13.2));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 56px "Orbitron", sans-serif';
+  cx.fillText('EVIDENCE ≠ AUTHORITY', cxp, 850);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.1, 13.7));
+  cx.fillStyle = TXT;
+  cx.font = '700 32px "JetBrains Mono", monospace';
+  cx.fillText('context may propagate', cxp, 940);
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.5, 14.1));
+  cx.fillStyle = NEON;
+  cx.fillText('authority does not', cxp, 996);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.0, 14.6));
+  cx.fillStyle = CYAN;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('the supervision informs · the human decides', cxp, 1080);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.6, 15.2));
+  cx.fillStyle = GOLD;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('"When you tell the truth you don\u2019t have to remember anything."', cxp, 1160);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.4, 16.0));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, 1300);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.8, 16.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('æ¹ ETHICS  ·  æææ.com', cxp, 1354);
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.2, 16.8));
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, 1408);
+  cx.restore();
+}
+
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+  drawQ(t,           ease(seg(t,0,0.5))     * (1 - ease(seg(t,3.0,3.4))));
+  drawCommitments(t, ease(seg(t,3.2,3.7))   * (1 - ease(seg(t,7.8,8.2))));
+  drawGate(t,        ease(seg(t,8.0,8.5))   * (1 - ease(seg(t,12.2,12.6))));
+  drawRule(t,        ease(seg(t,12.5,13.1)));
+}
+
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

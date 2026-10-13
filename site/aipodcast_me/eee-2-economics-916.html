@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — æ² ECONOMICS · who benefits?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">æ² · ECONOMÍA</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">¿a quién beneficia?</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">economia</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — æ² ECONOMICS · who benefits?
+   Second of three. Read from index.html ("æ² · Economía — ¿A quién beneficia?
+   Capacidades · proyectos · oportunidades").
+
+   The revenue figure is the real one, verified present in
+   .well-known/skills/index.json and ae/manifest.json: $133.65 PAID.
+
+   9:16 · 1080x1920 · Canvas 2D only. Warm wash from the first line.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t^=t>>>7;t=Math.imul(t,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the beneficiary chain — who actually receives */
+const CHAIN = [
+  ['a person',        'learns something they can use'],
+  ['a capability',    'they build with it'],
+  ['a customer',      'pays for the result'],
+  ['a commission',    'returns to the builder'],
+  ['more capability', 'funded by the last loop'],
+];
+
+/* the cohort — 250 formation units */
+const UNITS = (() => {
+  const rnd = mulberry32(250), out = [];
+  const cols = 10, rows = 25;
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      out.push({ x: 150 + c*86 + (rnd()-.5)*8, y: 640 + r*44 + (rnd()-.5)*6,
+                 ph: rnd()*Math.PI*2 });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+}
+
+function phaseAt(t){
+  if (t < 3.2)  return ['economia', 'capabilities · projects · opportunities'];
+  if (t < 8.2)  return ['loop',     'who benefits — the whole chain'];
+  if (t < 12.6) return ['receipt',  'not a projection · a receipt'];
+  return ['cohort', '250 → 250,000'];
+}
+function titleAt(t){
+  if (t < 3.2)  return 'æ² · ECONOMÍA';
+  if (t < 8.2)  return 'WHO BENEFITS?';
+  if (t < 12.6) return 'A RECEIPT';
+  return 'THE COHORT';
+}
+
+/* ── act 1: the question ───────────────────────────────── */
+function drawQ(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 940;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.32*(0.7+0.3*pulse(t,2.5))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 132px "Orbitron", sans-serif';
+  cx.fillText('æ²', cxp, cyp + 20);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.9, 1.5));
+  cx.fillStyle = TXT;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('ECONOMÍA', cxp, cyp + 130);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.4, 2.0));
+  cx.fillStyle = CYAN;
+  cx.font = '400 34px "JetBrains Mono", monospace';
+  cx.fillText('¿A quién beneficia?', cxp, cyp + 200);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.9, 2.5));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('who benefits?', cxp, cyp + 252);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.4, 3.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('capacidades · proyectos · oportunidades', cxp, cyp + 320);
+  cx.restore();
+}
+
+/* ── act 2: the beneficiary chain ──────────────────────── */
+function drawLoop(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.3, 3.9));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 46px "Orbitron", sans-serif';
+  cx.fillText('THE CHAIN', cxp, 660);
+
+  for (let i = 0; i < CHAIN.length; i++){
+    const [who, what] = CHAIN[i];
+    const at = 4.0 + i * 0.80;
+    const a = ease(seg(t, at, at + 0.5));
+    const y = 800 + i * 168;
+    cx.globalAlpha = ease(on) * a;
+
+    const bw = 820, bh = 118;
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.36*a).toFixed(3) + ')';
+    cx.lineWidth = 1.6;
+    cx.strokeRect(cxp - bw/2, y - 40, bw, bh);
+    cx.fillStyle = 'rgba(212,175,55,0.07)';
+    cx.fillRect(cxp - bw/2, y - 40, bw, bh);
+
+    cx.fillStyle = i === CHAIN.length-1 ? NEON : GOLDHI;
+    cx.font = '900 36px "Orbitron", sans-serif';
+    cx.fillText(who, cxp, y + 4);
+    cx.fillStyle = CYAN;
+    cx.font = '400 21px "JetBrains Mono", monospace';
+    cx.fillText(what, cxp, y + 42);
+
+    if (i < CHAIN.length - 1){
+      cx.globalAlpha = ease(on) * a * ease(seg(t, at + 0.35, at + 0.7));
+      cx.strokeStyle = GOLD; cx.lineWidth = 2.2;
+      cx.beginPath(); cx.moveTo(cxp, y + 82); cx.lineTo(cxp, y + 122); cx.stroke();
+      cx.beginPath(); cx.moveTo(cxp-12, y+108); cx.lineTo(cxp, y+124);
+      cx.lineTo(cxp+12, y+108); cx.stroke();
+    }
+  }
+  cx.restore();
+}
+
+/* ── act 3: the receipt ────────────────────────────────── */
+function drawReceipt(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.3, 8.9));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('NOT A PROJECTION', cxp, 700);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.8, 9.4));
+  cx.fillStyle = NEON;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('A RECEIPT', cxp, 764);
+
+  // the receipt card
+  cx.globalAlpha = ease(on) * ease(seg(t, 9.4, 10.0));
+  cx.strokeStyle = NEON; cx.lineWidth = 2.2;
+  cx.strokeRect(120, 850, 840, 400);
+  cx.fillStyle = 'rgba(0,255,157,0.06)';
+  cx.fillRect(120, 850, 840, 400);
+
+  const rows = [
+    ['customer',   'Nicolas Enriquez'],
+    ['purchase',   '$267.30  LLC formation'],
+    ['commission', '$133.65  50%'],
+    ['status',     'PAID'],
+  ];
+  cx.textAlign = 'left';
+  for (let i = 0; i < rows.length; i++){
+    const [k, v] = rows[i];
+    const a = ease(seg(t, 10.0 + i*0.32, 10.4 + i*0.32));
+    const y = 920 + i*84;
+    cx.globalAlpha = ease(on) * a;
+    cx.fillStyle = 'rgba(242,239,230,0.55)';
+    cx.font = '400 24px "JetBrains Mono", monospace';
+    cx.fillText(k, 168, y);
+    cx.fillStyle = k === 'status' ? NEON : GOLDHI;
+    cx.font = '700 26px "JetBrains Mono", monospace';
+    cx.fillText(v, 480, y);
+  }
+
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.6, 12.2));
+  cx.fillStyle = GOLD;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('Doola affiliate rail · zero custody on our side', cxp, 1320);
+  cx.globalAlpha = ease(on) * ease(seg(t, 12.0, 12.5));
+  cx.fillStyle = TXT;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('external provider under their own terms', cxp, 1364);
+  cx.restore();
+}
+
+/* ── act 4: the cohort ─────────────────────────────────── */
+function drawCohort(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  const app = ease(seg(t, 12.7, 15.4));
+  const shown = Math.floor(UNITS.length * app);
+  for (let i = 0; i < shown; i++){
+    const u = UNITS[i];
+    const tw = 0.55 + 0.45*Math.sin(t*2.4 + u.ph);
+    cx.globalAlpha = ease(on) * tw * 0.9;
+    cx.fillStyle = GOLD;
+    cx.beginPath(); cx.arc(u.x, u.y, 5.2, 0, 7); cx.fill();
+    cx.globalAlpha = ease(on) * tw * 0.14;
+    cx.beginPath(); cx.arc(u.x, u.y, 15, 0, 7); cx.fill();
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.2, 13.8));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 62px "Orbitron", sans-serif';
+  cx.fillText('250 → 250,000', cxp, 560);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 13.8, 14.4));
+  cx.fillStyle = CYAN;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('start at 250 formations · the ceiling is the ceiling', cxp, 620);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.4, 16.0));
+  cx.fillStyle = GOLD;
+  cx.font = '700 30px "JetBrains Mono", monospace';
+  cx.fillText('good ideas compound', cxp, 1680);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.8, 16.4));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, 1760);
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.2, 16.8));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('æ² ECONOMICS  ·  æææ.com', cxp, 1812);
+  cx.restore();
+}
+
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+  drawQ(t,       ease(seg(t,0,0.5))     * (1 - ease(seg(t,3.0,3.4))));
+  drawLoop(t,    ease(seg(t,3.2,3.7))   * (1 - ease(seg(t,8.0,8.4))));
+  drawReceipt(t, ease(seg(t,8.2,8.7))   * (1 - ease(seg(t,12.4,12.8))));
+  drawCohort(t,  ease(seg(t,12.6,13.2)));
+}
+
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

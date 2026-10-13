@@ -1,0 +1,63 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "codæ mode × code mode · æ:// as a typed SDK",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "7-codæmode",
+      "title": "CODÆ MODE × CODE MODE",
+      "subtitle": "applying code mode to our agentic chassis",
+      "phases": ["apply", "compose", "sovereign"],
+      "titles": ["THE APPLICATION", "COMPOSABLE", "SOVEREIGN"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "CODÆ MODE",
+          "lines": [
+            ["× CODE MODE", "#FFD700", "900", 52, 92],
+            ["æ:// as a typed SDK", "#00ff9d", "700", 36, 68],
+            ["write code → compose → execute", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["search", "write JS → query æ:// spec"],
+            ["execute", "write JS → compose operations"],
+            ["sandbox", "local · bounded · no env leaks"],
+            ["chassis", "æ:// language is compute"],
+            ["compose", "N operations in one execution"],
+            ["return", "only the data, not the spec"]
+          ],
+          "footer": "the LLM writes code against our namespace"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["SEARCH", "#FFD700", "query æ:// operations"],
+            ["EXECUTE", "#00e8ff", "compose + run"],
+            ["SANDBOX", "#00ff9d", "local · deterministic"],
+            ["SOVEREIGN", "#D4AF37", "no cloud custody"]
+          ],
+          "closer": "one namespace, one pattern, zero bloat",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["CODÆ MODE × CODE MODE", "#FFD700", "900", 36, 70],
+            ["the pattern scales to any namespace", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

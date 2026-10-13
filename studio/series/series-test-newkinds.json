@@ -1,0 +1,70 @@
+{
+  "series": "test",
+  "suffix": "916",
+  "brand": "TEST",
+  "prompt": "test://",
+  "lang": "en",
+  "tags_line": "test",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "new-kinds",
+      "title": "NEW KINDS",
+      "subtitle": "timeline + compare",
+      "phases": [
+        "a",
+        "b"
+      ],
+      "titles": [
+        "TIMELINE",
+        "COMPARE"
+      ],
+      "acts": [
+        {
+          "kind": "timeline",
+          "head": "THE ARC",
+          "items": [
+            [
+              "1517",
+              "95 Theses"
+            ],
+            [
+              "1529",
+              "Catechisms"
+            ],
+            [
+              "1530",
+              "Augsburg"
+            ],
+            [
+              "1580",
+              "Book of Concordia"
+            ]
+          ],
+          "closer": "63 years of reformation"
+        },
+        {
+          "kind": "compare",
+          "items": [
+            [
+              "NATIVE MCP",
+              "2,594 tools",
+              "1,170,523 tokens",
+              "585% of context"
+            ],
+            [
+              "CODE MODE",
+              "3 tools",
+              "~1,100 tokens",
+              "0.5% of context"
+            ]
+          ],
+          "closer": "the spec lives on the server"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/apostolico",
+  "region": "es-LATAM",
+  "sha256": "7eec9b966f40be89720c3fc0e10d81c189467a09d486ca781be4503f251f79c7",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:22:12Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/apostolico|es-LATAM|sha256:7eec9b966f40be89720c3fc0e10d81c189467a09d486ca781be4503f251f79c7|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

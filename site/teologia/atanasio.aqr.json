@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/atanasio",
+  "region": "es-LATAM",
+  "sha256": "25bb7e76e2d1feddb8c16de7bd6a18fde0f8ecdd4395ca71012d0fdb1fbbe3a7",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:22:12Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/atanasio|es-LATAM|sha256:25bb7e76e2d1feddb8c16de7bd6a18fde0f8ecdd4395ca71012d0fdb1fbbe3a7|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

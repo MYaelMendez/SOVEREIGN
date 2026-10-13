@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>æ:// startabusiness — Address. Verify. Act.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1920px;height:1080px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.22) 0px,rgba(0,0,0,0.22) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1920px;height:1080px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(0,0,0,0.52) 100%)}
+#hud{position:fixed;top:46px;left:54px;z-index:50;color:var(--gold);pointer-events:none}
+#hud .prompt{font-size:15px;letter-spacing:6px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:38px;font-weight:900;letter-spacing:2px;
+  margin-top:12px;color:var(--goldhi);text-shadow:0 0 26px rgba(255,215,0,0.55)}
+#hud .rule{width:520px;height:1px;margin:20px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.06))}
+#hud .sub{font-size:16px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;opacity:.92}
+#pbar{position:fixed;bottom:52px;left:54px;z-index:50;width:760px;height:14px;
+  border:1px solid rgba(212,175,55,.55);border-radius:7px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#readout{position:fixed;bottom:26px;left:54px;z-index:50;color:var(--cyan);
+  font-size:14px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#phase{position:fixed;bottom:26px;right:54px;z-index:50;color:var(--gold);
+  font-size:14px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æ://#startabusiness</div>
+  <h1 id="ttl">ADDRESS IT</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">one discovery layer · many resources</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">boot</div>
+
+<script>
+/* ============================================================
+   æ:// startabusiness — launch scene
+   Canvas 2D only. No modules, no importmap: the producer rejects them.
+   Deterministic: a seeded PRNG, and every value is a pure function of t.
+   ============================================================ */
+const W = 1920, H = 1080, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+/* seeded PRNG — deterministic across runs */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* the resource constellation — positions are generated once, from a fixed seed */
+const N_RES = 278;
+const NODES = (() => {
+  const rnd = mulberry32(20261010), out = [];
+  for (let i = 0; i < N_RES; i++) {
+    const a = rnd() * Math.PI * 2, r = 180 + rnd() * 620;
+    out.push({ a, r, s: 1.6 + rnd() * 3.4, ph: rnd() * Math.PI * 2,
+               hue: rnd() < 0.16 ? CYAN : GOLD });
+  }
+  return out;
+})();
+
+/* the mesh backdrop */
+const MESH = (() => {
+  const rnd = mulberry32(77), out = [];
+  for (let i = 0; i < 74; i++) out.push({ x: rnd()*W, y: rnd()*H, vx:(rnd()-.5)*10, vy:(rnd()-.5)*10 });
+  return out;
+})();
+
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+/* 0 before a, 1 after b, eased between */
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+
+  /* A warm wash over the void.
+     The gate measures MEAN luminance > 20. Pure void (#050505) is luminance 5,
+     so a sparse gold-on-black frame scored 6.71 and failed — the design language
+     was right and the measurement was right; the frame simply had no mass. This
+     wash lifts the field to ~#2a2418 (luminance ~36) across the centre while the
+     vignette keeps the true void at the edges, so it still reads as gold in the
+     dark rather than a lit page. */
+  const wash = cx.createRadialGradient(W*0.5, H*0.48, 0, W*0.5, H*0.48, W*0.66);
+  wash.addColorStop(0.00, 'rgba(58,50,34,0.95)');
+  wash.addColorStop(0.55, 'rgba(42,36,24,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.55)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  // subtle moving grid
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*14) % 80;
+  for (let x = -80 + off; x < W; x += 80){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -80 + off; y < H; y += 80){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  // mesh
+  for (const m of MESH){
+    m.x += m.vx*0.016; m.y += m.vy*0.016;
+    if (m.x < 0) m.x = W; if (m.x > W) m.x = 0;
+    if (m.y < 0) m.y = H; if (m.y > H) m.y = 0;
+  }
+  cx.lineWidth = 1.4;
+  for (let i = 0; i < MESH.length; i++)
+    for (let j = i+1; j < MESH.length; j++){
+      const a = MESH[i], b = MESH[j], dx = a.x-b.x, dy = a.y-b.y, d2 = dx*dx+dy*dy;
+      if (d2 < 30000){
+        const o = (1 - d2/30000) * 0.30;
+        cx.strokeStyle = 'rgba(0,234,255,' + o.toFixed(3) + ')';
+        cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+      }
+    }
+  for (const m of MESH){
+    cx.fillStyle = 'rgba(212,175,55,0.75)';
+    cx.beginPath(); cx.arc(m.x,m.y,2.4,0,7); cx.fill();
+  }
+
+  // a backing panel for the left column of content — mass, and it keeps the
+  // text off the mesh so it stays legible
+  const pan = cx.createLinearGradient(0,0,760,0);
+  pan.addColorStop(0, 'rgba(10,9,7,0.52)');
+  pan.addColorStop(1, 'rgba(10,9,7,0.00)');
+  cx.fillStyle = pan; cx.fillRect(0,0,860,H);
+}
+
+function phaseAt(t){
+  if (t < 3)   return ['boot',    'æ://  ·  resolving namespace'];
+  if (t < 7.5) return ['address', 'one discovery layer · many resources'];
+  if (t < 12)  return ['verify',  'a QR that has not been decoded back is a picture of one'];
+  if (t < 16)  return ['act',     'scanning never grants execution'];
+  return ['launch', 'wyoming dao llc · via our affiliate rail'];
+}
+function titleAt(t){
+  if (t < 3)   return 'BOOT';
+  if (t < 7.5) return 'ADDRESS IT';
+  if (t < 12)  return 'VERIFY IT';
+  if (t < 16)  return 'THEN ACT';
+  return 'LAUNCH';
+}
+
+/* ── the constellation ─────────────────────────────────── */
+function drawNodes(t, on){
+  if (on <= 0) return;
+  const cxp = 1240, cyp = 540, rot = t * 0.22;
+  const shown = Math.floor(N_RES * ease(on));
+  cx.save();
+  // orbits
+  cx.strokeStyle = 'rgba(212,175,55,0.13)'; cx.lineWidth = 1;
+  for (const r of [260, 420, 580, 740]){
+    cx.beginPath(); cx.ellipse(cxp, cyp, r, r*0.42, 0, 0, 7); cx.stroke();
+  }
+  for (let i = 0; i < shown; i++){
+    const n = NODES[i];
+    const a = n.a + rot;
+    const x = cxp + Math.cos(a) * n.r;
+    const y = cyp + Math.sin(a) * n.r * 0.42;
+    const tw = 0.55 + 0.45 * Math.sin(t * 2.2 + n.ph);
+    cx.globalAlpha = tw;
+    cx.fillStyle = n.hue;
+    cx.beginPath(); cx.arc(x, y, n.s, 0, 7); cx.fill();
+    if (i % 23 === 0){
+      cx.globalAlpha = tw * 0.4;
+      cx.strokeStyle = n.hue; cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(x, y); cx.lineTo(cxp, cyp); cx.stroke();
+    }
+  }
+  cx.globalAlpha = 1;
+  // core
+  const cp = 0.7 + 0.3 * pulse(t, 3);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 130);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.55*cp) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 130, 0, 7); cx.fill();
+  cx.fillStyle = GOLDHI;
+  cx.font = '700 30px "Orbitron", sans-serif'; cx.textAlign = 'center';
+  cx.fillText(String(shown), cxp, cyp + 10);
+  cx.fillStyle = 'rgba(242,239,230,0.68)';
+  cx.font = '400 15px "JetBrains Mono", monospace';
+  cx.fillText('resources addressed', cxp, cyp + 40);
+  cx.restore();
+}
+
+/* ── the QR, and two decoders ──────────────────────────── */
+function qrMatrix(n, seed){
+  const rnd = mulberry32(seed), m = [];
+  for (let y = 0; y < n; y++){ const row = [];
+    for (let x = 0; x < n; x++) row.push(rnd() < 0.47 ? 1 : 0);
+    m.push(row); }
+  // finder patterns — the three real corners
+  const fin = (ox, oy) => {
+    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++){
+      const edge = x===0||y===0||x===6||y===6;
+      const core = x>=2&&x<=4&&y>=2&&y<=4;
+      m[oy+y][ox+x] = (edge||core) ? 1 : 0;
+    }
+  };
+  fin(0,0); fin(n-7,0); fin(0,n-7);
+  return m;
+}
+const QRN = 25, QRM = qrMatrix(QRN, 4242);
+
+function drawQR(t, x, y, size, reveal){
+  const cell = size / QRN;
+  const drawn = Math.floor(QRN*QRN*ease(reveal));
+  let k = 0;
+  cx.save();
+  cx.fillStyle = '#0a0a0c';
+  cx.fillRect(x-14, y-14, size+28, size+28);
+  cx.strokeStyle = 'rgba(212,175,55,0.5)'; cx.lineWidth = 1;
+  cx.strokeRect(x-14.5, y-14.5, size+29, size+29);
+  for (let gy = 0; gy < QRN; gy++) for (let gx = 0; gx < QRN; gx++){
+    k++;
+    if (k > drawn) continue;
+    if (QRM[gy][gx]){
+      const d = Math.hypot(gx-QRN/2, gy-QRN/2);
+      cx.globalAlpha = clamp(1.25 - d/(QRN*0.86), 0.42, 1);
+      cx.fillStyle = GOLDHI;
+      cx.fillRect(x+gx*cell, y+gy*cell, cell-0.6, cell-0.6);
+    }
+  }
+  cx.globalAlpha = 1;
+  cx.restore();
+}
+
+function drawDecoders(t, x, y, size, on){
+  if (on <= 0) return;
+  const sweep = (t*1.55) % 1;
+  const sy = y + sweep * size;
+  cx.save();
+  // scan beam
+  const g = cx.createLinearGradient(0, sy-40, 0, sy+40);
+  g.addColorStop(0, 'rgba(0,255,157,0)');
+  g.addColorStop(0.5, 'rgba(0,255,157,0.30)');
+  g.addColorStop(1, 'rgba(0,255,157,0)');
+  cx.fillStyle = g; cx.fillRect(x-14, sy-40, size+28, 80);
+  cx.strokeStyle = NEON; cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(x-14, sy); cx.lineTo(x+size+14, sy); cx.stroke();
+
+  // the two decoder verdicts
+  const bx = x + size + 66, by = y + 46;
+  const rows = [
+    ['cv2',      t > 4.6],
+    ['pyzbar',   t > 5.6],
+    ['agree',    t > 6.6],
+  ];
+  cx.font = '700 20px "JetBrains Mono", monospace'; cx.textAlign = 'left';
+  for (let i = 0; i < rows.length; i++){
+    const [label, ok] = rows[i];
+    const ry = by + i*52;
+    const a = ok ? 1 : 0.34;
+    cx.globalAlpha = a * ease(on);
+    cx.strokeStyle = ok ? NEON : 'rgba(212,175,55,0.4)';
+    cx.lineWidth = 1.5;
+    cx.strokeRect(bx, ry-24, 232, 38);
+    cx.fillStyle = ok ? NEON : 'rgba(242,239,230,0.5)';
+    cx.fillText(label, bx+14, ry+2);
+    cx.fillStyle = ok ? NEON : 'rgba(242,239,230,0.4)';
+    cx.fillText(ok ? 'v-ok' : '…', bx+150, ry+2);
+    cx.globalAlpha = 1;
+  }
+  // the rune refusal — the failure class the gate exists for
+  if (t > 5.9){
+    cx.globalAlpha = ease(seg(t,5.9,6.4)) * ease(on);
+    cx.strokeStyle = '#ff6b6b'; cx.lineWidth = 1.5;
+    cx.strokeRect(bx, by + 3*52 - 24, 232, 38);
+    cx.fillStyle = '#ff6b6b';
+    cx.fillText('æ: rune', bx+14, by + 3*52 + 2);
+    cx.fillText('REFUSED', bx+150, by + 3*52 + 2);
+    cx.globalAlpha = 1;
+  }
+  cx.restore();
+}
+
+/* ── authority ─────────────────────────────────────────── */
+function drawGate(t, x, y, on){
+  if (on <= 0) return;
+  cx.save();
+  cx.globalAlpha = ease(on);
+  const rows = [
+    ['resolve',  'open',  NEON],
+    ['read',     'open',  NEON],
+    ['verify',   'open',  NEON],
+    ['publish',  'gated', GOLD],
+    ['execute',  'gated', GOLD],
+    ['merge',    'gated', GOLD],
+    ['unknown',  'deny',  '#ff6b6b'],
+  ];
+  cx.font = '700 21px "JetBrains Mono", monospace'; cx.textAlign = 'left';
+  for (let i = 0; i < rows.length; i++){
+    const [act, verdict, col] = rows[i];
+    const ry = y + i*58;
+    const appear = ease(seg(t, 12.3 + i*0.30, 12.9 + i*0.30));
+    cx.globalAlpha = ease(on) * appear;
+    // the action
+    cx.fillStyle = 'rgba(242,239,230,0.88)';
+    cx.fillText(act, x, ry);
+    // the gate bar
+    const barX = x + 190, barW = 300;
+    cx.strokeStyle = 'rgba(212,175,55,0.28)'; cx.lineWidth = 1;
+    cx.strokeRect(barX, ry-19, barW, 26);
+    const fillW = (verdict === 'open' ? 0.34 : verdict === 'gated' ? 0.68 : 1) * barW;
+    cx.fillStyle = col; cx.globalAlpha = ease(on)*appear*0.72;
+    cx.fillRect(barX, ry-19, fillW, 26);
+    cx.globalAlpha = ease(on)*appear;
+    cx.fillStyle = col;
+    cx.fillText(verdict.toUpperCase(), barX + barW + 26, ry);
+  }
+  cx.restore();
+}
+
+/* ── the launch mark ───────────────────────────────────── */
+function drawMark(t, on){
+  if (on <= 0) return;
+  cx.save();
+  cx.globalAlpha = ease(on);
+  const cxp = 960, cyp = 470;
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 340);
+  g.addColorStop(0, 'rgba(255,215,0,0.20)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 340, 0, 7); cx.fill();
+
+  cx.textAlign = 'center';
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 128px "Orbitron", sans-serif';
+  cx.fillText('æ', cxp, cyp + 44);
+  cx.font = '700 40px "Orbitron", sans-serif';
+  cx.fillStyle = TXT;
+  cx.fillText('#STARTABUSINESS', cxp, cyp + 132);
+
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillStyle = 'rgba(242,239,230,0.80)';
+  cx.fillText('address it  ·  verify it  ·  then act', cxp, cyp + 186);
+
+  // the real numbers
+  const facts = ['278 resources', '2 decoders', 'default deny', 'RTX 3050 · NVENC'];
+  cx.font = '400 17px "JetBrains Mono", monospace';
+  for (let i = 0; i < facts.length; i++){
+    const fx = cxp + (i - 1.5) * 300;
+    cx.globalAlpha = ease(on) * ease(seg(t, 16.4 + i*0.16, 16.9 + i*0.16));
+    cx.fillStyle = i % 2 ? CYAN : GOLD;
+    cx.fillText(facts[i], fx, cyp + 240);
+  }
+  cx.globalAlpha = ease(on) * ease(seg(t, 17.1, 17.6));
+  cx.fillStyle = GOLD;
+  cx.font = '700 19px "JetBrains Mono", monospace';
+  cx.fillText('partnersps.doola.com/hhsoqhb23250', cxp, cyp + 292);
+  cx.restore();
+}
+
+/* ── HUD text, driven by t ─────────────────────────────── */
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  document.getElementById('pfill').style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+/* ── the frame ─────────────────────────────────────────── */
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+
+  // 0–3 boot
+  const bootOn = 1 - ease(seg(t, 2.4, 3.2));
+  if (bootOn > 0){
+    cx.save(); cx.globalAlpha = bootOn; cx.textAlign = 'left';
+    const lines = [
+      'æ://            namespace resolved',
+      'æQR             278 resources · 9 categories',
+      'envelope        ae:1:<type>:<b64url(json)>',
+      'gate            cv2 AND pyzbar must agree',
+      'authority       default DENY',
+    ];
+    cx.font = '700 24px "JetBrains Mono", monospace';
+    for (let i = 0; i < lines.length; i++){
+      const a = ease(seg(t, 0.18 + i*0.34, 0.62 + i*0.34));
+      cx.globalAlpha = bootOn * a;
+      cx.fillStyle = i % 2 ? CYAN : GOLD;
+      cx.fillText(lines[i].slice(0, 16), 300, 430 + i*56);
+      cx.fillStyle = TXT;
+      cx.fillText(lines[i].slice(16), 300 + 340, 430 + i*56);
+    }
+    cx.restore();
+  }
+
+  // 3–7.5 address
+  const addrOn = ease(seg(t, 3.0, 3.8)) * (1 - ease(seg(t, 7.2, 7.8)));
+  drawNodes(t, addrOn);
+
+  // 7.5–12 verify
+  const verOn = ease(seg(t, 7.5, 8.1)) * (1 - ease(seg(t, 11.6, 12.1)));
+  if (verOn > 0){
+    drawQR(t, 300, 400, 300, seg(t, 7.8, 9.6));
+    drawDecoders(t, 300, 400, 300, verOn);
+  }
+
+  // 12–16 act
+  const actOn = ease(seg(t, 12.0, 12.6)) * (1 - ease(seg(t, 15.7, 16.2)));
+  if (actOn > 0){
+    cx.save(); cx.globalAlpha = ease(actOn);
+    cx.fillStyle = GOLD; cx.textAlign = 'left';
+    cx.font = '700 26px "JetBrains Mono", monospace';
+    cx.fillText('AUTHORITY — DEFAULT DENY', 300, 400);
+    cx.restore();
+    drawGate(t, 300, 470, actOn);
+  }
+
+  // 16–18 launch
+  drawMark(t, ease(seg(t, 16.0, 16.7)));
+}
+
+/* ── the external frame hook (drives the producer) ─────── */
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+
+/* live preview loop (the producer takes over via the hook) */
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/justicia",
+  "region": "es-LATAM",
+  "sha256": "98e54f25689f811d0158b8be7607db53802f1bf9ce0c556c5eccf7dc10c4142b",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:40:52Z",
+  "qr_version": 7,
+  "qr_modules": 45,
+  "payload": "æqr://v1|teologia.ai/justicia|es-LATAM|sha256:98e54f25689f811d0158b8be7607db53802f1bf9ce0c556c5eccf7dc10c4142b|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

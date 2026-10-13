@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — æææ.com · the command line internet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:46px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:21px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">æææ.com</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">the command line internet</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">prompt</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — æææ.com · the command line internet
+   9:16 · 1080x1920 · Canvas 2D only.
+
+   NOTE ON HONESTY: aaa-protocol.html claims "LLM compute at 2100+ tok/s".
+   Nothing in the tree substantiates that number — it appears only in
+   brain.json marketing copy, with no measurement receipt behind it. It is
+   deliberately NOT in this video. What IS shown is the structural thesis,
+   which is verifiable, and the local throughput we can actually stand behind.
+
+   The warm wash is written in from the first line: gold on void #050505 is
+   luminance 5, and the gate refuses a frame with no mass.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* routing particles — the namespace carrying an address */
+const ROUTES = (() => {
+  const rnd = mulberry32(5150), out = [];
+  for (let i = 0; i < 46; i++) out.push({
+    x: rnd()*W, y: rnd()*H, sp: 40 + rnd()*90, ph: rnd()*Math.PI*2, r: 1.6 + rnd()*2.6,
+  });
+  return out;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+
+  // packets travelling the namespace
+  for (const r of ROUTES){
+    r.y -= r.sp * 0.016;
+    if (r.y < -20){ r.y = H + 20; r.x = (r.x * 1.37 + 91) % W; }
+    cx.globalAlpha = 0.20 + 0.20*Math.sin(t*2 + r.ph);
+    cx.fillStyle = CYAN;
+    cx.beginPath(); cx.arc(r.x, r.y, r.r, 0, 7); cx.fill();
+    cx.globalAlpha = 0.09;
+    cx.fillRect(r.x - 1, r.y, 2, 34);
+  }
+  cx.globalAlpha = 1;
+}
+
+function phaseAt(t){
+  if (t < 3.5)  return ['prompt',   'the url is the command'];
+  if (t < 7.5)  return ['equation', 'qr + mæch = compute'];
+  if (t < 11.5) return ['triple',   'spatial · temporal · dimensional'];
+  if (t < 15.0) return ['matrix',   'one namespace, many domains'];
+  return ['mark', 'the namespace is the runtime'];
+}
+function titleAt(t){
+  if (t < 3.5)  return '>_æææ://|||';
+  if (t < 7.5)  return 'THE EQUATION';
+  if (t < 11.5) return 'TRIPLE-ASHE';
+  if (t < 15.0) return 'THE MATRIX';
+  return 'æææ.com';
+}
+
+/* ── act 1: the prompt ─────────────────────────────────── */
+function drawPrompt(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  // the three ash glyphs, resolving one by one
+  const glyphs = ['æ','æ','æ'];
+  for (let i = 0; i < 3; i++){
+    const a = ease(seg(t, 0.2 + i*0.45, 0.8 + i*0.45));
+    cx.globalAlpha = ease(on) * a;
+    cx.fillStyle = i === 2 ? GOLDHI : GOLD;
+    cx.font = '900 150px "Orbitron", sans-serif';
+    cx.fillText(glyphs[i], cxp - 170 + i*170, 880);
+  }
+  // the separator
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.6, 2.0));
+  cx.fillStyle = CYAN;
+  cx.font = '900 92px "Orbitron", sans-serif';
+  cx.fillText('///', cxp, 1010);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.0, 2.6));
+  cx.fillStyle = TXT;
+  cx.font = '700 34px "JetBrains Mono", monospace';
+  cx.fillText('THE COMMAND LINE INTERNET', cxp, 1120);
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.5, 3.1));
+  cx.fillStyle = CYAN;
+  cx.font = '400 27px "JetBrains Mono", monospace';
+  cx.fillText('the url is the command', cxp, 1180);
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.9, 3.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 25px "JetBrains Mono", monospace';
+  cx.fillText('the namespace is the runtime', cxp, 1230);
+  cx.restore();
+}
+
+/* ── act 2: the equation ───────────────────────────────── */
+function drawEquation(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  const terms = [
+    ['QR', 'visual addressing', GOLD,   3.7],
+    ['+',  '',                 CYAN,   4.5],
+    ['MÆCH', 'agentic programming', GOLD, 4.9],
+    ['=',  '',                 CYAN,   5.7],
+    ['COMPUTE', 'you own the hardware', GOLDHI, 6.1],
+  ];
+  for (let i = 0; i < terms.length; i++){
+    const [name, desc, col, at] = terms[i];
+    const a = ease(seg(t, at, at + 0.5));
+    const y = 700 + i*160;
+    cx.globalAlpha = ease(on) * a;
+
+    if (name === '+' || name === '='){
+      cx.fillStyle = col;
+      cx.font = '900 62px "Orbitron", sans-serif';
+      cx.fillText(name, cxp, y + 30);
+      continue;
+    }
+    const bw = 660, bh = 118;
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.38*a).toFixed(3) + ')';
+    cx.lineWidth = 1.6;
+    cx.strokeRect(cxp - bw/2, y - 20, bw, bh);
+    cx.fillStyle = 'rgba(212,175,55,0.07)';
+    cx.fillRect(cxp - bw/2, y - 20, bw, bh);
+    cx.fillStyle = col;
+    cx.font = '900 50px "Orbitron", sans-serif';
+    cx.fillText(name, cxp, y + 30);
+    cx.fillStyle = CYAN;
+    cx.font = '400 22px "JetBrains Mono", monospace';
+    cx.fillText(desc, cxp, y + 72);
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 6.7, 7.3));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('spatial + temporal = dimensional', cxp, 1560);
+  cx.restore();
+}
+
+/* ── act 3: triple-ashe ────────────────────────────────── */
+function drawTriple(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  const rows = [
+    ['æ', 'QR ADDRESSABILITY', 'spatial — every element has a visual address', 7.7],
+    ['æ', 'MÆCH EXECUTION',    'temporal — code flows through time',            8.9],
+    ['æ', 'PARALLEL FUSION',   'dimensional — several models at once',          10.1],
+  ];
+  for (let i = 0; i < rows.length; i++){
+    const [g, head, desc, at] = rows[i];
+    const a = ease(seg(t, at, at + 0.55));
+    const y = 760 + i*290;
+    cx.globalAlpha = ease(on) * a;
+
+    // the glyph
+    cx.fillStyle = i === 2 ? GOLDHI : GOLD;
+    cx.font = '900 96px "Orbitron", sans-serif';
+    cx.fillText(g, cxp, y);
+
+    cx.fillStyle = TXT;
+    cx.font = '700 34px "Orbitron", sans-serif';
+    cx.fillText(head, cxp, y + 70);
+    cx.fillStyle = CYAN;
+    cx.font = '400 23px "JetBrains Mono", monospace';
+    cx.fillText(desc, cxp, y + 112);
+
+    if (i < rows.length - 1){
+      cx.globalAlpha = ease(on) * a * ease(seg(t, at + 0.4, at + 0.8));
+      cx.strokeStyle = 'rgba(212,175,55,0.42)'; cx.lineWidth = 2;
+      cx.beginPath(); cx.moveTo(cxp, y + 142); cx.lineTo(cxp, y + 200); cx.stroke();
+    }
+  }
+  cx.restore();
+}
+
+/* ── act 4: the domain matrix ──────────────────────────── */
+function drawMatrix(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.5, 12.1));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('ONE NAMESPACE', cxp, 660);
+
+  const rows = [
+    ['æææ:///llm',     'llm.store',        'primary LLM substrate'],
+    ['æææ:///ael',     'æl.net',           'ML education network'],
+    ['æææ:///neuro',   'neuromitosis.com', 'neural compute'],
+    ['æææ:///private', 'privateclient.ai', 'private AI services'],
+  ];
+  cx.textAlign = 'left';
+  for (let i = 0; i < rows.length; i++){
+    const [route, domain, desc] = rows[i];
+    const at = 12.3 + i*0.62;
+    const a = ease(seg(t, at, at + 0.5));
+    const y = 810 + i*170;
+    cx.globalAlpha = ease(on) * a;
+
+    cx.strokeStyle = 'rgba(212,175,55,0.30)'; cx.lineWidth = 1.4;
+    cx.strokeRect(96, y - 58, 888, 124);
+
+    cx.fillStyle = CYAN;
+    cx.font = '700 27px "JetBrains Mono", monospace';
+    cx.fillText(route, 128, y - 18);
+
+    // the resolving arrow
+    cx.globalAlpha = ease(on) * a * ease(seg(t, at + 0.35, at + 0.7));
+    cx.strokeStyle = GOLD; cx.lineWidth = 2;
+    cx.beginPath(); cx.moveTo(150, y + 6); cx.lineTo(240, y + 6); cx.stroke();
+    cx.beginPath(); cx.moveTo(224, y - 4); cx.lineTo(244, y + 6); cx.lineTo(224, y + 16); cx.stroke();
+
+    cx.globalAlpha = ease(on) * a;
+    cx.fillStyle = GOLDHI;
+    cx.font = '700 32px "JetBrains Mono", monospace';
+    cx.fillText(domain, 270, y + 16);
+    cx.fillStyle = 'rgba(242,239,230,0.55)';
+    cx.font = '400 21px "JetBrains Mono", monospace';
+    cx.fillText(desc, 270, y + 48);
+  }
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.4, 14.9));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('one registry · one resolver · one namespace', cxp, 1650);
+  cx.restore();
+}
+
+/* ── act 5: the mark ───────────────────────────────────── */
+function drawMark(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 900;
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.24)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.1, 15.7));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 130px "Orbitron", sans-serif';
+  cx.fillText('æææ', cxp, cyp + 40);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.5, 16.1));
+  cx.fillStyle = TXT;
+  cx.font = '900 66px "Orbitron", sans-serif';
+  cx.fillText('æææ.com', cxp, cyp + 142);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.0, 16.6));
+  cx.fillStyle = CYAN;
+  cx.font = '400 27px "JetBrains Mono", monospace';
+  cx.fillText('the command line internet', cxp, cyp + 200);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.4, 17.0));
+  cx.fillStyle = TXT;
+  cx.font = '700 40px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, cyp + 292);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.8, 17.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('partnersps.doola.com/hhsoqhb23250', cxp, cyp + 352);
+  cx.globalAlpha = ease(on) * ease(seg(t, 17.1, 17.7));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, cyp + 406);
+  cx.restore();
+}
+
+/* ── HUD ───────────────────────────────────────────────── */
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+/* ── the frame ─────────────────────────────────────────── */
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+
+  drawPrompt(t,   ease(seg(t,0,0.5))   * (1 - ease(seg(t,3.2,3.7))));
+  drawEquation(t, ease(seg(t,3.5,4.0)) * (1 - ease(seg(t,7.2,7.7))));
+  drawTriple(t,   ease(seg(t,7.5,8.0)) * (1 - ease(seg(t,11.2,11.7))));
+  drawMatrix(t,   ease(seg(t,11.5,12.0)) * (1 - ease(seg(t,14.7,15.2))));
+  drawMark(t,     ease(seg(t,15.0,15.7)));
+}
+
+/* ── the external frame hook ───────────────────────────── */
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

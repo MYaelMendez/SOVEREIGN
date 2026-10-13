@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/tesis",
+  "region": "es-LATAM",
+  "sha256": "565549eebe9fa7b8c8b6c834637f1eeda35ed4935fc651e52cd2e5c77d402500",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:22:12Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/tesis|es-LATAM|sha256:565549eebe9fa7b8c8b6c834637f1eeda35ed4935fc651e52cd2e5c77d402500|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

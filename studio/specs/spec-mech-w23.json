@@ -1,0 +1,18 @@
+{
+  "title": "æ:// mech W23 — reactive dataflow",
+  "text": "Semana 23 · MECH Lang · mech-three bridge · RTX 3050 · NVENC",
+  "duration": 20,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "scene_html": "fase23-mech-reactive.html",
+  "mech_spec": {
+    "name": "W23-Demo",
+    "stages": ["idle", "plan", "render", "gate"],
+    "edges": [["idle", "plan"], ["plan", "render"], ["render", "gate"]],
+    "terminals": ["render"],
+    "refusals": ["gate"],
+    "raw": "# W23 mech spec",
+    "sha256": "20261013"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "system": "æ://",
+  "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+  "commitments": {
+    "conductor": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T17:49:22Z",
+      "sig": "P0LDRRWNJMZ_807BpkRuvmlL2a9W325kqdhBRRZNSFHcvQ2evx1PtM5Jt6kez76m1g6KXp1Ojxbaa4hUJ6_KBw",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "fleet_orchestrator": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T17:49:23Z",
+      "sig": "N-FGU2tEubMYjzGyzytk695_A3u9rV_235QnCtnE8mTyXVQkv1jdFPF-KvnT0QPTrvZt5F96hYVgN1Rd2kDOCg",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "hermes_supervision": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T17:49:23Z",
+      "sig": "UAcuTYuAWVgeF1-SG7TEqOblNaRBk16TfvzYyYNV_1xrnrRs87Q3kAtosK9rKV6RmjkYHwXTSNYhAwuAcv9RCA",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "test-agent": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T17:49:24Z",
+      "sig": "aLOo6p13eFmlgUZOWm6KVC_m_u6glywU3hkGmUzu58A-ZutL0mbkvQeYCNPChxhGd9cJl1HpX7rbOsG9_PfUCw",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "zeus_engine": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T17:49:24Z",
+      "sig": "R9_CJI8Il5n6JaNomgyPcODArg0uceNvVg7D0X_eQTwUAKNA69jclbVh8A5ZIAURDg2OPJRBMtJM9bBDVYvoAg",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "kænbæn_vault": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T18:09:34Z",
+      "sig": "VxTOxiQofJjE4ngcU98PZMM_UVkv1WJvtFMwbElpfGynBSIrAvQZt6H53jIZRTabRZak2uQGXMHv9SVGhj-uAg",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    },
+    "vaeult_chain": {
+      "pledge_hash": "bebe19b4923b3bdd1f681d89cc7cad75b45af850d0f38b23ed36f7e9a78335ad",
+      "signed_at": "2026-10-10T18:09:43Z",
+      "sig": "a_OWwlVOU-K8AY9LNa8FVrC1qms4OmR30t6IWORVT1IVv3xzz9PxWk214QUiF1g79ksdrshVGxIZtSGvbC8_Aw",
+      "pubkey": "bc794438c9c731a148d2c297bf108f3dadbbdf9a512bb3c867802504c9b3522b",
+      "fingerprint": "fa7dcfbbaebfc351"
+    }
+  },
+  "updated": "2026-10-10T18:09:43Z"
+}

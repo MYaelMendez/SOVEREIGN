@@ -1,0 +1,171 @@
+{
+  "series": "teo",
+  "suffix": "916",
+  "brand": "teologia.ai",
+  "prompt": "teologia://",
+  "lang": "es",
+  "tags_line": "teologia.ai  ·  es-LATAM",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "1-corpus",
+      "title": "EL CORPUS",
+      "subtitle": "devoción diaria · 17 artefactos",
+      "phases": ["corpus", "docs", "one"],
+      "titles": ["EL CORPUS", "1517 → 1580", "UNA SOLA PLATAFORMA"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "teologia.ai",
+          "lines": [
+            ["DEVOCIÓN DIARIA", "#F2EFE6", "900", 46, 96],
+            ["17 artefactos canónicos", "#00eaff", "400", 27, 70],
+            ["17 chips verificados · sha256", "#D4AF37", "400", 24, 68],
+            ["plataforma soberana · es-LATAM", "#00ff9d", "700", 25, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["1517", "Las 95 Tesis"],
+            ["1520", "A la Nobleza Cristiana"],
+            ["1520", "La Cautividad Babilónica"],
+            ["1520", "La Libertad Cristiana"],
+            ["1529", "Catecismo Menor"],
+            ["1529", "Catecismo Mayor"],
+            ["1529", "Enchiridion"],
+            ["1530", "Confesión de Augsburgo"],
+            ["1531", "Apología de la Confesión"],
+            ["1535", "Una manera sencilla de orar"],
+            ["1537", "Artículos de Smalcalda"],
+            ["1537", "Tratado del Primado"],
+            ["1577", "Fórmula de Concordia"],
+            ["1580", "Libro de Concordia"],
+            ["✝", "Credo Apostólico", "#00eaff"],
+            ["325", "Credo Niceno"],
+            ["✝", "Credo Atanasiano", "#00eaff"]
+          ],
+          "footer": "63 años · 17 documentos"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["SOLO SCRIPTURA", "#FFD700"],
+            ["SOLO FIDE", "#00eaff"],
+            ["SOLO GRATIA", "#00ff9d"]
+          ],
+          "closer": "la fe que obra por el amor",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["teologia.ai", "#F2EFE6", "700", 38, 60],
+            ["solo scriptura · solo fide · solo gratia", "#D4AF37", "400", 23, 0]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-plataforma",
+      "title": "CERO SERVIDORES",
+      "subtitle": "la plataforma es la superficie distribuible",
+      "phases": ["plataforma", "archivo", "chip", "copia"],
+      "titles": ["CERO SERVIDORES", "UN ARCHIVO", "EL CHIP", "SE COPIA"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "0",
+          "lines": [
+            ["CERO SERVIDORES", "#FFD700", "900", 50, 96],
+            ["CERO LLAVES", "#00ff9d", "900", 50, 80],
+            ["nada que apagar · nada que robar", "#00eaff", "400", 25, 74],
+            ["la plataforma es la superficie distribuible", "#F2EFE6", "400", 23, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["sin", "servidor"],
+            ["sin", "base de datos"],
+            ["sin", "cuenta"],
+            ["sin", "llave"],
+            ["sin", "permiso que pedir"]
+          ],
+          "footer": "un archivo · se copia · se pasa"
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["æqr://v1", "teologia.ai/platform"],
+            ["es-LATAM", "región"],
+            ["e4e8452f", "sha256 del manifiesto"],
+            ["☺://cc", "issuer"],
+            ["17/17", "hashes verificados"]
+          ],
+          "footer": "el chip compromete al manifiesto"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["teologia.ai", "#F2EFE6", "700", 38, 60],
+            ["plataforma soberana · es-LATAM", "#D4AF37", "400", 23, 0]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-ensenar",
+      "title": "ENSEÑARLES TEMPRANO",
+      "subtitle": "lo que aprendimos tarde",
+      "phases": ["enseñar", "lugar", "loop", "mision"],
+      "titles": ["ENSEÑARLES TEMPRANO", "DE DONNA, TEXAS", "EL CICLO", "HACIA LATINOAMÉRICA"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "ENSEÑARLES",
+          "lines": [
+            ["TEMPRANO", "#00ff9d", "900", 62, 100],
+            ["lo que aprendimos tarde", "#F2EFE6", "400", 28, 84],
+            ["ayudar a la gente a aprender, construir", "#00eaff", "400", 23, 42],
+            ["y enseñar a otros", "#00eaff", "400", 23, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["origen", "Donna, Texas"],
+            ["alcance", "comunidades de Latinoamérica"],
+            ["1936", "LALM · Latin American Lutheran Mission"],
+            ["", "LALI · Latin American Lutheran Institute"],
+            ["3 → 103", "edades"]
+          ],
+          "footer": "de un lugar, hacia muchos"
+        },
+        {
+          "kind": "blocks",
+          "head": "EL CICLO",
+          "items": [
+            ["ENSEÑAR", "#FFD700", "teach"],
+            ["CONSTRUIR", "#00eaff", "build"],
+            ["COMPARTIR", "#00ff9d", "share"]
+          ],
+          "closer": "quien aprende, enseña",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["FE · EDUCACIÓN · AGENCIA HUMANA", "#FFD700", "900", 32, 76],
+            ["la fe que obra por el amor", "#F2EFE6", "400", 26, 70],
+            ["teologia.ai", "#F2EFE6", "700", 38, 60],
+            ["#aprendelatam · #emprendelatam", "#D4AF37", "400", 23, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

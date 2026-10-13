@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/heidelberg",
+  "region": "es-LATAM",
+  "sha256": "9e901d720c24dd3e4aa55c558f322e3f99c48eea7cbba3031f0986e0ca4b814d",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:40:52Z",
+  "qr_version": 7,
+  "qr_modules": 45,
+  "payload": "æqr://v1|teologia.ai/heidelberg|es-LATAM|sha256:9e901d720c24dd3e4aa55c558f322e3f99c48eea7cbba3031f0986e0ca4b814d|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

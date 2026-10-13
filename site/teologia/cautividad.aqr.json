@@ -1,0 +1,13 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/cautividad",
+  "region": "es-LATAM",
+  "sha256": "eece8f0b45a47ff34c6b0dfcbe0a72ce145bce198ec251aaf7b6b6f02d76308c",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T06:22:12Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/cautividad|es-LATAM|sha256:eece8f0b45a47ff34c6b0dfcbe0a72ce145bce198ec251aaf7b6b6f02d76308c|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "decoded == payload"
+}

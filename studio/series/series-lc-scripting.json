@@ -1,0 +1,60 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "render scripting · series engine · deterministic",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "9-scripting",
+      "title": "RENDER SCRIPTING",
+      "subtitle": "JSON to scene to verified video",
+      "phases": ["spec", "evolve", "compare", "capability"],
+      "titles": ["THE SCRIPT", "THE ARC", "CANVAS VS OTHERS", "THE CAPABILITY"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "RENDER SCRIPTING",
+          "lines": [
+            ["JSON → SCENE → VIDEO", "#FFD700", "900", 44, 92],
+            ["the spec is the source of truth", "#00ff9d", "700", 32, 68],
+            ["one engine · many episodes", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "timeline",
+          "head": "THE EVOLUTION",
+          "items": [
+            ["v1", "4 acts · canvas only"],
+            ["v2", "+ timeline + compare"],
+            ["v3", "+ swarm particles"],
+            ["v4", "+ manim math anim"],
+            ["v5", "+ threejs 3D"]
+          ],
+          "closer": "the pipeline grew by adding act kinds"
+        },
+        {
+          "kind": "compare",
+          "items": [
+            ["CANVAS 2D", "native browser", "zero deps · 1080x1920", "series engine default"],
+            ["MANIM + THREEJS", "python / webgl", "math anim / 3D scenes", "separate pipelines"]
+          ],
+          "closer": "the script is the capability"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["THE SCRIPT IS THE CAPABILITY", "#FFD700", "900", 48, 76],
+            ["change the JSON · get a new episode", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

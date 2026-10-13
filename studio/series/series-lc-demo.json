@@ -1,0 +1,74 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "series engine · 6 act kinds · 3 render paths · particle swarm",
+  "width": 1080,
+  "height": 1920,
+  "duration": 15,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "8-demo",
+      "title": "THE ENGINE",
+      "subtitle": "every improvement, one spec",
+      "phases": ["engine", "kinds", "paths"],
+      "titles": ["THE ENGINE", "6 ACT KINDS", "3 RENDER PATHS"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "THE ENGINE",
+          "lines": [
+            ["6 ACT KINDS", "#FFD700", "900", 48, 92],
+            ["3 RENDER PATHS", "#00ff9d", "700", 36, 68],
+            ["1 CONTENT CONTRACT", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "timeline",
+          "head": "THE ARC",
+          "items": [
+            ["v1", "4 acts · canvas only"],
+            ["v2", "+ timeline + compare"],
+            ["v3", "+ particle swarm"],
+            ["v4", "+ manim path"],
+            ["v5", "+ threejs path"]
+          ],
+          "closer": "each success builds on the last"
+        },
+        {
+          "kind": "compare",
+          "items": [
+            ["CANVAS", "HTML + Canvas 2D", "9:16 social", "gold-on-void"],
+            ["MANIM", "Python + Manim CE", "1920x1080 edu", "3B1B style"],
+            ["THREE.JS", "WebGL + render.mjs", "3D scenes", "RTX ready"]
+          ],
+          "closer": "same spec, three emitters"
+        },
+        {
+          "kind": "blocks",
+          "head": "6 ACT KINDS",
+          "items": [
+            ["INTRO", "#FFD700", "hero title + lines"],
+            ["LIST", "#00eaff", "key-value rows"],
+            ["BLOCKS", "#00ff9d", "card grid"],
+            ["OUTRO", "#D4AF37", "closing CTA"],
+            ["TIMELINE", "#FFD700", "event line"],
+            ["COMPARE", "#00eaff", "A/B side-by-side"]
+          ],
+          "closer": "the swarm is always behind them"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["THE ENGINE", "#FFD700", "900", 52, 80],
+            ["JSON → scene → render → gate → deploy", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

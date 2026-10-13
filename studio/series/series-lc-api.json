@@ -1,0 +1,63 @@
+{
+  "series": "lc",
+  "suffix": "916",
+  "brand": "LONGCAT 2.5",
+  "prompt": "nous://",
+  "lang": "en",
+  "tags_line": "doola partner API · formation as a service",
+  "width": 1080,
+  "height": 1920,
+  "duration": 18,
+  "fps": 30,
+  "episodes": [
+    {
+      "id": "4-api",
+      "title": "DOOLA PARTNER API",
+      "subtitle": "formation as a service · 40+ endpoints",
+      "phases": ["api", "flow", "paths"],
+      "titles": ["PARTNER API", "THE FLOW", "THREE PATHS"],
+      "acts": [
+        {
+          "kind": "intro",
+          "big": "PARTNER API",
+          "lines": [
+            ["DOOLA", "#FFD700", "900", 52, 92],
+            ["formation as a service", "#00ff9d", "700", 36, 68],
+            ["40+ endpoints · 3 paths", "#00eaff", "400", 24, 0]
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            ["auth", "API key · no Bearer prefix"],
+            ["idempotency", "required on all creates"],
+            ["webhooks", "async progress · no polling"],
+            ["sandbox", "test.doola.com · dk_test_ key"],
+            ["errors", "machine-readable codes"],
+            ["signing", "SS-4 · Form 8821 · expedited EIN"]
+          ],
+          "footer": "build against sandbox first"
+        },
+        {
+          "kind": "blocks",
+          "items": [
+            ["REST API", "#FFD700", "customers · companies · compliance"],
+            ["EMBEDDED SDK", "#00e8ff", "@doola/js · your branding"],
+            ["MCP SERVER", "#00ff9d", "7 tools · 16 actions"],
+            ["OPENAPI", "#D4AF37", "machine-readable spec"]
+          ],
+          "closer": "one platform, three integration paths",
+          "closer_color": "#F2EFE6"
+        },
+        {
+          "kind": "outro",
+          "lines": [
+            ["DOOLA PARTNER API", "#FFD700", "900", 40, 70],
+            ["we intend to partner with them", "#00ff9d", "700", 30, 60],
+            ["LONGCAT 2.5 PREVIEW FREE", "#F2EFE6", "400", 26, 0]
+          ]
+        }
+      ]
+    }
+  ]
+}

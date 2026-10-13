@@ -48,10 +48,10 @@ const AAAResolver = (function() {
         'clear': { type: 'sys', desc: 'Clear terminal', usage: 'clear' },
         'status': { type: 'sys', desc: 'System status', usage: 'status' },
         'whoami': { type: 'sys', desc: 'Current identity', usage: 'whoami' },
+        'dispatch': { type: 'sys', desc: 'Dispatch a command to a surface', usage: 'dispatch <surface> <command> [args]' },
         'history': { type: 'sys', desc: 'Command history', usage: 'history' },
         'alias': { type: 'sys', desc: 'Create command alias', usage: 'alias <name>=<command>' },
         'motd': { type: 'sys', desc: 'Message of the day', usage: 'motd' },
-        'cat': { type: 'sys', desc: 'Display file contents', usage: 'cat <file>' },
         'echo': { type: 'sys', desc: 'Print text/variables', usage: 'echo <text>' },
         
         // LATAM MISSION COMMANDS
@@ -413,10 +413,10 @@ DESCRIPTION="THE STORE OF LARGE LANGUAGE MODELS ⌨️"`
                 return resolveHISTORY();
             case 'alias':
                 return resolveALIAS(args);
+            case 'dispatch':
+                return resolveDISPATCH(args);
             case 'motd':
                 return { type: 'output', output: MOTD };
-            case 'cat':
-                return resolveCAT(args);
             case 'echo':
                 return { type: 'output', output: args.join(' ').replace(/^\$/, '').trim() };
             
@@ -455,7 +455,7 @@ DESCRIPTION="THE STORE OF LARGE LANGUAGE MODELS ⌨️"`
                 return resolveMECH(args);
             case 'mechdown':
             case 'repl':
-                return resolveNavigate('/mechdown');
+                return resolveNavigation('goto', ['/mechdown']);
             case ':vars':
                 return { type: 'output', output: window.mechREPL ? window.mechREPL(':vars') : 'MechDown not loaded' };
             case ':clear':
@@ -468,8 +468,8 @@ DESCRIPTION="THE STORE OF LARGE LANGUAGE MODELS ⌨️"`
             
             default:
                 // Check for Mech assignment syntax: x := expression
-                if (fullInput.includes(':=')) {
-                    return resolveMECH([fullInput]);
+                if (raw.includes(':=')) {
+                    return resolveMECH([raw]);
                 }
                 return { type: 'error', output: `Unknown command: ${cmd}` };
         }
@@ -986,6 +986,22 @@ No content policy. Response streams straight to your terminal.
         };
     }
     
+    // ═══════════════════════════════════════════════════════════════
+    // æææ:///dispatch — COMMAND DISPATCH (Command Prompt AI)
+    // Typed intent ONLY. No I/O. A transport binds to `endpoint` later.
+    // ═══════════════════════════════════════════════════════════════
+    function resolveDISPATCH(args) {
+        return {
+            type: 'api',
+            endpoint: '/api/dispatch',
+            data: {
+                surface: args[0],
+                command: args[1],
+                args: args.slice(2)
+            }
+        };
+    }
+
     function resolveCOMPARE(args) {
         if (args.length < 3) {
             return { type: 'error', output: 'Usage: compare <model1> <model2> <prompt>' };

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<title>@yaelmendez — æ³ ENGINEERING · how do we build it?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--void:#050505;--gold:#D4AF37;--goldhi:#FFD700;--cyan:#00eaff;--neon:#00ff9d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--void);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+#c{position:fixed;top:0;left:0;width:1080px;height:1920px;display:block;z-index:1}
+#scanlines{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:40;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.20) 0px,rgba(0,0,0,0.20) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply}
+#vignette{position:fixed;top:0;left:0;width:1080px;height:1920px;z-index:41;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 66%,rgba(0,0,0,0.46) 100%)}
+#hud{position:fixed;top:84px;left:72px;right:72px;z-index:50;pointer-events:none}
+#hud .prompt{font-size:19px;letter-spacing:7px;color:var(--goldhi);opacity:.95}
+#hud h1{font-family:'Orbitron',sans-serif;font-size:42px;font-weight:900;letter-spacing:1px;
+  margin-top:18px;color:var(--goldhi);text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.1}
+#hud .rule{width:100%;height:1px;margin:24px 0;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,0.05))}
+#hud .sub{font-size:20px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;opacity:.94}
+#pbar{position:fixed;bottom:168px;left:72px;right:72px;z-index:50;height:12px;
+  border:1px solid rgba(212,175,55,.55);border-radius:6px;overflow:hidden;
+  background:rgba(212,175,55,0.07)}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,#D4AF37,#00ff9d)}
+#tags{position:fixed;bottom:106px;left:72px;right:72px;z-index:50;
+  font-size:19px;letter-spacing:2px;color:var(--gold);opacity:.92}
+#readout{position:fixed;bottom:56px;left:72px;z-index:50;color:var(--cyan);
+  font-size:16px;letter-spacing:3px}
+#readout .g{color:var(--goldhi)}
+#ph{position:fixed;bottom:56px;right:72px;z-index:50;color:var(--gold);
+  font-size:16px;letter-spacing:5px;text-transform:uppercase;opacity:.9}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div class="prompt">&gt;_æææ://|||</div>
+  <h1 id="ttl">æ³ · INGENIERÍA</h1>
+  <div class="rule"></div>
+  <div class="sub" id="stl">¿cómo lo construimos?</div>
+</div>
+<div id="pbar"><div id="pfill"></div></div>
+<div id="tags">@yaelmendez &nbsp;·&nbsp; æææ.com</div>
+<div id="readout">frame <span class="g" id="fc">0</span> / <span id="tc">0</span> &middot; t <span class="g" id="tt">0.00</span>s</div>
+<div id="ph">ingenieria</div>
+
+<script>
+/* ============================================================
+   @yaelmendez — æ³ ENGINEERING · how do we build it?
+   Third of three. Read from index.html ("æ³ · Ingeniería — ¿Cómo lo
+   construimos? TEOTECH · repos · herramientas").
+
+   The chain names are the real nine links (væult_chain.py, verified 11/11).
+   The gate thresholds are the real SupervisorVideo ones.
+
+   9:16 · 1080x1920 · Canvas 2D only. Warm wash from the first line.
+   ============================================================ */
+const W = 1080, H = 1920, DURATION = 18;
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d', { alpha: false });
+
+const GOLD = '#D4AF37', GOLDHI = '#FFD700', CYAN = '#00eaff', NEON = '#00ff9d';
+const TXT = '#F2EFE6';
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t^=t>>>7;t=Math.imul(t,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const ease  = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
+const seg   = (t,a,b) => clamp((t-a)/(b-a), 0, 1);
+const pulse = (t,s) => 0.5 + 0.5*Math.sin(t*s);
+
+/* the nine links — read from væult_chain.py */
+const LINKS = ['custody','format','gate','authority','contract',
+               'dispatch','publish','delivery','adoption'];
+
+/* a QR, drawn module by module — the chip */
+const QRN = 21;
+const QRM = (() => {
+  const rnd = mulberry32(1517), m = [];
+  for (let y = 0; y < QRN; y++){ const r = [];
+    for (let x = 0; x < QRN; x++) r.push(rnd() < 0.46 ? 1 : 0);
+    m.push(r); }
+  const fin = (ox, oy) => {
+    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++){
+      const edge = x===0||y===0||x===6||y===6, core = x>=2&&x<=4&&y>=2&&y<=4;
+      m[oy+y][ox+x] = (edge||core) ? 1 : 0;
+    }
+  };
+  fin(0,0); fin(QRN-7,0); fin(0,QRN-7);
+  return m;
+})();
+
+function bg(t){
+  cx.fillStyle = '#050505'; cx.fillRect(0,0,W,H);
+  const wash = cx.createRadialGradient(W*0.5, H*0.46, 0, W*0.5, H*0.46, H*0.62);
+  wash.addColorStop(0.00, 'rgba(60,52,35,0.95)');
+  wash.addColorStop(0.55, 'rgba(43,37,25,0.86)');
+  wash.addColorStop(1.00, 'rgba(12,11,8,0.52)');
+  cx.fillStyle = wash; cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle = 'rgba(212,175,55,0.10)'; cx.lineWidth = 1;
+  const off = (t*12) % 72;
+  for (let x = -72 + off; x < W; x += 72){ cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = -72 + off; y < H; y += 72){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+}
+
+function phaseAt(t){
+  if (t < 3.2)  return ['ingenieria', 'teotech · repos · herramientas'];
+  if (t < 8.0)  return ['chain',      'nine links · custody → adoption'];
+  if (t < 12.4) return ['chip',       'qr = the chip'];
+  return ['gate', 'build it · share it · teach it'];
+}
+function titleAt(t){
+  if (t < 3.2)  return 'æ³ · INGENIERÍA';
+  if (t < 8.0)  return 'THE CHAIN';
+  if (t < 12.4) return 'QR = THE CHIP';
+  return 'HOW WE BUILD';
+}
+
+/* ── act 1: the question ───────────────────────────────── */
+function drawQ(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 940;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.2, 0.9));
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 330);
+  g.addColorStop(0, 'rgba(255,215,0,' + (0.32*(0.7+0.3*pulse(t,2.5))) + ')');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 330, 0, 7); cx.fill();
+
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 132px "Orbitron", sans-serif';
+  cx.fillText('æ³', cxp, cyp + 20);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 0.9, 1.5));
+  cx.fillStyle = TXT;
+  cx.font = '900 46px "Orbitron", sans-serif';
+  cx.fillText('INGENIERÍA', cxp, cyp + 130);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.4, 2.0));
+  cx.fillStyle = CYAN;
+  cx.font = '400 33px "JetBrains Mono", monospace';
+  cx.fillText('¿Cómo lo construimos?', cxp, cyp + 200);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 1.9, 2.5));
+  cx.fillStyle = GOLD;
+  cx.font = '400 24px "JetBrains Mono", monospace';
+  cx.fillText('how do we build it?', cxp, cyp + 252);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 2.4, 3.0));
+  cx.fillStyle = TXT;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('TEOTECH · repos · herramientas', cxp, cyp + 320);
+  cx.restore();
+}
+
+/* ── act 2: the nine links ─────────────────────────────── */
+function drawChain(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2;
+  cx.textAlign = 'left';
+
+  const per = (8.0 - 3.2) / LINKS.length;
+  const first = Math.max(0, Math.floor((t - 3.2) / per) - 1);
+
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.3, 3.9));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 46px "Orbitron", sans-serif';
+  cx.fillText('THE CHAIN', cxp, 560);
+  cx.globalAlpha = ease(on) * ease(seg(t, 3.8, 4.4));
+  cx.fillStyle = CYAN;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('each link answers a failure the last could not', cxp, 610);
+
+  for (let i = first; i < Math.min(LINKS.length, first + 7); i++){
+    const at = 3.2 + i * per;
+    const a = ease(seg(t, at, at + per*0.5));
+    const y = 700 + (i - first) * 148;
+    cx.globalAlpha = ease(on) * a;
+
+    // the node
+    cx.fillStyle = i % 2 ? CYAN : GOLD;
+    cx.beginPath(); cx.arc(180, y, 10, 0, 7); cx.fill();
+
+    // the link line
+    if (i < LINKS.length - 1){
+      cx.globalAlpha = ease(on) * a * 0.6;
+      cx.strokeStyle = 'rgba(212,175,55,0.5)'; cx.lineWidth = 2;
+      cx.beginPath(); cx.moveTo(180, y + 12); cx.lineTo(180, y + 136); cx.stroke();
+      cx.globalAlpha = ease(on) * a;
+    }
+
+    cx.textAlign = 'left';
+    cx.fillStyle = TXT;
+    cx.font = '700 34px "JetBrains Mono", monospace';
+    cx.fillText(LINKS[i], 240, y + 11);
+  }
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on) * ease(seg(t, 7.3, 7.9));
+  cx.fillStyle = NEON;
+  cx.font = '700 28px "JetBrains Mono", monospace';
+  cx.fillText('11 / 11 healthy', cxp, 1690);
+  cx.restore();
+}
+
+/* ── act 3: QR = the chip ──────────────────────────────── */
+function drawChip(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 1010;
+  cx.textAlign = 'center';
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.1, 8.7));
+  cx.fillStyle = GOLDHI;
+  cx.font = '900 52px "Orbitron", sans-serif';
+  cx.fillText('QR = THE CHIP', cxp, 700);
+
+  // the die
+  const size = 320, cell = size / QRN;
+  const x0 = cxp - size/2, y0 = cyp - size/2;
+  cx.globalAlpha = ease(on) * ease(seg(t, 8.6, 9.2));
+  cx.fillStyle = '#0a0a0c';
+  cx.fillRect(x0-16, y0-16, size+32, size+32);
+  cx.strokeStyle = 'rgba(212,175,55,0.5)'; cx.lineWidth = 1.6;
+  cx.strokeRect(x0-16.5, y0-16.5, size+33, size+33);
+
+  const drawn = Math.floor(QRN*QRN * ease(seg(t, 8.8, 10.6)));
+  let k = 0;
+  for (let gy = 0; gy < QRN; gy++) for (let gx = 0; gx < QRN; gx++){
+    k++;
+    if (k > drawn) continue;
+    if (QRM[gy][gx]){
+      cx.fillStyle = GOLDHI;
+      cx.fillRect(x0 + gx*cell, y0 + gy*cell, cell-0.7, cell-0.7);
+    }
+  }
+
+  // the scan
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.0, 10.5));
+  const sweep = ((t - 10.0) * 0.9) % 1;
+  const sy = y0 + Math.max(0, sweep) * size;
+  if (t > 10.0){
+    const gg = cx.createLinearGradient(0, sy-36, 0, sy+36);
+    gg.addColorStop(0, 'rgba(0,255,157,0)');
+    gg.addColorStop(0.5, 'rgba(0,255,157,0.32)');
+    gg.addColorStop(1, 'rgba(0,255,157,0)');
+    cx.fillStyle = gg; cx.fillRect(x0-16, sy-36, size+32, 72);
+    cx.strokeStyle = NEON; cx.lineWidth = 2;
+    cx.beginPath(); cx.moveTo(x0-16, sy); cx.lineTo(x0+size+16, sy); cx.stroke();
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 10.8, 11.4));
+  cx.fillStyle = CYAN;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('scannable · verifiable · hash-chained', cxp, 1290);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.2, 11.8));
+  cx.fillStyle = GOLD;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('silicon ∩ information', cxp, 1334);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 11.6, 12.2));
+  cx.fillStyle = TXT;
+  cx.font = '400 21px "JetBrains Mono", monospace';
+  cx.fillText('a QR that has not been decoded back is a picture of one', cxp, 1390);
+  cx.restore();
+}
+
+/* ── act 4: build / share / teach ──────────────────────── */
+function drawGate(t, on){
+  if (on <= 0) return;
+  cx.save();
+  const cxp = W/2, cyp = 950;
+  cx.textAlign = 'center';
+  cx.globalAlpha = ease(on);
+  const g = cx.createRadialGradient(cxp, cyp, 0, cxp, cyp, 400);
+  g.addColorStop(0, 'rgba(255,215,0,0.22)');
+  g.addColorStop(1, 'rgba(255,215,0,0)');
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxp, cyp, 400, 0, 7); cx.fill();
+
+  const steps = ['BUILD IT', 'SHARE IT', 'TEACH IT'];
+  for (let i = 0; i < steps.length; i++){
+    const at = 12.6 + i * 0.55;
+    const a = ease(seg(t, at, at + 0.45));
+    const y = 800 + i * 150;
+    cx.globalAlpha = ease(on) * a;
+    const bw = 620, bh = 108;
+    cx.strokeStyle = 'rgba(212,175,55,' + (0.42*a).toFixed(3) + ')';
+    cx.lineWidth = 1.7;
+    cx.strokeRect(cxp - bw/2, y - 34, bw, bh);
+    cx.fillStyle = 'rgba(212,175,55,0.08)';
+    cx.fillRect(cxp - bw/2, y - 34, bw, bh);
+    cx.fillStyle = i === 0 ? GOLDHI : (i === 1 ? CYAN : NEON);
+    cx.font = '900 46px "Orbitron", sans-serif';
+    cx.fillText(steps[i], cxp, y + 34);
+  }
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.4, 15.0));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('45/45 tests  ·  P&R 392 MHz  ·  61 schemes', cxp, 1330);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 14.8, 15.4));
+  cx.fillStyle = CYAN;
+  cx.font = '400 22px "JetBrains Mono", monospace';
+  cx.fillText('gate: lum > 20 · con > 10 · mov > 0.5 · 0 black frames', cxp, 1376);
+
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.4, 16.0));
+  cx.fillStyle = TXT;
+  cx.font = '700 38px "JetBrains Mono", monospace';
+  cx.fillText('@yaelmendez', cxp, 1490);
+  cx.globalAlpha = ease(on) * ease(seg(t, 15.8, 16.4));
+  cx.fillStyle = GOLD;
+  cx.font = '400 23px "JetBrains Mono", monospace';
+  cx.fillText('æ³ ENGINEERING  ·  æææ.com', cxp, 1542);
+  cx.globalAlpha = ease(on) * ease(seg(t, 16.2, 16.8));
+  cx.fillText('#internetofagents  ·  #onepersoncompany', cxp, 1594);
+  cx.restore();
+}
+
+const ttlEl = document.getElementById('ttl');
+const stlEl = document.getElementById('stl');
+const phEl  = document.getElementById('ph');
+const pfEl  = document.getElementById('pfill');
+function hud(t){
+  const [ph, sub] = phaseAt(t);
+  const ti = titleAt(t);
+  if (ttlEl.textContent !== ti) ttlEl.textContent = ti;
+  if (stlEl.textContent !== sub) stlEl.textContent = sub;
+  if (phEl.textContent !== ph) phEl.textContent = ph;
+  pfEl.style.width = ((t/DURATION)*100).toFixed(2) + '%';
+}
+
+function renderAt(t){
+  t = clamp(t, 0, DURATION);
+  bg(t);
+  hud(t);
+  drawQ(t,     ease(seg(t,0,0.5))      * (1 - ease(seg(t,3.0,3.4))));
+  drawChain(t, ease(seg(t,3.2,3.7))    * (1 - ease(seg(t,7.8,8.2))));
+  drawChip(t,  ease(seg(t,8.0,8.5))    * (1 - ease(seg(t,12.2,12.6))));
+  drawGate(t,  ease(seg(t,12.5,13.1)));
+}
+
+let driven = false;
+window.__renderFrame = function (i, total){
+  driven = true;
+  const n = Math.max(1, (total || 1) - 1);
+  const t = (i / n) * DURATION;
+  renderAt(t);
+  document.getElementById('fc').textContent = i;
+  document.getElementById('tc').textContent = total;
+  document.getElementById('tt').textContent = t.toFixed(2);
+  return true;
+};
+function loop(){
+  if (!driven) renderAt((performance.now()/1000) % DURATION);
+  requestAnimationFrame(loop);
+}
+loop();
+window.__renderFrame(0, 1);
+</script>
+</body>
+</html>

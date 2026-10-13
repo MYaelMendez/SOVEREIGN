@@ -1,0 +1,16 @@
+{
+  "scheme": "æqr://v1",
+  "artifact": "teologia.ai/credo",
+  "region": "es-LATAM",
+  "sha256": "8dc9fb1c8af44eb12b3919166e3f4c15ee26a24a2b27f90406beace5cec36fbf",
+  "issuer": "☺://cc",
+  "issued_at": "2026-10-13T05:33:40Z",
+  "qr_version": 8,
+  "qr_modules": 49,
+  "payload": "æqr://v1|teologia.ai/credo|es-LATAM|sha256:8dc9fb1c8af44eb12b3919166e3f4c15ee26a24a2b27f90406beace5cec36fbf|issuer:☺://cc",
+  "decoded_ok": true,
+  "decode_note": "cv2 box=8 decoded",
+  "badge_svg": "C:\\æ\\site\\teologia\\aeqr-badge-credo.svg",
+  "html": "C:\\æ\\site\\teologia\\credo-niceno.html",
+  "note": "signed intent can travel; authority does not travel with it"
+}
