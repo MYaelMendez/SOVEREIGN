@@ -55,3 +55,70 @@ secrets.json
 # Organized loose root files (2026-10)
 scratch/
 _installers/
+
+# === 2026-10: nested repos + build/media artifacts ===
+# Nested first-party repos — tracked independently, never embed as gitlinks.
+# (each verified to hold 0 tracked files in this repo)
+atproto-private-client/
+gpu-mcp/
+hermes-mobile-app/
+reachy2-sdk/
+reachy_mini/
+supervisionvidaeo/
+vidæo/
+virtual-mcp/
+gospel-bookstore/
+pc-code/
+threejs-curriculo/
+_archive/
+# site/ is tracked in this repo AND carries its own clone — ignore only the clone
+site/.git/
+
+# Rust / native build output
+**/target/
+.fingerprint/
+*.rlib
+*.rmeta
+*.pdb
+*.o
+*.dll
+*.lib
+*.exp
+*.bin
+*.timestamp
+*.binarypb
+*.d
+
+# Browser profile junk
+**/.chrome-profile/
+CrashpadMetrics*
+first_party_sets*
+
+# Render output (frame sequences + encoded media)
+*-frames/
+studio/output/
+
+# Scratch one-offs
+fix*.py
+_stage.txt
+nul
+
+# Vendored third-party libraries (CDN replaces these; do not re-embed)
+**/vendor/
+
+# Media renders — video/audio are build outputs, not source
+*.mp4
+*.mp3
+*.wav
+
+# Runtime state / databases
+*.db
+*.sqlite
+
+# Demo scratch trees
+cuda-mcp2-demo/
+videolab/
+fleet-waves-demo/
+
+# Built wasm dist
+**/wasm/dist/
