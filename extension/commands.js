@@ -8,9 +8,18 @@ const COMMANDS = [
     pattern: /^#startabusiness$/,
     icon: 'æ',
     title: '#startabusiness',
-    desc: 'generate agentic.html sovereign business page',
-    url: 'https://myaelmendez.github.io/ae/',
-    keywords: ['business', 'llc', 'dao', 'form', 'start']
+    desc: 'sovereign business page + real formation — Doola Partner API',
+    url: 'https://myaelmendez.github.io/startabusiness.html',
+    keywords: ['business', 'llc', 'dao', 'form', 'start', 'formation', 'doola', 'api']
+  },
+  {
+    id: 'formation',
+    pattern: /^(#formation|#doola|doola)$/,
+    icon: 'dk',
+    title: '#formation · Doola rail',
+    desc: 'LLC / C-Corp formation — sandbox-first API client + affiliate hand-off',
+    url: 'https://myaelmendez.github.io/startabusiness.html',
+    keywords: ['formation', 'doola', 'llc', 'ccorp', 'ein', 'api', 'rail', 'entity']
   },
   {
     id: 'sovaereign',
