@@ -66,7 +66,7 @@ canvas{display:block;width:100vw;height:100vh}
   window.addEventListener('resize',resize);
   resize();
 
-  // draw a vertical progress bar (curriculum)
+  // draw a vertical progress bar (curriculum), animated by time
   function bar(x,y,w,h,p){
     ctx.fillStyle = 'rgba(212,175,55,0.12)';
     ctx.fillRect(x,y,w,h);
@@ -142,19 +142,27 @@ canvas{display:block;width:100vw;height:100vh}
       ctx.fillRect(0,y,w,1);
     }
 
-    // ── HEADER: væult chain ──
+    // ── HEADER: væult chain, with vertical pulse ──
+    const headerY = 60 + 8 * Math.sin(time * 1.2);
     ctx.fillStyle = 'rgba(212,175,55,0.8)';
-    txt(28,60,16,
+    ctx.shadowColor = 'rgba(240,210,106,0.3)';
+    ctx.shadowBlur = 12;
+    txt(28, headerY, 16,
       'VÆULT CHAIN  ·  8 LINKS',
       'vault ▮ envelope ▮ gate ▮ authority ▮ contract ▮ dispatch ▮ publish ▮ delivery',
       'rule: where a gate exists, pass through it. where none, say the check is missing'
     );
+    ctx.shadowBlur = 0;
 
-    // ── CURRICULUM BARS (W4–W23) ──
+    // ── CURRICULUM BARS (W4–W23), animated ──
     const by = 120, bh = 8, bw = 18, gap = 2, startX = 28;
+    const progress = 0.6 + 0.4 * Math.sin(time * 0.5);
     ctx.fillStyle = 'rgba(240,210,106,0.25)';
     for(let i=0;i<weeks.length;i++){
-      ctx.fillRect(startX + i*(bw+gap), by, bw, bh);
+      const p = i / weeks.length;
+      const barProgress = Math.max(0, Math.min(1, (progress + p - 0.5) * 1.4));
+      const h = bh * (0.3 + 0.7 * barProgress);
+      ctx.fillRect(startX + i*(bw+gap), by + bh - h, bw, h);
     }
     // draw week labels
     ctx.font = '9px "JetBrains Mono",monospace';
@@ -166,26 +174,32 @@ canvas{display:block;width:100vw;height:100vh}
 
     // ── SKILLS MICRO-GRID ──
     const gx = 28, gy = by + bh + 40, gw = 520, gh = 260;
+    const skew = 3 * Math.sin(time * 0.4);
     ctx.fillStyle = 'rgba(212,175,55,0.1)';
     ctx.fillRect(gx,gy,gw,gh);
     ctx.strokeStyle='rgba(212,175,55,0.3)';
     ctx.strokeRect(gx,gy,gw,gh);
+    ctx.transform(1, skew, -skew, 1, 0, 0);
 
     // title
     ctx.font = '10px "Orbitron",sans-serif';
     ctx.fillStyle = 'rgba(240,210,106,0.8)';
-    ctx.fillText('SKILLS · composición', gx+12, gy+18);
-    // skill list
-    const skills = ['Shader Foundations','Pipeline Determinístico','Materials','XML/SVG Dataflow','Spreadsheets→Geometry','Video→Context→Agent','Chaos + Gate','Teologia Calendar','Hauge/Lutheran','Schweitzer Nobel','1517 Reformation'];
-    ctx.font = '10px "JetBrains Mono",monospace';
-    ctx.fillStyle = 'rgba(240,210,106,0.6)';
+    ctx.fillText('SKILLS · composación', gx+12, gy+18 + skew);
+    // skill list with subtle pulse glow
+    const skillPulse = 0.6 + 0.4 * Math.sin(time * 0.8);
     skills.forEach((s,i)=>{
-      ctx.fillText('▸ '+s, gx+16, gy+34 + i*16);
+      const y = gy + 34 + i*16;
+      ctx.shadowColor = 'rgba(240,210,106,' + skillPulse + ')';
+      ctx.shadowBlur = 4 * skillPulse;
+      ctx.fillStyle = 'rgba(240,210,106,' + skillPulse + ')';
+      ctx.fillText('▸ '+s, gx+16, y + skew);
+      ctx.shadowBlur = 0;
     });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     // ── HARDWARE BADGE ──
     ctx.font = '9px "JetBrains Mono",monospace';
-    const hwY = gy + gh + 20;
+    const hwY = gy + gh + 20 + 4 * Math.sin(time * 0.6);
     aeps.forEach((a,i)=>{
       const yy = hwY + i*26;
       ctx.fillStyle = 'rgba(212,175,55,0.25)';
@@ -203,7 +217,7 @@ canvas{display:block;width:100vw;height:100vh}
     );
 
     // ── HISTORICAL SERIES ──
-    const hy = hwY + 4*26 + 40;
+    const hy = hwY + 4*26 + 40 + 8 * Math.sin(time * 0.5);
     ctx.font = '10px "Orbitron",sans-serif';
     ctx.fillStyle = 'rgba(240,210,106,0.85)';
     txt(gx, hy, 11,
@@ -214,9 +228,10 @@ canvas{display:block;width:100vw;height:100vh}
     );
 
     // ── FOOTER: SITE INDEX ──
+    const footerY = h - 40 + 6 * Math.sin(time * 0.7);
     ctx.font = '9px "JetBrains Mono",monospace';
     ctx.fillStyle = 'rgba(240,210,106,0.3)';
-    txt(gx, h-40, 9,
+    txt(gx, footerY, 9,
       'SITE INDEX · 233 surfaces · 14 namespaces · 184 pages on github.io',
       'Séries: 23 semanas · video local · zero cloud · zero dependencia externa'
     );
