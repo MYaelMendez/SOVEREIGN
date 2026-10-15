@@ -1,34 +1,73 @@
 {
-  "system": "\u00e6://",
+  "system": "æ://",
   "aee": {
     "spec": {
       "id": "SPEC-001",
       "title": "UART Transmitter",
       "hash": "6d2d6be292f6141ebca0b9f2bad8e2fc05e7854ac8294595eae18a55ad202d28",
-      "path": "C:/\u00e6/aee/spec/SPEC-001-uart-tx.md"
+      "path": "C:/æ/aee/spec/SPEC-001-uart-tx.md"
     },
     "rtl": {
       "id": "RTL-001",
-      "title": "UART Transmitter RTL",
-      "hash": "7134e83192dd0b31f80b913ef3b2a10767d6a5551902724fbb94bf9e8e535822",
-      "path": "C:/\u00e6/aee/rtl/uart_tx.v"
+      "rev": 2,
+      "title": "UART Transmitter RTL (SIM gate fix)",
+      "hash": "7d75a1df66732847ff90eb575179b089ba5469160608ebf0380f3716804065f7",
+      "path": "C:/æ/aee/rtl/uart_tx.v",
+      "rev1_hash": "7134e83192dd0b31f80b913ef3b2a10767d6a5551902724fbb94bf9e8e535822",
+      "fixes": [
+        "B1 tx_ready undriven wire",
+        "B2 fifo_rd_data race",
+        "B3 WAIT deadlock",
+        "B4 redundant rd/count"
+      ]
     },
     "sim": {
       "id": "SIM-001",
-      "title": "UART Transmitter Testbench",
       "hash": "9a23751c04f66a89db8ae4730f0c3db852984d6baf0040069dae063a9312df9b",
-      "path": "C:/\u00e6/aee/sim/uart_tx_tb.v"
-    },
-    "synthesis": {
-      "status": "pending",
-      "reason": "EDA tools not in PATH",
-      "tools_needed": [
-        "iverilog",
-        "yosys",
-        "nextpnr-ice40"
+      "path": "C:/æ/aee/sim/uart_tx_tb.v",
+      "status": "PASS",
+      "frames": [
+        "0x55→1010101010",
+        "0x00→1000000000",
+        "0xFF→1111111110",
+        "0xA5→1101001010",
+        "0x3C→1001111000"
       ]
     },
-    "timestamp": "2026-10-08T08:35:38.953334+00:00",
-    "receipt": "ae://receipt/aee-spec-001-6d2d6be292f6141e"
+    "synthesis": {
+      "status": "PASS",
+      "tool": "yosys 0.69+190",
+      "cells": 471,
+      "problems": 0,
+      "breakdown": {
+        "SB_LUT4": 257,
+        "SB_DFFE": 128,
+        "SB_CARRY": 40,
+        "SB_DFFER": 25,
+        "SB_DFFR": 19,
+        "SB_DFFS": 2
+      },
+      "json_sha256": "032406c6f3d88b1ef45770854c14afb6a3a92b2bb951aa735cae012ed4c4864d",
+      "note": "-noabc (ABC skipped on Windows: DLL inheritance); LUT count unoptimised, spec target <100 not met"
+    },
+    "layout": {
+      "status": "PASS",
+      "tool": "nextpnr-ice40 0.11.1",
+      "device": "iCE40 HX8K CT256",
+      "lc": "397/7680 (5%)",
+      "max_freq_mhz": 104.66,
+      "target_mhz": 50,
+      "warnings": 1,
+      "errors": 0,
+      "asc_sha256": "8f5bbb6c860a27e024560e5d74304646933947d547f87e9bd6e5d55a82eca680"
+    },
+    "timestamp": "2026-10-15T03:35:32.671843+00:00",
+    "receipt": "ae://receipt/aee-spec-001-41700abbec96c699",
+    "chain": {
+      "prev": "genesis-aee-20261007",
+      "intent": "SPEC-001 UART Transmitter — SPEC->RTL->SIM->SYNTH->P&R complete",
+      "evidence_sha256": "5f6504ab6ee7fe91e307e6d43ae9c99db34b0e0cf1f023609e570f3e07f631a2",
+      "hash": "41700abbec96c699ad6e434501f3a7df7bea1266dc44250c32f5b8eb94ad1d6f"
+    }
   }
 }

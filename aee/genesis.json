@@ -1,14 +1,14 @@
 {
-  "system": "\u00e6://",
+  "system": "æ://",
   "aee": {
     "genesis_block": {
       "hash": "genesis-aee-20261007",
       "timestamp": "2026-10-07T21:45:00Z",
-      "description": "AEE genesis \u2014 first SPEC hash for agentic electronic engineering",
+      "description": "AEE genesis — first SPEC hash for agentic electronic engineering",
       "spec": "6d2d6be292f6141ebca0b9f2bad8e2fc05e7854ac8294595eae18a55ad202d28",
-      "rtl": "7134e83192dd0b31f80b913ef3b2a10767d6a5551902724fbb94bf9e8e535822",
-      "synthesis": null,
-      "layout": null,
+      "rtl": "7d75a1df66732847ff90eb575179b089ba5469160608ebf0380f3716804065f7",
+      "synthesis": "032406c6f3d88b1ef45770854c14afb6a3a92b2bb951aa735cae012ed4c4864d",
+      "layout": "8f5bbb6c860a27e024560e5d74304646933947d547f87e9bd6e5d55a82eca680",
       "receipt": "ae://receipt/genesis-aee-20261007",
       "sim": "9a23751c04f66a89db8ae4730f0c3db852984d6baf0040069dae063a9312df9b"
     },
@@ -16,9 +16,15 @@
       {
         "receipt": "ae://receipt/aee-spec-001-6d2d6be292f6141e",
         "timestamp": "2026-10-08T08:35:38.953334+00:00",
-        "description": "SPEC-001 UART Transmitter \u2014 design phase complete"
+        "description": "SPEC-001 UART Transmitter — design phase complete"
+      },
+      {
+        "receipt": "ae://receipt/aee-spec-001-41700abbec96c699",
+        "timestamp": "2026-10-15T03:35:32.671843+00:00",
+        "description": "SPEC-001 UART Transmitter — SIM+SYNTH+P&R verified (rev2)",
+        "chain_hash": "41700abbec96c699ad6e434501f3a7df7bea1266dc44250c32f5b8eb94ad1d6f"
       }
     ],
-    "status": "genesis_created"
+    "status": "spec-001_verified"
   }
 }
