@@ -89,6 +89,94 @@
    "sig": "(fact: str)"
   },
   {
+   "doc": "Bounce animation — vertical translation.",
+   "hash": "34737da79326",
+   "line": 395,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.bounce",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 2.3)"
+  },
+  {
+   "doc": "Color shift animation — hue rotation through palette.",
+   "hash": "74e3d601752a",
+   "line": 416,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.color_shift",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 10.0)"
+  },
+  {
+   "doc": "List all available motion effects.",
+   "hash": "f15855762d64",
+   "line": 378,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.effects",
+   "sig": "()"
+  },
+  {
+   "doc": "Flip animation — 3D Y-axis rotation.",
+   "hash": "2beb7c3c52e7",
+   "line": 391,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.flip",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 4.0)"
+  },
+  {
+   "doc": "Float animation — translation + rotation.",
+   "hash": "2cce6e3e0da0",
+   "line": 412,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.float",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 4.0)"
+  },
+  {
+   "doc": "Glow animation — text-shadow pulse.",
+   "hash": "f1c43b900641",
+   "line": 399,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.glow",
+   "sig": "(intensity: <function _Kinetic.float at 0x0000013C1AD6BB60> = 1.0, duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 2.5)"
+  },
+  {
+   "doc": "Grow/Shrink animation — scale oscillation.",
+   "hash": "7a19323992cb",
+   "line": 404,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.grow",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 3.0)"
+  },
+  {
+   "doc": "Pulse animation — opacity oscillation.",
+   "hash": "c64a0392277a",
+   "line": 382,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.pulse",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 2.0)"
+  },
+  {
+   "doc": "Signal animation — color step alternation.",
+   "hash": "28fa2272bd83",
+   "line": 408,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.signal",
+   "sig": "(duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 2.8)"
+  },
+  {
+   "doc": "Slide animation — horizontal or vertical translation.",
+   "hash": "c6998063ae52",
+   "line": 386,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.slide",
+   "sig": "(direction: str = 'horizontal', duration: <function _Kinetic.float at 0x0000013C1AD6BB60> = 3.5)"
+  },
+  {
+   "doc": "Kinetic system status — all effects available, no errors.",
+   "hash": "a26b447359c0",
+   "line": 420,
+   "mesh": "kinetic",
+   "name": "æ.kinetic.status",
+   "sig": "()"
+  },
+  {
    "doc": "List active mesh bots.",
    "hash": "b33e1af6421b",
    "line": 42,
@@ -155,7 +243,7 @@
   {
    "doc": "",
    "hash": "c04dc57aecbf",
-   "line": 383,
+   "line": 445,
    "mesh": "storage",
    "name": "æ.storage.list",
    "sig": "(dir: str)"
@@ -163,7 +251,7 @@
   {
    "doc": "",
    "hash": "bd7806d08941",
-   "line": 371,
+   "line": 433,
    "mesh": "storage",
    "name": "æ.storage.read",
    "sig": "(path: str)"
@@ -171,7 +259,7 @@
   {
    "doc": "",
    "hash": "a677657d443b",
-   "line": 377,
+   "line": 439,
    "mesh": "storage",
    "name": "æ.storage.write",
    "sig": "(path: str, content: str)"
@@ -241,8 +329,8 @@
    "sig": "(resource: str)"
   }
  ],
- "count": 30,
+ "count": 41,
  "generated_from": "agents/æ_code_mode.py",
  "scheme": "æ://capabilities",
- "source_sha256": "7bf51e8ae9ed8f91fcdcce53322c9e3a9f8d3c2ef34a848508ed47afe00753a6"
+ "source_sha256": "3aad0eb888a2a5f22479b129c280ca2520bd856920267a7e9a244ee2a0f38dfa"
 }

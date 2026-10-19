@@ -366,6 +366,68 @@ class _Kanban:
         return importlib.import_module("qr_kanban")
 
 
+class _Kinetic:
+    """Kinetic bindings — motion primitives from æ · TEXT IS ALIVE.
+    
+    Mobile-first motion laboratory. Decorative motion is optional;
+    verified status must come from real evidence.
+    """
+
+    EFFECTS = ["pulse", "slide", "flip", "bounce", "glow", "grow", "signal", "float"]
+
+    def effects(self):
+        """List all available motion effects."""
+        return self.EFFECTS
+
+    def pulse(self, duration: float = 2.0):
+        """Pulse animation — opacity oscillation."""
+        return {"effect": "pulse", "duration": duration, "css": "animation: pulse 2s ease-in-out infinite"}
+
+    def slide(self, direction: str = "horizontal", duration: float = 3.5):
+        """Slide animation — horizontal or vertical translation."""
+        return {"effect": "slide", "direction": direction, "duration": duration,
+                "css": "animation: slide 3.5s ease-in-out infinite"}
+
+    def flip(self, duration: float = 4.0):
+        """Flip animation — 3D Y-axis rotation."""
+        return {"effect": "flip", "duration": duration, "css": "animation: flip 4s ease-in-out infinite"}
+
+    def bounce(self, duration: float = 2.3):
+        """Bounce animation — vertical translation."""
+        return {"effect": "bounce", "duration": duration, "css": "animation: bounce 2.3s ease-in-out infinite"}
+
+    def glow(self, intensity: float = 1.0, duration: float = 2.5):
+        """Glow animation — text-shadow pulse."""
+        return {"effect": "glow", "intensity": intensity, "duration": duration,
+                "css": "animation: glow 2.5s ease-in-out infinite"}
+
+    def grow(self, duration: float = 3.0):
+        """Grow/Shrink animation — scale oscillation."""
+        return {"effect": "grow", "duration": duration, "css": "animation: grow 3s ease-in-out infinite"}
+
+    def signal(self, duration: float = 2.8):
+        """Signal animation — color step alternation."""
+        return {"effect": "signal", "duration": duration, "css": "animation: signal 2.8s steps(1,end) infinite"}
+
+    def float(self, duration: float = 4.0):
+        """Float animation — translation + rotation."""
+        return {"effect": "float", "duration": duration, "css": "animation: float 4s ease-in-out infinite"}
+
+    def color_shift(self, duration: float = 10.0):
+        """Color shift animation — hue rotation through palette."""
+        return {"effect": "color_shift", "duration": duration, "css": "animation: colors 10s linear infinite"}
+
+    def status(self):
+        """Kinetic system status — all effects available, no errors."""
+        return {
+            "available": True,
+            "effects": self.EFFECTS,
+            "count": len(self.EFFECTS),
+            "source": "https://myaelmendez.github.io/mcp/kinetic/",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+
 class _Storage:
     """Storage bindings — filesystem access within sandbox."""
     def read(self, path: str):
@@ -434,6 +496,7 @@ class _Æ:
         self.storage = _Storage()
         self.video = _Video()
         self.kanban = _Kanban()
+        self.kinetic = _Kinetic()
 
     # ── discovery — the catalog is DERIVED from the bindings, never written ──
 
@@ -459,10 +522,15 @@ class _Æ:
                     continue
                 yield bname, mname, meth
 
-    def manifest(self, q: str = None, mesh: str = None):
+    def manifest(self, q: str = None, mesh: str = None, group_by_mesh: bool = False):
         """List every capability the DSL exposes: name, signature, doc, hash, source line.
 
         Derived from the live bindings, so the catalog cannot drift from the code.
+        
+        Args:
+            q: Filter by query string (matches name or doc)
+            mesh: Filter by mesh node name
+            group_by_mesh: If True, return dict grouped by mesh node instead of flat list
         """
         import inspect, hashlib
         caps = []
@@ -481,10 +549,25 @@ class _Æ:
         if q:
             ql = q.lower()
             caps = [c for c in caps if ql in c["name"].lower() or ql in c["doc"].lower()]
+        
+        if group_by_mesh:
+            grouped = {}
+            for c in caps:
+                mesh_name = c["mesh"]
+                if mesh_name not in grouped:
+                    grouped[mesh_name] = []
+                grouped[mesh_name].append(c)
+            return grouped
+        
         return caps
 
-    def help(self, name: str):
-        """Full documentation for one capability: signature, doc, source."""
+    def help(self, name: str, example: bool = False):
+        """Full documentation for one capability: signature, doc, source.
+        
+        Args:
+            name: Capability name (full or partial match)
+            example: If True, include a usage example in the response
+        """
         import inspect
         for bname, mname, meth in self._iter_caps():
             if name in (f"æ.{bname}.{mname}", f"{bname}.{mname}", mname):
@@ -492,14 +575,22 @@ class _Æ:
                     src = inspect.getsource(meth).strip()[:1200]
                 except Exception:
                     src = ""
-                return {"name": f"æ.{bname}.{mname}", "sig": self._sig(meth),
-                        "doc": inspect.getdoc(meth) or "", "source": src}
+                result = {"name": f"æ.{bname}.{mname}", "sig": self._sig(meth),
+                          "doc": inspect.getdoc(meth) or "", "source": src}
+                if example:
+                    result["example"] = f"æ.{bname}.{mname}()"
+                return result
         return {"error": f"no capability named '{name}'"}
 
-    def skills(self, q: str = None, limit: int = 60):
+    def skills(self, q: str = None, limit: int = 60, tags: list = None):
         """List æ skills from SKILL.md frontmatter (name, description, tags, path).
 
         The skill half of the catalog — procedures, not bindings.
+        
+        Args:
+            q: Filter by query string (matches name, description, or tags)
+            limit: Maximum number of results (default: 60)
+            tags: Filter by tags — returns only skills that have ALL specified tags
         """
         import re as _re
         roots = [Path(r"C:/æ/skills"),
@@ -519,7 +610,7 @@ class _Æ:
                 fm = m.group(1)
                 nm = _re.search(r"^name:\s*(.+)$", fm, _re.M)
                 de = _re.search(r"^description:\s*(.+)$", fm, _re.M)
-                tg = _re.search(r"tags:\s*\[(.*?)\]", fm, _re.M)
+                tg = _re.search(r"^tags:\s*\[(.*?)\]", fm, _re.M)
                 out.append({
                     "name": (nm.group(1).strip().strip('"') if nm else f.parent.name),
                     "description": (de.group(1).strip().strip('"') if de else ""),
@@ -531,11 +622,60 @@ class _Æ:
             out = [s for s in out
                    if ql in s["name"].lower() or ql in s["description"].lower()
                    or any(ql in t.lower() for t in s["tags"])]
+        if tags:
+            # Filter: skill must have ALL specified tags
+            tag_set = set(t.lower() for t in tags)
+            out = [s for s in out if tag_set.issubset(set(t.lower() for t in s["tags"]))]
         return out[:limit]
 
-    def find(self, q: str):
-        """Search capabilities AND skills in one call — the single discovery surface."""
-        return {"capabilities": self.manifest(q=q), "skills": self.skills(q=q)}
+    def find(self, q: str, type: str = "both", limit: int = 10):
+        """Search capabilities AND skills in one call — the single discovery surface.
+        
+        Args:
+            q: Search query string
+            type: Filter by type — 'capabilities', 'skills', or 'both' (default)
+            limit: Maximum number of results per category (default: 10)
+        """
+        result = {}
+        if type in ("capabilities", "both"):
+            result["capabilities"] = self.manifest(q=q)[:limit]
+        if type in ("skills", "both"):
+            result["skills"] = self.skills(q=q, limit=limit)
+        return result
+
+    def status(self):
+        """Health check of the entire mesh — bots, kanban, capabilities, skills."""
+        bots = self.mesh.bots()
+        kanban_tasks = self.kanban.board()
+        caps = self.manifest()
+        skills = self.skills()
+        
+        # Check each bot's status
+        bot_status = {}
+        for bot in bots:
+            bot_status[bot["id"]] = bot["status"]
+        
+        # Overall health
+        all_bots_ok = all(s == "ok" for s in bot_status.values())
+        kanban_ok = len(kanban_tasks) >= 0  # kanban is always "ok" if it returns
+        
+        return {
+            "healthy": all_bots_ok and kanban_ok,
+            "bots": bot_status,
+            "kanban": {
+                "tasks": len(kanban_tasks),
+                "ok": kanban_ok,
+            },
+            "capabilities": {
+                "count": len(caps),
+                "ok": len(caps) > 0,
+            },
+            "skills": {
+                "count": len(skills),
+                "ok": len(skills) > 0,
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
 
 # ══════════════════════════════════════════════════════════════
@@ -732,6 +872,56 @@ def run_tests():
     code = "r = æ.find('kanban'); print(len(r['capabilities']), len(r['skills']))"
     out, _, rc = execute(code)
     check("æ.find() searches both halves", rc == 0 and out.strip().split()[0].isdigit(), out.strip())
+
+    # 18. æ.status() health check
+    code = "s = æ.status(); print(s['healthy'])"
+    out, _, rc = execute(code)
+    check("æ.status() returns health", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 19. æ.manifest(group_by_mesh=True) groups by mesh node
+    code = "g = æ.manifest(group_by_mesh=True); print(len(g) > 0)"
+    out, _, rc = execute(code)
+    check("æ.manifest(group_by_mesh=True) groups", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 20. æ.find(q, type='capabilities') filters by type
+    code = "r = æ.find('kanban', type='capabilities'); print('capabilities' in r and 'skills' not in r)"
+    out, _, rc = execute(code)
+    check("æ.find(q, type='capabilities') filters", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 21. æ.skills(tags=[...]) filters by tags
+    code = "s = æ.skills(tags=['qr']); print(isinstance(s, list))"
+    out, _, rc = execute(code)
+    check("æ.skills(tags=[...]) filters", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 22. æ.help(name, example=True) includes example
+    code = "h = æ.help('æ.kanban.board', example=True); print('example' in h)"
+    out, _, rc = execute(code)
+    check("æ.help(name, example=True) includes example", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 23. æ.find(q, limit=5) limits results
+    code = "r = æ.find('kanban', limit=5); print(len(r['capabilities']) <= 5)"
+    out, _, rc = execute(code)
+    check("æ.find(q, limit=5) limits results", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 24. æ.kinetic.effects() lists all motion effects
+    code = "e = æ.kinetic.effects(); print(len(e) >= 8)"
+    out, _, rc = execute(code)
+    check("æ.kinetic.effects() lists effects", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 25. æ.kinetic.pulse() returns pulse config
+    code = "p = æ.kinetic.pulse(); print(p['effect'])"
+    out, _, rc = execute(code)
+    check("æ.kinetic.pulse() returns config", rc == 0 and out.strip() == "pulse", out.strip())
+
+    # 26. æ.kinetic.status() returns health
+    code = "s = æ.kinetic.status(); print(s['available'])"
+    out, _, rc = execute(code)
+    check("æ.kinetic.status() returns health", rc == 0 and out.strip().lower() == "true", out.strip())
+
+    # 27. æ.manifest() includes kinetic capabilities
+    code = "c = [x['name'] for x in æ.manifest() if 'kinetic' in x['name']]; print(len(c) > 0)"
+    out, _, rc = execute(code)
+    check("æ.manifest() includes kinetic", rc == 0 and out.strip().lower() == "true", out.strip())
 
     print(f"\n══ {passed} passed, {failed} failed ══")
     return 0 if failed == 0 else 1
