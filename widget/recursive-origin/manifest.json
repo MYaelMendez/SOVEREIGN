@@ -1,0 +1,41 @@
+{
+  "identity": {
+    "id": "ae-recursive-origin",
+    "version": "0.1.0",
+    "publisher": "MYaelMendez",
+    "glyph": "\u00e6",
+    "kind": "local-preparation-widget"
+  },
+  "capability": {
+    "module": "./widget.mjs",
+    "operations": [
+      "mount-before",
+      "unmount",
+      "create-child",
+      "prepare-public-draft",
+      "review-local-export"
+    ],
+    "live_provider_calls": false
+  },
+  "interface": {
+    "scene": "./index.html",
+    "viewport": "9:16",
+    "origin": "x0:y0:z0:\u00e6:\u00e6",
+    "public": "x0:y0:z:0:\u00e6:\u00e6:\u00e6",
+    "host_mount": "explicit opt-in; never replace existing origin"
+  },
+  "trust": {
+    "authority": "human",
+    "inherit_authority": false,
+    "permissions": [
+      "render:dom",
+      "download:reviewed-draft"
+    ],
+    "execution_grants": [],
+    "cryptographic_attestation": false
+  },
+  "source": {
+    "repository": "MYaelMendez/SOVEREIGN",
+    "base_revision": "9ba31caebe5c781be03c50d069386ee4428df34d"
+  }
+}

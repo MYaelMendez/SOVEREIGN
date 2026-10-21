@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Recursive Origin / Open Sovereign</title>
+<style>body{margin:0;background:#10110c;color:#ede6d4;font:16px/1.5 system-ui,sans-serif}main{max-width:720px;margin:auto;padding:16px}.existing{border:1px dashed #bbae7f;padding:24px}button{font:inherit;min-height:44px;padding:8px 14px;cursor:pointer}h1{font-size:22px}</style></head>
+<body><main><h1>Open Sovereign / additive widget preview</h1><p>The new portrait layer sits above a test fixture. This is not a replacement for your real homepage or OpenAI Site.</p><button id="mount">Mount layer</button>
+<section id="existing-origin" class="existing"><h2>Existing origin / preservation fixture</h2><p>This node, its DOM identity and click listener must survive mounting and removal.</p><button id="counter">Original control</button> <output id="count">0</output></section></main>
+<script type="module">
+import {mountBefore} from './widget.mjs';
+let count=0;
+document.querySelector('#counter').addEventListener('click',()=>{document.querySelector('#count').value=String(++count);});
+const origin=document.querySelector('#existing-origin');
+window.fixtureOrigin=origin;
+window.mountLayer=()=>mountBefore(origin);
+document.querySelector('#mount').addEventListener('click',window.mountLayer);
+window.mountLayer();
+</script></body></html>
