@@ -389,6 +389,10 @@ def main():
                                 '-safe', '0', '-i', str(lst), '-ar', '24000', '-ac', '1',
                                 str(track)], capture_output=True, timeout=600)
                 total = track.stat().st_size / 48000.0
+                # never let the audio shorten the picture: pad to the request
+                _want = nf / float(a.fps)
+                if total < _want:
+                    total = _want
                 subprocess.run([str(_ffmpeg()/'ffmpeg'), '-v', 'error', '-y',
                                 '-i', str(silent), '-i', str(track), '-c:v', 'copy',
                                 '-filter:a', f'apad=whole_dur={total:.6f}',
