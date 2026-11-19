@@ -193,12 +193,132 @@ def film(out: Path, trace: Path | None = None, spec: Path | None = None,
     return r
 
 
+
+# ── MIXTURE OF ROBOTS ───────────────────────────────────────────────────────
+# Five bodies, five voices, ONE signature. The cast is not five authorities;
+# it is one authority expressed through five personas. Every member's refusal
+# chains to the same ledger — fan out to N, fan in to ONE truth.
+
+CAST_FILE = 'cast.json'
+
+
+def _cast_path() -> Path | None:
+    h = Path(os.environ.get('HERMES_HOME', Path.home() / '.hermes'))
+    for c in (HERE / CAST_FILE,
+              h / 'plugins' / 'hermes-asimov' / CAST_FILE,
+              ROOT / 'hermes-plugins' / 'hermes-asimov' / CAST_FILE):
+        if c.exists():
+            return c
+    return None
+
+
+def load_cast() -> dict:
+    p = _cast_path()
+    if p is None:
+        return {'ok': False, 'refused': True, 'grants': False,
+                'reason': 'cast.json not found — the mixture needs its cast'}
+    d = json.loads(p.read_text(encoding='utf-8'))
+    return {'ok': True, 'schema': d.get('schema'), 'version': d.get('version'),
+            'authority': d.get('authority'), 'center': d.get('center'),
+            'brand': d.get('brand'), 'states': d.get('states'),
+            'members': d.get('cast', []), 'source': str(p), 'grants': False}
+
+
+def cast() -> dict:
+    """The mixture, measured against the links each member needs."""
+    c = load_cast()
+    if not c.get('ok'):
+        return c
+    links = doctor()['links']
+    rows = []
+    for m in c['members']:
+        v = m.get('voice', {})
+        rows.append({
+            'id': m['id'], 'label': m.get('label'), 'role': m.get('role'),
+            'derived': m.get('derived'), 'head_rgb': m.get('head_rgb'),
+            'voice': f"{v.get('base')} speed {v.get('speed')} shift {v.get('pitch_shift')} range {v.get('pitch_range')}",
+            # every member rides the same four links; none has its own authority
+            'links': {k: bool(x.get('ok')) for k, x in links.items()},
+        })
+    return {'ok': True, 'scheme': 'æ://mixture-of-robots',
+            'authority': c['authority'], 'center': c['center'],
+            'members': rows, 'count': len(rows),
+            'one_signature': True,
+            'note': 'five bodies, five voices, ONE signature. A persona is not an authority.',
+            'grants': False}
+
+
+# Which member answers which intent. Routing is a convenience, never a grant.
+ROLES = {
+    'nous':   ['authority', 'intent', 'judge', 'root', 'why', 'should'],
+    'hermes': ['build', 'render', 'film', 'code', 'wire', 'ship', 'how'],
+    'menlo':  ['cad', 'mesh', 'body', 'policy', 'upstream', 'model', 'joint'],
+    'asimov': ['move', 'stand', 'walk', 'balance', 'act', 'motion'],
+    'waetz':  ['learn', 'rule', 'test', 'safe', 'trust', 'refuse', 'who'],
+}
+
+
+def route(text: str) -> dict:
+    t = (text or '').lower()
+    scores = {k: sum(1 for w in ws if w in t) for k, ws in ROLES.items()}
+    best = max(scores, key=lambda k: scores[k])
+    if scores[best] == 0:
+        best = 'waetz'          # the learner takes the unclassified question
+    verdict = ask(text)
+    c = load_cast()
+    member = next((m for m in c.get('members', []) if m['id'] == best), None)
+    return {'ok': True, 'input': text, 'routed_to': best,
+            'label': member.get('label') if member else best,
+            'role': member.get('role') if member else None,
+            'matched': scores[best], 'scores': scores,
+            'decision': verdict['decision'], 'rules': verdict['rules'],
+            'authority': 'HUMAN://ROOT',
+            # routing chooses a voice, never a permission
+            'grants': False, 'executed': False,
+            'note': 'routing selects who speaks. It does not select who may act.'}
+
+
+def speak(text: str, as_id: str = 'waetz', out: Path | None = None) -> dict:
+    """Speak in a member's voice. The cast's voice params are applied, not invented."""
+    c = load_cast()
+    if not c.get('ok'):
+        return c
+    m = next((x for x in c['members'] if x['id'] == as_id), None)
+    if m is None:
+        return {'ok': False, 'refused': True, 'grants': False,
+                'reason': f'unknown cast member {as_id!r}',
+                'available': [x['id'] for x in c['members']]}
+    entry = _find('tiny-voca')
+    if entry is None:
+        return {'ok': False, 'refused': True, 'reason': 'tiny-voca not found', 'grants': False}
+    v = m.get('voice', {})
+    dest = out or (HERE / f'{as_id}-speak.wav')
+    args = ['--text', text, '--voice', str(v.get('base', 'M2')), '--output', str(dest)]
+    try:
+        r = subprocess.run([sys.executable, str(entry), *args],
+                           capture_output=True, text=True, timeout=600)
+        ok = dest.exists()
+    except Exception as exc:
+        return {'ok': False, 'refused': True, 'reason': str(exc), 'grants': False}
+    return {'ok': ok, 'member': as_id, 'label': m.get('label'),
+            'voice_base': v.get('base'), 'file': str(dest) if ok else None,
+            'bytes': dest.stat().st_size if ok else 0,
+            'grants': False, 'executed': False,
+            'note': 'speech grants nothing. The persona is not the principal.'}
+
+
 def main():
     ap = argparse.ArgumentParser(prog='tinyasimov', description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('doctor')
     sub.add_parser('status')
+    sub.add_parser('cast', help='the mixture of robots, measured')
+    r = sub.add_parser('route', help='which member answers this'); r.add_argument('text', nargs='+')
+    s = sub.add_parser('speak', help='speak in a member voice')
+    s.add_argument('text', nargs='+')
+    s.add_argument('--as', dest='as_id', default='waetz')
+    s.add_argument('--out')
     a = sub.add_parser('ask'); a.add_argument('text', nargs='+')
     w = sub.add_parser('walk'); w.add_argument('out')
     w.add_argument('--vx', type=float, default=0.4)
@@ -211,6 +331,13 @@ def main():
         res = doctor()
     elif args.cmd == 'status':
         res = status()
+    elif args.cmd == 'cast':
+        res = cast()
+    elif args.cmd == 'route':
+        res = route(' '.join(args.text))
+    elif args.cmd == 'speak':
+        res = speak(' '.join(args.text), args.as_id,
+                    Path(args.out) if args.out else None)
     elif args.cmd == 'ask':
         res = ask(' '.join(args.text))
     elif args.cmd == 'walk':
