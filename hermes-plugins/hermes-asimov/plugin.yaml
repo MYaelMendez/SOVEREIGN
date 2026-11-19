@@ -1,0 +1,28 @@
+name: hermes-asimov
+version: 0.1.0
+description: "asimov:// — governed command and control for the Asimov humanoid over the official Menlo SDK. Policy-gated verbs, hash-chained receipts, and a sim transport that needs no robot."
+author: "Yæl Méndez (@yaelmendez), Hermes Agent"
+license: Apache-2.0
+kind: standalone
+requires_hermes: ">=0.22.2"
+tags: [robot, asimov, menlo, c2, policy, receipts, sovereign, opensourceware]
+provides_tools:
+  - asimov_status
+  - asimov_verbs
+  - asimov_plan
+  - asimov_exec
+  - asimov_sim
+  - asimov_grant
+  - ae_resolve
+  - moh_status
+  - moh_agents
+  - moh_route
+  - moh_delegate
+  - voice_speak
+  - voice_cast
+  - ae_ledger
+  - ae_caps
+  - robot_render
+  - robot_render_status
+  - robot_render_list
+provides_hooks: []

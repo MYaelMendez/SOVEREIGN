@@ -1,0 +1,1 @@
+{"css": "dist/style.css", "description": "Mixture-of-Robots command deck: SDK status, cast, receipt ledgers, and policy-evaluated plans. Read-only; grants no authority.", "entry": "dist/index.js", "icon": "robot", "label": "Asimov", "name": "hermes-asimov", "tab": {"path": "/hermes-asimov", "position": "after:skills"}, "version": "0.2.0"}
