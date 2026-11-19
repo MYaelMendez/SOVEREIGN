@@ -178,7 +178,28 @@ def main():
     fd.mkdir(parents=True, exist_ok=True)
 
     nf = a.frames or int(round(a.seconds * a.fps))
-    ident = np.array([0.0, 0.67, 1.0], np.float32)      # hermes blue head
+    # Cast identity: the head carries the speaker's colour, not a fixed blue.
+    # cast.json has always defined head_rgb per member; the renderer never read it.
+    CAST = {}
+    try:
+        _h = Path(os.environ.get('HERMES_HOME', Path.home()/'.hermes'))
+        _cp = _h/'plugins'/'hermes-asimov'/'cast.json'
+        if _cp.exists():
+            for _m in json.loads(_cp.read_text(encoding='utf-8')).get('cast', []):
+                CAST[_m['id']] = _m
+    except Exception:
+        pass
+    _speaker = 'hermes'
+    if getattr(a, 'scenes', None):
+        try:
+            _sc = json.loads(Path(a.scenes).read_text(encoding='utf-8'))['scenes']
+            if _sc:
+                _speaker = _sc[0].get('speaker', 'hermes')
+        except Exception:
+            pass
+    _rgb = (CAST.get(_speaker) or {}).get('head_rgb', [0, 170, 255])
+    ident = np.array([c/255.0 for c in _rgb], np.float32)
+    print(f'  cast: {_speaker} head_rgb {_rgb}')
     chassis = np.array([0.86, 0.87, 0.90], np.float32)
     names = list(links)
     cols = np.array([ident if n == 'neck_pitch_link' else chassis for n in names], np.float32)
@@ -281,7 +302,7 @@ def main():
         dr.text((26, 14), a.title, font=F_B, fill=(11, 10, 6, 255))
         dr.text((26, 54), a.tagline, font=F_S, fill=(58, 48, 16, 255))
         dr.rectangle([0, HUD, W, HH], fill=(14, 13, 8, 255))
-        dr.rectangle([0, HUD, W, HUD + 5], fill=(0, 170, 255, 255))
+        dr.rectangle([0, HUD, W, HUD + 5], fill=(*[int(c) for c in _rgb], 255))
         y = HUD + 20
         for ln in [f'{len(links)} CAD links · {len(urdf["joints"])} joints',
                    f'{len(V):,} triangles per frame',
@@ -366,7 +387,7 @@ def main():
                         d2.text((26, 14), a.title, font=F_B, fill=(11, 10, 6, 255))
                         d2.text((26, 54), a.tagline, font=F_S, fill=(58, 48, 16, 255))
                         d2.rectangle([0, HUD, W, HH], fill=(14, 13, 8, 255))
-                        d2.rectangle([0, HUD, W, HUD + 5], fill=(0, 170, 255, 255))
+                        d2.rectangle([0, HUD, W, HUD + 5], fill=(*[int(c) for c in _rgb], 255))
                         _y = HUD + 20
                         for _ln in [f'{len(links)} CAD links · {len(urdf["joints"])} joints',
                                     f'{len(V):,} triangles per frame',
