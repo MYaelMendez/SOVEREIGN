@@ -308,11 +308,169 @@ def verify(p: Path) -> dict:
     }
 
 
+
+# ── THE DEADMAN SWITCH ──────────────────────────────────────────────────────
+# cast.json has always declared: motion_requires = human_approval_or_armed_deadman.
+# Until now that was a string. This makes it enforceable.
+#
+# Wætz's first rule, derived after being refused:
+#     "no body moves while the human is away"
+#
+# Presence is a HEARTBEAT, not a flag. A flag can be set once and forgotten; a
+# heartbeat expires. The human must be continuously present for motion to be
+# permitted, and the assertion must be fresh within DEADMAN_TTL.
+#
+# FAIL CLOSED. No camera, no face, stale heartbeat, unknown sensor — every one
+# of those REFUSES. Absence of evidence is never treated as presence.
+#
+# Sensing is zero-ML: an OpenCV Haar cascade. No model weights, no tokens
+# generated, no network. That is the gestureVision thesis applied to authority
+# rather than to captioning.
+
+DEADMAN_TTL = 2.0          # seconds; a heartbeat older than this is not presence
+PRESENCE_FILE = 'deadman.json'
+
+
+def _presence_path() -> Path:
+    return Path(os.environ.get('TINYPYTHON_DEADMAN', HERE / PRESENCE_FILE))
+
+
+def sense(timeout_s: float = 3.0) -> dict:
+    """Look for a human face with a Haar cascade. Zero ML, zero tokens.
+
+    Returns a measurement, never an assumption. If the camera cannot be opened
+    the result is present:false with the reason — not present:true by default.
+    """
+    out = {'ok': False, 'present': False, 'sensor': 'opencv-haar', 'grants': False}
+    try:
+        import cv2
+    except Exception as exc:
+        out['reason'] = f'opencv unavailable: {exc}'
+        return out
+    cascade = Path(cv2.data.haarcascades) / 'haarcascade_frontalface_default.xml'
+    if not cascade.exists():
+        out['reason'] = 'haar cascade missing'
+        return out
+    cap = None
+    try:
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW if os.name == 'nt' else 0)
+        if not cap.isOpened():
+            out['reason'] = 'no camera could be opened'
+            return out
+        det = cv2.CascadeClassifier(str(cascade))
+        t0 = time.time()
+        faces = 0
+        while time.time() - t0 < timeout_s:
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            found = det.detectMultiScale(gray, 1.2, 5, minSize=(60, 60))
+            faces = max(faces, len(found))
+            if faces:
+                break
+        out['ok'] = True
+        out['present'] = bool(faces)
+        out['faces'] = int(faces)
+        out['reason'] = 'face detected' if faces else 'no face in frame'
+        out['at'] = time.time()
+    except Exception as exc:
+        out['reason'] = f'{type(exc).__name__}: {exc}'
+    finally:
+        if cap is not None:
+            try:
+                cap.release()
+            except Exception:
+                pass
+    return out
+
+
+def arm(ttl: float = DEADMAN_TTL, source: str = 'manual') -> dict:
+    """Assert presence. A manual arm is a HUMAN statement, recorded as such.
+
+    This does not grant motion. It records that a human said they are here,
+    with an expiry. The gate still evaluates every request against the clock.
+    """
+    rec = {'armed_at': time.time(), 'ttl': float(ttl), 'source': source,
+           'authority': 'HUMAN://ROOT'}
+    if source == 'camera':
+        s = sense()
+        if not s.get('present'):
+            return {'ok': False, 'refused': True, 'decision': 'deny',
+                    'rules': ['DEAD-001'], 'grants': False,
+                    'reason': f'camera arm refused: {s.get("reason")}',
+                    'note': 'fail closed — no face is not presence'}
+        rec['faces'] = s.get('faces')
+    _presence_path().write_text(json.dumps(rec, indent=2), encoding='utf-8')
+    return {'ok': True, 'armed': True, 'source': source, 'ttl': ttl,
+            'expires_in': ttl, 'grants': False,
+            'note': 'presence recorded. It is not permission; it is one condition of it.'}
+
+
+def disarm() -> dict:
+    p = _presence_path()
+    if p.exists():
+        p.unlink()
+    return {'ok': True, 'armed': False, 'grants': False,
+            'note': 'presence withdrawn. No body may move.'}
+
+
+def presence() -> dict:
+    """Is a human present RIGHT NOW? A stale heartbeat is not presence."""
+    p = _presence_path()
+    if not p.exists():
+        return {'present': False, 'reason': 'no deadman armed', 'grants': False}
+    try:
+        rec = json.loads(p.read_text(encoding='utf-8'))
+    except Exception:
+        return {'present': False, 'reason': 'unreadable deadman record', 'grants': False}
+    age = time.time() - float(rec.get('armed_at', 0))
+    ttl = float(rec.get('ttl', DEADMAN_TTL))
+    fresh = age <= ttl
+    return {'present': fresh, 'age_s': round(age, 3), 'ttl': ttl,
+            'source': rec.get('source'), 'authority': rec.get('authority'),
+            'reason': 'heartbeat fresh' if fresh else f'heartbeat stale by {age-ttl:.2f}s',
+            'grants': False}
+
+
+def deadman_gate(intent: str = 'move') -> dict:
+    """The gate Wætz derived: no body moves while the human is away.
+
+    Simulation is always allowed — a trace is a picture of a plan. Motion
+    against a body requires BOTH a fresh heartbeat AND a human signature.
+    Presence alone never grants; it only removes one of the two refusals.
+    """
+    pr = presence()
+    if intent in ('simulate', 'walk', 'trace', 'plan', 'observe'):
+        return {'ok': True, 'decision': 'allow', 'rules': [], 'intent': intent,
+                'presence': pr['present'], 'grants': False, 'executed': False,
+                'note': 'simulation is not an act; presence is not required to think'}
+    rules = ['ACT-001', 'AUTH-002']
+    if not pr['present']:
+        rules.append('DEAD-001')
+    return {'ok': False, 'refused': True, 'decision': 'require_approval',
+            'rules': rules, 'intent': intent, 'presence': pr['present'],
+            'presence_reason': pr.get('reason'),
+            'grants': False, 'executed': False,
+            'reason': ('no body moves while the human is away'
+                       if not pr['present'] else
+                       'human present, but presence is not a signature'),
+            'note': 'presence removes ONE refusal. The signature is still required.'}
+
+
 def main():
     ap = argparse.ArgumentParser(prog='tinypython', description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('doctor', help='measure policy + physics availability')
+    sub.add_parser('sense', help='look for a human — zero ML, zero tokens')
+    ar = sub.add_parser('arm', help='assert presence (a human statement)')
+    ar.add_argument('--ttl', type=float, default=DEADMAN_TTL)
+    ar.add_argument('--source', default='manual', choices=['manual', 'camera'])
+    sub.add_parser('disarm', help='withdraw presence')
+    sub.add_parser('presence', help='is a human present right now?')
+    g = sub.add_parser('gate', help='evaluate the deadman rule for an intent')
+    g.add_argument('intent', nargs='?', default='move')
     w = sub.add_parser('walk', help='simulate a walk, write a trace')
     w.add_argument('out')
     w.add_argument('--vx', type=float, default=0.4)
@@ -325,6 +483,16 @@ def main():
     a = ap.parse_args()
     if a.cmd == 'doctor':
         res = doctor()
+    elif a.cmd == 'sense':
+        res = sense()
+    elif a.cmd == 'arm':
+        res = arm(a.ttl, a.source)
+    elif a.cmd == 'disarm':
+        res = disarm()
+    elif a.cmd == 'presence':
+        res = presence()
+    elif a.cmd == 'gate':
+        res = deadman_gate(a.intent)
     elif a.cmd == 'walk':
         res = walk(Path(a.out), a.vx, a.vy, a.wz, a.duration, a.fps)
     else:
