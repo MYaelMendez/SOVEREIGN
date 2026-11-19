@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinycuda"
+version = "0.1.0"
+description = "A deterministic GPU triangle rasteriser in one file. Any triangles, one dependency, no OpenGL."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Yæl Méndez", email = "yael@llm.store" }]
+keywords = ["cuda", "cupy", "rasteriser", "deterministic", "graphics", "opensourceware"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: GPU :: NVIDIA CUDA",
+  "License :: OSI Approved :: Apache Software License",
+  "Topic :: Multimedia :: Graphics :: 3D Rendering",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+cuda = ["cupy-cuda13x>=13"]
+cuda12 = ["cupy-cuda12x>=13"]
+image = ["pillow>=10"]
+dev = ["pytest>=8", "pillow>=10"]
+
+[project.scripts]
+tinycuda = "tinycuda:main"
+
+[tool.setuptools]
+py-modules = ["tinycuda"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
