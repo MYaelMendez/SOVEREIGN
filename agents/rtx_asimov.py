@@ -148,6 +148,9 @@ def main():
     ap.add_argument('--seconds', type=float, default=8.0)
     ap.add_argument('--workdir')
     ap.add_argument('--model-dir', help='directory holding urdf.json and meshes/ (default: ./model)')
+    ap.add_argument('--scenes', help='scene spec JSON with speak/state lines — enables voice + world')
+    ap.add_argument('--texture', default='sci_fi', help='world bed texture')
+    ap.add_argument('--silent', action='store_true', help='skip the sound stage')
     ap.add_argument('--title', default='rtx:// asimov')
     ap.add_argument('--tagline', default='REAL MENLO CAD · URDF FK · CUDA RASTER')
     a = ap.parse_args()
@@ -261,8 +264,70 @@ def main():
                     '-i', str(fd / 'f%05d.png'), '-c:v', 'h264_nvenc', '-preset', 'p5',
                     '-b:v', '6M', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
                     str(silent)], capture_output=True, timeout=1800)
-    silent.replace(out)
-    meta = dict(frames=nf, fps=a.fps, links=len(links), joints=len(urdf['joints']),
+    # ── sound stage ──────────────────────────────────────────────────────
+    # The OpenGL films all carry a world (0% near-silent windows). The RTX
+    # path inherited none of it — superior compute must not mean losing the
+    # audio. Voice and world are a stage here, not a manual afterthought.
+    audio = {'voice': False, 'world': False}
+    if not a.silent:
+        try:
+            sys.path.insert(0, str(HERE))
+            import sound_link as S
+            scenes = json.loads(Path(a.scenes).read_text(encoding='utf-8'))['scenes'] \
+                if a.scenes else None
+        except Exception as exc:
+            scenes = None
+            print(f'  sound stage unavailable: {type(exc).__name__}: {exc}')
+        if scenes:
+            # voice: one line per scene, timed by its own audio length
+            tts = Path(os.environ.get('HERMES_HOME', Path.home()/'.hermes')) / \
+                'plugins' / 'tiny-voca-voice' / 'scripts' / 'tiny_voca_voice.py'
+            wavs = []
+            if tts.exists():
+                for i, sc in enumerate(scenes):
+                    w = wd / f's{i}.wav'
+                    subprocess.run([sys.executable, str(tts), '--text', sc.get('speak', ''),
+                                    '--voice', sc.get('voice', 'M2'), '--output', str(w)],
+                                   capture_output=True, timeout=300)
+                    if w.exists():
+                        wavs.append(w)
+                audio['voice'] = len(wavs) == len(scenes) and bool(wavs)
+            if wavs:
+                lst = wd / 'audio.txt'
+                lst.write_text(''.join(f"file '{w.as_posix()}'\n" for w in wavs), encoding='utf-8')
+                track = wd / 'track.wav'
+                subprocess.run([str(_ffmpeg()/'ffmpeg'), '-v', 'error', '-y', '-f', 'concat',
+                                '-safe', '0', '-i', str(lst), '-ar', '24000', '-ac', '1',
+                                str(track)], capture_output=True, timeout=600)
+                total = track.stat().st_size / 48000.0
+                subprocess.run([str(_ffmpeg()/'ffmpeg'), '-v', 'error', '-y',
+                                '-i', str(silent), '-i', str(track), '-c:v', 'copy',
+                                '-filter:a', f'apad=whole_dur={total:.6f}',
+                                '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',
+                                '-t', f'{total:.6f}', str(out)], capture_output=True, timeout=900)
+                # world: derived from the film's OWN scene boundaries
+                try:
+                    t0 = 0.0
+                    for sc, w in zip(scenes, wavs):
+                        d_ = w.stat().st_size / 48000.0
+                        sc['_t0'] = t0; sc['_dur'] = d_; t0 += d_
+                    spec_ = {'scenes': scenes, '_total': t0}
+                    a_ = S.spec_from_film(spec_, texture=a.texture, bed_db=-29.0)
+                    wv = wd / 'world.wav'
+                    r_ = S.render(a_, wv)
+                    if r_.get('ok'):
+                        mixed = wd / 'world.mp4'
+                        m_ = S.mix(out, wv, mixed, bed_gain=0.5)
+                        if m_.get('ok'):
+                            mixed.replace(out)
+                            audio['world'] = True
+                            audio['events'] = len(a_['events'])
+                            audio['torch'] = r_.get('torch')
+                except Exception as exc:
+                    print(f'  world stage failed: {type(exc).__name__}: {exc}')
+    if not out.exists():
+        silent.replace(out)
+    meta = dict(audio=audio, frames=nf, fps=a.fps, links=len(links), joints=len(urdf['joints']),
                 triangles=len(V0), seconds=round(el, 1),
                 ms_per_frame=round(el / nf * 1000, 1), raster_ms=round(rms / nf, 1),
                 device='RTX 3050 CUDA', source='urdf.json', bytes=out.stat().st_size)

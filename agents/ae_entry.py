@@ -70,6 +70,7 @@ WORDS = {
     'commands': 'cli', 'terminal': 'cli', 'shell': 'cli',
     # film — the storyboard is where a new user starts
     'film': 'film', 'movie': 'film', 'video': 'film', 'cinema': 'film',
+    'sound': 'asimov', 'audio': 'asimov', 'voice': 'voice',
     'storyboard': 'film', 'board': 'film', 'previz': 'film', 'shot': 'film',
     'película': 'film', 'pelicula': 'film', 'filme': 'film', 'cine': 'film',
     '电影': 'film', '映画': 'film', '영화': 'film', 'фильм': 'film', 'फ़िल्म': 'film',
@@ -172,7 +173,34 @@ def dispatch(raw):
     out = {'ok': True, 'authority': AUTHORITY, 'input': raw,
            'resolved': addr, 'via': how, 'grants': False,
            'note': 'Resolution opens an address. It is not a permission.'}
-    if addr.startswith('asimov://'):
+    if addr.startswith('asimov://sound'):
+        rest = addr[len('asimov://sound'):].strip().lower()
+        import json as _j, os as _o
+        from pathlib import Path as _P
+        _H = _P(_o.environ.get('HERMES_HOME', _P.home()/'.hermes'))
+        _cfg = _H / 'asimov-sound.json'
+        _cur = {'on': True, 'texture': 'sci_fi', 'bed_gain': 0.5, 'bed_db': -29.0}
+        if _cfg.exists():
+            try: _cur.update(_j.loads(_cfg.read_text(encoding='utf-8')))
+            except Exception: pass
+        if rest in ('on', 'off'):
+            _cur['on'] = (rest == 'on')
+            _cfg.write_text(_j.dumps(_cur, indent=2), encoding='utf-8')
+            out['result'] = {'ok': True, 'scheme': 'asimov://sound', 'sound': _cur['on'],
+                             'texture': _cur['texture'], 'authority': 'HUMAN://ROOT',
+                             'grants': False,
+                             'note': 'voice + world are a render stage. Sound grants nothing.'}
+        elif rest.startswith('texture '):
+            _cur['texture'] = rest.split(None, 1)[1].strip()
+            _cfg.write_text(_j.dumps(_cur, indent=2), encoding='utf-8')
+            out['result'] = {'ok': True, 'texture': _cur['texture'], 'grants': False}
+        else:
+            out['result'] = {'ok': True, 'scheme': 'asimov://sound', **_cur,
+                             'authority': 'HUMAN://ROOT', 'grants': False,
+                             'usage': 'asimov://sound on | off | texture <name>',
+                             'textures': ['sci_fi','room_cold','city_hum','drone','rain',
+                                          'ocean','wind','forest','night','fire','vinyl']}
+    elif addr.startswith('asimov://'):
         try:
             import asimov_protocol as P
             out['result'] = P.dispatch(addr)
