@@ -197,10 +197,16 @@ def render(spec, out_path, wd):
         for n, a in A.items():
             if close and n != who: continue
             hp = d.xpos[a['body']].copy()
-            pr = project(hp + np.array([0.078, 0.0, 0.040]), lookat, az, el, dist, W, VH)
+            _R = d.xmat[A[who]['body']].reshape(3, 3)
+            _nrm = _R @ np.array([1.0, 0.0, 0.0])
+            pr = project(hp + _R @ np.array([0.078, 0.0, 0.040]),
+                         lookat, az, el, dist, W, VH)
             if not pr: continue
             px, py, z, f = pr
-            fw = (f*0.115)/z
+            _a, _e = math.radians(az), math.radians(el)
+            _dv = np.array([math.cos(_e)*math.cos(_a), math.cos(_e)*math.sin(_a), math.sin(_e)])
+            facing = abs(float(np.dot(_nrm, _dv)))
+            fw = (f*0.150)/z*max(0.0, facing)
             fh = fw*0.66
             if fw < 14: continue
             active = (n == who)

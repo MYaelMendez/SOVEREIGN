@@ -9,7 +9,7 @@ stay distinct at render size. Charge arc, scanlines, status dot.
 """
 from PIL import Image, ImageDraw, ImageFilter
 
-SS = 3
+SS = 4
 
 # viseme: (width_frac_of_mouth_box, height_frac, roundness, openness)
 VISEMES = [
@@ -52,7 +52,9 @@ def _mouth(d, cx, cy, mw, mh, curve, rgb, rnd, openness):
             if ib[2] > ib[0] and ib[3] > ib[1]:
                 _rr(d, ib, int(mh / 3 * rnd), fill=(5, 7, 9, 205))
         return
-    # curved mouth: a thick arc drawn as a polyline
+    # curved mouth: a thick arc drawn as a polyline. The stroke must survive
+    # downscaling — at 90 px a thin arc disappears, so scale it with the panel
+    # and floor it at a visible weight rather than a fraction of mouth height.
     n = 26
     pts = []
     for i in range(n + 1):
@@ -61,7 +63,12 @@ def _mouth(d, cx, cy, mw, mh, curve, rgb, rnd, openness):
         # parabola: smile dips at the centre when curve>0 (screen y grows down)
         y = cy + curve * mh * 0.9 * (1 - (2 * t - 1) ** 2)
         pts.append((x, y))
-    d.line(pts, fill=rgb + (235,), width=max(2, int(mh * 0.55)), joint='curve')
+    stroke = max(3, int(mh * 0.95))
+    d.line(pts, fill=rgb + (255,), width=stroke, joint='curve')
+    # rounded caps so the arc reads as a drawn mouth, not a cut-off line
+    rcap = stroke / 2
+    for (ex, ey) in (pts[0], pts[-1]):
+        d.ellipse([ex - rcap, ey - rcap, ex + rcap, ey + rcap], fill=rgb + (255,))
 
 
 def face(size, rgb, *, viseme=0, blink=0.0, gaze=(0.0, 0.0), charge=None,
@@ -78,6 +85,20 @@ def face(size, rgb, *, viseme=0, blink=0.0, gaze=(0.0, 0.0), charge=None,
     ins = 0.035 * w
     scr = [bez[0] + ins, bez[1] + ins, bez[2] - ins, bez[3] - ins]
     _rr(d, scr, 0.07 * h, fill=(5, 7, 9, 255))
+    # lit-panel gradient: a screen is not a flat black rectangle. A faint
+    # top-down falloff gives the glass depth without adding noise.
+    _grad = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    _gd = ImageDraw.Draw(_grad)
+    _y0, _y1 = int(scr[1]), int(scr[3])
+    for _yy in range(_y0, _y1):
+        _k = (_yy - _y0) / max(1, _y1 - _y0)
+        _a = int(20 * (1.0 - _k) ** 1.6)
+        if _a > 0:
+            _gd.line([(scr[0], _yy), (scr[2], _yy)], fill=rgb + (_a,))
+    _mask = Image.new('L', (w, h), 0)
+    _rr(ImageDraw.Draw(_mask), scr, 0.07 * h, fill=255)
+    img = Image.composite(Image.alpha_composite(img, _grad), img, _mask)
+    d = ImageDraw.Draw(img)
 
     gl = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     _rr(ImageDraw.Draw(gl), scr, 0.07 * h, fill=rgb + (int(30 * glow),))

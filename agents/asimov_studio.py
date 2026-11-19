@@ -193,14 +193,21 @@ def render(spec, out_path, workdir):
                 fwd = cam.lookat - eye; fwd = fwd/np.linalg.norm(fwd)
                 rt = np.cross(fwd, np.array([0.,0.,1.])); rt = rt/np.linalg.norm(rt)
                 up = np.cross(rt, fwd)
-                pt = d.xpos[hb] + np.array([0.078, 0.0, 0.040])
+                # anchor in the HEAD's frame, not world: rotate the local
+                # offset by the body orientation or the face drifts off the
+                # tablet whenever the head yaws or pitches.
+                R = d.xmat[hb].reshape(3, 3)
+                pt = d.xpos[hb] + R @ np.array([0.078, 0.0, 0.040])
+                nrm = R @ np.array([1.0, 0.0, 0.0])
                 rel = pt - eye; z = float(np.dot(rel, fwd))
                 if z > 1e-6:
                     f = (VIEW_H/2.0)/math.tan(math.radians(FOVY)/2.0)
                     px = W/2.0 + f*float(np.dot(rel, rt))/z
                     py = VIEW_H/2.0 - f*float(np.dot(rel, up))/z
-                    fw = (f*0.115)/z; fh = fw*0.66
-                    if fw >= 10:
+                    # foreshorten by the tablet normal's alignment with the view
+                    facing = abs(float(np.dot(nrm, dv)))
+                    fw = (f*0.150)/z*facing; fh = fw*0.66
+                    if fw >= 10 and facing >= 0.25:
                         stt = s.get('state', 'IDLE')
                         vis = int(2 + 3*abs(math.sin(tt*7.0))) if stt == 'SPEAKING' else 0
                         fi = _face((int(fw), int(fh)), cr, viseme=vis,

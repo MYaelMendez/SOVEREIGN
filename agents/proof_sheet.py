@@ -150,11 +150,16 @@ def sheet(spec, out_path, cast_mod):
             return (CW/2.0+f*float(np.dot(rel,rt))/z, VH/2.0-f*float(np.dot(rel,up))/z, z, f)
         for n, a in A.items():
             if close and n != who: continue
-            pr = proj(d.xpos[a['body']].copy() + np.array([0.078,0,0.040]))
+            _R = d.xmat[a['body']].reshape(3, 3)
+            _nrm = _R @ np.array([1.0, 0.0, 0.0])
+            pr = proj(d.xpos[a['body']].copy() + _R @ np.array([0.078,0,0.040]))
             if not pr: continue
             px, py, z, f = pr
-            fw = (f*0.115)/z; fh = fw*0.66
-            if fw < 10: continue
+            _a, _e = math.radians(az), math.radians(el)
+            _dv = np.array([math.cos(_e)*math.cos(_a), math.cos(_e)*math.sin(_a), math.sin(_e)])
+            facing = abs(float(np.dot(_nrm, _dv)))
+            fw = (f*0.150)/z*max(0.0, facing); fh = fw*0.66
+            if fw < 10 or facing < 0.25: continue
             active = (n == who)
             vis = 2 if (active and stt == 'SPEAKING') else 0
             fi = make_face((int(fw), int(fh)), rgb if active else a['rgb'],
