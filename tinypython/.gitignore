@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+assets/
+.pytest_cache/
+*.egg-info/
+*.json
+!pyproject.toml

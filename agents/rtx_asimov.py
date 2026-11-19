@@ -149,6 +149,7 @@ def main():
     ap.add_argument('--workdir')
     ap.add_argument('--model-dir', help='directory holding urdf.json and meshes/ (default: ./model)')
     ap.add_argument('--scenes', help='scene spec JSON with speak/state lines — enables voice + world')
+    ap.add_argument('--trace', help='tinyPython locomotion trace: real policy-driven qpos, not keyframes')
     ap.add_argument('--texture', default='sci_fi', help='world bed texture')
     ap.add_argument('--silent', action='store_true', help='skip the sound stage')
     ap.add_argument('--title', default='rtx:// asimov')
@@ -199,6 +200,23 @@ def main():
 
     r.render(V0, N0, cols[L0], P @ look_at(ctr + [dist, 0, 0.15], ctr))  # warmup
 
+    # ── real locomotion ──────────────────────────────────────────────────
+    # A trace from tinyPython carries qpos produced by the Menlo ONNX policy
+    # against MuJoCo ground contact. The base trajectory EMERGED from control;
+    # nothing keyed it. When present it replaces the synthetic gesture entirely.
+    TR = None
+    if getattr(a, 'trace', None):
+        _td = json.loads(Path(a.trace).read_text(encoding='utf-8'))
+        _jn = _td['joint_names']
+        _refs = np.array(_td['joint_refs'], np.float32)
+        _q = np.array(_td['qpos'], np.float32)
+        _base = np.array(_td['base'], np.float32)
+        # qpos layout: [x y z qw qx qy qz, 23 joints]
+        TR = {'names': _jn, 'q': _q[:, 7:7+len(_jn)], 'base': _base,
+              'n': len(_q), 'policy': _td.get('policy'),
+              'sha': _td.get('policy_sha256'), 'travel': _td.get('base_x')}
+        print(f'  TRACE {TR["n"]} frames · policy {TR["policy"]} · travel {TR["travel"]} m')
+
     t0 = time.time(); rms = 0.0
     for i in range(nf):
         tt = i / a.fps
@@ -225,12 +243,31 @@ def main():
                 ang[nm] = 0.34 * math.sin(tt * 1.2)
             elif 'neck_pitch' in nm:
                 ang[nm] = 0.12 * math.sin(tt * 1.6)
+        if TR is not None:
+            k = min(TR['n'] - 1, int(i * TR['n'] / max(1, nf)))
+            ang = {nm: float(TR['q'][k, j]) for j, nm in enumerate(TR['names'])}
         xf = transforms(urdf, ang)
         root = np.eye(4)
-        root[:3, :3] = rot_euler([0, 0, 0.10 * math.sin(tt * 0.7)])
-        root[2, 3] = 0.03 * math.sin(tt * 1.9)
+        if TR is not None:
+            bx, by, bz, qw, qx, qy, qz = TR['base'][k]
+            # follow the walker: keep the body framed as it translates
+            root[:3, :3] = np.array([
+                [1-2*(qy*qy+qz*qz), 2*(qx*qy-qz*qw), 2*(qx*qz+qy*qw)],
+                [2*(qx*qy+qz*qw), 1-2*(qx*qx+qz*qz), 2*(qy*qz-qx*qw)],
+                [2*(qx*qz-qy*qw), 2*(qy*qz+qx*qw), 1-2*(qx*qx+qy*qy)]], np.float32)
+            root[0, 3] = 0.0            # camera tracks; the walk is in the legs
+            root[1, 3] = 0.0
+            root[2, 3] = float(bz) - 0.639
+        else:
+            root[:3, :3] = rot_euler([0, 0, 0.10 * math.sin(tt * 0.7)])
+            root[2, 3] = 0.03 * math.sin(tt * 1.9)
         V, N, L = world_tris(links, xf, root)
-        az = 0.34 * math.sin(tt * 0.55)
+        if TR is not None:
+            # side-on: the walk is along X, so the camera must sit on Y or the
+            # stride is foreshortened into the lens and reads as standing still
+            az = math.pi / 2 + 0.26 * math.sin(tt * 0.45)
+        else:
+            az = 0.34 * math.sin(tt * 0.55)
         eye = ctr + np.array([dist * math.cos(az), dist * math.sin(az),
                               0.15 + 0.10 * math.sin(tt * 0.8)], np.float32)
         tr = time.time()
@@ -293,6 +330,58 @@ def main():
                         wavs.append(w)
                 audio['voice'] = len(wavs) == len(scenes) and bool(wavs)
             if wavs:
+                # derive the frame count from the audio, then re-render if the
+                # caller's --frames was too short. A film whose video ends
+                # before its narration is a still with a voiceover.
+                _tot = sum(w.stat().st_size / 48000.0 for w in wavs)
+                _need = int(math.ceil(_tot * a.fps))
+                if _need > nf:
+                    print(f'  AUDIO {_tot:.2f}s needs {_need} frames, had {nf} '
+                          f'— extending the picture to match the voice')
+                    for i in range(nf, _need):
+                        tt = i / a.fps
+                        ang = {}
+                        if TR is not None:
+                            k = min(TR['n'] - 1, int(i * TR['n'] / max(1, _need)))
+                            ang = {nm: float(TR['q'][k, j]) for j, nm in enumerate(TR['names'])}
+                        xf = transforms(urdf, ang)
+                        root = np.eye(4)
+                        if TR is not None:
+                            bx, by, bz, qw, qx, qy, qz = TR['base'][k]
+                            root[:3, :3] = np.array([
+                                [1-2*(qy*qy+qz*qz), 2*(qx*qy-qz*qw), 2*(qx*qz+qy*qw)],
+                                [2*(qx*qy+qz*qw), 1-2*(qx*qx+qz*qz), 2*(qy*qz-qx*qw)],
+                                [2*(qx*qz-qy*qw), 2*(qy*qz+qx*qw), 1-2*(qx*qx+qy*qy)]], np.float32)
+                            root[2, 3] = float(bz) - 0.639
+                        V, N, L = world_tris(links, xf, root)
+                        az = (math.pi/2 + 0.26*math.sin(tt*0.45)) if TR is not None \
+                             else 0.34*math.sin(tt*0.55)
+                        eye = ctr + np.array([dist*math.cos(az), dist*math.sin(az),
+                                              0.15 + 0.10*math.sin(tt*0.8)], np.float32)
+                        px = r.render(V, N, cols[L], P @ look_at(eye, ctr))
+                        cv = Image.new('RGB', (W, HH), (11, 10, 6))
+                        cv.paste(Image.fromarray(px), (0, HDR))
+                        d2 = ImageDraw.Draw(cv, 'RGBA')
+                        d2.rectangle([0, 0, W, HDR], fill=(212, 175, 55, 255))
+                        d2.text((26, 14), a.title, font=F_B, fill=(11, 10, 6, 255))
+                        d2.text((26, 54), a.tagline, font=F_S, fill=(58, 48, 16, 255))
+                        d2.rectangle([0, HUD, W, HH], fill=(14, 13, 8, 255))
+                        d2.rectangle([0, HUD, W, HUD + 5], fill=(0, 170, 255, 255))
+                        _y = HUD + 20
+                        for _ln in [f'{len(links)} CAD links · {len(urdf["joints"])} joints',
+                                    f'{len(V):,} triangles per frame',
+                                    'URDF forward kinematics · no collision proxies',
+                                    'rasterised on RTX 3050 · CuPy RawKernel · zero OpenGL']:
+                            d2.text((26, _y), _ln, font=F_S, fill=(255, 246, 218, 255)); _y += 30
+                        d2.text((26, HH - 40), 'RTX:// CUDA · HUMAN://ROOT · Menlo Research CAD',
+                                font=F_X, fill=(138, 122, 63, 255))
+                        cv.save(fd / f'f{i:05d}.png')
+                    nf = _need
+                    # re-encode the picture with the full frame set
+                    subprocess.run([str(_ffmpeg()/'ffmpeg'), '-v', 'error', '-y',
+                                    '-framerate', str(a.fps), '-i', str(fd/'f%05d.png'),
+                                    '-c:v', 'h264_nvenc', '-preset', 'p5', '-pix_fmt', 'yuv420p',
+                                    str(silent)], capture_output=True, timeout=1800)
                 lst = wd / 'audio.txt'
                 lst.write_text(''.join(f"file '{w.as_posix()}'\n" for w in wavs), encoding='utf-8')
                 track = wd / 'track.wav'
@@ -328,6 +417,11 @@ def main():
     if not out.exists():
         silent.replace(out)
     meta = dict(audio=audio, frames=nf, fps=a.fps, links=len(links), joints=len(urdf['joints']),
+                locomotion=({'source': 'policy', 'policy': TR['policy'],
+                             'policy_sha256': TR['sha'], 'travel_m': TR['travel'],
+                             'note': 'base trajectory emerged from PD control against '
+                                     'ground contact; not keyframed'}
+                            if TR is not None else {'source': 'keyframed gesture'}),
                 triangles=len(V0), seconds=round(el, 1),
                 ms_per_frame=round(el / nf * 1000, 1), raster_ms=round(rms / nf, 1),
                 device='RTX 3050 CUDA', source='urdf.json', bytes=out.stat().st_size)

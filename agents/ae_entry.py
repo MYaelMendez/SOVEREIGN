@@ -35,6 +35,9 @@ SCHEME_ALIASES = {
     'cli': 'cli', 'shell': 'cli', 'terminal': 'cli', 'caps': 'cli',
     'film': 'film', 'cinema': 'film', 'movie': 'film', 'video': 'film',
     'mp4': 'mp4', 'media': 'mp4',
+    # æææ:// — the verb æ opens the molt context protocol
+    'æææ': 'æææ', 'aeaeae': 'æææ', 'aaa': 'æææ',
+    'molt': 'æææ', 'mcp': 'æææ', 'context': 'æææ',
 }
 
 # emoji -> canonical scheme  (🤖 AI execution, 💬 chat, 🗣 voice, ⌨ command line)
@@ -71,6 +74,7 @@ WORDS = {
     # film — the storyboard is where a new user starts
     'film': 'film', 'movie': 'film', 'video': 'film', 'cinema': 'film',
     'sound': 'asimov', 'audio': 'asimov', 'voice': 'voice',
+    'molt': 'aeaeae', 'handshake': 'aeaeae', 'mcp': 'aeaeae',
     'storyboard': 'film', 'board': 'film', 'previz': 'film', 'shot': 'film',
     'película': 'film', 'pelicula': 'film', 'filme': 'film', 'cine': 'film',
     '电影': 'film', '映画': 'film', '영화': 'film', 'фильм': 'film', 'फ़िल्म': 'film',
@@ -89,7 +93,8 @@ ROUTES = {
 }
 
 REACHABLE = ['asimov:// (BOT://, 🤖, 💬, "robot", "asimov protocol")',
-             'voice:// (🗣)', 'cli:// (⌨)']
+             'voice:// (🗣)', 'cli:// (⌨)',
+             'æææ://molt_context_protocol (MCP/1517 — context flows, authority does not)']
 
 
 def _norm(s):
@@ -173,7 +178,39 @@ def dispatch(raw):
     out = {'ok': True, 'authority': AUTHORITY, 'input': raw,
            'resolved': addr, 'via': how, 'grants': False,
            'note': 'Resolution opens an address. It is not a permission.'}
-    if addr.startswith('asimov://sound'):
+    if addr.startswith('æææ://') or addr.startswith('aeaeae://'):
+        _tail = addr.split('://', 1)[1].strip()
+        _known = ('', 'mcp')
+        if _tail in _known or _tail.startswith('molt_context_protocol') or _tail.startswith('mcp '):
+            if 'molt_context_protocol' in _tail:
+                rest = _tail.split('molt_context_protocol', 1)[1].strip()
+            elif _tail.startswith('mcp'):
+                rest = _tail[3:].strip()
+            else:
+                rest = ''
+            import subprocess as _sp, sys as _sy, json as _j
+            from pathlib import Path as _P
+            _m = _P('C:/æ/agents/molt_context_protocol.py')
+            if not _m.exists():
+                out['result'] = {'ok': False, 'refused': True, 'decision': 'deny',
+                                 'reason': 'molt_context_protocol.py not installed'}
+            else:
+                _args = [_sy.executable, str(_m)] + (rest.split() if rest else [])
+                try:
+                    _r = _sp.run(_args, capture_output=True, text=True, timeout=90)
+                    out['result'] = _j.loads(_r.stdout or '{}')
+                except Exception as _e:
+                    out['result'] = {'ok': False, 'refused': True,
+                                     'reason': f'{type(_e).__name__}: {_e}'}
+            out['result'].setdefault('grants', False)
+            out['result']['scheme'] = 'æææ://molt_context_protocol'
+        else:
+            out['result'] = {'ok': False, 'refused': True, 'decision': 'deny',
+                             'reason': f'unknown æææ:// route {_tail!r}',
+                             'reachable': ['æææ://molt_context_protocol',
+                                           'æææ://mcp handshake|verify|molt'],
+                             'grants': False}
+    elif addr.startswith('asimov://sound'):
         rest = addr[len('asimov://sound'):].strip().lower()
         import json as _j, os as _o
         from pathlib import Path as _P
