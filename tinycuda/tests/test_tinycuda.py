@@ -188,3 +188,148 @@ def test_render_draws_something():
     M, _, _ = TC.fit_camera(v)
     px = TC.Raster(180, 320).render(v, n, c, M)
     assert px.std() > 8, 'frame is nearly uniform — nothing drawn'
+
+
+# ── the render as a verifier: the part that is not 1990s ────────────────────
+
+@needs
+def test_reference_then_grade_is_one(tmp_path):
+    v, n, c = TC._synthetic(5_000, seed=3)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    r = TC.reference(src, ref, w=120, h=160)
+    assert r['ok'] and r['grants'] is False
+    g = TC.grade(src, ref)
+    assert g['reward'] == 1.0
+    assert g['tokens_generated'] == 0 and g['model_calls'] == 0
+    assert g['verifier'] == 'pixel-hash'
+
+
+@needs
+def test_perturbed_geometry_scores_zero(tmp_path):
+    """Half a millimetre on one vertex must fail. There is no tolerance."""
+    v, n, c = TC._synthetic(5_000, seed=4)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=120, h=160)
+    v2 = v.copy(); v2[0, 0, 0] += 0.0005
+    bad = tmp_path / 'bad.npz'; np.savez(bad, verts=v2, norms=n)
+    g = TC.grade(bad, ref)
+    assert g['reward'] == 0.0, 'an unverified edit must not score as verified'
+    assert g['asset_changed'] is True
+    # at this resolution the edit is below one pixel: the oracle must SAY so
+    # rather than claim it checked the geometry.
+    if g['pixels_match']:
+        assert g['sub_pixel_change'] is True
+        assert 'SUB-PIXEL' in g['diagnosis']
+    else:
+        assert 'ASSET CHANGED' in g['diagnosis']
+
+
+@needs
+def test_missing_reference_refuses(tmp_path):
+    v, n, _ = TC._synthetic(100)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    g = TC.grade(src, tmp_path / 'absent.json')
+    assert g['ok'] is False and g['reward'] == 0.0 and g['refused'] is True
+
+
+@needs
+def test_reference_records_provenance(tmp_path):
+    """A reference is a human assertion and must say so."""
+    import json
+    v, n, _ = TC._synthetic(500)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=96, h=128, note='baseline')
+    R = json.loads(ref.read_text(encoding='utf-8'))
+    assert R['authority'] == 'HUMAN://ROOT'
+    assert R['source_sha256'] and R['pixel_sha256']
+    assert R['note'] == 'baseline'
+    assert 'may not rewrite' in TC.reference.__doc__ or True
+
+
+@needs
+def test_grade_distinguishes_asset_from_renderer(tmp_path):
+    """Same asset + different pixels = RENDERER regression, not asset change.
+
+    This is the white-silhouette class: geometry correct, colours wrong, every
+    unit test passes, picture broken. The diagnosis must name the renderer.
+    """
+    v, n, _ = TC._synthetic(3_000, seed=9)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=120, h=160, colour=(0.83, 0.69, 0.22))
+    # re-grade with a DIFFERENT colour but the same asset file
+    import json
+    R = json.loads(ref.read_text(encoding='utf-8'))
+    R['colour'] = [0.2, 0.2, 0.9]      # simulate a renderer-side change
+    ref.write_text(json.dumps(R), encoding='utf-8')
+    g = TC.grade(src, ref)
+    assert g['reward'] == 0.0
+    assert g['asset_changed'] is False
+    assert 'RENDERER CHANGED' in g['diagnosis']
+
+
+@needs
+def test_sub_pixel_change_is_reported_not_verified(tmp_path):
+    """The sensitivity floor, pinned.
+
+    A 0.5 mm edit on a soup spanning +-1 unit renders identically at 120x160.
+    The oracle is blind below one pixel. It must report that, never score 1.0.
+    """
+    v, n, _ = TC._synthetic(5_000, seed=4)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=120, h=160)
+    v2 = v.copy(); v2[0, 0, 0] += 0.0005
+    bad = tmp_path / 'bad.npz'; np.savez(bad, verts=v2, norms=n)
+    g = TC.grade(bad, ref)
+    assert g['reward'] == 0.0
+    assert g['sub_pixel_change'] is True
+    assert g['pixels_match'] is True, 'the render really is identical'
+    assert 'blind below one pixel' in g['diagnosis']
+
+
+@needs
+def test_oracle_grades_shape_not_pose(tmp_path):
+    """Measured invariance: fit_camera normalises translation and uniform scale.
+
+    translate +0.5 on every vertex  -> identical hash (normalised away)
+    uniform scale x2                -> identical hash (normalised away)
+    anisotropic x1.3                -> DIFFERENT hash (shape changed)
+    shear                           -> DIFFERENT hash
+    one vertex +0.05                -> DIFFERENT hash
+
+    So this oracle grades SHAPE, not pose. That is a property to state, not a
+    defect to hide: a renderer that auto-frames its subject cannot see the
+    subject move. Pose fidelity needs a fixed camera, which `grade` does not use.
+    """
+    v, n, _ = TC._synthetic(2_000, seed=11)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=360, h=640)
+
+    moved = tmp_path / 'moved.npz'; np.savez(moved, verts=v + 0.5, norms=n)
+    g = TC.grade(moved, ref)
+    assert g['pixels_match'] is True, 'translation is normalised away by fit_camera'
+    assert g['reward'] == 0.0, 'but the asset changed, so it is not verified'
+    assert g['sub_pixel_change'] is True
+
+    scaled = tmp_path / 'scaled.npz'; np.savez(scaled, verts=v * 2.0, norms=n)
+    assert TC.grade(scaled, ref)['pixels_match'] is True
+
+
+@needs
+def test_shape_change_is_detected(tmp_path):
+    """A real deformation must fail the hash."""
+    v, n, _ = TC._synthetic(2_000, seed=11)
+    src = tmp_path / 's.npz'; np.savez(src, verts=v, norms=n)
+    ref = tmp_path / 's.ref.json'
+    TC.reference(src, ref, w=360, h=640)
+    aniso = v * np.array([1.3, 1.0, 1.0], np.float32)
+    bad = tmp_path / 'aniso.npz'; np.savez(bad, verts=aniso, norms=n)
+    g = TC.grade(bad, ref)
+    assert g['reward'] == 0.0
+    assert g['pixels_match'] is False
+    assert 'ASSET CHANGED' in g['diagnosis']

@@ -1,0 +1,49 @@
+{
+  "ok": true,
+  "schema": "ae/agentic-environment/1",
+  "repo": "MYaelMendez/vaeult",
+  "url": "https://github.com/MYaelMendez/vaeult",
+  "fork": false,
+  "upstream": null,
+  "language": "Python",
+  "languages_pct": {
+    "Python": 100.0
+  },
+  "license": "MIT",
+  "pushed_at": "2026-10-11T14:41:09Z",
+  "inventory": {
+    "files": 6,
+    "code": 1,
+    "tests": 0,
+    "docs": 2,
+    "manifests": [],
+    "test_files": []
+  },
+  "task_types": [
+    "qa"
+  ],
+  "task_rationale": {
+    "qa": "oracle = measured repo facts (languages, counts, licence, structure)"
+  },
+  "verifier": {
+    "kind": "facts",
+    "present": true,
+    "command": null,
+    "note": "no test suite; only qa is gradeable. needs_tests."
+  },
+  "runnable": false,
+  "needs_tests": true,
+  "reward": {
+    "correctness": 1.0,
+    "tool_efficiency_bonus": 0.1,
+    "note": "verifier correctness dominates; efficiency is a small bonus"
+  },
+  "safety": {
+    "executes_on_host": false,
+    "requires_sandbox": true,
+    "tests_reset_before_grading": true,
+    "note": "an agent may edit tests while working; the grader must reset them"
+  },
+  "authority": "HUMAN://ROOT",
+  "grants": false
+}

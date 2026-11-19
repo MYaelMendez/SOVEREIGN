@@ -1,0 +1,63 @@
+{
+  "ok": true,
+  "schema": "ae/agentic-environment/1",
+  "repo": "MYaelMendez/supervisionvidaeo",
+  "url": "https://github.com/MYaelMendez/supervisionvidaeo",
+  "fork": false,
+  "upstream": null,
+  "language": "Python",
+  "languages_pct": {
+    "Python": 100.0
+  },
+  "license": "MIT",
+  "pushed_at": "2026-10-11T14:40:18Z",
+  "inventory": {
+    "files": 20,
+    "code": 16,
+    "tests": 5,
+    "docs": 1,
+    "manifests": [
+      "pyproject.toml"
+    ],
+    "test_files": [
+      "tests/test_qr_coder.py",
+      "tests/test_qr_vision.py",
+      "tests/test_supervisionvidaeo.py",
+      "tests/test_video_supervision.py",
+      "tests/test_vision_supervision.py"
+    ]
+  },
+  "task_types": [
+    "repair",
+    "extend",
+    "build",
+    "qa"
+  ],
+  "task_rationale": {
+    "repair": "5 test files present — a failing check is a reward",
+    "extend": "a working test suite grades a follow-up change",
+    "build": "hidden tests can be held out from the existing suite",
+    "qa": "oracle = measured repo facts (languages, counts, licence, structure)"
+  },
+  "verifier": {
+    "kind": "pytest",
+    "present": true,
+    "command": "pytest -q",
+    "note": "run in a sandbox; never on the host"
+  },
+  "runnable": true,
+  "needs_tests": false,
+  "reward": {
+    "correctness": 1.0,
+    "tool_efficiency_bonus": 0.1,
+    "note": "verifier correctness dominates; efficiency is a small bonus"
+  },
+  "safety": {
+    "executes_on_host": false,
+    "requires_sandbox": true,
+    "tests_reset_before_grading": true,
+    "note": "an agent may edit tests while working; the grader must reset them"
+  },
+  "authority": "HUMAN://ROOT",
+  "grants": false
+}

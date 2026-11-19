@@ -303,6 +303,123 @@ def render_file(src: Path, out: Path, w=720, h=1280, fov=40.0,
             'note': 'colours are 0-1; the hash is over the raw pixel buffer'}
 
 
+
+# ── THE RENDER AS A VERIFIER ──────────────────────────────────────────────────
+# This is the part that is not 1990s.
+#
+# A deterministic rasteriser turns a picture into a GRADEABLE ASSERTION. An
+# agent proposes a change; the scene renders; the pixel hash either matches the
+# reference or it does not. No model call, no human judgement, no tolerance
+# tuning, no flaky perceptual metric.
+#
+# Coding benchmarks grade with tests. Robotics grades with a human watching a
+# video. This grades with a hash — and the hash is over the actual physical
+# output of a GPU pipeline, not a proxy for it.
+#
+# RECURSIVE ENGINEERING: our own repos become environments whose verifier is
+# our own renderer. tinyCUDA grades tinyGPU; tinyGPU's films grade the scene
+# specs; a repair that changes the geometry fails the hash even if every unit
+# test passes. That catches the class of bug unit tests structurally miss —
+# the white silhouette that passed every gate.
+#
+# The reference is captured by a HUMAN, once, and stored with its provenance.
+# An agent may not rewrite the reference to make its own output pass; the
+# grader resets it, exactly as SWE-bench resets test files.
+
+REF_SUFFIX = '.ref.json'
+
+
+def reference(src: Path, ref: Path, w=360, h=640, fov=40.0,
+              colour=(0.83, 0.69, 0.22), note='') -> dict:
+    """Capture a reference render. A human act — recorded with its provenance."""
+    import hashlib
+    src = Path(src)
+    if src.suffix.lower() == '.stl':
+        v, n = load_stl(src)
+    elif src.suffix.lower() == '.npz':
+        d = np.load(src); v, n = d['verts'], d['norms']
+    else:
+        return {'ok': False, 'reason': f'unsupported input {src.suffix}'}
+    c = np.tile(np.array(colour, np.float32), (len(v), 1))
+    M, _, _ = fit_camera(v, fov=fov)
+    r = Raster(w, h)
+    r.render(v, n, c, M)
+    px = r.render(v, n, c, M)
+    rec = {'schema': 'tinycuda/reference/1', 'source': str(src),
+           'source_sha256': hashlib.sha256(src.read_bytes()).hexdigest(),
+           'resolution': [w, h], 'fov': fov, 'colour': list(colour),
+           'triangles': len(v),
+           'pixel_sha256': hashlib.sha256(px.tobytes()).hexdigest(),
+           'mean_luminance': round(float(px.mean()), 4),
+           'captured_at': time.time(), 'authority': 'HUMAN://ROOT', 'note': note}
+    Path(ref).write_text(json.dumps(rec, indent=2), encoding='utf-8')
+    return {'ok': True, 'reference': str(ref), 'pixel_sha256': rec['pixel_sha256'],
+            'triangles': len(v), 'grants': False,
+            'note': 'a reference is a human assertion. An agent may not rewrite it.'}
+
+
+def grade(src: Path, ref: Path) -> dict:
+    """Grade a render against a reference. Correctness is 1.0 or 0.0.
+
+    Returns a reward an RL loop can consume directly, plus the diagnosis a
+    human needs. A changed source hash means the ASSET moved; an unchanged
+    source with a changed pixel hash means the RENDERER moved. Those are
+    different failures and the grade says which.
+    """
+    import hashlib
+    ref = Path(ref)
+    if not ref.exists():
+        return {'ok': False, 'refused': True, 'reward': 0.0,
+                'reason': f'no reference at {ref}', 'grants': False}
+    R = json.loads(ref.read_text(encoding='utf-8'))
+    src = Path(src)
+    if src.suffix.lower() == '.stl':
+        v, n = load_stl(src)
+    elif src.suffix.lower() == '.npz':
+        d = np.load(src); v, n = d['verts'], d['norms']
+    else:
+        return {'ok': False, 'refused': True, 'reward': 0.0,
+                'reason': f'unsupported input {src.suffix}', 'grants': False}
+    w, h = R['resolution']
+    c = np.tile(np.array(R['colour'], np.float32), (len(v), 1))
+    M, _, _ = fit_camera(v, fov=R['fov'])
+    r = Raster(w, h)
+    r.render(v, n, c, M)
+    px = r.render(v, n, c, M)
+    got = hashlib.sha256(px.tobytes()).hexdigest()
+    src_sha = hashlib.sha256(src.read_bytes()).hexdigest()
+    match = got == R['pixel_sha256']
+    asset_moved = src_sha != R['source_sha256']
+    # SENSITIVITY FLOOR: a change smaller than a pixel renders identically.
+    # The hash cannot see it, so it must not claim to have verified it.
+    sub_pixel = bool(match and asset_moved)
+    if match and not asset_moved:
+        diagnosis = 'identical — the render reproduces the reference byte for byte'
+    elif sub_pixel:
+        diagnosis = ('SUB-PIXEL CHANGE — the asset differs but the render does not. '
+                     'This oracle is blind below one pixel; raise the resolution '
+                     'or grade the geometry directly.')
+    elif asset_moved:
+        diagnosis = 'ASSET CHANGED — the geometry differs from the reference source'
+    else:
+        diagnosis = 'RENDERER CHANGED — same asset, different pixels. A regression.'
+    lum = round(float(px.mean()), 4)
+    verified = bool(match and not asset_moved)
+    return {'ok': verified, 'reward': 1.0 if verified else 0.0,
+            'pixels_match': match, 'sub_pixel_change': sub_pixel,
+            'resolution': [w, h],
+            'verifier': 'pixel-hash', 'tokens_generated': 0, 'model_calls': 0,
+            'expected': R['pixel_sha256'], 'got': got,
+            'asset_changed': asset_moved, 'diagnosis': diagnosis,
+            'triangles': len(v), 'expected_triangles': R['triangles'],
+            'mean_luminance': lum, 'reference_luminance': R['mean_luminance'],
+            'lum_delta': round(lum - R['mean_luminance'], 4),
+            'grants': False,
+            'note': 'correctness is binary and requires BOTH a pixel match and an '
+                    'unchanged asset. Sensitivity is bounded by resolution: a '
+                    'sub-pixel edit is reported, never scored as verified.'}
+
+
 def main():
     ap = argparse.ArgumentParser(prog='tinycuda', description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -317,11 +434,22 @@ def main():
     r.add_argument('--width', type=int, default=720)
     r.add_argument('--height', type=int, default=1280)
     r.add_argument('--fov', type=float, default=40.0)
+    rf = sub.add_parser('reference', help='capture a reference render (a human act)')
+    rf.add_argument('src'); rf.add_argument('ref')
+    rf.add_argument('--width', type=int, default=360)
+    rf.add_argument('--height', type=int, default=640)
+    rf.add_argument('--note', default='')
+    g = sub.add_parser('grade', help='grade a render against a reference — a reward')
+    g.add_argument('src'); g.add_argument('ref')
     a = ap.parse_args()
     if a.cmd == 'doctor':
         res = doctor()
     elif a.cmd == 'bench':
         res = bench(w=a.width, h=a.height, reps=a.reps)
+    elif a.cmd == 'reference':
+        res = reference(Path(a.src), Path(a.ref), a.width, a.height, note=a.note)
+    elif a.cmd == 'grade':
+        res = grade(Path(a.src), Path(a.ref))
     else:
         res = render_file(Path(a.src), Path(a.out), a.width, a.height, a.fov)
     print(json.dumps(res, indent=2))

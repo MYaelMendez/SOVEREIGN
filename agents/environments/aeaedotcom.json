@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "schema": "ae/agentic-environment/1",
+  "repo": "MYaelMendez/aeaedotcom",
+  "url": "https://github.com/MYaelMendez/aeaedotcom",
+  "fork": false,
+  "upstream": null,
+  "language": "HTML",
+  "languages_pct": {
+    "HTML": 60.0,
+    "Python": 36.6,
+    "CSS": 2.6,
+    "Shell": 0.4,
+    "PowerShell": 0.4
+  },
+  "license": null,
+  "pushed_at": "2026-10-18T17:51:14Z",
+  "inventory": {
+    "files": 1462,
+    "code": 28,
+    "tests": 0,
+    "docs": 3,
+    "manifests": [
+      "requirements.txt"
+    ],
+    "test_files": []
+  },
+  "task_types": [
+    "qa"
+  ],
+  "task_rationale": {
+    "qa": "oracle = measured repo facts (languages, counts, licence, structure)"
+  },
+  "verifier": {
+    "kind": "facts",
+    "present": true,
+    "command": null,
+    "note": "no test suite; only qa is gradeable. needs_tests."
+  },
+  "runnable": false,
+  "needs_tests": true,
+  "reward": {
+    "correctness": 1.0,
+    "tool_efficiency_bonus": 0.1,
+    "note": "verifier correctness dominates; efficiency is a small bonus"
+  },
+  "safety": {
+    "executes_on_host": false,
+    "requires_sandbox": true,
+    "tests_reset_before_grading": true,
+    "note": "an agent may edit tests while working; the grader must reset them"
+  },
+  "authority": "HUMAN://ROOT",
+  "grants": false
+}

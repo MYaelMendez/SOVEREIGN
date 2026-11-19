@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "schema": "ae/agentic-environment/1",
+  "repo": "MYaelMendez/MYaelMendez",
+  "url": "https://github.com/MYaelMendez/MYaelMendez",
+  "fork": false,
+  "upstream": null,
+  "language": "HTML",
+  "languages_pct": {
+    "HTML": 93.3,
+    "Python": 6.7
+  },
+  "license": null,
+  "pushed_at": "2026-11-16T21:56:34Z",
+  "inventory": {
+    "files": 10,
+    "code": 1,
+    "tests": 0,
+    "docs": 0,
+    "manifests": [],
+    "test_files": []
+  },
+  "task_types": [
+    "qa"
+  ],
+  "task_rationale": {
+    "qa": "oracle = measured repo facts (languages, counts, licence, structure)"
+  },
+  "verifier": {
+    "kind": "facts",
+    "present": true,
+    "command": null,
+    "note": "no test suite; only qa is gradeable. needs_tests."
+  },
+  "runnable": false,
+  "needs_tests": true,
+  "reward": {
+    "correctness": 1.0,
+    "tool_efficiency_bonus": 0.1,
+    "note": "verifier correctness dominates; efficiency is a small bonus"
+  },
+  "safety": {
+    "executes_on_host": false,
+    "requires_sandbox": true,
+    "tests_reset_before_grading": true,
+    "note": "an agent may edit tests while working; the grader must reset them"
+  },
+  "authority": "HUMAN://ROOT",
+  "grants": false
+}

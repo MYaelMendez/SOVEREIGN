@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "schema": "ae/agentic-environment/1",
+  "repo": "MYaelMendez/-L",
+  "url": "https://github.com/MYaelMendez/-L",
+  "fork": false,
+  "upstream": null,
+  "language": "Java",
+  "languages_pct": {
+    "Java": 62.3,
+    "JavaScript": 22.4,
+    "FreeMarker": 6.0,
+    "TypeScript": 4.3,
+    "CSS": 2.5
+  },
+  "license": "NOASSERTION",
+  "pushed_at": "2025-07-24T12:24:23Z",
+  "inventory": {
+    "files": 6427,
+    "code": 3278,
+    "tests": 1252,
+    "docs": 157,
+    "manifests": [
+      "orcid-web/src/main/webapp/static/javascript/ng1Orcid/components/orcid-theme/package.json",
+      "orcid-web/src/main/webapp/static/javascript/ng1Orcid/components/types/package.json",
+      "orcid-web/src/main/webapp/static/javascript/ng1Orcid/package.json",
+      "orcid-web/src/test/javascript/node_modules/karma-chrome-launcher/package.json"
+    ],
+    "test_files": [
+      "orcid-activemq/src/test/java/org/orcid/activemq/AppContextActiveMQTest.java",
+      "orcid-activities-indexer/src/test/java/org/orcid/activitiesindexer/persistence/dao/ActivitiesStatusDaoTest.java",
+      "orcid-activities-indexer/src/test/java/org/orcid/activitiesindexer/persistence/managers/ActivitiesStatusManagerTest.java",
+      "orcid-activities-indexer/src/test/java/org/orcid/activitiesindexer/s3/S3UpdaterTest.java",
+      "orcid-api-common/src/test/java/org/orcid/api/common/analytics/APIEndpointParserTest.java",
+      "orcid-api-common/src/test/java/org/orcid/api/common/analytics/AnalyticsProcessTest.java",
+      "orcid-api-common/src/test/java/org/orcid/api/common/analytics/client/google/UniversalAnalyticsClientTest.java",
+      "orcid-api-common/src/test/java/org/orcid/api/common/filter/ApiVersionCheckFilterTest.java"
+    ]
+  },
+  "task_types": [
+    "repair",
+    "extend",
+    "build",
+    "qa"
+  ],
+  "task_rationale": {
+    "repair": "1252 test files present — a failing check is a reward",
+    "extend": "a working test suite grades a follow-up change",
+    "build": "hidden tests can be held out from the existing suite",
+    "qa": "oracle = measured repo facts (languages, counts, licence, structure)"
+  },
+  "verifier": {
+    "kind": "unknown",
+    "present": false,
+    "command": null,
+    "note": "tests exist but no recognised runner — the reward is unbound"
+  },
+  "runnable": false,
+  "needs_tests": false,
+  "reward": {
+    "correctness": 1.0,
+    "tool_efficiency_bonus": 0.1,
+    "note": "verifier correctness dominates; efficiency is a small bonus"
+  },
+  "safety": {
+    "executes_on_host": false,
+    "requires_sandbox": true,
+    "tests_reset_before_grading": true,
+    "note": "an agent may edit tests while working; the grader must reset them"
+  },
+  "authority": "HUMAN://ROOT",
+  "grants": false
+}
