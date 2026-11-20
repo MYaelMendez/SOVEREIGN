@@ -1,0 +1,7 @@
+{
+  "id": "asimov-cad",
+  "displayName": "Asimov CAD",
+  "description": "Asimov CAD rendered on an RTX 3050 — 1,007,041 triangles, nine states, deterministic. Not an illustration of the robot: the robot.",
+  "spritesheetPath": "spritesheet.webp",
+  "createdBy": "tinygpu"
+}
