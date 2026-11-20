@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinycudavideo"
+version = "0.1.0"
+description = "GPU frames to a receipted film, or a refusal. Pixel gate plus mux gate."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Yael Mendez", email = "yael@llm.store" }]
+keywords = ["cuda", "nvenc", "video", "deterministic", "verification", "robotics"]
+dependencies = ["numpy>=1.24", "pillow>=10"]
+
+[project.optional-dependencies]
+gpu = ["cupy-cuda13x>=13"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+tinycudavideo = "tinycudavideo:main"
+
+[project.urls]
+Homepage = "https://myaelmendez.github.io"
+Repository = "https://github.com/MYaelMendez/tinycudavideo"
+
+[tool.setuptools]
+py-modules = ["tinycudavideo"]
