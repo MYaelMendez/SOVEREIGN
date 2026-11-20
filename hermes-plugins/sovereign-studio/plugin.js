@@ -37,6 +37,9 @@ const VLC = 'http://127.0.0.1:8081'
 // Python backend of its own. The voice routes belong to tiny-voca-voice, so we
 // address that router directly rather than 404 against a backend we never wrote.
 const VOICE_API = '/api/plugins/tiny-voca-voice'
+// VLC sends no CORS headers. The local proxy adds them; when it is absent the
+// direct fetch is attempted and the failure is reported as CORS, not as down.
+const PROXY = 'http://127.0.0.1:8164'
 
 async function voiceRest(path, opts) {
   const r = await fetch(VOICE_API + path, {
@@ -132,11 +135,18 @@ function CompanionTab() {
               children: 'paused — the robot keeps its last pose',
             }),
       }),
-      gpu ? jsxs('div', {
+      gpu && gpu.available ? jsxs('div', {
         style: { fontSize: 10, color: DIM, lineHeight: 1.7 },
         children: [
-          jsx('div', { children: `${gpu.name || 'GPU'} · ${gpu.util ?? '?'}% · ${gpu.temp ?? '?'}°C` }),
-          ram ? jsx('div', { children: `RAM ${ram.percent ?? '?'}% · ${ram.free_gb ?? '?'} GB free` }) : null,
+          jsx('div', { children: `${gpu.name} · ${gpu.util_pct}% · ${gpu.temp_c}°C · ${gpu.pstate}` }),
+          jsx('div', { children: `VRAM ${gpu.mem_used_mib}/${gpu.mem_total_mib} MiB` }),
+          ram && ram.available
+            ? jsx('div', { children: `RAM ${ram.load_pct}% · ${ram.free_gb} GB free · ${env.host.cpus} threads` })
+            : null,
+          env.ledgers ? jsx('div', {
+            children: `${Object.values(env.ledgers).reduce((a, b) => a + b, 0)} receipts across ${Object.keys(env.ledgers).length} ledgers`,
+          }) : null,
+          jsx('div', { style: { color: 'rgba(212,175,55,0.25)' }, children: 'perception grants nothing' }),
         ],
       }) : null,
     ],
@@ -150,13 +160,28 @@ function VoiceTab() {
   const [voice, setVoice] = React.useState('M2')
   const [busy, setBusy] = React.useState(false)
   const [receipts, setReceipts] = React.useState([])
+  const [ledger, setLedger] = React.useState('probing')   // probing | ok | unreachable
   const [err, setErr] = React.useState(null)
 
   const load = React.useCallback(async () => {
     try {
       const d = await voiceRest('/receipts?limit=6')
       setReceipts(Array.isArray(d) ? d : (d && d.receipts) || [])
-    } catch (e) { /* the ledger may be empty; that is not an error */ }
+      setLedger('ok')
+    } catch (e) {
+      // EMPTY and UNREACHABLE are different facts. Reporting 'no receipts yet'
+      // when the ledger cannot be read is a false statement about the world.
+      // the plugin API is desktop-only; the proxy reads the same files from disk
+      try {
+        const r = await fetch(`${PROXY}/ledgers`, { cache: 'no-store' })
+        const d = await r.json()
+        const n = d.ledgers && d.ledgers['tiny-voca-receipts']
+        setReceipts(n != null
+          ? [{ text: `${n} speech receipts on disk`, sha: 'via studio proxy' }]
+          : [])
+        setLedger(n != null ? 'proxy' : 'unreachable')
+      } catch (e2) { setLedger('unreachable') }
+    }
   }, [])
 
   React.useEffect(() => { load() }, [load])
@@ -199,7 +224,7 @@ function VoiceTab() {
       }),
       jsx(Btn, { active: true, onClick: speak, children: busy ? 'SPEAKING…' : 'SPEAK' }),
       err ? jsx('div', { style: { color: MAGENTA, fontSize: 10.5 }, children: err }) : null,
-      jsx(Label, { children: 'RECENT RECEIPTS' }),
+      jsx(Label, { children: ledger === 'proxy' ? 'LEDGER (via proxy)' : 'RECENT RECEIPTS' }),
       jsxs('div', {
         style: { display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflowY: 'auto' },
         children: receipts.length
@@ -210,7 +235,10 @@ function VoiceTab() {
                 jsx('div', { children: String(r.sha || r.hash || '').slice(0, 16) }),
               ],
             }, i))
-          : jsx('div', { style: { fontSize: 10, color: DIM }, children: 'no receipts yet' }),
+          : jsx('div', { style: { fontSize: 10, color: ledger === 'unreachable' ? MAGENTA : DIM },
+              children: ledger === 'unreachable'
+                ? 'ledger unreachable — the plugin API is served by the desktop app, not a plain browser. Receipts exist; this view cannot read them.'
+                : ledger === 'probing' ? 'reading the ledger…' : 'the ledger is empty' }),
       }),
     ],
   })
@@ -224,16 +252,29 @@ function WatchTab() {
   const [file, setFile] = React.useState('')
 
   const auth = 'Basic ' + btoa(':asimov')
+  const [via, setVia] = React.useState(null)
   const req = React.useCallback(async (q) => {
+    // try the proxy first: it is the path that works from a browser
+    try {
+      const r = await fetch(`${PROXY}/vlc/requests/status.json${q || ''}`, { cache: 'no-store' })
+      if (r.ok) { const d = await r.json(); if (d && d.state !== undefined) { setVia('proxy'); return d } }
+    } catch (e) { /* fall through to direct */ }
     const r = await fetch(`${VLC}/requests/status.json${q || ''}`, {
       headers: { Authorization: auth }, cache: 'no-store',
     })
+    setVia('direct')
     return r.json()
   }, [])
 
   const poll = React.useCallback(async () => {
     try { setSt(await req()); setErr(null) }
-    catch (e) { setErr('VLC not reachable on :8081') }
+    catch (e) {
+      // A browser fetch to :8081 is cross-origin and VLC sends no CORS headers.
+      // That is NOT the same as VLC being down — distinguish them.
+      setErr('VLC blocked by CORS from a browser (it sends no CORS headers). '
+           + 'In the desktop pane this may succeed; from a plain page use the '
+           + 'proxy at :8164, or drive VLC over HTTP directly.')
+    }
   }, [req])
 
   React.useEffect(() => {
@@ -260,7 +301,7 @@ function WatchTab() {
         children: [
           jsx(Dot, { ok: playing, colour: GOLD }),
           jsx('span', { style: { fontSize: 10.5, color: playing ? GOLD : DIM },
-            children: st ? `${st.state} · ${st.time ?? 0}/${st.length ?? 0}s` : 'probing…' }),
+            children: st ? `${st.state} · ${st.time ?? 0}/${st.length ?? 0}s${via ? ' · via ' + via : ''}` : 'probing…' }),
         ],
       }),
       jsx('div', {
