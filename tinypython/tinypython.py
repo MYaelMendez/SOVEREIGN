@@ -128,8 +128,15 @@ def quat_to_mat(q):
                      [2*(x*z-y*w),   2*(y*z+x*w),   1-2*(x*x+y*y)]])
 
 
-def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24) -> dict:
-    """Simulate. The base trajectory emerges from control, not a reference."""
+def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24,
+         schedule=None) -> dict:
+    """Simulate. The base trajectory emerges from control, not a reference.
+
+    `schedule` is a list of segments {t0, t1, vx, vy, wz}. The command changes
+    DURING the walk, so a trace can accelerate, turn and stop instead of holding
+    one velocity for its whole length. Without it the command is constant —
+    which is why five cast members replaying one trace all walked identically.
+    """
     import mujoco, onnxruntime as ort
     a = asset_dir()
     pol = a / 'policy' / 'policy.onnx'
@@ -172,7 +179,27 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24) -> dict:
     data.qpos[qpos_adr] = DEFAULT_POS
     mujoco.mj_forward(model, data)
 
-    cmd = np.array([vx, vy, wz], np.float32)
+    base_cmd = np.array([vx, vy, wz], np.float32)
+    cmd = base_cmd.copy()
+    # a schedule is validated up front: overlapping or out-of-range segments
+    # would silently produce a trace that does not match what was asked for
+    segs = []
+    if schedule:
+        for s in schedule:
+            t0, t1 = float(s['t0']), float(s['t1'])
+            if not (0.0 <= t0 < t1 <= duration + 1e-6):
+                return {'ok': False, 'refused': True,
+                        'reason': f'segment [{t0},{t1}] outside [0,{duration}]',
+                        'grants': False}
+            segs.append((t0, t1, np.array([float(s.get('vx', 0.0)),
+                                           float(s.get('vy', 0.0)),
+                                           float(s.get('wz', 0.0))], np.float32)))
+        segs.sort()
+        for i in range(1, len(segs)):
+            if segs[i][0] < segs[i-1][1] - 1e-6:
+                return {'ok': False, 'refused': True,
+                        'reason': f'segments overlap at t={segs[i][0]}',
+                        'grants': False}
     ticks = int(round(duration / POLICY_DT))
     prev_action = np.zeros(23, np.float32)
     filtered = DEFAULT_POS.copy()
@@ -181,7 +208,16 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24) -> dict:
     min_z, fell_at = 99.0, None
     t0 = time.perf_counter()
 
+    cmd_h = []
     for t in range(ticks):
+        if segs:
+            now = t * POLICY_DT
+            cmd = base_cmd.copy()
+            for (s0, s1, sc) in segs:
+                if s0 <= now < s1:
+                    cmd = sc
+                    break
+        cmd_h.append(cmd.copy())
         gravity = quat_to_mat(data.qpos[3:7]).T @ np.array([0.0, 0.0, -1.0])
         obs = np.concatenate([
             0.25 * data.qvel[3:6],
@@ -229,18 +265,44 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24) -> dict:
     com_x = float(com[-1, 0] - com[0, 0])
     # Success = stayed up AND obeyed the command. A forward-only test wrongly
     # fails a standing robot and a robot walking backward.
-    speed = float(np.linalg.norm(cmd[:2]))
+    speed = float(np.linalg.norm(base_cmd[:2]))
     upright = fell_at is None
-    if speed < 0.05 and abs(float(cmd[2])) < 0.05:
+    if segs:
+        # judge each commanded segment against the motion measured IN it.
+        # A single end-to-end displacement cannot score a walk that turned.
+        per = []
+        for (s0, s1, sc) in segs:
+            i0 = min(len(base) - 1, int(s0 * fps))
+            i1 = min(len(base) - 1, max(i0 + 1, int(s1 * fps)))
+            dx = float(base[i1, 0] - base[i0, 0])
+            dy = float(base[i1, 1] - base[i0, 1])
+            sp = float(np.linalg.norm(sc[:2]))
+            if sp < 0.05 and abs(float(sc[2])) < 0.05:
+                ok = (dx * dx + dy * dy) ** 0.5 < 0.30
+                what = 'stand'
+            elif abs(float(sc[2])) > 0.05:
+                def yaw_at(k):
+                    w, x, y, z = base[k, 3:7]
+                    return float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
+                ok = abs(yaw_at(i1) - yaw_at(i0)) > 0.05
+                what = 'turn'
+            else:
+                ok = (dx * float(sc[0]) + dy * float(sc[1])) > 0.05
+                what = 'move'
+            per.append({'t0': s0, 't1': s1, 'intent': what,
+                        'cmd': sc.tolist(), 'dx': round(dx, 4), 'dy': round(dy, 4),
+                        'obeyed': bool(ok)})
+        obeyed = all(s['obeyed'] for s in per)
+    elif speed < 0.05 and abs(float(base_cmd[2])) < 0.05:
         obeyed = abs(base_x) < 0.30          # commanded to stand: stay put
-    elif abs(float(cmd[2])) > 0.05:
+    elif abs(float(base_cmd[2])) > 0.05:
         yaw = float(np.arctan2(2*(base[-1,1]*base[-1,3] + base[-1,2]*base[-1,4]),
                                1 - 2*(base[-1,3]**2 + base[-1,4]**2)))
         obeyed = abs(yaw) > 0.05             # commanded to turn: change heading
     else:
         # measure the COMMANDED axis: a lateral command moves y, not x
         base_y = float(base[-1, 1] - base[0, 1])
-        along = base_x*float(cmd[0]) + base_y*float(cmd[1])
+        along = base_x*float(base_cmd[0]) + base_y*float(base_cmd[1])
         obeyed = along > 0.05
     success = bool(upright and obeyed)
 
@@ -250,7 +312,11 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24) -> dict:
         'policy_sha256': hashlib.sha256(pol.read_bytes()).hexdigest(),
         'joint_names': JOINTS, 'joint_refs': DEFAULT_POS.tolist(),
         'qpos': qpos.tolist(), 'base': base.tolist(), 'com': com.tolist(),
-        'command': cmd.tolist(), 'fps': fps, 'nq': int(model.nq), 'nv': int(model.nv),
+        'command': base_cmd.tolist(), 'fps': fps, 'nq': int(model.nq), 'nv': int(model.nv),
+        'schedule': ([{'t0': s0, 't1': s1, 'cmd': sc.tolist()} for s0, s1, sc in segs]
+                     if segs else None),
+        'command_per_tick': np.array(cmd_h, np.float32).tolist() if segs else None,
+        'segments': per if segs else None,
         'policy_ticks': ticks, 'physics_steps': ticks*SUBSTEPS, 'duration_s': duration,
         'base_x': base_x, 'com_x': com_x, 'min_z': min_z, 'fell_at': fell_at,
         'success': success,
@@ -477,6 +543,7 @@ def main():
     w.add_argument('--vy', type=float, default=0.0)
     w.add_argument('--wz', type=float, default=0.0)
     w.add_argument('--duration', type=float, default=12.0)
+    w.add_argument('--schedule', help='JSON file: [{"t0":0,"t1":4,"vx":0.4},...]')
     w.add_argument('--fps', type=int, default=24)
     v = sub.add_parser('verify', help='recompute whether the trace walked')
     v.add_argument('file')
@@ -494,7 +561,12 @@ def main():
     elif a.cmd == 'gate':
         res = deadman_gate(a.intent)
     elif a.cmd == 'walk':
-        res = walk(Path(a.out), a.vx, a.vy, a.wz, a.duration, a.fps)
+        sched = None
+        if getattr(a, 'schedule', None):
+            sched = json.loads(Path(a.schedule).read_text(encoding='utf-8'))
+            if isinstance(sched, dict):
+                sched = sched.get('schedule', sched.get('segments'))
+        res = walk(Path(a.out), a.vx, a.vy, a.wz, a.duration, a.fps, schedule=sched)
     else:
         res = verify(Path(a.file))
     print(json.dumps(res, indent=2, ensure_ascii=False))
