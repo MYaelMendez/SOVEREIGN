@@ -97,10 +97,46 @@ def probe_remote() -> dict:
         return {'available': False, 'reason': str(exc), 'declared': True}
 
 
+def probe_nous() -> dict:
+    """The Nous Research inference service. Reachability measured, capacity NOT.
+
+    We are a client of a hosted service. We can see that the route answers; we
+    cannot see the silicon behind it, and must not report a number we did not
+    measure. `capacity: unknown` is the honest answer for a cloud tier.
+    """
+    import urllib.request, re
+    cfg = home() / 'config.yaml'
+    url = None
+    if cfg.exists():
+        for ln in cfg.read_text(encoding='utf-8', errors='replace').splitlines():
+            m = re.search(r'base_url:\s*(https://\S*nousresearch\S*)', ln)
+            if m:
+                url = m.group(1); break
+    if not url:
+        return {'available': False, 'declared': True,
+                'reason': 'no Nous base_url in config — tier declared, not measured'}
+    try:
+        # an unauthenticated probe: a 401 still proves the route is live
+        req = urllib.request.Request(url.rstrip('/') + '/models', method='GET')
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                code = r.status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        return {'available': True, 'endpoint': url, 'http': code,
+                'capacity': 'unknown — hosted service, silicon not visible to us',
+                'note': 'reachability measured. 401 means the route is live and we '
+                        'are unauthenticated, which is the correct posture for a probe.'}
+    except Exception as exc:
+        return {'available': False, 'endpoint': url,
+                'reason': f'{type(exc).__name__}: {exc}'}
+
+
 def inventory() -> dict:
     cpu = probe_cpu()
     gpu = probe_gpu()
     rem = probe_remote()
+    nous = probe_nous()
     devices = [
         {'id': 'cpu://teknium', 'tier': 'local', 'kind': 'cpu',
          'measured': True, 'capacity': cpu,
@@ -111,10 +147,14 @@ def inventory() -> dict:
         {'id': 'vps://backbone', 'tier': 'remote', 'kind': 'cpu',
          'measured': bool(rem.get('available')), 'capacity': rem,
          'good_at': ['public surface', 'tunnel', 'broker', 'always-on']},
+        {'id': 'cloud://nous', 'tier': 'cloud', 'kind': 'inference',
+         'measured': bool(nous.get('available')), 'capacity': nous,
+         'good_at': ['language', 'reasoning', 'planning', 'the conductor itself'],
+         'note': 'Nous Research hosts this. nous girl is its voice in the cast.'},
         {'id': 'hardware://asimov', 'tier': 'embodied', 'kind': 'robot',
          'measured': False, 'capacity': {'available': False,
-         'reason': 'no physical robot attached'},
-         'good_at': ['nothing yet — this tier is DECLARED']},
+         'reason': 'no physical robot attached — fundraising target'},
+         'good_at': ['nothing yet — this tier is DECLARED until a body is bought']},
     ]
     measured = [d for d in devices if d['measured']]
     return {'ok': True, 'scheme': 'mod://', 'authority': 'HUMAN://ROOT',
@@ -138,6 +178,8 @@ WORKLOADS = {
               'note': 'each scene line synthesises independently'},
     'world': {'divisible': True, 'unit': 'layer', 'device': 'cpu://teknium',
               'note': 'bed and event layers render independently, then sum'},
+    'reason': {'divisible': True, 'unit': 'request', 'device': 'cloud://nous',
+               'note': 'inference requests are independent; the provider batches them'},
     'publish': {'divisible': False, 'unit': 'push', 'device': 'vps://backbone',
                 'note': 'a push is serialised by the kanban lock — never parallel'},
 }
