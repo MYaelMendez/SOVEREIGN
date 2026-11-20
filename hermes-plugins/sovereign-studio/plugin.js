@@ -135,9 +135,19 @@ function CompanionTab() {
               children: 'paused — the robot keeps its last pose',
             }),
       }),
+      // The companion iframe already prints GPU / VRAM / RAM / receipts.
+      // Repeating them here showed the same numbers twice in one 420px pane.
+      // Show only what the companion does NOT: the ledger total across ALL
+      // ledgers, and the standing rule. When the iframe is paused, the pane
+      // is the only source, so the full block returns.
       gpu && gpu.available ? jsxs('div', {
         style: { fontSize: 10, color: DIM, lineHeight: 1.7 },
-        children: [
+        children: live ? [
+          env.ledgers ? jsx('div', {
+            children: `${Object.values(env.ledgers).reduce((a, b) => a + b, 0)} receipts · ${Object.keys(env.ledgers).length} ledgers`,
+          }) : null,
+          jsx('div', { style: { color: 'rgba(212,175,55,0.25)' }, children: 'perception grants nothing' }),
+        ] : [
           jsx('div', { children: `${gpu.name} · ${gpu.util_pct}% · ${gpu.temp_c}°C · ${gpu.pstate}` }),
           jsx('div', { children: `VRAM ${gpu.mem_used_mib}/${gpu.mem_total_mib} MiB` }),
           ram && ram.available
