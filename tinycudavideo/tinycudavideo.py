@@ -209,6 +209,10 @@ def produce(frames, out, fps: int = 24, audio=None, bitrate: str = '6M') -> dict
     wd = out.parent / (out.stem + '-tcv')
     fd = wd / 'frames'
     fd.mkdir(parents=True, exist_ok=True)
+    # Purge stale frames from a previous, longer run: image2 reads until the
+    # first gap, so leftovers would be encoded after the new frames.
+    for _p in fd.glob('f*.png'):
+        _p.unlink()
     if isinstance(frames, (str, Path)) and Path(frames).is_dir():
         src = sorted(Path(frames).glob('*.png'))
         nf = len(src)

@@ -43,7 +43,11 @@ _spec.loader.exec_module(ra)
 from rtx_raster import RtxRenderer as Raster, persp, look_at  # noqa: E402
 
 GOLD = (212, 175, 55)
-VOID = (11, 10, 6)
+# Raised from (11,10,6): dao-directory-916 measured luminance 19.68 against a
+# threshold of 20 and was refused. The gate was right — the scene was too dark.
+# Lift the scene, never the threshold.
+VOID = (18, 17, 11)
+RASTER_BG = (0.055, 0.062, 0.082)   # was the rasteriser default (0.02,0.03,0.05)
 DIM = (138, 122, 63)
 INK = (232, 230, 223)
 MAGENTA = (255, 64, 220)
@@ -140,6 +144,15 @@ def main():
     wd = out.parent / (out.stem + '-p6')
     fd = wd / 'frames'
     fd.mkdir(parents=True, exist_ok=True)
+    # Purge stale frames from a previous, longer run. image2 reads until the
+    # first gap, so leftover higher-numbered frames get encoded after the new
+    # ones — a new scene silently followed by the old one it replaced.
+    for _p in fd.glob('f*.png'):
+        try:
+            if int(_p.stem[1:]) >= nf:
+                _p.unlink()
+        except ValueError:
+            pass
 
     def font(sz, bold=False):
         try:
@@ -169,7 +182,7 @@ def main():
     # warmup every raster — first render is JIT, never a published frame
     v0, n0, l0 = body(np.eye(4), 0.0)
     for r, t in zip(RASTERS, TABLES):
-        r.render(v0, n0, t[l0], P @ look_at(ctr + [dist, 0, 0.15], ctr))
+        r.render(v0, n0, t[l0], P @ look_at(ctr + [dist, 0, 0.15], ctr), bg=RASTER_BG)
 
     print(f'  {NB} environments · {VW}x{VH} each · {len(v0):,} tris/body')
     t0 = time.time()
@@ -198,7 +211,7 @@ def main():
             az = 0.22 * math.sin(tt * 0.4 + bi)
             eye = ctr + np.array([dist * math.cos(az), dist * math.sin(az), 0.16], np.float32)
             tr = time.time()
-            img = RASTERS[bi].render(vv, nn, TABLES[bi][ll], P @ look_at(eye, ctr))
+            img = RASTERS[bi].render(vv, nn, TABLES[bi][ll], P @ look_at(eye, ctr), bg=RASTER_BG)
             rms += (time.time() - tr) * 1000
             cv.paste(Image.fromarray(img), (px + 4, py + LBL + 4))
             hc = tuple(MEM[bi]['head_rgb'])
@@ -337,7 +350,8 @@ def main():
             'size': [W, H], 'panels': NB + 1, 'panel_viewport': [VW, VH],
             'layout': f'{COLS}x{ROWS}', 'bodies': NB,
             'triangles': len(v0) * NB, 'raster_ms': round(rms / nf, 1),
-            'cast': IDS, 'texture': a.texture, 'grants': False}
+            'cast': IDS, 'texture': a.texture, 'void': list(VOID),
+            'raster_bg': list(RASTER_BG), 'grants': False}
     (wd / 'render.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
     print(json.dumps(meta, indent=2))
     return 0
