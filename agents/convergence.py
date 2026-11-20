@@ -327,7 +327,7 @@ def main():
         silent.replace(out)
 
     meta = {'audio': audio, 'frames': nf, 'fps': a.fps, 'seconds': round(el, 1),
-            'raster_ms': round(rms / nf, 1), 'bodies': 2,
+            'raster_ms': round(rms / nf, 1), 'bodies': NB,
             'cast': {i: m['head_rgb'] for i, m in zip(IDS, MEMBERS)},
             'gait': ('policy' if TR is not None else 'static'),
             'links_per_body': nL, 'triangles': int(len(V)),
