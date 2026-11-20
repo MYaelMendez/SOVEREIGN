@@ -113,6 +113,15 @@ def main():
         except Exception:
             return ImageFont.load_default()
     F_B, F_S, F_X = font(30, True), font(19), font(17)
+    # derived is a fact about the cast, not a caption to hard-code. nous and
+    # hermes are the base voices; waetz, menlo and asimov are personas on them.
+    _dl, _dr = bool(L.get('derived')), bool(R.get('derived'))
+    if not _dl and not _dr:
+        _derived_line = 'both derived:false — the base voices'
+    elif _dl and _dr:
+        _derived_line = 'both derived:true — personas on the base voices'
+    else:
+        _derived_line = f'{a.left} derived:{str(_dl).lower()} · {a.right} derived:{str(_dr).lower()}'
 
     def body(root, offset):
         V, N, Li = ra.world_tris(links, ra.transforms(urdf, {}), root)
@@ -171,7 +180,7 @@ def main():
         for ln in [f'{a.left}  ·  {L.get("role", "")}',
                    f'{a.right}  ·  {R.get("role", "")}',
                    f'{len(V):,} triangles · two bodies · one frame',
-                   'both derived:false — the base voices']:
+                   _derived_line]:
             d.text((26, y), ln, font=F_S, fill=(255, 246, 218, 255)); y += 30
         d.text((26, H - 40), 'RTX:// CUDA · HUMAN://ROOT · one signature',
                font=F_X, fill=(138, 122, 63, 255))
