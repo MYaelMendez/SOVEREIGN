@@ -1,0 +1,51 @@
+{
+  "schema": "proof/film/1",
+  "title": "LOOP/09",
+  "tagline": "the artefact of a run becomes the input of the next",
+  "seconds": 9,
+  "fps": 24,
+  "size": [720, 1280],
+  "emoji": { "symbol": "🔁", "seed": 9 },
+  "voice": {
+    "text": "Nine links. A policy walks, the pixels grade it, the instruments grade the pixels, and the verdict becomes the next instruction. The loop is closed.",
+    "voice": "hermes",
+    "seed": 9,
+    "max_seconds": 8.6
+  },
+  "beats": {
+    "count": 9,
+    "per_beat_seconds": 1.0,
+    "sources_dir": "C:/æ/github-pages",
+    "sources": [
+      "asimov-policy-walk-916.mp4",
+      "tinymujoco-5s-916.mp4",
+      "tinycuda-3s-916.mp4",
+      "policy-12s.mp4",
+      "gait-09.mp4",
+      "tinygpu-demo-916.mp4",
+      "oracles-09.mp4",
+      "showreel-09.mp4",
+      "proof-09.mp4"
+    ],
+    "labels": [
+      "policy walk · +4.19 m",
+      "motion grade · 21 tests",
+      "pixel grade · 22 tests",
+      "trace to film · PASS",
+      "saved gait · 20 s",
+      "cuda raster · 15 tests",
+      "13 instruments · 13 suites",
+      "nine kinds · one second",
+      "the receipt · sha256"
+    ]
+  },
+  "overlay": {
+    "beat_numeral": true,
+    "source_block": { "sha256_chars": 32, "rect": [0, 540, 620, 720] },
+    "progress_cells": "per_frame",
+    "footer": "GPL · THE LOOP IS CLOSED · 13/13 INSTRUMENTS",
+    "lower_third": { "height": 250, "fill": [22, 19, 13] }
+  },
+  "gates": { "luminance": 20, "contrast": 10, "motion": 0.5, "black_pct": 5, "mux_delta_s": 0.15 },
+  "output": { "name": "loop-09", "receipt": true, "meta": true }
+}
