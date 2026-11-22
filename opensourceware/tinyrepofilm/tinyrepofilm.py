@@ -169,6 +169,9 @@ def main():
     ap.add_argument("--dry-run",action="store_true")
     ap.add_argument("--derive-only",action="store_true")
     ap.add_argument("--publish",action="store_true")
+    ap.add_argument("--render",action="store_true",help="run the full local pipeline: voice, CDP frames, NVENC, gate, seal")
+    ap.add_argument("--gate-python",default=r"C:/gpu/Scripts/python.exe")
+    ap.add_argument("--voice-python",default=r"C:/gpu/Scripts/python.exe")
     a=ap.parse_args()
 
     print(f"tinyRepoFilm · target={a.target}")
@@ -232,8 +235,19 @@ def main():
             print("  next brief: clean — proceed")
     except Exception as e:
         print(f"  loop: UNAVAILABLE ({type(e).__name__}: {e}) — do not claim the loop closed")
-    print("  REFUSED: full render is not wired in this revision — use the existing kit; "
-          "this CLI owns detection, derivation, binding and gates.")
+    if a.render:
+        from render_film import render_film
+        code,dec=render_film(a.target,story,facts,out,a.voice_python,a.gate_python)
+        emit_decision(dec,a.target,a.out)
+        print(f"  render: {dec.get('verdict')} rc={code} "+
+              (f"byte={dec.get('byte_receipt','')[:12]}" if code==0 else dec.get("reason","")))
+        if code!=0: return code
+        if a.publish:
+            d=refuse("--publish is not wired: sealing is local; deploy via kanban_push.py")
+            emit_decision(d,a.target,a.out)
+            print("  REFUSED: "+d["reason"],file=sys.stderr); return EXIT_REFUSED
+        return EXIT_OK
+    print("  STAGED: render available with --render; this run did not render.")
     if a.publish:
         d=refuse("--publish without a sealed receipt"); emit_decision(d,a.target,a.out)
         print("  REFUSED: "+d["reason"],file=sys.stderr); return EXIT_REFUSED
