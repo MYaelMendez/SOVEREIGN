@@ -14,15 +14,13 @@ CLI=Path(r"C:/æ/opensourceware/tinyrepofilm/tinyrepofilm.py")
 SCRATCH=Path(r"C:/Users/yaelm/AppData/Local/hermes/cache/scratch/trf-refusal-tests")
 PY=r"C:/gpu/Scripts/python.exe"
 KIT=CLI.parent
-ENV=None
-def _env():
-    global ENV
-    if ENV is None:
-        ENV=os.environ.copy()
-        for k in ("PYTHONPATH","PYTHONHOME","VIRTUAL_ENV"): ENV.pop(k,None)
-        ENV["PATH"]=str(KIT)+os.pathsep+ENV.get("PATH","")
-    return ENV
 import os
+def _env():
+    # Fresh env per call — a global cache inherits mutations from other suites.
+    e=os.environ.copy()
+    for k in ("PYTHONPATH","PYTHONHOME","VIRTUAL_ENV"): e.pop(k,None)
+    e["PATH"]=str(KIT)+os.pathsep+e.get("PATH","")
+    return e
 
 def run(target:str, *flags) -> tuple[int,str,Path]:
     out=SCRATCH/target.replace('/','_')
