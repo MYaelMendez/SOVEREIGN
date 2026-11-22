@@ -164,8 +164,10 @@ def validate(expr: str) -> None:
 
 def evaluate(expr: str) -> dict:
     validate(expr)
+    ns = namespace()
+    ns["__builtins__"] = {}
     try:
-        out = eval(expr, {"__builtins__": {}}, namespace())  # noqa: S307 — governed above
+        out = eval(expr, ns, ns)  # noqa: S307 — governed: no dunder, whitelist
     except Refused as e:
         rec = receipt("refused", {"expr": expr, "reason": str(e)})
         return {"ok": False, "refused": True, "reason": str(e), "receipt": rec["hash"]}
