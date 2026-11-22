@@ -7,7 +7,7 @@ It reads: git topology, tinyfilmmemory ledger, tinyæ registry, robot index,
 deploy-status, and ae_lessons. Nothing in the page is typed by hand.
 """
 from __future__ import annotations
-import argparse, json, os, subprocess, hashlib
+import argparse, json, os, subprocess, hashlib, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -85,16 +85,55 @@ a{{color:var(--gold);font-size:11px;margin-right:14px}}
  <a href="./merge-addendum.json">facts →</a>
 </div></body></html>'''
 
+GIT = r"C:\Program Files\Git\cmd\git.exe"
+
+
+def git_state() -> dict:
+    """Measure the branch against master. The full path bypasses the WindowsApps shim."""
+    def run(*args):
+        r = subprocess.run([GIT, *args], capture_output=True, text=True, timeout=60,
+                           encoding="utf-8", errors="replace", cwd=ROOT)
+        return (r.stdout + r.stderr).strip()
+    head = run("rev-parse", "HEAD").splitlines()[0].strip()
+    branch = run("rev-parse", "--abbrev-ref", "HEAD")
+    counts = run("rev-list", "--left-right", "--count", f"master...{branch}").split()
+    behind, ahead = (int(counts[0]), int(counts[1])) if len(counts) == 2 else (None, None)
+    return {"branch": branch, "head": head, "ahead": ahead, "behind": behind}
+
+
+def check(d: dict) -> dict:
+    """Stamp correct/actual onto the facts; correct means head/ahead/behind agree."""
+    actual = git_state()
+    ok = (actual["head"] == d.get("head") and actual["ahead"] == d.get("ahead")
+          and actual["behind"] == d.get("behind"))
+    d = dict(d)
+    d["correct"] = ok
+    d["checked_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    d["actual"] = actual
+    d["correct_kind"] = ("measured — the branch was re-probed with git at checked_at")
+    return d
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("--out",required=True,type=Path)
+    ap.add_argument("--check",action="store_true",
+                    help="re-probe git; stamp correct/actual onto the facts and fail 1 if stale")
     a=ap.parse_args()
-    d=derive();html=build(d)
+    d=derive()
+    if a.check:
+        d=check(d)
+        if not d["correct"]:
+            print(f"STALE: facts say head={d['head']} ahead={d['ahead']} behind={d['behind']} "
+                  f"but git says head={d['actual']['head']} ahead={d['actual']['ahead']} "
+                  f"behind={d['actual']['behind']} — re-derive", file=sys.stderr)
+    html=build(d)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(html,encoding="utf-8")
     j=a.out.with_suffix(".json")
     j.write_text(json.dumps(d,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(f"wrote {a.out} {len(html):,}B · head={d['head']} ahead={d['ahead']} behind={d['behind']} "
+          f"correct={d.get('correct')} "
           f"chain={d['ledger']['chain']} films={d['ledger']['films']} aligned={d['deploy']['aligned']}")
-    return 0
+    return 1 if (a.check and not d["correct"]) else 0
 
 if __name__=="__main__": raise SystemExit(main())
