@@ -1,0 +1,28 @@
+{
+  "chain": "væult — the whole tool chain   (11/11 links healthy)\n\n  #  LINK          ROLE        ANSWERS\n  ✓ 1  vault         custody     where the secret lives\n                                  C:/æ/væult/væult.py\n  ✓ 2  envelope      format      how anything crosses a boundary\n                                  C:/æ/agents/qr_envelope.py\n  ✓ 3  supervision   gate        is the artifact real, or a picture of one\n                                  C:/æ/agents/qr_supervision.py\n  ✓ 4  signing       authority   who may act, and until when\n                                  C:/æ/agents/card_signing.py\n  ✓ 5  pledge        contract    what an agent has promised\n                                  C:/æ/agents/agent_pledge.py\n  ✓ 6  kanban        dispatch    how a physical card moves the board\n                                  C:/æ/agents/qr_kanban.py\n  ✓ 7  push          publish     how a fleet pushes without colliding\n                                  C:/æ/agents/kanban_push.py\n  ✓ 10  alias         reach       can a person actually open this path\n                                  C:/æ/agents/ascii_alias.py\n  ✓ 9  teach         adoption    is every agent actually taught to use this chain\n                                  C:/æ/agents/teach_check.py\n  ✓ 8  transport     delivery    how a sealed envelope reaches a person\n                                  C:/æ/agents/qr_mail.py\n  ✓     sms           delivery    C:/æ/agents/qr_sms.py\nC:\\æ\\agents\\qr_kanban.py:53: SyntaxWarning: invalid escape sequence '\\.'\n  \"\"\"cv2.imread cannot read a non-ASCII path on Windows (C:\\æ\\... -> None).\"\"\"",
+  "verify": "✓ vault        cli answers\n  ✓ envelope     all verbs present\n  ✓ supervision  all verbs present\n  ✓ signing      all verbs present\n  ✓ pledge       all verbs present\n  ✓ kanban       all verbs present\n  ✓ push         all verbs present\n  ✓ alias        all verbs present\n  ✓ teach        all verbs present\n  ✓ transport    all verbs present\n  ✓ sms          all verbs present\n\n  11/11 healthy\nC:\\æ\\agents\\qr_kanban.py:53: SyntaxWarning: invalid escape sequence '\\.'\n  \"\"\"cv2.imread cannot read a non-ASCII path on Windows (C:\\æ\\... -> None).\"\"\"",
+  "tinyae": {
+    "families": 13,
+    "green": 12,
+    "not_green": 1
+  },
+  "memory": {
+    "ok": false,
+    "chain": {
+      "ok": true,
+      "length": 16,
+      "head": "84ddebfb3b7715352fbeba883273beae222161932d26e46921de75030ae629e9"
+    },
+    "films_checked": 13,
+    "drift": [
+      "hermes-agent-activity",
+      "hermes-agent-activity"
+    ],
+    "absent": [],
+    "note": "absent artifact is honest; drift means bytes changed since sealing"
+  },
+  "tiny_family": {
+    "members": 20,
+    "ok": 20
+  }
+}

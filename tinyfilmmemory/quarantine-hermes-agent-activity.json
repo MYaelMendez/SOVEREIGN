@@ -1,0 +1,15 @@
+{
+  "schema": "ae/film-quarantine/1",
+  "at": "2026-11-22T18:24:26+00:00",
+  "reason": "v1 and v2 were superseded by v3 at the same path; their original bytes no longer exist. Quarantine (not re-seal): re-sealing would assert dead bytes are live.",
+  "current_file": {
+    "path": "hermes-agent-activity.mp4",
+    "sha256": "8ff23c4081331d0a4afb97dd58dc47a0096b0375e138db184a310a6f88a4777c"
+  },
+  "quarantined_citations": [
+    "æ://film/hermes-agent-activity · sha256:f10f87cf0861f7b4",
+    "æ://film/hermes-agent-activity · sha256:e95955406e8cf4af"
+  ],
+  "live_citation": "æ://film/hermes-agent-activity-v3 · sha256:8ff23c4081331d0a",
+  "decision": "QUARANTINE — do not re-seal"
+}

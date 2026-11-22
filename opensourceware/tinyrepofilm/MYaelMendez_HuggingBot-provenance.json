@@ -1,0 +1,12 @@
+{
+  "schema": "ae/fork-provenance/1",
+  "target": "MYaelMendez/HuggingBot",
+  "fork": true,
+  "parent": "pollen-robotics/reachy_mini",
+  "status": "identical",
+  "ahead_by": 0,
+  "behind_by": 0,
+  "local_authorship": false,
+  "reason": "fork byte-identical to upstream; inherited commits are not local authorship",
+  "decision": "REFUSE TO FILM"
+}
