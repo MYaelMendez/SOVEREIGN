@@ -224,6 +224,9 @@ def render(results: list[dict], total_ok: int, elapsed: float) -> str:
             'derivado de <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;'
             'border-radius:4px;color:#ffd966">viewBox_for()</code>: si la regla cambia, '
             'la imagen cambia con ella.</p>'
+            '<p style="margin-top:10px"><a href="https://myaelmendez.github.io/tinySVG.html" '
+            'style="color:#7bdff2;text-decoration:none;border-bottom:1px dashed #7bdff2">'
+            'la pagina de tinySVG — con su laboratorio interactivo →</a></p>'
             + demo + '</div>')
 
     return f"""<!DOCTYPE html>
@@ -344,7 +347,7 @@ footer a{{color:var(--gold);text-decoration:none}}
   <footer>
     <span>tiny* · generado por <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tiny_family.py</code> · cada doctor ejecutado en esta maquina. · <a href="https://myaelmendez.github.io/kanban-unified.html" style="color:var(--gold);text-decoration:none">kænbæn unificado →</a></span>
     <span style="display:flex;align-items:center;gap:14px">
-      <span><a href="https://myaelmendez.github.io/tinyffmpeg.html">tinyffmpeg</a> · <a href="https://myaelmendez.github.io/aipodcast_me/skills-demo.html">demo de skills</a> · <a href="https://github.com/MYaelMendez">MYaelMendez</a></span>
+      <span><a href="https://myaelmendez.github.io/tinyffmpeg.html">tinyffmpeg</a> · <a href="https://myaelmendez.github.io/tinySVG.html" style="color:#7bdff2">tinySVG</a> · <a href="https://myaelmendez.github.io/aipodcast_me/skills-demo.html">demo de skills</a> · <a href="https://github.com/MYaelMendez">MYaelMendez</a></span>
       <a id="ae-qr-badge" href="tiny.html.receipt.json" target="_blank" rel="noopener" aria-label="Verify this surface">
         <img src="tiny.html.receipt.png" alt="QR de la firma tinyqr" width="56" height="56">
       </a>
