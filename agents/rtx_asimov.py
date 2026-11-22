@@ -90,10 +90,24 @@ def axis_rot(axis, ang):
     return np.eye(3) * math.cos(ang) + (1 - math.cos(ang)) * np.outer(v, v) + math.sin(ang) * K
 
 
-def transforms(urdf, angles):
-    """URDF forward kinematics: walk parent -> child until every link is placed."""
-    xf = {'pelvis_link': np.eye(4)}
-    for _ in range(8):
+def transforms(urdf, angles, root_link=None):
+    """URDF forward kinematics: walk parent -> child until every link is placed.
+
+    The root is DERIVED, not named. This used to seed xf with 'pelvis_link',
+    which silently produced zero transforms for any robot without an Asimov
+    pelvis — Reachy Mini loaded 17 links and rendered nothing. A URDF root is
+    the link that is never any joint's child; that definition works for every
+    robot. Pass root_link to override when a model declares more than one.
+    """
+    if root_link is None:
+        children = {j['child'] for j in urdf['joints']}
+        parents = {j['parent'] for j in urdf['joints']}
+        roots = sorted(parents - children)
+        if not roots:
+            raise ValueError('no URDF root: every link is a child (cycle?)')
+        root_link = roots[0]
+    xf = {root_link: np.eye(4)}
+    for _ in range(16):
         for j in urdf['joints']:
             p, c = j['parent'], j['child']
             if p in xf and c not in xf:
@@ -447,7 +461,7 @@ def main():
                              'note': 'base trajectory emerged from PD control against '
                                      'ground contact; not keyframed'}
                             if TR is not None else {'source': 'keyframed gesture'}),
-                triangles=len(V0), seconds=round(el, 1),
+                triangles=len(V0), seconds=round(nf / a.fps, 3), wall_s=round(el, 1),
                 ms_per_frame=round(el / nf * 1000, 1), raster_ms=round(rms / nf, 1),
                 device='RTX 3050 CUDA', source='urdf.json', bytes=out.stat().st_size)
     (wd / 'rtx.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
