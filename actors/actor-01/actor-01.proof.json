@@ -1,0 +1,70 @@
+{
+  "schema": "proof/film/1",
+  "title": "ACTOR/01",
+  "tagline": "one robot, three cues — every move a policy, every word a line",
+  "seconds": 9.0,
+  "fps": 24,
+  "size": [
+    720,
+    1280
+  ],
+  "emoji": {
+    "symbol": "🎬",
+    "seed": 1
+  },
+  "voice": {
+    "text": "I am the actor. Every step is a policy. Every word is scripted.",
+    "voice": "hermes",
+    "seed": 1,
+    "max_seconds": 8.6
+  },
+  "beats": {
+    "count": 3,
+    "per_beat_seconds": 3.0,
+    "sources_dir": "C:\\æ\\actors\\actor-01\\clips",
+    "sources": [
+      "cue00-asimov-stand.mp4",
+      "cue01-asimov-walk.mp4",
+      "cue02-asimov-turn.mp4"
+    ],
+    "labels": [
+      "asimov · stand · “I am the actor.”",
+      "asimov · walk · “Every step is a policy.”",
+      "asimov · turn · “Every word is scripted.”"
+    ]
+  },
+  "overlay": {
+    "beat_numeral": true,
+    "source_block": {
+      "sha256_chars": 32,
+      "rect": [
+        0,
+        540,
+        620,
+        720
+      ]
+    },
+    "progress_cells": "per_frame",
+    "footer": "ACTOR/SCRIPT/1 · EVERY MOVE IS A POLICY · EVERY WORD IS A LINE",
+    "lower_third": {
+      "height": 250,
+      "fill": [
+        22,
+        19,
+        13
+      ]
+    }
+  },
+  "gates": {
+    "luminance": 20,
+    "contrast": 10,
+    "motion": 0.5,
+    "black_pct": 5,
+    "mux_delta_s": 0.15
+  },
+  "output": {
+    "name": "actor-01",
+    "receipt": true,
+    "meta": true
+  }
+}

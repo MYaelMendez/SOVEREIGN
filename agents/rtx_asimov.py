@@ -171,6 +171,12 @@ def main():
     ap.add_argument('--free-root', action='store_true',
                     help='keep the base translation and hold the camera on the path: '
                          'the film then carries the traversal and can be read back')
+    ap.add_argument('--az', type=float, default=None,
+                    help='scripted camera azimuth (radians); fixed, no sway')
+    ap.add_argument('--el', type=float, default=None,
+                    help='scripted camera elevation (metres above the target)')
+    ap.add_argument('--dist', type=float, default=None,
+                    help='scripted camera distance (metres)')
     a = ap.parse_args()
 
     import cupy as cp
@@ -319,14 +325,17 @@ def main():
             root[:3, :3] = rot_euler([0, 0, 0.10 * math.sin(tt * 0.7)])
             root[2, 3] = 0.03 * math.sin(tt * 1.9)
         V, N, L = world_tris(links, xf, root)
-        if TR is not None:
+        if getattr(a, 'az', None) is not None:
+            az = a.az                       # scripted: a fixed camera, no sway
+        elif TR is not None:
             # side-on: the walk is along X, so the camera must sit on Y or the
             # stride is foreshortened into the lens and reads as standing still
             az = math.pi / 2 + 0.26 * math.sin(tt * 0.45)
         else:
             az = 0.34 * math.sin(tt * 0.55)
-        eye = ctr + np.array([dist * math.cos(az), dist * math.sin(az),
-                              0.15 + 0.10 * math.sin(tt * 0.8)], np.float32)
+        _el = a.el if getattr(a, 'el', None) is not None else 0.15 + 0.10 * math.sin(tt * 0.8)
+        _dist = a.dist if getattr(a, 'dist', None) is not None else dist
+        eye = ctr + np.array([_dist * math.cos(az), _dist * math.sin(az), _el], np.float32)
         tr = time.time()
         img = r.render(V, N, cols[L], P @ look_at(eye, ctr))
         rms += (time.time() - tr) * 1000

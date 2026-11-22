@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "out": "C:\\\u00e6\\actors\\actor-01\\render\\actor-01.mp4",
+  "frames_rendered": 72,
+  "picture_loops": 2,
+  "fps": 24,
+  "gate": {
+    "ok": true,
+    "pixels": {
+      "luminance": 26.26,
+      "contrast": 50.84,
+      "motion": 0.82,
+      "black_pct": 0.0,
+      "analysis_scale": [
+        720,
+        1280
+      ],
+      "sampled": 49
+    },
+    "mux": {
+      "video_s": 4.083,
+      "audio_s": 4.075,
+      "delta_s": 0.008,
+      "frozen_tail_s": 0.0
+    },
+    "size": [
+      720,
+      1280
+    ],
+    "frames": 98,
+    "checks": {
+      "luminance": true,
+      "contrast": true,
+      "motion": true,
+      "black_frames": true,
+      "mux_match": true
+    },
+    "failed": [],
+    "note": "motion is measured at analysis_scale. Native by default, matching the instrument the thresholds came from. A downscaled measurement is a different instrument \u2014 never compare the two silently."
+  },
+  "sha256": "2f51ffb7168a71fe0446a6e5e0d82250f2dd6eb864dd966e2d7174c0124cd4b1",
+  "emoji": {
+    "emoji": "\ud83c\udfac",
+    "codepoints": [
+      127916
+    ],
+    "seed": 12380011123593794396,
+    "palette": {
+      "base": [
+        0.82,
+        0.69,
+        0.22
+      ],
+      "void": [
+        0.075,
+        0.062,
+        0.034
+      ],
+      "accent": [
+        0.95,
+        0.1425,
+        0.6808
+      ],
+      "context_hue": 320
+    },
+    "camera": {
+      "az": 3.2114,
+      "el": 0.28,
+      "dist": 5.6,
+      "fov": 42.0
+    },
+    "motion": {
+      "family": "orbit",
+      "speed": 0.96
+    }
+  }
+}

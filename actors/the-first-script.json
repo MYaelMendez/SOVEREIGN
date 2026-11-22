@@ -1,0 +1,32 @@
+{
+  "schema": "actor/script/1",
+  "title": "ACTOR/01",
+  "tagline": "one robot, three cues — every move a policy, every word a line",
+  "seconds": 9,
+  "footer": "ACTOR/SCRIPT/1 · EVERY MOVE IS A POLICY · EVERY WORD IS A LINE",
+  "cast": [
+    {
+      "id": "asimov",
+      "name": "Asimov",
+      "model": "C:/æ/tinygpu/model",
+      "head": "255,214,0",
+      "traces": {
+        "stand": "C:/æ/verbs/out/stand.json",
+        "walk": "C:/æ/verbs/out/walk.json",
+        "turn": "C:/æ/verbs/out/turn.json"
+      }
+    }
+  ],
+  "cues": [
+    {"t": 0.0, "actor": "asimov", "verb": "stand", "line": "I am the actor.",
+     "camera": {"az": 1.5708, "el": 0.15, "dist": 3.0}},
+    {"t": 3.0, "actor": "asimov", "verb": "walk", "line": "Every step is a policy.",
+     "camera": {"az": 2.0944, "el": 0.18, "dist": 3.4}},
+    {"t": 6.0, "actor": "asimov", "verb": "turn", "line": "Every word is scripted.",
+     "camera": {"az": 1.5708, "el": 0.22, "dist": 3.2}}
+  ],
+  "voice": {"voice": "hermes", "seed": 1},
+  "emoji": {"symbol": "🎬", "seed": 1},
+  "gates": {"luminance": 20, "contrast": 10, "motion": 0.5, "black_pct": 5, "mux_delta_s": 0.15},
+  "output": {"name": "actor-01", "workdir": "C:/æ/actors", "receipt": true}
+}

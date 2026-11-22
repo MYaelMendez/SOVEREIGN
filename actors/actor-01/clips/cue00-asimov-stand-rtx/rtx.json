@@ -1,0 +1,25 @@
+{
+  "audio": {
+    "voice": false,
+    "world": false
+  },
+  "frames": 72,
+  "fps": 24,
+  "links": 26,
+  "joints": 25,
+  "locomotion": {
+    "source": "policy",
+    "policy": "Menlo/asimov1-locomotion-0818",
+    "policy_sha256": "47f70691ecd5afda2933b2e6430d2375004c943552284172a2d7b28b84188a0c",
+    "travel_m": -0.007468803241706618,
+    "note": "base trajectory emerged from PD control against ground contact; not keyframed"
+  },
+  "triangles": 1007041,
+  "seconds": 3.0,
+  "wall_s": 33.0,
+  "ms_per_frame": 458.5,
+  "raster_ms": 70.7,
+  "device": "RTX 3050 CUDA",
+  "source": "urdf.json",
+  "bytes": 164412
+}
