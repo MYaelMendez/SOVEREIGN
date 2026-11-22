@@ -111,6 +111,12 @@ SEED=[
    invariant='no bare git push and no -A in deploy scripts',
    check={'kind':'advisory','note':'verify kanban_push.py task record manually'},
    change='explicit git add of 2 paths + kanban_push.py with FLEET_REPO'),
+  dict(id='fleet_index_fresh',run='robots.html',
+    defect='robots/index.json is a declared-not-measured catalog with no --check — drift invisible',
+    invariant='fleet index equals disk-derived robots',
+    check={'kind':'catalog_fresh','generator':'C:/æ/agents/robot_index.py',
+           'index':'C:/æ/github-pages/robots/index.json'},
+    change='robot_index.py --check added; STALE/MISSING fail 1, OK current on parity'),
 ]
 
 def get(ctx,key):
@@ -178,6 +184,15 @@ def evaluate(lesson,ctx):
         if not f or not Path(f).exists(): return False,'REFUSED: verify_json missing'
         d=json.loads(Path(f).read_text(encoding='utf-8'))
         return (d.get('ok') is True and d.get('open_drift')==[]), f"ok={d.get('ok')} open={d.get('open_drift')}"
+    if kind=='catalog_fresh':
+        import subprocess, sys
+        gen=c.get('generator'); idx=c.get('index')
+        if not gen or not Path(gen).exists(): return False,'REFUSED: generator missing'
+        if not idx or not Path(idx).exists(): return False,'REFUSED: index missing'
+        r=subprocess.run([sys.executable,gen,'--out',idx,'--check'],capture_output=True,
+                         text=True,timeout=180,encoding='utf-8',errors='replace')
+        return r.returncode==0, (r.stdout or r.stderr).strip()[:120]
+
     return True,'unknown check kind'
 def main():
     ap=argparse.ArgumentParser()
