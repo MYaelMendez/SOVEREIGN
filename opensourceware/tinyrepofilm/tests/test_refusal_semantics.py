@@ -13,11 +13,21 @@ from pathlib import Path
 CLI=Path(r"C:/æ/opensourceware/tinyrepofilm/tinyrepofilm.py")
 SCRATCH=Path(r"C:/Users/yaelm/AppData/Local/hermes/cache/scratch/trf-refusal-tests")
 PY=r"C:/gpu/Scripts/python.exe"
+KIT=CLI.parent
+ENV=None
+def _env():
+    global ENV
+    if ENV is None:
+        ENV=os.environ.copy()
+        for k in ("PYTHONPATH","PYTHONHOME","VIRTUAL_ENV"): ENV.pop(k,None)
+        ENV["PATH"]=str(KIT)+os.pathsep+ENV.get("PATH","")
+    return ENV
+import os
 
 def run(target:str, *flags) -> tuple[int,str,Path]:
     out=SCRATCH/target.replace('/','_')
     r=subprocess.run([PY,str(CLI),'--target',target,'--out',str(out),*flags],
-      capture_output=True,text=True,timeout=300,encoding='utf-8',errors='replace')
+      capture_output=True,text=True,timeout=300,encoding='utf-8',errors='replace',cwd=str(KIT),env=_env())
     return r.returncode,(r.stdout or r.stderr),out
 
 def test_refused_identical_fork_is_exit_10_with_decision():
@@ -32,6 +42,7 @@ def test_refused_identical_fork_is_exit_10_with_decision():
 
 def test_blocked_missing_browser_is_exit_11():
     """Sabotage: no Chrome binary -> infrastructure BLOCKED, not a verdict."""
+    sys.path.insert(0,str(KIT))
     import render_film
     from pathlib import Path as P
     original=render_film.Path
