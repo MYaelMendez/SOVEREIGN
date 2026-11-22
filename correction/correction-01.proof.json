@@ -1,0 +1,51 @@
+{
+  "schema": "proof/film/1",
+  "title": "CORRECTION/01",
+  "tagline": "the disobedience was ours — the verdict was world-frame, the command is body-frame",
+  "seconds": 9,
+  "fps": 24,
+  "size": [720, 1280],
+  "emoji": { "symbol": "🧭", "seed": 1 },
+  "voice": {
+    "text": "The disobedience was ours. The verdict compared world axes against a body-frame command. Rotated, every segment obeys.",
+    "voice": "hermes",
+    "seed": 1,
+    "max_seconds": 8.6
+  },
+  "beats": {
+    "count": 9,
+    "per_beat_seconds": 1.0,
+    "sources_dir": "C:/æ/correction/src",
+    "sources": [
+      "cue00-nous-stand.mp4",
+      "cue01-hermes-walk.mp4",
+      "cue02-waetz-turn.mp4",
+      "cue03-menlo-strafe.mp4",
+      "cue04-asimov-set_velocity.mp4",
+      "proof-09.mp4",
+      "actor-01.mp4",
+      "mixture-performed.mp4",
+      "verbs-09.mp4"
+    ],
+    "labels": [
+      "the claim: segment 3 disobeys",
+      "world dx -0.613 vs cmd vy 0.3",
+      "the heading after the turn: 137 deg",
+      "the same displacement, rotated: lateral +0.38",
+      "0818: 3 of 3 segments obey",
+      "26-09-24: 3 of 3 segments obey",
+      "the corrected schedule: turn, then walk",
+      "no retirement — the instrument was wrong",
+      "the retraction, on the record"
+    ]
+  },
+  "overlay": {
+    "beat_numeral": true,
+    "source_block": { "sha256_chars": 32, "rect": [0, 540, 620, 720] },
+    "progress_cells": "per_frame",
+    "footer": "CORRECTION/01 · THE VERDICT IS BODY-FRAME",
+    "lower_third": { "height": 250, "fill": [22, 19, 13] }
+  },
+  "gates": { "luminance": 20, "contrast": 10, "motion": 0.5, "black_pct": 5, "mux_delta_s": 0.15 },
+  "output": { "name": "correction-01", "receipt": true, "meta": true }
+}

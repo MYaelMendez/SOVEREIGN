@@ -270,6 +270,9 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24,
     if segs:
         # judge each commanded segment against the motion measured IN it.
         # A single end-to-end displacement cannot score a walk that turned.
+        def yaw_at(k):
+            w, x, y, z = base[k, 3:7]
+            return float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
         per = []
         for (s0, s1, sc) in segs:
             i0 = min(len(base) - 1, int(s0 * fps))
@@ -281,13 +284,17 @@ def walk(out: Path, vx=0.4, vy=0.0, wz=0.0, duration=12.0, fps=24,
                 ok = (dx * dx + dy * dy) ** 0.5 < 0.30
                 what = 'stand'
             elif abs(float(sc[2])) > 0.05:
-                def yaw_at(k):
-                    w, x, y, z = base[k, 3:7]
-                    return float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
                 ok = abs(yaw_at(i1) - yaw_at(i0)) > 0.05
                 what = 'turn'
             else:
-                ok = (dx * float(sc[0]) + dy * float(sc[1])) > 0.05
+                # the command is BODY-FRAME: rotate the measured WORLD
+                # displacement into the body frame at the segment's start.
+                # Comparing world axes against a body-frame command calls a
+                # correct walk-after-a-turn a disobedience.
+                c, s = float(np.cos(yaw_at(i0))), float(np.sin(yaw_at(i0)))
+                along = dx * c + dy * s
+                lateral = -dx * s + dy * c
+                ok = (along * float(sc[0]) + lateral * float(sc[1])) > 0.05
                 what = 'move'
             per.append({'t0': s0, 't1': s1, 'intent': what,
                         'cmd': sc.tolist(), 'dx': round(dx, 4), 'dy': round(dy, 4),
