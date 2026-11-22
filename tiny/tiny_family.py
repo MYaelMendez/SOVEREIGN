@@ -42,6 +42,7 @@ FAMILY = [
     ("tinyrepofilm", "film",     "un repo, org o usuario -> pelicula sellada"),
     ("tinyvoca",     "voice",    "la voz local que narra los films"),
     ("tinyae",       "protocol", "la familia measure-and-refuse, un solo prefijo"),
+    ("tinySVG",      "geometry", "el viewBox no es la pantalla: escala y solapes"),
 ]
 
 DOMAINS = {
@@ -60,6 +61,7 @@ DOMAINS = {
     "film":    "#ffd700",
     "voice":   "#ff8fab",
     "protocol":"#D4AF37",
+    "geometry":"#7bdff2",
 }
 
 
@@ -86,33 +88,51 @@ def _interpreters() -> list[str]:
 
 
 def run_doctor(name: str) -> dict:
+    """Run an instrument's doctor against EVERY interpreter and report the
+    disagreement. A verdict that flips between interpreters is a FINDING, not a
+    pass: the GPU cv2 misses a QR the venv reads, so stopping at the first `ok`
+    would hide a flaky instrument."""
     py = ROOT / name / f"{name}.py"
     if not py.exists():
-        return {"ok": False, "refusal": f"{py} no existe"}
-    last = None
+        return {"ok": False, "refusal": f"{py} no existe", "verdicts": []}
+    verdicts, last = [], None
     for exe in _interpreters():
         t0 = time.time()
         try:
             r = subprocess.run([exe, str(py), "doctor"],
                                capture_output=True, text=True, timeout=120, errors="replace")
         except Exception as exc:
-            last = {"ok": False, "refusal": f"{type(exc).__name__}: {exc}"}
+            verdicts.append({"python": Path(exe).name, "ok": False,
+                             "refusal": f"{type(exc).__name__}: {exc}"})
             continue
         dt = round(time.time() - t0, 2)
         out = (r.stdout or "").strip()
         try:
             d = json.loads(out)
         except Exception:
-            last = {"ok": False, "refusal": f"stdout no es JSON: {out[:120]}",
-                    "rc": r.returncode, "elapsed_s": dt}
+            verdicts.append({"python": Path(exe).name, "ok": False,
+                             "refusal": f"stdout no es JSON: {out[:120]}"})
             continue
-        d["_elapsed_s"] = dt
-        d["_rc"] = r.returncode
-        d["_python"] = Path(exe).name
+        verdicts.append({"python": Path(exe).name, "ok": bool(d.get("ok")),
+                         "elapsed_s": dt})
         if d.get("ok"):
-            return d
-        last = d
-    return last or {"ok": False, "refusal": "sin interprete"}
+            last = d
+    # A missing module is a DEPENDENCY gap, not an instrument verdict: an
+    # instrument that needs CuPy is green on the GPU interpreter and cannot run
+    # on the venv. That is not flakiness.
+    for v in verdicts:
+        msg = str(v.get("refusal") or "")
+        v["dep"] = ("ModuleNotFoundError" in msg or "ImportError" in msg
+                    or "no module named" in msg or "Cannot find" in msg)
+    if last is None:
+        last = {"ok": False, "verdicts": verdicts,
+                "refusal": (verdicts[-1].get("refusal") if verdicts
+                            else "ningun interprete ejecuto el doctor")}
+    real = [v["ok"] for v in verdicts if not v.get("dep")]
+    last["verdicts"] = verdicts
+    last["ok"] = any(v["ok"] for v in verdicts)
+    last["flaky"] = bool(real) and any(real) and (len(set(real)) > 1)
+    return last
 
 
 def positions(n: int, w: int, h: int) -> list[tuple[float, float]]:
@@ -137,7 +157,16 @@ def esc(x) -> str:
 
 
 def render(results: list[dict], total_ok: int, elapsed: float) -> str:
-    W, H = 1600, 1040
+    # tinySVG governs the geometry: pick the widest viewBox whose type still
+    # clears the legibility floor at a real chat-column width. Hand-picking
+    # 1600 left the deployed surface at 11.93 px — under the floor.
+    sys.path.insert(0, str(ROOT / "tinySVG"))
+    try:
+        import tinySVG
+        W = tinySVG.viewBox_for(707.0, 27.0)
+    except Exception:
+        W = 1590
+    H = round(W * 0.65)
     pts = positions(len(FAMILY), W, H)
     nodes, lines = [], []
     for (name, dom, role), (x, y), r in zip(FAMILY, pts, results):
@@ -295,6 +324,7 @@ footer a{{color:var(--gold);text-decoration:none}}
       </a>
     </span>
   </footer>
+</div>
 
 <script>
 const RESULTS = {payload};
@@ -303,10 +333,12 @@ const list = document.getElementById('family-list');
 FAMILY.forEach((n, i) => {{
   const r = RESULTS[i] || {{}};
   const ok = !!r.ok;
+  const tag = r.flaky ? 'FLAKY' : (ok ? 'ok' : (r.refusal || 'REFUSED').slice(0, 42));
   const row = document.createElement('div');
   row.className = 'kv';
-  row.innerHTML = '<span class="k">' + n + '</span><span class="v ' + (ok ? 'ok' : 'bad') + '">' +
-                  (ok ? 'ok' : (r.refusal || 'REFUSED').slice(0, 42)) + ' · ' + (r._elapsed_s ?? '?') + 's</span>';
+  row.innerHTML = '<span class="k">' + n + '</span><span class="v ' +
+                  (r.flaky ? 'bad' : (ok ? 'ok' : 'bad')) + '">' + tag +
+                  ' · ' + ((r.verdicts && r.verdicts[0] && r.verdicts[0].elapsed_s) ?? '?') + 's</span>';
   row.style.cursor = 'pointer';
   row.onclick = () => select(n);
   list.appendChild(row);
@@ -335,7 +367,8 @@ def main() -> int:
     for name, _, _ in FAMILY:
         r = run_doctor(name)
         results.append(r)
-        print(f"  {name:<18} ok={r.get('ok')} {r.get('_elapsed_s')}s")
+        print(f"  {name:<18} ok={r.get('ok')} flaky={r.get('flaky')} "
+              f"{((r.get('verdicts') or [{}])[0].get('elapsed_s'))}s")
     elapsed = time.time() - t0
     ok = sum(1 for r in results if r.get("ok"))
     html = render(results, ok, elapsed)
