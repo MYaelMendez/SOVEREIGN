@@ -46,6 +46,8 @@ HTML_OUT = REPO / "continuity.html"
 SCHEMA = "ae/continuity/1"
 ACT_SCHEMA = "ae/github-activity/1"
 MECH_SHA16 = hashlib.sha256((ROOT / "github-pages/maechlang/authority.mec").read_bytes()).hexdigest()[:16]
+_WASM = ROOT / "github-pages/continuity-wasm/dist/continuity_core_bg.wasm"
+WASM_SHA16 = hashlib.sha256(_WASM.read_bytes()).hexdigest()[:16] if _WASM.exists() else "NOT-BUILT"
 VERDICTS = ("proved", "broke", "change")
 MIN_FONT_PX = 12.0          # tinySVG's floor
 RENDER_W = 707.0            # real chat width from tinySVG's doctor
@@ -267,8 +269,28 @@ def legibility() -> dict:
             else f"font {effective:.1f}px below {MIN_FONT_PX}px floor at any width"}
 
 
+def wasm_state(root: ET.Element) -> str:
+    """The Rust core's state JSON, built from the SAME XML that produced the
+    cards. One truth: the wasm never derives from a second, drifting copy."""
+    sections = []
+    for s in root.find("sections"):
+        num = s.get("num", "")
+        sections.append({
+            "key": s.get("ordinal"),
+            "label": f"§{num}" if num else "§·",
+            "title": s.findtext("title") or "",
+            "date": s.get("date", ""),
+            "parity": s.get("parity", "ok"),
+            "has_proved": s.get("has_proved") == "1",
+            "has_broke": s.get("has_broke") == "1",
+            "has_change": s.get("has_change") == "1",
+        })
+    return json.dumps(sections, ensure_ascii=False).replace("</", "<\\/")
+
+
 def render(root: ET.Element, g: dict) -> str:
     """HTML is a pure render of the XML plus its grade — no source re-read."""
+    state_json = wasm_state(root)
     m = root.find("meta")
     act = root.find("activity")
     chassis = root.find("chassis")
@@ -343,6 +365,9 @@ def render(root: ET.Element, g: dict) -> str:
 <section class="panel" id="mech-panel"><h2>æ:// · REACTIVE GOVERNANCE (Mech 0.3.5)</h2>
 <div class="fetched">authority.mec sha256 <code>{MECH_SHA16}</code> · inputs rewritten → whole program re-run</div>
 <div id="mech-out" class="note">reading computed state from the wasm…</div></section>
+<section class="panel" id="core-panel"><h2>RUST/WASM · DERIVATION CORE</h2>
+<div class="fetched">continuity_core_bg.wasm sha256 <code>{WASM_SHA16}</code> · derive() over the XML state</div>
+<div id="core-out" class="note">loading Rust core…</div></section>
 <div class="filters">
 <input id="q" placeholder="filter by word, § number, or verdict…">
 <button data-f="all" class="on">ALL</button>
@@ -353,30 +378,40 @@ def render(root: ET.Element, g: dict) -> str:
 <main id="list">{"".join(cards)}</main>
 <footer>SOURCES {html.escape(src)} · render width {RENDER_W:.0f}px · type floor {MIN_FONT_PX:.0f}px ·
 #050505 / #D4AF37 / #00ff9d</footer>
-</div><script type="module">
-// Reactive dataflow, not event-handler accumulation: ⟦inputs⟧ are rewritten
-// and the WHOLE surface is re-derived. Same inputs → same DOM, no drift.
-const INPUTS = {{ q: '', verdict: 'all' }};  // ⟦inputs⟧
+</div><script type="application/json" id="continuity-state">{state_json}</script>
+<script type="module">
+// ⟦inputs⟧ rewritten on every Δ; the WHOLE result is re-derived by the Rust
+// core. No event-handler accumulation, no JS mirror of the derivation.
+const INPUTS = {{ q: '', verdict: 'all' }};
 const cards=[...document.querySelectorAll('.card')];
-function derive(){{
-  cards.forEach(c=>{{
-    const term=INPUTS.q.trim().toLowerCase();
-    const hit=!term||c.textContent.toLowerCase().includes(term)||
-      ('§'+c.dataset.n).includes(term);
-    const fv=INPUTS.verdict==='all'||
-      c.dataset['has'+INPUTS.verdict[0].toUpperCase()+INPUTS.verdict.slice(1)]==='1';
-    c.style.display=(hit&&fv)?'':'none';
-  }});
+const coreOut=document.getElementById('core-out');
+const state=JSON.parse(document.getElementById('continuity-state').textContent);
+let core=null;
+function paint(r){{
+  if(r.refused){{ coreOut.textContent='REFUSED — '+r.reason; return; }}
+  const visible=new Set(r.visible);
+  cards.forEach(c=>{{ c.style.display=visible.has(c.dataset.n)?'':'none'; }});
   document.querySelectorAll('.filters button').forEach(b=>
     b.classList.toggle('on', b.dataset.f===INPUTS.verdict));
+  coreOut.textContent='derive() '+r.count+'/'+r.total+' · receipt '+r.receipt.slice(0,16)+
+    ' · parity '+r.parity+' · input-driven, not accumulated';
 }}
-document.getElementById('q').addEventListener('input',e=>{{
-  INPUTS.q=e.target.value; derive();
-}});
+function derive(){{
+  if(!core){{ coreOut.textContent='REFUSED — Rust core unavailable; no derivation claimed'; return; }}
+  try {{ paint(JSON.parse(core.derive(JSON.stringify(state), JSON.stringify(INPUTS)))); }}
+  catch(e) {{ coreOut.textContent='REFUSED — derive() failed: '+String(e&&e.message||e); }}
+}}
+document.getElementById('q').addEventListener('input',e=>{{ INPUTS.q=e.target.value; derive(); }});
 document.querySelectorAll('.filters button').forEach(b=>b.addEventListener('click',()=>{{
   INPUTS.verdict=b.dataset.f; derive();
 }}));
-derive();
+// load the Rust core; fail closed — a JS fallback would be a second drifter
+try {{
+  const mod=await import('./continuity-wasm/dist/continuity_core.js');
+  await mod.default();
+  core=mod;
+  derive();
+}} catch(e) {{ coreOut.textContent='REFUSED — Rust core could not load: '+String(e&&e.message||e); }}
 
 // Mech: same reactive discipline for authority. Rewrite ⟦inputs⟧, re-run the
 // WHOLE program, read out_string() — never a JS mirror of the verdict.
