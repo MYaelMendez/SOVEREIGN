@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<family xmlns="urn:ae" xmlns:g="urn:gold" version="1">
+  <node g:rank="2" kind="identity">tinyqr</node>
+  <node g:rank="1" kind="geometry">tinySVG</node>
+  <node g:rank="3" kind="xml">tinyXML</node>
+</family>

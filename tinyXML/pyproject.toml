@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinyXML"
+version = "0.1.0"
+description = "El instrumento soberano de XML: mide si un documento es bien formado y donde rompe, canonicaliza de forma determinista, rechaza XXE y firma la forma canonica."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = ["defusedxml>=0.7"]
+authors = [{ name = "Yæl Méndez", email = "yael@llm.store" }]
+keywords = ["xml", "canonicalization", "c14n", "xxe", "signatures", "opensourceware"]
+
+[tool.setuptools]
+py-modules = ["tinyXML"]
