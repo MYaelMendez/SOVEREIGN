@@ -118,14 +118,15 @@ def run_doctor(name: str) -> dict:
 def positions(n: int, w: int, h: int) -> list[tuple[float, float]]:
     """Fibonacci (sunflower) — deterministic, no random.
 
-    The inner radius starts at 150 so the first node clears the r=86 core ring;
-    the earlier 62*sqrt(0.5) put the innermost node at ~44 and the core text
-    painted straight over it."""
+    The inner radius starts at 215 so the first node (r=58) clears the r=128 core
+    ring; the earlier 62*sqrt(0.5) put the innermost node at ~44 and the core text
+    painted straight over it. The growth step keeps the outermost node inside the
+    1500x980 viewBox at 20 members."""
     cx, cy = w / 2, h / 2
     golden = math.pi * (3 - math.sqrt(5))
     pts = []
     for i in range(n):
-        r = 150.0 + 64.0 * math.sqrt(i)
+        r = 215.0 + 48.0 * math.sqrt(i)
         a = i * golden
         pts.append((cx + r * math.cos(a) * 1.55, cy + r * math.sin(a) * 1.05))
     return pts
@@ -136,7 +137,7 @@ def esc(x) -> str:
 
 
 def render(results: list[dict], total_ok: int, elapsed: float) -> str:
-    W, H = 1500, 980
+    W, H = 1600, 1040
     pts = positions(len(FAMILY), W, H)
     nodes, lines = [], []
     for (name, dom, role), (x, y), r in zip(FAMILY, pts, results):
@@ -146,16 +147,16 @@ def render(results: list[dict], total_ok: int, elapsed: float) -> str:
         nodes.append(
             f'<g class="node" data-name="{esc(name)}" data-dom="{esc(dom)}" data-ok="{str(ok).lower()}" '
             f'data-role="{esc(role)}" transform="translate({x:.1f},{y:.1f})" style="cursor:pointer">'
-            f'<circle r="34" fill="rgba(5,5,5,.72)" stroke="{ring}" stroke-width="1.6" '
+            f'<circle r="58" fill="rgba(5,5,5,.72)" stroke="{ring}" stroke-width="2.2" '
             f'style="transition:r .3s"/>'
-            f'<circle r="4" fill="{col}" y="-24"/>'
-            f'<text y="5" text-anchor="middle" fill="#e8e8e8" font-size="12" '
+            f'<circle r="7" fill="{col}" y="-40"/>'
+            f'<text y="9" text-anchor="middle" fill="#e8e8e8" font-size="27" '
             f'font-family="JetBrains Mono,monospace">{esc(name.replace("tiny",""))}</text>'
-            f'<text y="22" text-anchor="middle" fill="{col}" font-size="9" '
+            f'<text y="38" text-anchor="middle" fill="{col}" font-size="19" '
             f'font-family="JetBrains Mono,monospace">{esc("ok" if ok else "refused")}</text>'
             f'</g>')
         lines.append(f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{W/2}" y2="{H/2}" '
-                     f'stroke="{col}" stroke-opacity=".13" stroke-width="1"/>')
+                     f'stroke="{col}" stroke-opacity=".16" stroke-width="1.6"/>')
 
     legend = []
     seen = []
@@ -261,11 +262,11 @@ footer a{{color:var(--gold);text-decoration:none}}
   <div class="stage">
     <svg viewBox="0 0 {W} {H}" role="img" aria-label="constelacion de la familia tiny*">
       {''.join(lines)}
-      <circle cx="{W/2}" cy="{H/2}" r="86" fill="none" stroke="rgba(212,175,55,.28)" stroke-width="1"/>
-      <circle cx="{W/2}" cy="{H/2}" r="70" fill="rgba(5,5,5,.8)" stroke="rgba(212,175,55,.45)"/>
-      <text x="{W/2}" y="{H/2-6}" text-anchor="middle" fill="#D4AF37" font-size="26"
+      <circle cx="{W/2}" cy="{H/2}" r="128" fill="none" stroke="rgba(212,175,55,.28)" stroke-width="1.6"/>
+      <circle cx="{W/2}" cy="{H/2}" r="104" fill="rgba(5,5,5,.8)" stroke="rgba(212,175,55,.45)"/>
+      <text x="{W/2}" y="{H/2-8}" text-anchor="middle" fill="#D4AF37" font-size="46"
             font-family="Orbitron,sans-serif" font-weight="900">tiny*</text>
-      <text x="{W/2}" y="{H/2+18}" text-anchor="middle" fill="#8a7a4a" font-size="11"
+      <text x="{W/2}" y="{H/2+30}" text-anchor="middle" fill="#8a7a4a" font-size="21"
             font-family="JetBrains Mono,monospace">{len(FAMILY)} instrumentos</text>
       {''.join(nodes)}
     </svg>
