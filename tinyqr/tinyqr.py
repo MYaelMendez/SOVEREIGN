@@ -25,7 +25,6 @@ import json
 import os
 import sys
 import tempfile
-import time
 from pathlib import Path
 
 AGENTS = Path(r"C:\æ\agents")
@@ -82,8 +81,9 @@ def doctor() -> dict:
         out["checks"]["keypair"] = f"REFUSED: {type(exc).__name__}: {exc}"
         return out
 
-    # 2. sign
-    msg = "tinyqr-doctor:" + hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
+    # 2. sign — deterministic message: a doctor must be repeatable, and a QR
+    # whose payload wobbles wobbles its own gate.
+    msg = "tinyqr-doctor:" + hashlib.sha256(b"tinyqr-doctor-v1").hexdigest()[:16]
     try:
         sig = sk.sign(msg.encode()).hex()
         out["checks"]["sign"] = f"ok · sig {sig[:16]}…"
