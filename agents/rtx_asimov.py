@@ -168,6 +168,9 @@ def main():
     ap.add_argument('--silent', action='store_true', help='skip the sound stage')
     ap.add_argument('--title', default='rtx:// asimov')
     ap.add_argument('--tagline', default='REAL MENLO CAD · URDF FK · CUDA RASTER')
+    ap.add_argument('--free-root', action='store_true',
+                    help='keep the base translation and hold the camera on the path: '
+                         'the film then carries the traversal and can be read back')
     a = ap.parse_args()
 
     import cupy as cp
@@ -252,6 +255,21 @@ def main():
               'sha': _td.get('policy_sha256'), 'travel': _td.get('base_x')}
         print(f'  TRACE {TR["n"]} frames · policy {TR["policy"]} · travel {TR["travel"]} m')
 
+    if getattr(a, 'free_root', False) and TR is not None:
+        # the traversal is the subject: hold the camera on the path's midpoint
+        # and pull back far enough that the whole walk stays framed. The default
+        # film pins the root (root[0,3]=root[1,3]=0), which shows the GAIT and
+        # erases the PATH — a teacher of motion, not of trajectory.
+        _bx, _by = TR['base'][:, 0], TR['base'][:, 1]
+        _span_x = float(_bx.max() - _bx.min())
+        _span_y = float(_by.max() - _by.min())
+        ctr = np.array([float((_bx.min() + _bx.max()) / 2),
+                        float((_by.min() + _by.max()) / 2),
+                        (zmin + zmax) / 2], np.float32)
+        dist = max(dist, max(_span_x, _span_y) * 1.15 + span * 0.9)
+        print(f'  FREE ROOT · path {_span_x:.2f} x {_span_y:.2f} m · camera held at '
+              f'{ctr[0]:.2f},{ctr[1]:.2f} · dist {dist:.2f}')
+
     t0 = time.time(); rms = 0.0
     for i in range(nf):
         tt = i / a.fps
@@ -290,8 +308,12 @@ def main():
                 [1-2*(qy*qy+qz*qz), 2*(qx*qy-qz*qw), 2*(qx*qz+qy*qw)],
                 [2*(qx*qy+qz*qw), 1-2*(qx*qx+qz*qz), 2*(qy*qz-qx*qw)],
                 [2*(qx*qz-qy*qw), 2*(qy*qz+qx*qw), 1-2*(qx*qx+qy*qy)]], np.float32)
-            root[0, 3] = 0.0            # camera tracks; the walk is in the legs
-            root[1, 3] = 0.0
+            if getattr(a, 'free_root', False):
+                root[0, 3] = bx             # the path is the subject
+                root[1, 3] = by
+            else:
+                root[0, 3] = 0.0            # camera tracks; the walk is in the legs
+                root[1, 3] = 0.0
             root[2, 3] = float(bz) - 0.639
         else:
             root[:3, :3] = rot_euler([0, 0, 0.10 * math.sin(tt * 0.7)])
