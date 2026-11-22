@@ -97,7 +97,12 @@ def main():
     ap = argparse.ArgumentParser(prog='asimov_pet')
     ap.add_argument('--model-dir', required=True)
     ap.add_argument('--out', required=True)
-    ap.add_argument('--trace', default=None, help='policy trace for the walk rows')
+    ap.add_argument('--trace', default=None, help='policy trace for the walk row')
+    ap.add_argument('--trace-turn', default=None,
+                    help='policy trace for the turning rows (a real wz command, '
+                         'not the walk replayed at a yaw)')
+    ap.add_argument('--receipt', action='store_true',
+                    help='record the sheet hash and the source traces in pet.json')
     ap.add_argument('--head', default='255,214,0', help='head RGB — asimov yellow')
     ap.add_argument('--name', default='Asimov CAD')
     a = ap.parse_args()
@@ -118,12 +123,21 @@ def main():
                      for n in names], np.float32)
 
     TR = None
+    TRT = None
     if a.trace and Path(a.trace).exists():
         td = json.loads(Path(a.trace).read_text(encoding='utf-8'))
         jn = td['joint_names']
         TR = {'names': jn, 'q': np.array(td['qpos'], np.float32)[:, 7:7 + len(jn)],
-              'n': len(td['qpos'])}
+              'n': len(td['qpos']), 'sha': td.get('policy_sha256'),
+              'cmd': td.get('command'), 'file': str(a.trace)}
         print(f'  gait: {TR["n"]} policy frames')
+    if a.trace_turn and Path(a.trace_turn).exists():
+        td = json.loads(Path(a.trace_turn).read_text(encoding='utf-8'))
+        jn = td['joint_names']
+        TRT = {'names': jn, 'q': np.array(td['qpos'], np.float32)[:, 7:7 + len(jn)],
+               'n': len(td['qpos']), 'sha': td.get('policy_sha256'),
+               'cmd': td.get('command'), 'file': str(a.trace_turn)}
+        print(f'  turn gait: {TRT["n"]} policy frames')
 
     V0, _, _ = ra.world_tris(links, ra.transforms(urdf, {}), np.eye(4))
     zmin, zmax = float(V0[:, :, 2].min()), float(V0[:, :, 2].max())
@@ -139,11 +153,12 @@ def main():
         M[2, 3] = lift + z_off
         return ra.world_tris(links, ra.transforms(urdf, angles), M)
 
-    def gait_angles(ph):
-        if TR is None:
+    def gait_angles(ph, tr=None):
+        t = TR if tr is None else tr
+        if t is None:
             return {}
-        k = int(ph * TR['n']) % TR['n']
-        return {nm: float(TR['q'][k, j]) for j, nm in enumerate(TR['names'])}
+        k = int(ph * t['n']) % t['n']
+        return {nm: float(t['q'][k, j]) for j, nm in enumerate(t['names'])}
 
     # arm joints for the wave — read the real names, never invent them
     arm = [n for n in names if 'shoulder' in n and ('pitch' in n or 'roll' in n)]
@@ -157,8 +172,13 @@ def main():
         if state == 'waiting':
             return pose(gait_angles(0.0), 0.30 + 0.10 * math.sin(w), 0.004 * math.sin(w))
         if state in ('running', 'running-right', 'running-left'):
-            yaw = {'running': 0.30, 'running-right': -0.55, 'running-left': 0.55 + math.pi}[state]
-            return pose(gait_angles(u), yaw, 0.0)
+            # each locomotion row is its OWN policy command: the walk row runs
+            # the vx trace; the two turning rows run a real wz trace. Replaying
+            # one walk at three yaws made three identical gaits.
+            if state == 'running':
+                return pose(gait_angles(u, TR), 0.30, 0.0)
+            yaw = {'running-right': -0.55, 'running-left': 0.55 + math.pi}[state]
+            return pose(gait_angles(u, TRT), yaw, 0.0)
         if state == 'waving':
             ang = gait_angles(0.0)
             for j in arm[:2]:
@@ -206,6 +226,25 @@ def main():
             'description': 'Asimov CAD rendered on an RTX 3050 — 1,007,041 triangles, '
                            'nine states, deterministic. Not an illustration of the robot: the robot.',
             'spritesheetPath': 'spritesheet.webp', 'createdBy': 'tinygpu'}
+    if a.receipt:
+        import hashlib
+        sheet = (out / 'spritesheet.webp').read_bytes()
+        meta['receipt'] = {
+            'schema': 'asimov-pet/1',
+            'spritesheet_sha256': hashlib.sha256(sheet).hexdigest(),
+            'spritesheet_bytes': len(sheet),
+            'atlas': list(atlas.size), 'frame': [FW, FH],
+            'states': STATE_ROWS, 'frames_per_state': FRAMES,
+            'policy': 'Menlo/asimov1-locomotion-0818',
+            'policy_sha256': (TR or TRT or {}).get('sha'),
+            'sources': {'running': (TR or {}).get('file'),
+                        'turning': (TRT or {}).get('file')},
+            'source_commands': {'running': (TR or {}).get('cmd'),
+                                'turning': (TRT or {}).get('cmd')},
+            'min_opaque_px': min(lit),
+            'deterministic': True,
+            'note': 'same model + same traces -> same bytes; the hash is the receipt',
+        }
     (out / 'pet.json').write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f'\n  atlas {atlas.size} · {el:.1f}s · {len(v):,} tris/frame')
     print(f'  min opaque px across all 54 frames: {min(lit):,}')
