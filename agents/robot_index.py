@@ -77,6 +77,29 @@ PROVIDES = {
         "receipt": "microduck-protocol.jsonl",
         "ledger": "microduck-protocol.jsonl",
     },
+    # mesh bodies: rigs on disk, no vendor SDK, no physics, no actuators.
+    # The same seven routes exist; the physical ones refuse by name.
+    "Soldier": {
+        "status": "mesh facts (GLB, measured)",
+        "verbs": "the dialect's own table (7: 5 read, 2 render)",
+        "plan": "render/animate — refused by name for the physical",
+        "receipt": "meshbot-protocol.jsonl",
+        "ledger": "meshbot-protocol.jsonl",
+    },
+    "Xbot": {
+        "status": "mesh facts (GLB, measured)",
+        "verbs": "the dialect's own table (7: 5 read, 2 render)",
+        "plan": "render/animate — refused by name for the physical",
+        "receipt": "meshbot-protocol.jsonl",
+        "ledger": "meshbot-protocol.jsonl",
+    },
+    "kira": {
+        "status": "mesh facts (GLB, measured)",
+        "verbs": "the dialect's own table (7: 5 read, 2 render)",
+        "plan": "render/animate — refused by name for the physical",
+        "receipt": "meshbot-protocol.jsonl",
+        "ledger": "meshbot-protocol.jsonl",
+    },
 }
 
 
@@ -85,6 +108,25 @@ def _verb_table(mod) -> list[str]:
         return sorted(rp._verb_table(mod))
     except Exception:
         return []
+
+
+# Digits on disk for each dialect. The PROVIDES mapping stays declared (the
+# dialects expose no machine-readable "I implement X" flag), but the claim
+# now carries MEASURABLE evidence: the module exists and how big it is.
+DIALECT_MODULE = {"asimov":"asimov_protocol.py","reachy":"reachy_protocol.py",
+                  "microduck":"microduck_protocol.py"}
+LEDGER_FILE = {"asimov":"asimov-protocol.jsonl","reachy":"reachy-protocol.jsonl",
+               "microduck":"microduck-protocol.jsonl"}
+
+def dialect_evidence(name:str) -> dict:
+    mod=HERE/DIALECT_MODULE[name] if name in DIALECT_MODULE else None
+    ledger=ROOT/"logs"/LEDGER_FILE[name] if name in LEDGER_FILE else None
+    src=mod.read_text(encoding="utf-8",errors="replace") if mod and mod.is_file() else ""
+    return {"module":str(mod.relative_to(ROOT)).replace("\\","/") if mod and mod.is_file() else None,
+            "module_bytes":mod.stat().st_size if mod and mod.is_file() else 0,
+            "verb_table_present":("VERBS" in src and "def verbs" in src),
+            "ledger_file":str(ledger.relative_to(ROOT)).replace("\\","/") if ledger and ledger.is_file() else None,
+            "ledger_bytes":ledger.stat().st_size if ledger and ledger.is_file() else 0}
 
 
 def build() -> dict:
@@ -114,6 +156,8 @@ def build() -> dict:
             "ledger_receipts": (meta.get("ledger") or {}).get("receipts"),
             "policy_sha256": meta.get("policy_sha256"),
             "provides": {v: provides.get(v) for v in STANDARD_INTERFACE},
+        "evidence": dialect_evidence(name),
+        "evidence_kind": "module+verb-table+ledger measured; PROVIDES verb mapping declared",
             "coverage": round(100 * sum(1 for v in STANDARD_INTERFACE if provides.get(v))
                               / len(STANDARD_INTERFACE)),
         }
