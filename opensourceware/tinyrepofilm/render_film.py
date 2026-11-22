@@ -26,6 +26,18 @@ def render_film(target:str, story:list, facts:dict, out:Path,
     voice=work/"voice"; voice.mkdir(exist_ok=True)
     frames=work/"frames"; frames.mkdir(exist_ok=True)
 
+    # 0) OPTIONAL HyperFrames gate — fails closed, never silently skipped.
+    composition=os.environ.get("HF_COMPOSITION")
+    if composition:
+        gate=ROOT/"agents/hf_runtime.py"
+        if not Path(composition).exists() or not gate.exists():
+            return EXIT_BLOCKED,refuse("HF gate: composition or adapter missing",EXIT_BLOCKED)
+        r=subprocess.run([sys.executable,str(gate),"validate",composition],
+          capture_output=True,text=True,timeout=600,encoding="utf-8",errors="replace")
+        if r.returncode!=0:
+            return EXIT_REFUSED,refuse(f"HyperFrames validate failed: {(r.stdout+r.stderr)[-180:]}")
+        print("  HF gate: PASS (No console errors)")
+
     # 1) deterministic narration, every number bound to the derived record
     lines=[("M2",f"From public GitHub. {target}. {facts['total_stars']:,} stars, {facts['total_forks']:,} forks."),
            ("F2",f"{facts['commits_52w']:,} commits across fifty two weeks."),

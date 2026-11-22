@@ -96,12 +96,30 @@ def main():
     if a.cmd=="contract":
         d=doctor(); print(json.dumps({"required":CONTRACT,"found":d["contract_snippets"]},indent=2))
         return 0 if all(d["contract_snippets"].values()) else 1
-    if not a.target: print("-- target required",file=sys.stderr);return 1
+    if not a.target: print("BLOCKED: target required",file=sys.stderr);return 11
     b=bun()
     if not b: print("BLOCKED: bun not installed",file=sys.stderr);return 11
-    cmd=[b,"x","hyperframes",a.cmd,a.target]
-    r=sh(cmd,cwd=str(Path(a.target).parent))
-    print((r.stdout or r.stderr)[:3000])
+    # Pin cwd to the workspace: the composition dir has no node_modules, so
+    # `bun x` would resolve a remote hyperframes instead of this checkout.
+    # CLI commands take a PROJECT DIRECTORY, not an HTML file.
+    target=Path(a.target).resolve()
+    project=target if target.is_dir() else target.parent
+    # `bun x` fails to remap bins when launched from the isolated interpreter.
+    # The workspace already has the CLI built — call its bin directly.
+    bin_js=HF/"packages/cli/dist/cli.js"
+    if not bin_js.exists():
+        print("BLOCKED: CLI not built at "+str(bin_js),file=sys.stderr);return 11
+    cmd=[b,str(bin_js),a.cmd,str(project)]
+    r=sh(cmd,cwd=str(HF),t=600)
+    out=(r.stdout or r.stderr)[:4000]
+    print(out)
+    # Fail closed: absence of an explicit PASS token is BLOCKED (11), never 0.
+    if a.cmd=="validate":
+        # validate is the real local gate (runtime + JS errors + assets).
+        # Absence of an explicit success token fails closed.
+        if r.returncode==0 and ("valid" in out.lower() or "error(s): 0" in out.lower()): return 0
+        print("BLOCKED: validate produced no explicit success token",file=sys.stderr)
+        return 11
     return r.returncode
 
 if __name__=="__main__": sys.exit(main())
