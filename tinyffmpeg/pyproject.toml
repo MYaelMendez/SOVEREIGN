@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinyffmpeg"
+version = "0.1.0"
+description = "A sovereign instrument for the local FFmpeg builds. Proves them, exposes capabilities, encodes with a receipt, grades determinism."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Yæl Méndez", email = "yael@llm.store" }]
+keywords = ["ffmpeg", "nvenc", "codec", "deterministic", "receipts", "opensourceware"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Win32 (MS Windows)",
+  "License :: OSI Approved :: Apache Software License",
+  "Topic :: Multimedia :: Video :: Conversion",
+]
+
+[tool.setuptools]
+py-modules = ["tinyffmpeg"]
