@@ -154,6 +154,8 @@ def validate(expr: str) -> None:
     for name in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", stripped):
         if name in ("None", "True", "False"):
             continue
+        if name in ("for", "in", "if", "else", "elif", "and", "or", "not", "is", "lambda"):
+            continue          # comprehension / boolean syntax, not a lookup
         if len(name) == 1 and name.islower():
             continue          # loop / comprehension binding (n, i, r, …)
         if name not in _ALLOWED_NAMES:
