@@ -91,6 +91,21 @@ SEED=[
    invariant='no ghp_/gho_/ghp/Bearer/Authorization in derived json',
    check={'kind':'regex_absent','file':'data_json','pattern':'gh[pous]_[A-Za-z0-9]{10,}|Bearer\\s+\\S+|Authorization'},
    change='gen_contributions.py writes only public calendar fields; regex-verified'),
+  dict(id='identical_fork_refused',run='huggingbot',
+    defect='a fork identical to upstream passed with 659 inherited commits — authorship theft',
+    invariant='an upstream-identical fork REFUSEs with exit 10 before derivation',
+    check={'kind':'exit_code_eq','file':'decision_json','value':10},
+    change='fork_provenance() reads derived compare record; identical => REFUSE 10'),
+  dict(id='refusal_has_record',run='tinyrepofilm',
+    defect='REFUSED and a crash both returned 1 — a refusal without a record did not happen',
+    invariant='every refusal persists decision-<target>.json with verdict and exit code',
+    check={'kind':'decision_record','file':'decision_json'},
+    change='emit_decision() writes verdict/exit_code beside the artifact; 10=REFUSED 11=BLOCKED'),
+  dict(id='decided_drift_not_resealed',run='tinyfilmmemory',
+    defect='v1/v2 hermes drift demanded re-seal although bytes were superseded by v3',
+    invariant='quarantined drift stays visible but open_drift is empty',
+    check={'kind':'drift_decided','file':'verify_json'},
+    change='quarantine record + verify() distinguishes open_drift from quarantined'),
  dict(id='explicit_stage_only',run='deploy',
    defect='concurrent agent held index.lock; -A would have shipped unverified work',
    invariant='no bare git push and no -A in deploy scripts',
@@ -146,8 +161,24 @@ def evaluate(lesson,ctx):
         # verified by the studio's own probe; require the explicit attestation
         att=get(ctx,'coherence_verified')
         return bool(att), f'attested={att}'
-    return True,'unknown check kind'
 
+    if kind=='exit_code_eq':
+        f=get(ctx,c['file'])
+        if not f or not Path(f).exists(): return False,'REFUSED: no decision record'
+        d=json.loads(Path(f).read_text(encoding='utf-8'))
+        return d.get('exit_code')==c['value'], f"exit={d.get('exit_code')} expected={c['value']}"
+    if kind=='decision_record':
+        f=get(ctx,c['file'])
+        if not f or not Path(f).exists(): return False,'REFUSED: refusal without a record'
+        d=json.loads(Path(f).read_text(encoding='utf-8'))
+        ok=d.get('verdict') in ('REFUSED','BLOCKED','FILMED') and isinstance(d.get('exit_code'),int)
+        return ok, f"verdict={d.get('verdict')} exit={d.get('exit_code')}"
+    if kind=='drift_decided':
+        f=get(ctx,c['file'])
+        if not f or not Path(f).exists(): return False,'REFUSED: verify_json missing'
+        d=json.loads(Path(f).read_text(encoding='utf-8'))
+        return (d.get('ok') is True and d.get('open_drift')==[]), f"ok={d.get('ok')} open={d.get('open_drift')}"
+    return True,'unknown check kind'
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('cmd',choices=['seed','list','check','brief','verify'])
