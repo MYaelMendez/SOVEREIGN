@@ -110,8 +110,8 @@ class QRRequestHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length) if content_length > 0 else b"{}"
 
         try:
-            data = json.loads(body.decode("utf-8"))
-        except json.JSONDecodeError:
+            data = json.loads(body.decode("utf-8", errors="replace"))
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
             self.send_json({"error": "invalid JSON"}, status=400)
             return
 
