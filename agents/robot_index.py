@@ -145,6 +145,13 @@ def build() -> dict:
                                         or (v == "receipt" and bool(meta.get("ledger")))
                                         or (v == "ledger" and bool(meta.get("ledger"))))]
         provides = PROVIDES.get(name, {})
+        rule = None
+        mod = None
+        try:
+            mod = rp._load((rp.ROBOTS.get(name) or meta).get("module"))
+            rule = (mod.status() or {}).get("rule")
+        except Exception:
+            pass
         out_robots[name] = {
             "scheme": meta.get("scheme"),
             "sdk": meta.get("sdk"),
@@ -156,8 +163,9 @@ def build() -> dict:
             "ledger_receipts": (meta.get("ledger") or {}).get("receipts"),
             "policy_sha256": meta.get("policy_sha256"),
             "provides": {v: provides.get(v) for v in STANDARD_INTERFACE},
-        "evidence": dialect_evidence(name),
-        "evidence_kind": "module+verb-table+ledger measured; PROVIDES verb mapping declared",
+            "rule": rule,
+            "evidence": dialect_evidence(name),
+            "evidence_kind": "module+verb-table+ledger measured; PROVIDES verb mapping declared",
             "coverage": round(100 * sum(1 for v in STANDARD_INTERFACE if provides.get(v))
                               / len(STANDARD_INTERFACE)),
         }
