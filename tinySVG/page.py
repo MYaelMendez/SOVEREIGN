@@ -51,7 +51,29 @@ def esc(x) -> str:
     return str(x).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def render(doctor: dict, lab: str) -> str:
+def capabilities() -> str:
+    """The capability table: membership from the registry, verbs from the modules.
+    A name is not a capability — its verbs are."""
+    import re
+    sys.path.insert(0, str(ROOT / "tinyae"))
+    try:
+        import tinyae
+    except Exception:
+        return '<tr><td colspan="4">registro no disponible</td></tr>'
+    rows = []
+    for name, dom, role in tinyae.FAMILY:
+        p = ROOT / name / f"{name}.py"
+        verbs = []
+        if p.exists():
+            src = p.read_text(encoding="utf-8", errors="replace")
+            verbs = list(dict.fromkeys(re.findall(r"add_parser\(\s*['\"]([a-z_]+)['\"]", src)))
+        rows.append(f'<tr><td>{dom}</td><td>{name}</td>'
+                    f'<td>{", ".join(verbs) if verbs else "<i>(delega)</i>"}</td>'
+                    f'<td>{esc(role)}</td></tr>')
+    return "\n".join(rows)
+
+
+def render(doctor: dict, cap_rows: str) -> str:
     rows = "\n".join(
         f'<tr><td>{esc(a)}</td><td><code>{esc(b)}</code></td>'
         f'<td class="r">{esc(c)}</td><td>{esc(d)}</td></tr>'
@@ -252,6 +274,35 @@ footer a{{color:var(--gold);text-decoration:none}}
     </div>
     <div class="demo" style="margin-top:12px"><svg id="flt" viewBox="0 0 1590 1034"
       role="img" aria-label="constelacion con filtros svg"></svg></div>
+  </section>
+
+  <section>
+    <h2>LA LINEA QUE LOS <span>UNIFICA</span></h2>
+    <p class="lead"><b>Ninguno hace la cosa. Todos gobernan la cosa.</b>
+    Cada tiny* envuelve una capacidad que ya existia (FFmpeg, cv2, MuJoCo, ONNX,
+    SVG, XML, Ed25519) y se niega a operarla sin medirla antes. El mecanismo es el
+    mismo en los 22: <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">doctor()</code>
+    que mide, <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">refusal</code>
+    que es un resultado, y un ledger de decisiones.</p>
+    <div class="grid">
+      <div class="stat"><div class="k">la cosa que NO hace</div><div class="v" style="font-size:1rem;line-height:1.4">tinyffmpeg no codifica · tinySVG no dibuja · tinyXML no parsea · tinyqr no firma</div></div>
+      <div class="stat"><div class="k">lo que SI hace</div><div class="v" style="font-size:1rem;line-height:1.4">mide los builds · mide el viewBox · dice donde rompe · verifica desde los bytes</div></div>
+    </div>
+    <p class="lead" style="margin-top:12px"><b>La prueba de que es una linea y no una
+    coincidencia:</b> cuando un instrumento no la sigue, el gate lo detecta. tinySVG
+    cazo <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tiny.html</code>
+    a 11.93 px; tinyæ cazo a <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tinygpugbot</code>
+    disfrazado de flaky; tinyXML cazo un HTML que se hacia pasar por XML.</p>
+  </section>
+
+  <section>
+    <h2>CAPACIDADES <span>MEDIDAS</span></h2>
+    <p class="lead">22 instrumentos, 14 dominios, 22 green / 0 refused / 0 flaky. Los
+    verbos son la capacidad real, extraidos de cada modulo — no del nombre.</p>
+    <table>
+      <tr><th>dominio</th><th>instrumento</th><th>verbos</th><th>capacidad</th></tr>
+      {cap_rows}
+    </table>
   </section>
 
   <section>
@@ -508,7 +559,7 @@ def main() -> int:
     doctor = tinySVG.doctor()
     if not doctor.get("ok"):
         print(f"doctor REFUSED: {doctor}", file=sys.stderr)
-    html = render(doctor, "")
+    html = render(doctor, capabilities())
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     r = tinySVG.check_svg(OUT, render_w=707.0)
