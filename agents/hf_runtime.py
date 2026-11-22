@@ -13,7 +13,7 @@ four capabilities we actually need and fails closed when any is absent.
     python hf_runtime.py validate <composition.html>
 """
 from __future__ import annotations
-import argparse, hashlib, json, os, subprocess, sys
+import argparse, hashlib, json, os, pathlib, subprocess, sys
 from pathlib import Path
 
 ROOT=Path(r"C:/æ")
@@ -78,7 +78,7 @@ def doctor() -> dict:
               "render":ROOT/"opensourceware/hermes-contributions-film/render.mjs",
               "gate":ROOT/"vidæo/vidæo.py"}
     d["our_adapters"]={k:v.exists() for k,v in adapters.items()}
-    hf_src=pathlib.Path(adapters["hf_runtime"]).read_text(encoding='utf-8',errors='replace')
+    hf_src=Path(adapters["hf_runtime"]).read_text(encoding='utf-8',errors='replace')
     d["sovereign_contract"]={k:(k in hf_src or k in (ROOT/"vidæo/vidæo.py").read_text(encoding='utf-8',errors='replace')) for k in SOVEREIGN}
     d["ok"]=(d["repo_exists"] and d["entry"] and d["dist"] and bool(bun())
              and all(d["contract_snippets"].values())
