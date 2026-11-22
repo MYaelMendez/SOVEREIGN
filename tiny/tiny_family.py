@@ -167,6 +167,15 @@ def render(results: list[dict], total_ok: int, elapsed: float) -> str:
     except Exception:
         W = 1590
     H = round(W * 0.65)
+    # the instrument demonstrates itself: its rule, drawn and self-checked
+    demo = ""
+    try:
+        from demo import demo_svg
+        demo = demo_svg(707.0)
+        if not tinySVG.check_svg_str(demo, 707.0)["ok"]:
+            demo = ""
+    except Exception:
+        demo = ""
     pts = positions(len(FAMILY), W, H)
     nodes, lines = [], []
     for (name, dom, role), (x, y), r in zip(FAMILY, pts, results):
@@ -202,6 +211,21 @@ def render(results: list[dict], total_ok: int, elapsed: float) -> str:
 
     payload = json.dumps(results, ensure_ascii=False, default=str)
 
+    demo_section = ""
+    if demo:
+        demo_section = (
+            '<div class="card" style="margin-top:16px">'
+            '<h3>LA REGLA, DEMOSTRADA — tinySVG</h3>'
+            '<p style="color:var(--dim);font-size:.78rem;line-height:1.6;margin-bottom:12px">'
+            'Este SVG lo emite <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;'
+            'border-radius:4px;color:#ffd966">tinySVG/demo.py</code> y lo verifica '
+            '<code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;'
+            'color:#ffd966">tinySVG check</code> antes de publicarse. Cada numero esta '
+            'derivado de <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;'
+            'border-radius:4px;color:#ffd966">viewBox_for()</code>: si la regla cambia, '
+            'la imagen cambia con ella.</p>'
+            + demo + '</div>')
+
     return f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -209,7 +233,7 @@ def render(results: list[dict], total_ok: int, elapsed: float) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>tiny* · la familia soberana</title>
 <meta rel="canonical" href="https://myaelmendez.github.io/tiny.html">
-<meta name="description" content="Los 18 instrumentos tiny* del fleet, como una constelación ejecutable: cada nodo corrio su doctor real. Medido, no declarado.">
+<meta name="description" content="Los {len(results)} instrumentos tiny* del fleet, como una constelación ejecutable: cada nodo corrio su doctor real. Medido, no declarado.">
 <meta property="og:title" content="tiny* · la familia soberana">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://myaelmendez.github.io/tiny.html">
@@ -302,6 +326,8 @@ footer a{{color:var(--gold);text-decoration:none}}
   </div>
 
   <div class="legend">{''.join(legend)}</div>
+
+  {demo_section}
 
   <div class="panel">
     <div class="card">

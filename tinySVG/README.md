@@ -44,9 +44,13 @@ tinySVG/
 python tinySVG.py doctor                                # la cadena, a 707 px
 python tinySVG.py check <surface.html> --render-w 707   # mide una superficie real
 python tinySVG.py constellation a,b,c --render-w 707   # emite un SVG auto-dimensionado
+python demo.py --out demo.svg                           # la regla, dibujada y auto-verificada
 python tinySVG.py grade                                 # determinismo
 python tinySVG.py ledger                                # integridad de la cadena
 ```
+
+`demo.py` dibuja la lección (viewBox 1590 → pantalla 707 → 12.0 px) y **se
+autoverifica con `check`**: si el SVG del demo no pasa, no se publica.
 
 Tests: `python -m unittest tests.test_tinySVG -v`
 

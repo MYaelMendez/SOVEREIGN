@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1590 827" role="img" aria-label="demostracion: el viewBox no es la pantalla">
+<rect width="1590" height="827" fill="#050505"/>
+<rect width="1590" height="827" fill="none" stroke="#D4AF37" stroke-opacity=".35"/>
+<text x="795.0" y="74" text-anchor="middle" fill="#D4AF37" font-size="40" font-family="monospace" font-weight="bold">el viewBox no es la pantalla</text>
+<text x="795.0" y="128" text-anchor="middle" fill="#a3926a" font-size="23" font-family="monospace">una etiqueta de 27 unidades, medida en dos anchos de render</text>
+<rect x="95" y="198" width="541" height="248" fill="rgba(212,175,55,.08)" stroke="#D4AF37" stroke-width="2.5"/>
+<text x="366" y="303" text-anchor="middle" fill="#e8e8e8" font-size="26" font-family="monospace">viewBox 1590</text>
+<text x="366" y="392" text-anchor="middle" fill="#a3926a" font-size="22" font-family="monospace">lo que el autor dibuja</text>
+<line x1="654" y1="323" x2="1127" y2="323" stroke="#D4AF37" stroke-width="3" marker-end="url(#ah)"/>
+<defs><marker id="ah" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D4AF37"/></marker></defs>
+<text x="890" y="307" text-anchor="middle" fill="#D4AF37" font-size="27" font-family="monospace">× 0.4447</text>
+<rect x="1145" y="198" width="318" height="248" fill="rgba(123,223,242,.08)" stroke="#7bdff2" stroke-width="2.5"/>
+<text x="1304" y="303" text-anchor="middle" fill="#e8e8e8" font-size="26" font-family="monospace">pantalla 707</text>
+<text x="1304" y="392" text-anchor="middle" fill="#7bdff2" font-size="34" font-family="monospace" font-weight="bold">12.0 px</text>
+<rect x="95" y="546" width="1399" height="99" fill="rgba(5,5,5,.6)" stroke="#D4AF37" stroke-opacity=".4"/>
+<text x="795" y="608" text-anchor="middle" fill="#e8e8e8" font-size="25" font-family="monospace">viewBox = render × fuente ÷ suelo = 707 × 27 ÷ 12 = 1590</text>
+<text x="95" y="699" fill="#a3926a" font-size="22" font-family="monospace">chat 707 px  →  viewBox 1590  →  12.0 px  ·  monitor 1280 px  →  viewBox 2880  →  12.0 px</text>
+<text x="95" y="761" fill="#a3926a" font-size="22" font-family="monospace">tipo &lt; 12 px  →  REFUSADO (tiny.html publico 11.93 px con viewBox 1600; tinySVG lo rechazo)</text>
+</svg>

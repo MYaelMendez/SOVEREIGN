@@ -69,19 +69,74 @@ def viewBox_for(render_w: float, font: float, base: float = 1000.0) -> float:
 
 # ── the check ──────────────────────────────────────────────────────────────
 
+def _blocks(raw: bytes) -> list[bytes]:
+    """Every <svg>…</svg> block. A surface can carry more than one."""
+    low = raw.lower()
+    out, i = [], 0
+    while True:
+        s = low.find(b"<svg", i)
+        if s < 0:
+            break
+        e = low.find(b"</svg>", s)
+        if e < 0:
+            break
+        out.append(raw[s:e + 6])
+        i = e + 6
+    return out
+
+
+def check_svg_str(raw: bytes | str, render_w: float | None = None) -> dict:
+    """Measure SVG markup. Same contract as `check_svg`, from a string."""
+    if isinstance(raw, str):
+        raw = raw.encode("utf-8")
+    head = raw.lstrip()[:200].lower()
+    if not head.startswith(b"<svg"):
+        blocks = _blocks(raw)
+        if not blocks:
+            return {"ok": False, "refusal": "no hay ningun bloque <svg>"}
+        return _aggregate([_measure(b, render_w) for b in blocks])
+    return _measure(raw, render_w)
+
+
 def check_svg(path: Path | str, render_w: float | None = None) -> dict:
     """Measure a surface. Reads the artifact, never the filename."""
     path = Path(path)
     if not path.exists():
         return {"ok": False, "refusal": f"no such file: {path}"}
     raw = path.read_bytes()
-    # an HTML surface wraps its SVG; measure the ARTIFACT, so extract the block
-    # instead of refusing a page that is not bare XML.
+    # an HTML surface wraps its SVG(s); measure the ARTIFACT, so extract the
+    # blocks instead of refusing a page that is not bare XML.
     head = raw.lstrip()[:200].lower()
-    if not head.startswith(b"<svg") and b"<svg" in raw:
-        s = raw.index(b"<svg")
-        e = raw.lower().rindex(b"</svg>") + len(b"</svg>")
-        raw = raw[s:e]
+    if not head.startswith(b"<svg"):
+        blocks = _blocks(raw)
+        if not blocks:
+            return {"ok": False, "refusal": "no hay ningun bloque <svg> en el archivo"}
+        return _aggregate([_measure(b, render_w) for b in blocks])
+    return _measure(raw, render_w)
+
+
+def _aggregate(parts: list[dict]) -> dict:
+    """Worst-case rollup: a surface is only as good as its worst block."""
+    if len(parts) == 1:
+        return parts[0]
+    ok = all(p.get("ok") for p in parts)
+    out = {
+        "ok": ok,
+        "blocks": len(parts),
+        "nodes": sum(p.get("nodes", 0) for p in parts),
+        "small_labels": sum(len(p.get("small_labels") or []) for p in parts),
+        "overflow": sum(len(p.get("overflow") or []) for p in parts),
+        "overlaps": sum(len(p.get("overlaps") or []) for p in parts),
+        "viewBoxes": [p.get("viewBox") for p in parts],
+        "parts": [{k: p.get(k) for k in ("ok", "viewBox", "nodes", "refusal")} for p in parts],
+    }
+    if not ok:
+        out["refusal"] = "; ".join(
+            f"bloque {i+1}: {p.get('refusal')}" for i, p in enumerate(parts) if not p.get("ok"))
+    return out
+
+
+def _measure(raw: bytes, render_w: float | None) -> dict:
     try:
         root = ET.fromstring(raw)
     except ET.ParseError as exc:

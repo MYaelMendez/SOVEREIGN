@@ -67,6 +67,12 @@ class TestRefusals(unittest.TestCase):
             r = ts.check_svg(p)
             self.assertFalse(r["ok"])
 
+    def test_string_input(self):
+        svg = ts.constellation(["a", "b", "c"], render_w=707.0)
+        r = ts.check_svg_str(svg, render_w=707.0)
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(r["nodes"], 3)
+
     def test_small_type_is_a_refusal(self):
         # emit a layout whose viewBox is too wide for the render width
         svg = ts.constellation(["a", "b", "c"], render_w=707.0)
