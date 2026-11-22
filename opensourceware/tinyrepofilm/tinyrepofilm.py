@@ -26,6 +26,24 @@ DEFAULT_OUT=ROOT/"tinyfilmmemory/explainer/deliverables"
 
 STAGES=["detect","derive","bind","gate","render","seal","publish"]
 
+# A refusal is a RESULT, not a crash. Callers must be able to tell them apart.
+EXIT_OK=0
+EXIT_REFUSED=10        # gate said no — correct outcome, record it
+EXIT_BLOCKED=11        # environment/infrastructure unavailable, not a verdict
+EXIT_STAGED=2          # derived+staged, render intentionally not wired
+
+def refuse(reason:str, code:int=EXIT_REFUSED) -> dict:
+    return {"verdict":"REFUSED","reason":reason,"exit_code":code}
+
+def emit_decision(dec:dict, target:str, out:Path|None=None) -> None:
+    """Persist the verdict beside the artifact — a refusal that is not
+    recorded is a refusal that did not happen."""
+    if out is None: return
+    d=out/f"decision-{target.replace('/','_')}.json"
+    d.parent.mkdir(parents=True,exist_ok=True)
+    d.write_text(json.dumps({"target":target,**dec},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(f"  decision: {d}")
+
 def gh(path:str, jq:str|None=None) -> dict|list|None:
     cmd=["gh","api",path]
     if jq: cmd+=["--jq",jq]
@@ -163,16 +181,19 @@ def main():
     kind=detect(a.target)
     print(f"  detect: {kind}")
     if isinstance(kind,str) and kind.startswith("REFUSED"):
-        print("  REFUSED:",kind,file=sys.stderr); return 1
+        d=refuse(kind); emit_decision(d,a.target,a.out)
+        print("  REFUSED:",kind,file=sys.stderr); return EXIT_REFUSED
 
     if kind=="repo":
         prov=fork_provenance(a.target)
         print(f"  provenance: {prov.get('reason') or ('fork, local commits present' if prov.get('fork') else 'not a fork')}")
         if prov.get("refuse"):
-            print("  REFUSED: "+prov["reason"],file=sys.stderr); return 1
+            d=refuse(prov["reason"]); emit_decision(d,a.target,a.out)
+            print("  REFUSED: "+prov["reason"],file=sys.stderr); return EXIT_REFUSED
     try: facts=derive(kind,a.target)
-    except RuntimeError as e:
-        print(f"  REFUSED: {e}",file=sys.stderr); return 1
+    except (RuntimeError, FileNotFoundError) as e:
+        d=refuse(str(e),EXIT_BLOCKED); emit_decision(d,a.target,a.out)
+        print(f"  BLOCKED: {e}",file=sys.stderr); return EXIT_BLOCKED
     print(f"  derive: stars={facts['total_stars']:,} forks={facts['total_forks']:,} "
           f"contributors={facts['contributor_sum']:,} commits/52w={facts['commits_52w']:,} "
           f"active={facts['active_weeks']}/52 peak={facts['peak_week']:,}")
@@ -181,7 +202,10 @@ def main():
     res=gate(story,facts)
     print(f"  gate: {'PASS' if res['ok'] else 'REFUSE'} · {len(story)} scenes bound")
     for p in res["problems"]: print("    !",p)
-    if not res["ok"]: return 1
+    if not res["ok"]:
+        d=refuse("semantic gate: "+"; ".join(res["problems"]))
+        emit_decision(d,a.target,a.out)
+        print("  REFUSED: "+d["reason"],file=sys.stderr); return EXIT_REFUSED
 
     out=a.out/f"trf-{a.target.replace('/','_')}"
     out.mkdir(parents=True,exist_ok=True)
@@ -211,7 +235,8 @@ def main():
     print("  REFUSED: full render is not wired in this revision — use the existing kit; "
           "this CLI owns detection, derivation, binding and gates.")
     if a.publish:
-        print("  REFUSED: --publish without a sealed receipt",file=sys.stderr); return 1
-    return 2
+        d=refuse("--publish without a sealed receipt"); emit_decision(d,a.target,a.out)
+        print("  REFUSED: "+d["reason"],file=sys.stderr); return EXIT_REFUSED
+    return EXIT_STAGED
 
 if __name__=="__main__": sys.exit(main())
