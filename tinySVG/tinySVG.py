@@ -144,6 +144,12 @@ def _measure(raw: bytes, render_w: float | None) -> dict:
 
     vb = root.get("viewBox") or root.get("viewbox")
     if not vb:
+        # an SVG that only carries <defs> (or nothing) is not a visual surface:
+        # it declares filters/gradients for another SVG. Skip, don't refuse.
+        kids = [k for k in root if not k.tag.endswith("defs")]
+        if not kids:
+            return {"ok": True, "skipped": "solo <defs>: no es una superficie visual",
+                    "nodes": 0, "viewBox": None}
         return {"ok": False, "refusal": "sin viewBox — no hay forma de derivar la escala"}
     try:
         vx, vy, vw, vh = [float(v) for v in vb.replace(",", " ").split()]
