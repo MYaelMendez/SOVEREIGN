@@ -231,7 +231,29 @@ def render_video(spec_path, output_path, duration=6.0, fps=FPS):
         return None
 
     size_kb = output_path.stat().st_size / 1024 if output_path.exists() else 0
-    return {"path": str(output_path), "size_kb": size_kb, "frames": total_frames}
+
+    # FAB gate — bind the artifact to a real build, a real sha256 and a readable
+    # container. A file that exists is not an encode.
+    encode_gate = None
+    try:
+        import importlib.util
+        _tf = Path(r"C:\æ\tinyffmpeg\integrate.py")
+        if _tf.exists():
+            _spec = importlib.util.spec_from_file_location("tinyffmpeg_integrate", _tf)
+            _m = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_m)
+            encode_gate = _m.gate(output_path)
+            if not encode_gate.get("ok"):
+                print("  tinyffmpeg REFUSED: {}".format(encode_gate.get("refusal")))
+                return None
+            print("  tinyffmpeg: {} · sha256 {}… · {} frames".format(
+                encode_gate.get("codec"), encode_gate["sha256"][:12],
+                encode_gate.get("frames")))
+    except Exception as e:
+        print("  tinyffmpeg gate skipped: {}: {}".format(type(e).__name__, e))
+
+    return {"path": str(output_path), "size_kb": size_kb, "frames": total_frames,
+            "encode_gate": encode_gate}
 
 
 def main():
