@@ -1,0 +1,178 @@
+cyclotron:
+  commit: ed938b4f51b156e944d5879db6f7dc7662a76db5
+  branch: user/ariel/lowerbody-27dof
+  remote: git@github.com:menloresearch/cyclotron.git
+  dirty: true
+isaaclab_commit: 81c0d4d52f9158d3a3c2064dca78241ebe75c378
+packages:
+  isaacsim: 5.1.0.0
+  isaaclab: 0.54.4
+  rsl-rl-lib: 5.0.1
+  torch: 2.7.0+cu128
+robot_model:
+  name: asimov_1_27dof
+  repo: null
+  urdf_filepath: asimov_1_27dof.urdf
+  sha256: 03a5e87ac971b944cbc1a36cbdada9ed3b6d9aeb2ba519df91eefd8fea86b46c
+  commit: null
+  dirty: null
+actor_code:
+  rsl_rl.models: 6444fc1df8bc94d40ab1911f0e8e6b3f777459986e7f7944d25b7e5ca9b3e206
+  rsl_rl.models.cnn_model: 818422d1d7a93cd8174a3c34fec8c425f2adf9d81c9623f2b335c2934a60276e
+  rsl_rl.models.mlp_model: 6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b
+  rsl_rl.models.rnn_model: 80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc
+  rsl_rl.modules: 56df7ca2ff95c53f17451fd98720c48871a1679e9d6e3ab0c0961e4339908054
+  rsl_rl.modules.cnn: 4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf
+  rsl_rl.modules.distribution: 4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b
+  rsl_rl.modules.mlp: bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc
+  rsl_rl.modules.normalization: 539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926
+  rsl_rl.modules.rnn: 07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6
+policy_io:
+  actions:
+    joint_names:
+    - left_hip_pitch_joint
+    - left_hip_roll_joint
+    - left_hip_yaw_joint
+    - left_knee_joint
+    - left_ankle_pitch_joint
+    - left_ankle_roll_joint
+    - right_hip_pitch_joint
+    - right_hip_roll_joint
+    - right_hip_yaw_joint
+    - right_knee_joint
+    - right_ankle_pitch_joint
+    - right_ankle_roll_joint
+    scale:
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.07999999821186066
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.07999999821186066
+    offset:
+    - -0.15
+    - 0.0
+    - 0.0
+    - 0.45
+    - -0.3
+    - 0.0
+    - 0.15
+    - 0.0
+    - 0.0
+    - -0.45
+    - 0.3
+    - 0.0
+    clip:
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - -0.09000000357627869
+      - 0.09000000357627869
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - null
+      - null
+    - - -0.09000000357627869
+      - 0.09000000357627869
+    stiffness:
+    - 150.0
+    - 150.0
+    - 150.0
+    - 150.0
+    - 224.4199981689453
+    - 35.20000076293945
+    - 150.0
+    - 150.0
+    - 150.0
+    - 150.0
+    - 224.4199981689453
+    - 35.20000076293945
+    damping:
+    - 5.0
+    - 5.0
+    - 5.0
+    - 5.0
+    - 10.201000213623047
+    - 1.600000023841858
+    - 5.0
+    - 5.0
+    - 5.0
+    - 5.0
+    - 10.201000213623047
+    - 1.600000023841858
+  observations:
+    policy:
+      base_ang_vel:
+        asset_cfg:
+          body_names:
+          - waist_yaw_link
+      projected_gravity:
+        asset_cfg:
+          body_names:
+          - waist_yaw_link
+      command: {}
+      joint_pos_slot01:
+        asset_cfg:
+          joint_names:
+          - left_hip_pitch_joint
+          - left_hip_roll_joint
+          - right_hip_pitch_joint
+          - right_hip_roll_joint
+      joint_pos_slot23:
+        asset_cfg:
+          joint_names:
+          - left_hip_yaw_joint
+          - left_knee_joint
+          - right_hip_yaw_joint
+          - right_knee_joint
+      joint_pos_slot45:
+        asset_cfg:
+          joint_names:
+          - left_ankle_pitch_joint
+          - left_ankle_roll_joint
+          - right_ankle_pitch_joint
+          - right_ankle_roll_joint
+      joint_vel_slot01:
+        asset_cfg:
+          joint_names:
+          - left_hip_pitch_joint
+          - left_hip_roll_joint
+          - right_hip_pitch_joint
+          - right_hip_roll_joint
+      joint_vel_slot23:
+        asset_cfg:
+          joint_names:
+          - left_hip_yaw_joint
+          - left_knee_joint
+          - right_hip_yaw_joint
+          - right_knee_joint
+      joint_vel_slot45:
+        asset_cfg:
+          joint_names:
+          - left_ankle_pitch_joint
+          - left_ankle_roll_joint
+          - right_ankle_pitch_joint
+          - right_ankle_roll_joint
+      actions: {}
+run_configs:
+  env.yaml: 54cc838e15da41468fb8a429b33f33057213eb6bf4d3bb0385e913bd27e87cde
+  agent.yaml: dc4b278d5d74478815b562f8e2ab3868287424ab4b3108a007811507fffdb79b
