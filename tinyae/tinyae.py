@@ -110,6 +110,8 @@ def run_doctor(name: str) -> dict:
     if not f.exists():
         return {"ok": False, "status": "MODULE MISSING",
                 "reason": f"{f} no existe", "verdicts": [], "module": False}
+    # tinyæ measures itself as an instrument, not as the gate (see selftest)
+    verb = "selftest" if name == "tinyae" else "doctor"
     env = os.environ.copy()
     for k in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"):
         env.pop(k, None)
@@ -117,7 +119,7 @@ def run_doctor(name: str) -> dict:
     for exe in interpreters():
         t0 = time.time()
         try:
-            r = subprocess.run([exe, str(f), "doctor"], capture_output=True,
+            r = subprocess.run([exe, str(f), verb], capture_output=True,
                                text=True, timeout=120, errors="replace", env=env,
                                cwd=str(ROOT / name))
         except subprocess.TimeoutExpired:
@@ -138,18 +140,19 @@ def run_doctor(name: str) -> dict:
                              "elapsed_s": dt})
             continue
         blob = json.dumps(d, ensure_ascii=False)
-        verdicts.append({"python": Path(exe).name, "ok": bool(d.get("ok")),
+        verdicts.append({"python": Path(exe).name, "label": _label(exe),
+                         "ok": bool(d.get("ok")),
                          "elapsed_s": dt, "rc": r.returncode,
                          "error": str(d.get("error") or d.get("reason") or "")[:200],
                          "_blob": blob})
         if d.get("ok"):
             last = d
-    DEP_MARKS = ("ModuleNotFoundError", "ImportError", "no module named",
-                 "Cannot find", "TIMEOUT")
+    DEP_MARKS = ("modulenotfounderror", "importerror", "no module named",
+                 "cannot find", "missing", "dll", "timeout")
     for v in verdicts:
         # scan the WHOLE receipt: tinycuda reports at checks.cuda.error
         msg = (str(v.get("refusal") or "") + " " + str(v.get("error") or "")
-               + " " + str(v.get("_blob") or ""))
+               + " " + str(v.get("_blob") or "")).lower()
         v["dep"] = any(m in msg for m in DEP_MARKS)
         v.pop("_blob", None)
     if last is None:
@@ -282,139 +285,201 @@ def doctor() -> dict:
     return out
 
 
+def selftest() -> dict:
+    """Does the generator work? Not "is the family healthy?" — that is `doctor`.
+
+    Kept separate so the registry and the surfaces cannot chase each other.
+    """
+    checks = {}
+    try:
+        reg = read_registry()
+        checks["registry_readable"] = True
+        checks["schema_current"] = reg.get("schema") == SCHEMA
+    except Exception as exc:
+        checks["registry_readable"] = False
+        checks["schema_current"] = False
+        return {"ok": False, "checks": checks, "error": f"{type(exc).__name__}: {exc}"}
+    checks["surfaces_present"] = all(
+        p.exists() for p in (CONSTELLATION, HQ, REPORT))
+    checks["cli_verbs"] = all(callable(v) for v in (derive, doctor, render_surfaces))
+    ok = all(checks.values())
+    return {"ok": ok, "checks": checks,
+            "reason": "instrument functional" if ok else "see checks"}
+
+
 # ── derived surfaces ────────────────────────────────────────────────────────
-def render_hq(reg: dict) -> str:
-    rooms = "\n".join(
-        f'      <a class="room" href="tiny.html#{i["name"]}">\n'
-        f'        <span class="rn">{i["name"].replace("tiny","")}</span>\n'
-        f'        <span class="rr">{role}</span>\n'
-        f'        <span class="rd {"ok" if i["ok"] else "refused"}">'
-        f'{"ok" if i["ok"] else "refused"}</span>\n'
-        f'      </a>'
-        for i, (name, _dom, role) in zip(reg["instruments"], FAMILY))
-    return f'''<!DOCTYPE html>
+CSS = """
+:root{--void:#050505;--gold:#D4AF37;--ink:#e8e4d8;--dim:#8a8577;
+      --line:#2a2620;--ok:#39ff14;--bad:#ff6b6b;--warn:#ffb020}
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);
+  font:14px/1.62 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  padding:clamp(16px,4vw,44px) clamp(14px,3vw,34px)}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:clamp(20px,4vw,30px);color:var(--gold);margin:0 0 6px;
+   letter-spacing:.01em;line-height:1.15}
+.what{color:var(--dim);margin:0 0 22px;max-width:64ch;font-size:13px}
+.prov{display:flex;gap:8px 26px;flex-wrap:wrap;border-block:1px solid var(--line);
+  padding:10px 0;margin:0 0 20px;font-size:12px;color:var(--dim)}
+.prov b{color:var(--ink);font-weight:400}
+.verdict{font-size:15px;margin:0 0 18px}
+.verdict b{color:var(--gold);font-size:19px;font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;color:var(--dim);font-weight:400;font-size:10px;
+   letter-spacing:.12em;text-transform:uppercase;
+   border-bottom:1px solid var(--line);padding:6px 10px 6px 0}
+td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;vertical-align:top}
+td.n{color:var(--gold);white-space:nowrap}
+.v-ok{color:var(--ok)}.v-bad{color:var(--bad)}.v-warn{color:var(--warn)}
+.ev{color:var(--dim);font-size:12px}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:8px;margin-bottom:8px}
+.room{border:1px solid var(--line);border-radius:9px;padding:10px 11px;
+  text-decoration:none;color:inherit;display:block;background:rgba(255,255,255,.012)}
+.room:hover{border-color:var(--gold)}
+.room .rn{color:var(--gold);font-size:13px}
+.room .rv{display:inline-block;margin-top:7px;font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;border:1px solid;border-radius:999px;padding:2px 7px}
+.limits{border-left:2px solid var(--gold);padding:10px 14px;margin:26px 0 0;
+  color:var(--dim);font-size:12px;max-width:72ch}
+.links{margin-top:26px;font-size:12px}
+.links a{color:var(--gold);text-decoration:none;margin-right:16px}
+@media(max-width:640px){td.ev{display:none}}
+"""
+
+
+def _label(exe: str) -> str:
+    p = str(exe).lower()
+    if "gpu" in p:
+        return "gpu"
+    if "hermes" in p:
+        return "hermes-venv"
+    return "sys"
+
+
+def _evidence(i: dict) -> str:
+    """A row's evidence, or its refusal. Never the word GREEN as a reason.
+
+    Distinguishes the three things that can happen on an interpreter:
+    it ran and passed, it ran and disagreed, it could not run at all.
+    """
+    vs = i.get("verdicts") or []
+    if not vs:
+        return str(i.get("reason") or "no verdict")[:200]
+
+    def lab(v):
+        return v.get("label") or v.get("python") or "?"
+
+    if i.get("flaky"):
+        parts = [f"{lab(v)} {'ok' if v.get('ok') else 'refused'} "
+                 f"{v.get('elapsed_s', '?')}s" for v in vs]
+        return "interpreters disagree \u2014 " + "; ".join(parts)
+
+    if i.get("ok"):
+        ok = [v for v in vs if v.get("ok")]
+        could_not = [v for v in vs if not v.get("ok")]
+        out = "ok on " + ", ".join(f"{lab(v)} {v.get('elapsed_s', '?')}s" for v in ok)
+        if could_not:
+            out += "; " + ", ".join(f"{lab(v)} could not run" for v in could_not)
+        return out
+
+    parts = [f"{lab(v)}: {v.get('refusal') or v.get('error') or 'refused'}"
+             for v in vs]
+    return "; ".join(parts)[:220]
+
+
+def _verdict_cell(i: dict) -> str:
+    if i.get("flaky"):
+        return '<td class="v-warn">flaky</td>'
+    if i.get("ok"):
+        return '<td class="v-ok">green</td>'
+    return '<td class="v-bad">not green</td>'
+
+
+def _page(reg: dict, title: str, desc: str, canonical: str, lede: str,
+          main: str) -> str:
+    return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>tinyHQ · the headquarters of the tiny constellation</title>
-<meta name="description" content="tinyHQ — generated from tinyae-registry.json. Every room's badge is a measurement, not a claim.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
-<style>
-:root{{--void:#050505;--gold:#D4AF37;--text:#e8e8e8;--dim:#a3926a;--mut:#a89e80;--line:rgba(212,175,55,.24)}}
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:var(--void);color:var(--text);font-family:'JetBrains Mono',ui-monospace,monospace;min-height:100vh;overflow-x:hidden}}
-body::before{{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1000px 700px at 50% 30%,rgba(212,175,55,.10),transparent 62%)}}
-.wrap{{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:clamp(14px,2.6vw,34px)}}
-header{{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line)}}
-.eyebrow{{font-size:clamp(.58rem,1.1vw,.72rem);letter-spacing:.4em;text-transform:uppercase;color:var(--gold)}}
-h1{{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1.9rem,5.4vw,3.8rem);color:var(--gold);letter-spacing:-.02em;line-height:.95;margin-top:10px;text-shadow:0 0 50px rgba(212,175,55,.26)}}
-.sub{{color:var(--dim);font-size:clamp(.74rem,1.4vw,.9rem);margin-top:12px;max-width:680px;line-height:1.6}}
-.count{{text-align:right}}
-.count .n{{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(2rem,5vw,3.6rem);color:var(--gold);line-height:1}}
-.count .l{{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-top:6px}}
-.count .t{{font-size:.66rem;color:var(--mut);margin-top:8px}}
-section{{margin-top:26px}}
-.sec-head{{font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(.95rem,2.4vw,1.35rem);color:var(--gold);letter-spacing:.06em;margin-bottom:12px}}
-.lede{{color:var(--dim);font-size:clamp(.72rem,1.3vw,.86rem);line-height:1.65;max-width:760px;margin-bottom:14px}}
-.rooms{{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px}}
-.room{{display:block;border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:rgba(8,7,4,.5);text-decoration:none;transition:border-color .2s,transform .2s}}
-.room:hover{{border-color:var(--gold);transform:translateY(-2px)}}
-.rn{{display:block;font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.02rem;color:var(--gold)}}
-.rr{{display:block;color:var(--mut);font-size:.7rem;line-height:1.5;margin-top:6px;min-height:2.2em}}
-.rd{{display:inline-block;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid;border-radius:999px;padding:2px 8px;margin-top:8px}}
-.rd.ok{{color:#39ff14;border-color:rgba(57,255,20,.4)}}
-.rd.refused{{color:#ff6b6b;border-color:rgba(255,107,107,.4)}}
-footer{{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:.66rem;color:var(--mut);letter-spacing:.08em;line-height:1.7}}
-footer a{{color:var(--gold);text-decoration:none}}
-</style>
+<title>{title}</title>
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{canonical}">
+<link rel="icon" href="./favicon.svg">
+<style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <div class="eyebrow">æ:// tinyHQ · la sede</div>
-      <h1>tinyHQ</h1>
-      <p class="sub">The headquarters of the tiny constellation. Every badge is a
-      <b>measurement</b> taken when this page was generated — never a claim copied
-      from somewhere else.</p>
-    </div>
-    <div class="count">
-      <div class="n">{reg['families']}</div>
-      <div class="l">rooms</div>
-      <div class="t">{reg['green']} ok · {reg['not_green']} refused · {reg['flaky']} flaky</div>
-    </div>
-  </header>
-  <section>
-    <h2 class="sec-head">the floor plan</h2>
-    <p class="lede">Generated from <code>tinyae-registry.json</code> by
-    <code>tinyae.py surfaces</code>. A room that cannot run is shown as refused.</p>
-    <div class="rooms">
-{rooms}
-    </div>
-  </section>
-  <footer>
-    derived {reg['derived_at']} · {reg['regime']['interpreters']} interpreters · flaky detection on<br>
-    <a href="./tinyae-registry.json">registry →</a>
-    <a href="./tinyae.html">report →</a>
-    <a href="./tiny.html">constellation →</a>
-    <a href="./purpose.html">the charter →</a>
-  </footer>
+<h1>{title}</h1>
+<p class="what">{lede}</p>
+<div class="prov">
+  <span>derived <b>{reg['derived_at']}</b></span>
+  <span>interpreters <b>{reg['regime']['interpreters']}</b></span>
+  <span>flaky detection <b>on</b></span>
+  <span>source <b>tinyae-registry.json</b></span>
+</div>
+<p class="verdict"><b>{reg['families']}</b> instruments &middot;
+<b>{reg['green']}</b> green &middot; <b>{reg['not_green']}</b> not green &middot;
+<b>{reg['flaky']}</b> flaky</p>
+{main}
+<div class="limits">
+What this is not: not a test suite, not a guarantee, not a certification.
+Green is a snapshot at the time above. A <span class="v-warn">flaky</span> row means
+the interpreters disagreed &mdash; a finding, not a pass. An instrument that is
+refused is shown as refused, never painted green.
+</div>
+<div class="links">
+ <a href="./tinyae-registry.json">registry</a>
+ <a href="./tiny.html">constellation</a>
+ <a href="./tinyhq.html">tinyHQ</a>
+ <a href="./purpose.html">the charter</a>
+</div>
 </div>
 </body>
 </html>
-'''
+"""
 
 
 def render_report(reg: dict) -> str:
     rows = "\n".join(
-        f'<tr><td>{i["name"]}</td>'
-        f'<td class="{"ok" if i["ok"] else "bad"}">{"GREEN" if i["ok"] else "NOT GREEN"}</td>'
-        f'<td class="{"bad" if i["flaky"] else ""}">{"FLAKY" if i["flaky"] else "—"}</td>'
-        f'<td>{i.get("reason") or "—"}</td></tr>'
+        f'<tr><td class="n">{i["name"]}</td>{_verdict_cell(i)}'
+        f'<td class="ev">{_evidence(i)}</td></tr>'
         for i in reg["instruments"])
-    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>tinyæ — the instrument family</title>
-<meta name="description" content="tinyæ — generated from tinyae-registry.json. Every row is a doctor gate run for this read.">
-<style>
-:root{{--gold:#D4AF37;--void:#050505;--ink:#e8e4d8;--dim:#8a8577;--line:#2a2620}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--void);color:var(--ink);
-font-family:'JetBrains Mono',ui-monospace,monospace;padding:34px 30px 70px}}
-h1{{font-size:clamp(28px,5vw,52px);color:var(--gold);letter-spacing:.04em;margin:0 0 6px}}
-.tag{{color:var(--dim);font-size:12px;margin-bottom:24px}}
-.kpi{{display:flex;gap:30px;border-block:1px solid var(--line);padding:14px 0;margin-bottom:22px;flex-wrap:wrap}}
-.kpi b{{color:var(--gold);font-size:26px;display:block}}
-span{{font-size:10px;color:var(--dim);letter-spacing:.14em}}
-table{{border-collapse:collapse;width:100%;font-size:12px}}
-td{{padding:7px 10px;border-bottom:1px solid var(--line)}}
-td:first-child{{color:var(--gold)}}
-td.ok{{color:#00ff9d}}td.bad{{color:#ff7a6b}}
-a{{color:var(--gold);font-size:12px;margin-right:18px}}
-p{{font-size:12px;color:var(--dim);max-width:760px;line-height:1.7}}
-</style></head><body>
-<h1>tinyæ</h1>
-<div class="tag">one prefix · many instruments · one receipt chain · #opensourceware</div>
-<div class="kpi">
- <div><b>{reg['families']}</b><span>FAMILIES</span></div>
- <div><b>{reg['green']}</b><span>DOCTORS GREEN NOW</span></div>
- <div><b>{reg['not_green']}</b><span>NOT GREEN / UNTESTED</span></div>
- <div><b>{reg['flaky']}</b><span>FLAKY · INTERPRETERS DISAGREE</span></div>
-</div>
-<table><tbody>
-{rows}
-</tbody></table>
-<p>Measured at {reg['derived_at']} by tinyæ — each instrument's own doctor, run on
-{reg['regime']['interpreters']} interpreters. A refusal is reported as a refusal, never
-painted green; flaky means the interpreters disagreed, which is a finding rather than a pass.</p>
-<div style="margin-top:24px">
- <a href="./tinyhq.html">tinyHQ →</a>
- <a href="./tinyae-registry.json">REGISTRY →</a>
- <a href="./tiny.html">constellation →</a>
- <a href="./purpose.html">the charter →</a>
-</div>
-</body></html>'''
+    main = (
+        '<table>\n'
+        '<thead><tr><th>instrument</th><th>verdict</th><th>evidence</th></tr></thead>\n'
+        '<tbody>\n' + rows + '\n</tbody></table>')
+    return _page(
+        reg, "tinyæ — the family, measured",
+        "Every row is one instrument's own doctor, run on this machine when this "
+        "page was generated. A refusal is shown as a refusal.",
+        "https://myaelmendez.github.io/tinyae.html",
+        "Each row carries its own evidence: which interpreters ran, how long they "
+        "took, and what came back. Nothing here is copied from a claim.",
+        main)
+
+
+def render_hq(reg: dict) -> str:
+    rooms = "\n".join(
+        f'<a class="room" href="./tinyae.html">\n'
+        f'  <span class="rn">{i["name"]}</span>\n'
+        f'  <span class="rv {"v-ok" if i["ok"] and not i["flaky"] else ("v-warn" if i["flaky"] else "v-bad")}">'
+        f'{"ok" if i["ok"] and not i["flaky"] else ("flaky" if i["flaky"] else "refused")}</span>\n'
+        f'</a>'
+        for i in reg["instruments"])
+    main = (
+        '<p class="what">One room per instrument. The badge is the measurement; '
+        'the <a href="./tinyae.html" style="color:var(--gold)">report</a> carries '
+        'the evidence behind it.</p>\n'
+        '<div class="rooms">\n' + rooms + '\n</div>')
+    return _page(
+        reg, "tinyHQ — the family, measured",
+        "One room per instrument; every badge is a measurement taken when this "
+        "page was generated.",
+        "https://myaelmendez.github.io/tinyhq.html",
+        "The floor plan of the tiny constellation, generated from the registry.",
+        main)
 
 
 def render_surfaces() -> dict:
@@ -435,8 +500,8 @@ def render_constellation() -> dict:
 # ── cli ─────────────────────────────────────────────────────────────────────
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="tinyæ — the meta-instrument above the tiny* family")
-    ap.add_argument("verb", choices=["doctor", "derive", "surfaces", "verify",
-                                     "report", "constellation"])
+    ap.add_argument("verb", choices=["doctor", "selftest", "derive", "surfaces",
+                                     "verify", "report", "constellation"])
     ap.add_argument("--out", type=Path, default=None,
                     help="derive: registry path (default tinyae-registry.json)")
     a = ap.parse_args(argv)
@@ -454,6 +519,11 @@ def main(argv=None) -> int:
         print(f"tinyæ: {reg['families']} families · {reg['green']} green · "
               f"{reg['not_green']} not green · {reg['flaky']} flaky → {out}")
         return 0
+
+    if a.verb == "selftest":
+        d = selftest()
+        print(json.dumps(d, ensure_ascii=False, indent=2))
+        return 0 if d.get("ok") else 1
 
     if a.verb == "surfaces":
         print(json.dumps(render_surfaces(), indent=2))
