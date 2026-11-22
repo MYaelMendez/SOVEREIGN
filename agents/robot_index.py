@@ -154,9 +154,22 @@ def build() -> dict:
 def main() -> int:
     p = argparse.ArgumentParser(prog="robot-index")
     p.add_argument("--out", default=str(ROOT / "robots" / "index.json"))
+    p.add_argument("--check", action="store_true",
+                   help="fail 1 if the committed index differs from disk-derived truth")
     a = p.parse_args()
     doc = build()
     out = pathlib.Path(a.out)
+    if a.check:
+        if not out.exists():
+            print("MISSING: " + str(out), file=sys.stderr)
+            return 1
+        cur = json.loads(out.read_text(encoding="utf-8"))
+        keys = [k for k in doc if k != "generated"]
+        if any(cur.get(k) != doc[k] for k in keys):
+            print("STALE: robots/index.json differs from disk — regenerate", file=sys.stderr)
+            return 1
+        print(f"OK current: {doc['count']} robots derived from disk")
+        return 0
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(doc, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"wrote {out}  ({doc['count']} robots)")
