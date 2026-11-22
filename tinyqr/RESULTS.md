@@ -79,10 +79,40 @@ supervise_raw         →  cross_decoder: 2/2 decoders: cv2, pyzbar
 El bug ya estaba documentado en `series_engine.py` y se había esquivado con un
 path ASCII de staging. Ahora está arreglado en la raíz.
 
+## Sellar un artefacto — `seal`
+
+```
+python tinyqr.py seal <file> [--key sovereign-web]
+```
+
+```
+artifact     tiny.html
+sha256       c438e352133fa8bf…
+fingerprint  1cc18a8917380464   (clave `sovereign-web`)
+qr           tiny.html.receipt.png   · version 5
+qr_payload   https://myaelmendez.github.io/verify.html?a=tiny.html&h=c438e352133f
+receipt      tiny.html.receipt.json  (firma ed25519 completa)
+```
+
+El artefacto **no se toca**: el recibo es un archivo aparte, así el hash es el que
+descarga el lector.
+
+### El defecto que costó el primer intento
+El QR llevaba la firma completa (`{v,a,m,p,s}` = 304 chars) → **QR v18**, y
+OpenCV no detecta el quad en versiones ≥18:
+
+```
+supervision refused — cross_decoder: 1/2 decoders: pyzbar;
+                       contrast: no quad detected; quiet_zone: no quad detected
+```
+
+El mismo gate pasaba **10/10** con 300 chars. El QR ahora lleva la URL corta
+(~80 chars, v5), escaneable por cualquier teléfono; la firma vive en el JSON.
+
 ## Ledger
 
 ```
 chain_ok  true
-records   3
-head      8654d9059889
+records   51
+head      ec56a6d055e1
 ```

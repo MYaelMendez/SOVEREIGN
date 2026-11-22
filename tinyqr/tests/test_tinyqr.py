@@ -8,6 +8,7 @@ Plus the regression that cost real time: cv2 cannot read a non-ASCII path.
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import os
 import tempfile
@@ -59,6 +60,22 @@ class TestRefusals(unittest.TestCase):
     def test_sign_refuses_an_unknown_key(self):
         r = tq.sign("no_such_key_xyz", "m")
         self.assertFalse(r["ok"])
+
+    def test_seal_signs_the_artifact_and_the_qr_reads_back(self):
+        """The whole point: sign a file, read the QR, verify the signature."""
+        with tempfile.TemporaryDirectory() as td:
+            f = Path(td) / "artifact.html"
+            f.write_text("<html>tiny</html>", encoding="utf-8")
+            r = tq.seal(f, key="sovereign-web")
+            self.assertTrue(r["ok"], r)
+            self.assertEqual(r["sha256"], hashlib.sha256(f.read_bytes()).hexdigest())
+            # the QR carries the short URL; the signature lives in the receipt
+            d = tq.decode(r["png"])
+            self.assertTrue(d["ok"], d)
+            self.assertIn("verify.html?a=artifact.html", str(d["data"]))
+            rec = json.loads(Path(r["receipt"]).read_text(encoding="utf-8"))
+            v = tq.verify(rec["public_key"], rec["sha256"], rec["signature"])
+            self.assertTrue(v["ok"], v)
 
 
 class TestGrade(unittest.TestCase):

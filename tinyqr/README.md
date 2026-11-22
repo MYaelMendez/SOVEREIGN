@@ -49,9 +49,14 @@ python tinyqr.py sign <name> "<mensaje>"      # firma con una clave local
 python tinyqr.py verify <pub> "<msg>" <sig>   # verifica
 python tinyqr.py decode <qr.png>              # decodifica el chip
 python tinyqr.py issue '{"k":"v"}'            # emite + roundtrip + sha256
+python tinyqr.py seal <file> [--key sovereign-web]   # firma un artefacto + QR
 python tinyqr.py grade '{"k":"v"}'            # determinismo, dos encodes
 python tinyqr.py ledger                       # integridad de la cadena
 ```
+
+`seal` **no toca el artefacto**: escribe `<file>.receipt.json` (firma ed25519
+completa) y `<file>.receipt.png` (la URL corta de verificación, escaneable por
+cualquier teléfono). El QR lleva la URL; la firma vive en el JSON.
 
 Tests: `python -m unittest tests.test_tinyqr -v`
 

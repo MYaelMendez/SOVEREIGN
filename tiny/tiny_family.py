@@ -342,11 +342,11 @@ footer a{{color:var(--gold);text-decoration:none}}
   </div>
 
   <footer>
-    <span>tiny* · generado por <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tiny_family.py</code> · cada doctor ejecutado en esta maquina.</span>
+    <span>tiny* · generado por <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tiny_family.py</code> · cada doctor ejecutado en esta maquina. · <a href="https://myaelmendez.github.io/kanban-unified.html" style="color:var(--gold);text-decoration:none">kænbæn unificado →</a></span>
     <span style="display:flex;align-items:center;gap:14px">
       <span><a href="https://myaelmendez.github.io/tinyffmpeg.html">tinyffmpeg</a> · <a href="https://myaelmendez.github.io/aipodcast_me/skills-demo.html">demo de skills</a> · <a href="https://github.com/MYaelMendez">MYaelMendez</a></span>
-      <a id="ae-qr-badge" href="https://myaelmendez.github.io/verify.html?url=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html" target="_blank" rel="noopener" aria-label="Verify this surface">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&amp;data=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html&amp;bgcolor=050505&amp;color=D4AF37" alt="QR verify" width="56" height="56">
+      <a id="ae-qr-badge" href="tiny.html.receipt.json" target="_blank" rel="noopener" aria-label="Verify this surface">
+        <img src="tiny.html.receipt.png" alt="QR de la firma tinyqr" width="56" height="56">
       </a>
     </span>
   </footer>
@@ -401,6 +401,17 @@ def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     print(f"\ntiny* family -> {OUT}  {len(html.encode()):,} bytes · {ok}/{len(FAMILY)} ok en {elapsed:.0f}s")
+    # seal the artifact: the HTML is finished, so its hash is what the reader gets
+    try:
+        sys.path.insert(0, str(ROOT / "tinyqr"))
+        import tinyqr
+        s = tinyqr.seal(OUT)
+        if s.get("ok"):
+            print(f"  sellado · sha256 {s['sha256'][:16]}… · fp {s['fingerprint']} · QR v{s['qr_version']}")
+        else:
+            print(f"  SELLO REFUSADO: {s.get('refusal')}")
+    except Exception as exc:
+        print(f"  SELLO NO DISPONIBLE: {type(exc).__name__}: {exc}")
     return 0
 
 

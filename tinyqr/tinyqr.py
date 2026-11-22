@@ -179,6 +179,51 @@ def issue(kind: str, payload: dict, name: str | None = None) -> dict:
                 "roundtrip": d.get("data") == payload}
 
 
+def seal(path: Path | str, key: str = "sovereign-web") -> dict:
+    """Sign an artifact and emit its QR.
+
+    The artifact is NOT modified: the receipt is a separate file, so the hash
+    stays valid for what the reader downloads. Returns the receipt plus the PNG.
+    """
+    p = Path(path)
+    if not p.exists():
+        return {"ok": False, "refusal": f"no such file: {p}"}
+    sha = hashlib.sha256(p.read_bytes()).hexdigest()
+    s = sign(key, sha)
+    if not s.get("ok"):
+        return {"ok": False, "refusal": s.get("refusal", "no se pudo firmar")}
+    pub, sig = s["public_key"], s["signature"]
+    outdir = p.parent
+    png = outdir / f"{p.name}.receipt.png"
+    receipt = outdir / f"{p.name}.receipt.json"
+    # The QR must be LOW density: OpenCV's detector misses version >= 18, and a
+    # 304-char payload (full pub + signature) lands there. The canonic budget is
+    # a short URL — scannable by any phone — while the full signature lives in
+    # the receipt JSON for cryptographic verification.
+    url = f"https://myaelmendez.github.io/verify.html?a={p.name}&h={sha[:12]}"
+    enc, last = None, None
+    for _ in range(3):
+        try:
+            enc = _qkm().encode_qr(url, filepath=png)
+            break
+        except Exception as exc:
+            last = f"{type(exc).__name__}: {exc}"
+    if enc is None:
+        return {"ok": False, "refusal": last}
+    receipt.write_text(json.dumps({
+        "artifact": p.name, "sha256": sha, "algorithm": "ed25519",
+        "fingerprint": s.get("fingerprint"), "public_key": pub, "signature": sig,
+        "qr": png.name, "qr_payload": url,
+        "verify": "tinyqr verify <pub> <sha256> <sig>",
+    }, ensure_ascii=False, indent=1), encoding="utf-8")
+    return {"ok": True, "sha256": sha, "fingerprint": s.get("fingerprint"),
+            "public_key": pub, "signature": sig, "png": str(png),
+            "receipt": str(receipt), "qr_version": enc.get("version"),
+            "verify_url": url,
+            "note": "el QR lleva la URL corta (legible por cualquier telefono); "
+                    "la firma completa esta en el recibo JSON"}
+
+
 def grade(payload: dict) -> dict:
     """Determinism: encode the same payload twice, compare PNG bytes."""
     with tempfile.TemporaryDirectory() as td:
@@ -251,6 +296,7 @@ def main() -> int:
     v = sub.add_parser("verify"); v.add_argument("pub"); v.add_argument("message"); v.add_argument("sig")
     d = sub.add_parser("decode"); d.add_argument("png")
     i = sub.add_parser("issue"); i.add_argument("json_payload")
+    sl = sub.add_parser("seal"); sl.add_argument("path"); sl.add_argument("--key", default="sovereign-web")
     g = sub.add_parser("grade"); g.add_argument("json_payload")
     sub.add_parser("ledger")
     a = ap.parse_args()
@@ -275,6 +321,12 @@ def main() -> int:
     if a.cmd == "grade":
         r = grade(json.loads(a.json_payload)); print(json.dumps(r, ensure_ascii=False, indent=1))
         ledger_append("grade", {"deterministic": r.get("deterministic")})
+        return 0 if r.get("ok") else 1
+    if a.cmd == "seal":
+        r = seal(a.path, a.key)
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+        ledger_append("seal", {"ok": r.get("ok"), "sha256": r.get("sha256"),
+                               "fingerprint": r.get("fingerprint")})
         return 0 if r.get("ok") else 1
     if a.cmd == "ledger":
         print(json.dumps(ledger_verify(), ensure_ascii=False, indent=1))
