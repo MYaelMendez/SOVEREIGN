@@ -57,6 +57,40 @@ def test_study_receipt_carries_prev_change(isolated_ledger):
     assert b['brief'] == ['second instruction']
 
 
+def test_no_finding_is_not_an_instruction(monkeypatch):
+    """An all-green study must emit a non-actionable sentinel, never a task."""
+    monkeypatch.setattr(tl, 'instruments', lambda: [
+        {'name': 'tinyX', 'module': True, 'cases': 5}])
+    monkeypatch.setattr(tl, 'doctor', lambda: {
+        'ok': True, 'present': 1, 'family': 1, 'untested': []})
+    monkeypatch.setattr(tl, 'selftest', lambda: {'ok': True, 'passed': 1, 'total': 1})
+    r = tl.study()
+    assert r['ok'] and r['actionable'] is False
+    assert r['change'] == ['NO FINDING · all suites green, no refusal unpinned']
+    assert 'checkpoint' not in ' '.join(r['change'])
+    # the sentinel must survive into the brief, marked non-actionable
+    b = tl.next_brief()
+    assert b['actionable'] is False
+    assert b['brief'] == r['change']
+
+
+def test_next_brief_defaults_old_receipts_to_actionable(isolated_ledger):
+    """Receipts written before this field existed stay actionable."""
+    tl.receipt('study', {'change': ['legacy instruction'], 'untested': []})
+    b = tl.next_brief()
+    assert b['actionable'] is True
+    assert b['brief'] == ['legacy instruction']
+
+
+def test_legacy_hardcoded_fallback_is_not_promoted(isolated_ledger):
+    """The old default-branch string must not become an instruction retroactively."""
+    tl.receipt('study', {'change': ['close the loop back into the policy: '
+                                    'let the visual grade select or reject a checkpoint'],
+                         'untested': []})
+    b = tl.next_brief()
+    assert b['actionable'] is False
+
+
 def test_ledger_chain_and_tamper(isolated_ledger):
     tl.receipt('a', {'x': 1})
     tl.receipt('b', {'x': 2})

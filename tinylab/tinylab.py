@@ -184,17 +184,23 @@ def study() -> dict:
     if not st.get('ok'):
         change.append('repair the failing instrument suites')
     if not change:
-        change.append('close the loop back into the policy: let the visual '
-                      'grade select or reject a checkpoint')
+        # NO FINDING is not an instruction. A learner with nothing to repair
+        # must say so, never emit a frontier task that looks self-authored.
+        change = ['NO FINDING · all suites green, no refusal unpinned']
+        actionable = False
+    else:
+        actionable = True
     rec = receipt('study', {'present': d['present'], 'tested': len(tested),
                             'untested': untested, 'selftest_ok': st.get('ok'),
                             'passed': st.get('passed'), 'total': st.get('total'),
-                            'prev_change': prev_change, 'change': change})
+                            'prev_change': prev_change, 'change': change,
+                            'actionable': actionable})
     return {'ok': bool(st.get('ok') and not untested),
             'instruments': d['present'], 'tested': len(tested),
             'untested': untested, 'selftest': {'passed': st.get('passed'),
                                                'total': st.get('total')},
             'prev_change': prev_change, 'change': change,
+            'actionable': actionable,
             'ledger': rec['hash'],
             'note': 'the artefact of a run becomes the input of the next'}
 
@@ -203,7 +209,16 @@ def next_brief() -> dict:
     """The last study's change → the next brief."""
     for r in reversed(_read()):
         if r.get('action') == 'study':
-            return {'ok': True, 'brief': r['detail'].get('change'),
+            d = r['detail']
+            actionable = d.get('actionable')
+            if actionable is None:
+                # legacy receipts had no flag; the old hardcoded fallback was
+                # never a real instruction, so do not promote it to one now
+                legacy_fallback = 'close the loop back into the policy'
+                actionable = not any(legacy_fallback in str(x)
+                                     for x in (d.get('change') or []))
+            return {'ok': True, 'brief': d.get('change'),
+                    'actionable': actionable,
                     'from': r['hash'], 'note': 'the lab instructed itself'}
     return {'ok': False, 'reason': 'no study recorded yet'}
 
