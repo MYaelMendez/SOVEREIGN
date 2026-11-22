@@ -218,6 +218,22 @@ def main():
         if os.path.exists(OUTPUT) and os.path.getsize(OUTPUT) > 0:
             sz = os.path.getsize(OUTPUT)
             print(f"✅ {OUTPUT}  ({sz/1024/1024:.1f} MB)")
+            # FAB gate — bind the artifact to the build that encoded it.
+            try:
+                import hashlib, importlib.util
+                from pathlib import Path as _P
+                _tf = _P(r"C:\æ\tinyffmpeg\integrate.py")
+                if _tf.exists():
+                    _sp = importlib.util.spec_from_file_location("tinyffmpeg_integrate", _tf)
+                    _m = importlib.util.module_from_spec(_sp); _sp.loader.exec_module(_m)
+                    _v = _m.gate(OUTPUT)
+                    if _v.get("ok"):
+                        print(f"   tinyffmpeg: {_v.get('codec')} · sha256 {_v['sha256'][:12]}… "
+                              f"· {_v.get('frames')} frames · {_v.get('width')}x{_v.get('height')}")
+                    else:
+                        print(f"   tinyffmpeg REFUSED: {_v.get('refusal')}")
+            except Exception as e:
+                print(f"   tinyffmpeg gate skipped: {type(e).__name__}: {e}")
         else:
             print(f"❌ Output failed. stderr: {r.stderr[-500:]}")
 

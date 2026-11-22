@@ -195,17 +195,27 @@ def gate(path: Path, sample: int = 48, scale=None) -> dict:
     }
 
 
-def produce(frames, out, fps: int = 24, audio=None, bitrate: str = '6M') -> dict:
+def produce(frames=None, out=None, fps: int = 24, audio=None, bitrate: str = '6M',
+            emoji: str = None) -> dict:
     """frames: iterable of HxWx3 uint8 arrays, or a directory of PNGs.
 
     Loops the picture to cover longer audio (a cyclic gait continuing is honest;
     a frozen frame is not), then GATES. Returns ok=False with the reason rather
     than a receipt for a broken film.
+
+    emoji: an optional Unicode symbol that ADDRESSES this film. Its context
+    (palette + camera + motion, from emoji_scene) is recorded in the result and
+    the receipt, so the film is reproducible and gradeable by its symbol. When
+    `frames` is omitted and `emoji` is given, the frames are rendered from the
+    emoji's own scene — the emoji is a first-class render input.
     """
     import math
     import numpy as np
     from PIL import Image
     out = Path(out)
+    if frames is None and emoji:
+        from emoji_scene import render_frames
+        frames = render_frames(emoji, seconds=5.0, fps=fps)
     wd = out.parent / (out.stem + '-tcv')
     fd = wd / 'frames'
     fd.mkdir(parents=True, exist_ok=True)
@@ -257,12 +267,34 @@ def produce(frames, out, fps: int = 24, audio=None, bitrate: str = '6M') -> dict
     g = gate(out)
     res = {'ok': g['ok'], 'out': str(out), 'frames_rendered': nf, 'picture_loops': loops,
            'fps': fps, 'gate': g,
-           'sha256': hashlib.sha256(out.read_bytes()).hexdigest()}
+           'sha256': hashlib.sha256(out.read_bytes()).hexdigest(),
+           'codec': _codec_gate(out)}
+    if emoji:
+        from emoji_scene import scene_for
+        res['emoji'] = scene_for(emoji)
     if not g['ok']:
         res['reason'] = 'gate failed: ' + ', '.join(g['failed'])
         res['refused'] = True
     (wd / 'produce.json').write_text(json.dumps(res, indent=2), encoding='utf-8')
     return res
+
+
+def _codec_gate(path):
+    """Bind the artifact to the build that encoded it (tinyffmpeg.integrate).
+
+    tinycudavideo gates the PICTURE; tinyffmpeg proves the CODEC. Together a
+    film is bound to both the frames and the encoder that wrote them.
+    """
+    try:
+        import importlib.util
+        p = Path(r"C:\æ\tinyffmpeg\integrate.py")
+        if not p.exists():
+            return None
+        spec = importlib.util.spec_from_file_location("tinyffmpeg_integrate", p)
+        m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+        return m.gate(path)
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
 
 
 def receipt(path: Path) -> dict:
@@ -271,6 +303,7 @@ def receipt(path: Path) -> dict:
     return {'file': path.name, 'bytes': path.stat().st_size,
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
             'gate': g, 'ok': g['ok'],
+            'codec': _codec_gate(path),
             'citation': f'æ://film/{path.stem}',
             'note': 'the DOI is the hash of the delivered bytes, not of the source'}
 
@@ -292,8 +325,9 @@ def main() -> int:
         p = sub.add_parser(n); p.add_argument('film')
     g = sub.add_parser('grade'); g.add_argument('a'); g.add_argument('b')
     p = sub.add_parser('produce')
-    p.add_argument('--frames', required=True); p.add_argument('--out', required=True)
+    p.add_argument('--frames'); p.add_argument('--out', required=True)
     p.add_argument('--fps', type=int, default=24); p.add_argument('--audio')
+    p.add_argument('--emoji')
     a = ap.parse_args()
     if a.cmd == 'doctor':
         d = doctor(); print(json.dumps(d, indent=2)); return 0 if d['ok'] else 1
@@ -304,7 +338,8 @@ def main() -> int:
     if a.cmd == 'grade':
         r = grade(Path(a.a), Path(a.b)); print(json.dumps(r, indent=2)); return 0 if r['reward'] == 1.0 else 1
     if a.cmd == 'produce':
-        r = produce(Path(a.frames), Path(a.out), a.fps, a.audio)
+        r = produce(Path(a.frames) if a.frames else None, Path(a.out), a.fps, a.audio,
+                    emoji=a.emoji)
         print(json.dumps(r, indent=2)); return 0 if r['ok'] else 1
     return 2
 
