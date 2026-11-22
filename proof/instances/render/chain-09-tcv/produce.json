@@ -7,8 +7,8 @@
   "gate": {
     "ok": true,
     "pixels": {
-      "luminance": 23.12,
-      "contrast": 38.36,
+      "luminance": 23.15,
+      "contrast": 38.43,
       "motion": 5.82,
       "black_pct": 0.0,
       "analysis_scale": [
@@ -38,7 +38,7 @@
     "failed": [],
     "note": "motion is measured at analysis_scale. Native by default, matching the instrument the thresholds came from. A downscaled measurement is a different instrument \u2014 never compare the two silently."
   },
-  "sha256": "a98a0e391b07987d0e18d3bab137ed119621cff7fa0bcffaeeb18b562c3fe4c9",
+  "sha256": "e834786663a8f060558a6156f77742e86d72f80eccf27c4e85243e4edc7080cc",
   "emoji": {
     "emoji": "\ud83e\udd16",
     "codepoints": [
