@@ -38,6 +38,16 @@ import qr_envelope as qe
 import qr_supervision as qs
 
 
+def _imread(path):
+    """cv2.imread cannot read a non-ASCII path on Windows (C:\æ\... -> None)."""
+    import cv2
+    import numpy as np
+    buf = np.fromfile(str(path), dtype=np.uint8)
+    if buf.size == 0:
+        return None
+    return cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
+
 def _degradations():
     """Each degradation: name -> fn(img, severity 0..1) -> img."""
     import cv2
@@ -113,7 +123,7 @@ def sweep(severities=(0.25, 0.5, 1.0), kinds=("route", "secret")) -> dict:
                 env = qe.encode(kind, {"probe": kind, "n": 40})
                 clean = tmp / f"{name}-{sev}-{kind}.png"
                 qs._render(env, clean, box_size=10, border=4)
-                img = cv2.imread(str(clean))
+                img = _imread(clean)
                 if img is None:
                     rows.append({"sev": sev, "kind": kind, "passed": False,
                                  "why": "render failed"})

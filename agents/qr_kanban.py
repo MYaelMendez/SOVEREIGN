@@ -48,6 +48,16 @@ import subprocess
 import sys
 import time
 
+
+def _imread(path):
+    """cv2.imread cannot read a non-ASCII path on Windows (C:\æ\... -> None)."""
+    import cv2
+    import numpy as np
+    buf = np.fromfile(str(path), dtype=np.uint8)
+    if buf.size == 0:
+        return None
+    return cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
 AGENTS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AGENTS))
 
@@ -357,7 +367,7 @@ def read_card(image, upscale: float = 1.5, require_both: bool = False) -> list[d
     import qr_envelope as qe
 
     if isinstance(image, (str, pathlib.Path)):
-        img = cv2.imread(str(image))
+        img = _imread(image)
     else:
         img = image
     if img is None:
@@ -570,7 +580,7 @@ def main(argv: list[str]) -> None:
         import supervision as sv
         import numpy as np
         import cv2
-        frame = cv2.imread(args.image)
+        frame = _imread(args.image)
         if frame is None:
             print(f"  ✗ cannot read {args.image}")
             return

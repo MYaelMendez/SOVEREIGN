@@ -420,6 +420,19 @@ def _contrast(img, points) -> tuple[float, str]:
     return ratio, f"dark {lo:.0f} light {hi:.0f} ratio {ratio:.2f}"
 
 
+def _imread(path) -> "object":
+    """cv2.imread CANNOT read a non-ASCII path on Windows (C:\\æ\\... -> None).
+
+    Read the bytes ourselves and decode; the path stops being a silent refusal.
+    """
+    import cv2
+    import numpy as np
+    buf = np.fromfile(str(path), dtype=np.uint8)
+    if buf.size == 0:
+        return None
+    return cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
+
 def supervise(image_path, expect_kind: str | None = None,
               expect_payload: dict | None = None,
               envelope: str | None = None) -> QRReport:
@@ -429,7 +442,7 @@ def supervise(image_path, expect_kind: str | None = None,
 
     checks: list[Check] = []
     path = pathlib.Path(image_path)
-    img = cv2.imread(str(path))
+    img = _imread(path)
     report = QRReport(passed=False)
 
     if img is None:
@@ -586,7 +599,7 @@ def supervise_raw(image_path, expect_text: str) -> QRReport:
 
     checks: list[Check] = []
     path = pathlib.Path(image_path)
-    img = cv2.imread(str(path))
+    img = _imread(path)
     report = QRReport(passed=False)
 
     if img is None:
