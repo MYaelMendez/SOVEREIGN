@@ -39,6 +39,9 @@ FAMILY = [
     ("tinyfilmmemory","memory",  "la memoria del film"),
     ("tinylab",      "lab",      "el auto-estudio de la familia"),
     ("tinyplugin",   "plugin",   "fallos de instalacion, a la vista"),
+    ("tinyrepofilm", "film",     "un repo, org o usuario -> pelicula sellada"),
+    ("tinyvoca",     "voice",    "la voz local que narra los films"),
+    ("tinyae",       "protocol", "la familia measure-and-refuse, un solo prefijo"),
 ]
 
 DOMAINS = {
@@ -54,6 +57,9 @@ DOMAINS = {
     "memory":  "#c8b6ff",
     "lab":     "#7CFC00",
     "plugin":  "#8d99ae",
+    "film":    "#ffd700",
+    "voice":   "#ff8fab",
+    "protocol":"#D4AF37",
 }
 
 
@@ -110,12 +116,16 @@ def run_doctor(name: str) -> dict:
 
 
 def positions(n: int, w: int, h: int) -> list[tuple[float, float]]:
-    """Fibonacci (sunflower) — deterministic, no random."""
+    """Fibonacci (sunflower) — deterministic, no random.
+
+    The inner radius starts at 150 so the first node clears the r=86 core ring;
+    the earlier 62*sqrt(0.5) put the innermost node at ~44 and the core text
+    painted straight over it."""
     cx, cy = w / 2, h / 2
     golden = math.pi * (3 - math.sqrt(5))
     pts = []
     for i in range(n):
-        r = 62.0 * math.sqrt(i + 0.5)
+        r = 150.0 + 64.0 * math.sqrt(i)
         a = i * golden
         pts.append((cx + r * math.cos(a) * 1.55, cy + r * math.sin(a) * 1.05))
     return pts
@@ -220,9 +230,9 @@ pre.det{{background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:10
 footer{{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:.7rem;color:var(--dim);
  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}}
 footer a{{color:var(--gold);text-decoration:none}}
-#ae-qr-badge{{position:fixed;bottom:18px;right:18px;z-index:99999;width:58px;height:58px;border-radius:12px;
+#ae-qr-badge{{width:58px;height:58px;border-radius:12px;
  border:1px solid var(--gold);background:var(--void);padding:4px;display:block;text-decoration:none;
- box-shadow:0 8px 30px rgba(0,0,0,.6);transition:transform .3s,box-shadow .3s}}
+ box-shadow:0 8px 30px rgba(0,0,0,.6);transition:transform .3s,box-shadow .3s;flex:0 0 auto}}
 #ae-qr-badge:hover{{transform:scale(1.12) rotate(-2deg);box-shadow:0 0 30px rgba(212,175,55,.55)}}
 #ae-qr-badge img{{width:100%;height:100%;display:block;border-radius:8px}}
 @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.55}}}}
@@ -277,13 +287,13 @@ footer a{{color:var(--gold);text-decoration:none}}
 
   <footer>
     <span>tiny* · generado por <code style="background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:4px;color:#ffd966">tiny_family.py</code> · cada doctor ejecutado en esta maquina.</span>
-    <span><a href="https://myaelmendez.github.io/tinyffmpeg.html">tinyffmpeg</a> · <a href="https://myaelmendez.github.io/aipodcast_me/skills-demo.html">demo de skills</a> · <a href="https://github.com/MYaelMendez">MYaelMendez</a></span>
+    <span style="display:flex;align-items:center;gap:14px">
+      <span><a href="https://myaelmendez.github.io/tinyffmpeg.html">tinyffmpeg</a> · <a href="https://myaelmendez.github.io/aipodcast_me/skills-demo.html">demo de skills</a> · <a href="https://github.com/MYaelMendez">MYaelMendez</a></span>
+      <a id="ae-qr-badge" href="https://myaelmendez.github.io/verify.html?url=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html" target="_blank" rel="noopener" aria-label="Verify this surface">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&amp;data=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html&amp;bgcolor=050505&amp;color=D4AF37" alt="QR verify" width="56" height="56">
+      </a>
+    </span>
   </footer>
-</div>
-
-<a id="ae-qr-badge" href="https://myaelmendez.github.io/verify.html?url=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html" target="_blank" rel="noopener" aria-label="Verify this surface">
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=56x56&amp;data=https%3A%2F%2Fmyaelmendez.github.io%2Ftiny.html&amp;bgcolor=050505&amp;color=D4AF37" alt="QR verify" width="56" height="56">
-</a>
 
 <script>
 const RESULTS = {payload};
