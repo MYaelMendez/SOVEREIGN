@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>æææ:/// NEUROMITOSIS OS · systems online</title>
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00ffd7;--green:#00ff9d;--red:#ff6b6b;--violet:#B98CFF;--dim:rgba(255,255,255,.48);--line:rgba(212,175,55,.28)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:#eafaf7;font-family:'JetBrains Mono',ui-monospace,monospace;padding:20px;min-height:100vh;
+ background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(212,175,55,.018) 4px)}
+.wrap{max-width:1100px;margin:0 auto}
+h1{color:var(--gold);font-size:22px;letter-spacing:3px}
+.sub{color:var(--dim);font-size:10px;margin:6px 0 14px;letter-spacing:1px}
+.boot{border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:10px;line-height:1.8;background:#000;margin-bottom:12px;min-height:92px}
+.boot .ok{color:var(--green)}.boot .warn{color:var(--red)}.boot .g{color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+.card{border:1px solid var(--line);border-radius:4px;padding:11px;background:rgba(0,0,0,.45)}
+.card .k{color:var(--gold);font-size:9px;letter-spacing:2px}
+.card .v{font-size:11px;margin-top:6px;line-height:1.6;word-break:break-word}
+.card .d{color:var(--dim);font-size:10px;margin-top:5px;word-break:break-all}
+.verified{color:var(--green)}.pending{color:var(--cyan)}.unknown{color:var(--red)}
+.panel{border:1px solid var(--line);border-radius:4px;padding:12px;margin:10px 0;background:rgba(0,0,0,.4)}
+.panel h2{font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:9px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th{color:var(--gold);text-align:left;font-weight:400;opacity:.8;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);word-break:break-all}
+code{color:var(--gold)}
+.foot{margin-top:14px;color:var(--dim);font-size:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
+.badge{display:inline-block;border:1px solid var(--line);padding:3px 8px;border-radius:3px;font-size:10px;color:var(--cyan);margin-right:6px}
+</style>
+</head>
+<body><div class="wrap">
+  <h1>æææ:/// NEUROMITOSIS OS</h1>
+  <div class="sub">HUMAN + ROBOT + DAO · LOCAL SUBSTRATE · EVERY STATE READ FROM RECEIPTS OR PROBED · NO PRINTED STATUS</div>
+  <div id="badges"><span class="badge">linking to local kernel…</span></div>
+
+  <div class="boot" id="boot">> INITIALIZING NEUROMITOSIS KERNEL...<br>> LINKING æ:// chain · custody → format → gate → authority → contract → dispatch → publish → delivery → teach<br>> WAITING FOR LOCAL STATUS...</div>
+
+  <div class="grid" id="modules"></div>
+
+  <div class="panel">
+    <h2>MODEL COMBINATOR · adopted, not imagined</h2>
+    <table><thead><tr><th>MODEL</th><th>ROLE</th><th>STATE</th><th>HASH / BOUNDARY</th></tr></thead><tbody>
+      <tr><td>Gemma-3-4B-it Q4_K_M</td><td>local cognition</td><td class="verified">INFERENCE ARTIFACT</td><td><code>04a43a22…</code> · GGUF never modified</td></tr>
+      <tr><td>Gemma-3-4B-it safetensors</td><td>trainable base</td><td class="pending">QLoRA · GPU VERIFIED</td><td><code>6.1 GB</code> · 0.38% trainable · 4-bit nf4</td></tr>
+      <tr><td>Asimov-1 twin</td><td>body</td><td class="verified">nu=0</td><td><code>24daef4d…</code> · trace replay, no motion claim</td></tr>
+      <tr><td>tinyACTOR</td><td>act boundary</td><td class="verified">OPERATED</td><td><code>cd13569f85b0…</code> · grants:false</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="panel">
+    <h2>ROOT_ENDPOINT · live probes</h2>
+    <table><thead><tr><th>MODULE</th><th>ENDPOINT</th><th>HTTP</th><th>STATE</th></tr></thead><tbody id="endpoints"></tbody></table>
+  </div>
+
+  <div class="panel">
+    <h2>CLAIMS THE SHELL CARRIES BUT WE REJECT</h2>
+    <table><thead><tr><th>PRINTED ELSEWHERE</th><th>VERDICT</th></tr></thead><tbody id="rejected"></tbody></table>
+  </div>
+
+  <div class="foot" id="foot">LOCAL SURFACE <code>C:/æ/site/neuromitosis-os.html</code> · status API <code>127.0.0.1:8092/api/status</code> · chassis from mech-os, theater removed · Evidence ≠ Authority · no act granted by a surface.</div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const color=(s)=>s.match(/VERIFIED|VALID|GATED|OPERATED|TRAINED|200/)?'verified':(s.match(/PENDING/)?'pending':'unknown');
+async function load(){
+ try{
+  const r=await fetch('http://127.0.0.1:8092/api/status',{mode:'cors'});
+  if(!r.ok) throw new Error('status '+r.status);
+  const d=await r.json();
+  $('#badges').innerHTML='<span class="badge">kernel: '+d.system.boot+'</span><span class="badge">authority: '+d.system.authority+'</span>';
+  $('#boot').innerHTML='> INITIALIZING NEUROMITOSIS KERNEL...<br>> BOOT: <span class="ok">'+d.system.boot+'</span><br>> SUBSTRATE: <span class="g">'+d.system.substrate+'</span><br>> AUTHORITY: <span class="ok">'+d.system.authority+'</span><br>> MODULES: '+d.modules.length+' · ENDPOINTS: '+d.endpoints.length+' · STATUS: <span class="ok">PROBED</span>';
+  $('#modules').innerHTML=d.modules.map(m=>'<div class="card"><div class="k">'+m.id+' · '+m.label+'</div><div class="v '+color(m.state)+'">'+m.state+'</div><div class="d">'+m.detail+'<br>'+m.endpoint+'</div></div>').join('');
+  $('#endpoints').innerHTML=d.endpoints.map(e=>'<tr><td>'+e.name+'</td><td><code>'+e.url+'</code></td><td>'+(e.http||'—')+'</td><td class="'+color(String(e.http||'UNREACHABLE'))+'">'+(e.http?'MEASURED':'UNREACHABLE')+'</td></tr>').join('');
+  $('#rejected').innerHTML=d.rejected_claims.map(c=>'<tr><td>'+c.split(' — ')[0]+'</td><td class="unknown">'+c.split(' — ')[1]+'</td></tr>').join('');
+  $('#foot').innerHTML+='<br>BOUNDARY: '+d.boundary;
+ }catch(e){
+  $('#boot').innerHTML+='<br><span class="warn">> KERNEL LINK FAILED: '+e.message+' — no status claimed</span>';
+ }
+}
+load();
+</script>
+</body></html>
