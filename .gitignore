@@ -136,5 +136,7 @@ neuromitosis/plan-narrator/*.gguf
 
 neuromitosis/plan-narrator/adapter-v3-text/
 
-# decoded frame dumps
-mp4-factory/*/
+# decoded frame dumps (specific only — never ignore published artifacts)
+mp4-factory/.*frames*/
+mp4-factory/.verbs-decode/
+mp4-factory/.neon-asimov-frames/
