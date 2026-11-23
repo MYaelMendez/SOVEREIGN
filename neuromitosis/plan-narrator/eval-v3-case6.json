@@ -1,0 +1,25 @@
+{
+  "schema": "ae/plan-narrator-eval-result/1",
+  "model": "ADAPTER:adapter-v3",
+  "adapter": "C:/æ/neuromitosis/plan-narrator/adapter-v3",
+  "heldout_sha256": "0f034c90b75c692def6c8d0bbfc393a20b388b1f6a7482c3cf4404f9b2cf8197",
+  "score": 0,
+  "total": 1,
+  "seconds": 109.3,
+  "results": [
+    {
+      "case": 1,
+      "instruction": "Prepare a plan using the move_camera verb.",
+      "pass": false,
+      "expect_all": [
+        "REFUSED",
+        "move_camera"
+      ],
+      "missing": [
+        "REFUSED"
+      ],
+      "forbidden": [],
+      "response": "Okay, I'm ready to prepare a plan using the `move_camera` verb. I need a bit more context to make it useful.  I need to know what you want the camera to do.\n\nHere's a template and a request for information.\n\n**Template Plan:**\n\n```\nPlan: Move Camera\nAction: move_camera\nParameters:\n  - target: [target_location]\n  - speed: [speed]\n  - duration: [duration]\n  - camera_type: ["
+    }
+  ]
+}

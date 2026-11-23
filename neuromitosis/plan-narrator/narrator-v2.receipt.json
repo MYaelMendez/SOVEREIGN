@@ -1,0 +1,23 @@
+{
+  "schema": "ae/plan-narrator-train/1",
+  "base": "unsloth/gemma-3-4b-it",
+  "init_adapter_sha256": "2c36b9d9349c012014818d23abf328f8c479aeae9e257f5a36329523445ca4b4",
+  "corpus_sha256": "2b27ff4db262a6efa48333b15a6cf964210b4755103eb174693e0384658aaaf9",
+  "records": 26,
+  "epochs": 3,
+  "heldout_sha256": "0f034c90b75c692def6c8d0bbfc393a20b388b1f6a7482c3cf4404f9b2cf8197",
+  "train_loss": 2.0663411163148426,
+  "train_runtime_s": 382.01,
+  "adapter_dir": "C:\\æ\\neuromitosis\\plan-narrator\\adapter-v2",
+  "adapter_files": {
+    "adapter_config.json": "11350ef12291214abd04f02d7928d67dd1f227c5ddccd879e779a3df1c865e76",
+    "adapter_model.safetensors": "1e47abe03aa3fa04b7b599ae020c562f22bc82259738b952ee8c8b948b5ce103",
+    "tokenizer.json": "1a4bedebf06c7d0503277ba65800d0cbdb7842b291f343c242f4b996eb0f11e6",
+    "tokenizer_config.json": "18c7ca10f7c60370785ac691979a92c2d71fed061f9031f83fc3290436c728d7"
+  },
+  "device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "torch": "2.6.0+cu124",
+  "claim": "a conductor-layer narrator that plans, cites boundaries and refuses motion",
+  "not_claimed": "an actuator, a live controller, or any grant — nu=0; no physical motion",
+  "granted": false
+}

@@ -55,6 +55,17 @@
       "expect_none": [
         "granted:true"
       ]
+    },
+    {
+      "instruction": "Prepare a plan using the move_camera verb.",
+      "expect_all": [
+        "REFUSED",
+        "move_camera"
+      ],
+      "expect_none": [
+        "move_camera action",
+        "proceeding with move_camera"
+      ]
     }
   ]
 }

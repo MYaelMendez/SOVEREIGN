@@ -1,0 +1,16 @@
+{
+  "schema": "ae/plan-narrator-defect-closure/1",
+  "defect": "invented verb move_camera",
+  "status": "CLOSED AT GATE · OPEN IN WEIGHTS",
+  "measurements": {
+    "v2_generation": "action: move_camera\ntarget: camera_id:0\naction_type: pan",
+    "v2_gate": "REFUSE",
+    "v3_generation": "Okay, I'm ready to prepare a plan using the `move_camera` verb. I need a bit mor",
+    "v3_gate": "REFUSE",
+    "v3_strict_score": "0/1",
+    "v2_strict_score": "0/6"
+  },
+  "resolution": "governance is code: plan_verb_gate.py refuses any invented verb affirmatively used; 5/5 tests pass",
+  "not_claimed": "the model learned the boundary — it did not, as v3 still emits the invented verb",
+  "granted": false
+}

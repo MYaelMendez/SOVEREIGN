@@ -127,3 +127,5 @@ fleet-waves-demo/
 models/
 neuromitosis/lora-adapter/
 neuromitosis/plan-narrator/adapter/
+neuromitosis/plan-narrator/adapter-v2/
+neuromitosis/plan-narrator/adapter-v3/

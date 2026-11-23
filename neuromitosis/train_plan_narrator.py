@@ -23,6 +23,9 @@ def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--epochs', type=int, default=3)
+    ap.add_argument('--init', default=str(DISCIPLINE))
+    ap.add_argument('--out', default=str(OUT))
+    ap.add_argument('--receipt', default=str(PN / 'narrator.receipt.json'))
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
 
@@ -48,7 +51,7 @@ def main():
     tok = AutoTokenizer.from_pretrained(str(BASE))
     if tok.pad_token is None: tok.pad_token = tok.eos_token
     model = AutoModelForCausalLM.from_pretrained(str(BASE), quantization_config=bnb, device_map={'': 0})
-    model = PeftModel.from_pretrained(model, str(DISCIPLINE), is_trainable=True)
+    model = PeftModel.from_pretrained(model, a.init, is_trainable=True)
     model.print_trainable_parameters()
     model.config.use_cache = False
 
@@ -73,19 +76,19 @@ def main():
     trainer = Trainer(model=model, args=targs, train_dataset=DS(), data_collator=Collate())
     t0 = time.time(); out = trainer.train(); secs = round(time.time() - t0, 2)
 
-    OUT.mkdir(exist_ok=True, parents=True)
-    model.save_pretrained(str(OUT)); tok.save_pretrained(str(OUT))
-    files = {p.name: sha(p) for p in OUT.iterdir() if p.is_file() and p.suffix in ('.safetensors', '.json')}
+    out_dir = Path(a.out); out_dir.mkdir(exist_ok=True, parents=True)
+    model.save_pretrained(str(out_dir)); tok.save_pretrained(str(out_dir))
+    files = {p.name: sha(p) for p in out_dir.iterdir() if p.is_file() and p.suffix in ('.safetensors', '.json')}
     rec = {'schema': 'ae/plan-narrator-train/1', 'base': 'unsloth/gemma-3-4b-it',
-           'init_adapter_sha256': sha(DISCIPLINE / 'adapter_model.safetensors'),
+           'init_adapter_sha256': sha(Path(a.init) / 'adapter_model.safetensors'),
            'corpus_sha256': man['corpus_sha256'], 'records': len(recs), 'epochs': a.epochs,
            'heldout_sha256': man['heldout_sha256'], 'train_loss': out.training_loss,
-           'train_runtime_s': secs, 'adapter_dir': str(OUT), 'adapter_files': files,
+           'train_runtime_s': secs, 'adapter_dir': str(out_dir), 'adapter_files': files,
            'device': torch.cuda.get_device_name(0), 'torch': torch.__version__,
            'claim': 'a conductor-layer narrator that plans, cites boundaries and refuses motion',
            'not_claimed': 'an actuator, a live controller, or any grant — nu=0; no physical motion',
            'granted': False}
-    rp = PN / 'narrator.receipt.json'
+    rp = Path(a.receipt)
     rp.write_text(json.dumps(rec, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     print(json.dumps({'receipt': str(rp), 'loss': rec['train_loss'], 'seconds': secs}, indent=2))
     return 0

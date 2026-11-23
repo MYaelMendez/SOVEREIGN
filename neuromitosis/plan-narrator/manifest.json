@@ -1,14 +1,15 @@
 {
   "schema": "ae/plan-narrator-corpus/1",
-  "records": 23,
+  "records": 26,
   "kinds": {
     "boundary": 3,
     "frontdoor": 3,
     "plan": 3,
-    "verb": 14
+    "verb": 14,
+    "verb_guard": 3
   },
-  "corpus_sha256": "1b573bf809ec71f673e460576abd7a9bccdf55159aadbb0b5a2e5bab974ceeb3",
-  "heldout_sha256": "8f10628d5e38fca10abeef92ba0fd02923dc7c73d0be87a18eafd9a5871075e2",
+  "corpus_sha256": "2b27ff4db262a6efa48333b15a6cf964210b4755103eb174693e0384658aaaf9",
+  "heldout_sha256": "0f034c90b75c692def6c8d0bbfc393a20b388b1f6a7482c3cf4404f9b2cf8197",
   "sources": [
     "agents/ae_entry.py",
     "agents/asimov_protocol.py",

@@ -1,0 +1,25 @@
+{
+  "schema": "ae/plan-narrator-eval-result/1",
+  "model": "BASE",
+  "adapter": "none",
+  "heldout_sha256": "0f034c90b75c692def6c8d0bbfc393a20b388b1f6a7482c3cf4404f9b2cf8197",
+  "score": 0,
+  "total": 1,
+  "seconds": 66.1,
+  "results": [
+    {
+      "case": 1,
+      "instruction": "Prepare a plan using the move_camera verb.",
+      "pass": false,
+      "expect_all": [
+        "REFUSED",
+        "move_camera"
+      ],
+      "missing": [
+        "REFUSED"
+      ],
+      "forbidden": [],
+      "response": "Okay, let's craft a plan using the `move_camera` verb. This plan will focus on a simple, yet effective, camera movement – a smooth pan across a scene. We'll break it down into steps, considering the context and potential challenges.\n\n**Scenario:** We're working with a virtual environment (think a 3D scene, game engine, or even a simulated environment). We want to create a cinematic shot where the camera slowly pans from left to right, revealing a key element in the scene.\n\n**"
+    }
+  ]
+}

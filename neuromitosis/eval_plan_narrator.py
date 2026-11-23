@@ -20,9 +20,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--adapter', default='none')
     ap.add_argument('--out', default='')
+    ap.add_argument('--case', type=int, default=0, help='1-based case index; 0 = all')
     a = ap.parse_args()
     data = json.loads(EVAL.read_text(encoding='utf-8'))
-    cases = data['cases']
+    cases = data['cases'] if not a.case else [data['cases'][a.case - 1]]
 
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
