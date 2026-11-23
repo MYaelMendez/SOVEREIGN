@@ -193,7 +193,7 @@ def evaluate(lesson,ctx):
                          text=True,timeout=180,encoding='utf-8',errors='replace')
         return r.returncode==0, (r.stdout or r.stderr).strip()[:120]
 
-    return True,'unknown check kind'
+    return False, f'REFUSED: unknown check kind {kind!r} — fail closed, never claim a pass'
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('cmd',choices=['seed','list','check','brief','verify'])
