@@ -1,0 +1,21 @@
+{
+  "schema": "ae/neuromitosis-corpus/1",
+  "records": 44,
+  "kinds": {
+    "identity": 1,
+    "lesson": 39,
+    "policy": 1,
+    "receipt": 2,
+    "take": 1
+  },
+  "corpus_sha256": "6f0a56ff551f3b63db4eab2eb4d5724d79648213238dcbb86d19db08db735088",
+  "bytes": 35471,
+  "source_files": [
+    "agents/ae-boy-identity.txt",
+    "github-pages/ae-policy.json",
+    "logs/ae_lessons.jsonl",
+    "logs/tinyactor-takes.jsonl",
+    "mp4-factory/neon-holomesh-916.receipt.json",
+    "mp4-factory/tinyactor-performance-916.receipt.json"
+  ]
+}

@@ -122,3 +122,6 @@ fleet-waves-demo/
 
 # Built wasm dist
 **/wasm/dist/
+
+# trainable base weights — local only, never in git
+models/

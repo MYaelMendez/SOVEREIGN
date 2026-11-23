@@ -1,0 +1,34 @@
+{
+  "schema": "ae/neuromitosis-adopt/1",
+  "date": "2026-11-23",
+  "operator": "Yael Mendez",
+  "adopted_model": {
+    "role": "neuromitosis model — local cognition for the human+robot+DAO bond",
+    "inference_artifact": "C:/Users/yaelm/AppData/Local/hermes/models/gemma-3-4b-it/gemma-3-4b-it-Q4_K_M.gguf",
+    "inference_sha256": "04a43a22e8d2003deda5acc2",
+    "trainable_base": "unsloth/gemma-3-4b-it (safetensors, 6.1 GB on disk)",
+    "why": "4B Q4 fits 6 GB VRAM; vision projector available for robot/surface frames; already serves the aeboy"
+  },
+  "hard_boundary": "GGUF is an inference format and CANNOT be fine-tuned. Training uses the safetensors base; the resulting LoRA adapter is applied back at serve time. The serving GGUF is never modified.",
+  "corpus": {
+    "generator": "neuromitosis/build_corpus.py",
+    "records": 44,
+    "sha256": "6f0a56ff551f3b63db4eab2eb4d5724d79648213238dcbb86d19db08db735088",
+    "sources": "ae_lessons.jsonl (39), tinyactor-takes (1), ae-boy identity (1), receipts (2), ae-policy.json (1)",
+    "secret_scan": "0 credential values; the word token appears only inside a lesson INVARIANT forbidding leaks"
+  },
+  "method": "QLoRA 4-bit nf4 double-quant, r=8 alpha=16, grad-checkpointing, batch 1 accum 4, 2 epochs",
+  "not_claimed": [
+    "a new authority — the adapter grants no acts and changes no policy",
+    "robot motion — nu=0 plants; no commanded act",
+    "a secret store — no credential is in corpus, adapter, or receipt",
+    "a new persona — identity is injected by the proxy at serve time, not memorised in weights"
+  ],
+  "acceptance": [
+    "corpus regenerates to the same sha256",
+    "trainable params < 1% of model",
+    "training loss finite and decreasing",
+    "adapter files hashed in receipt",
+    "aeboy still answers through the unmodified GGUF before and after"
+  ]
+}
