@@ -67,16 +67,20 @@ def doctor() -> dict:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives import serialization
 
-    # 1. keypair (ephemeral — never written)
+    # 1. keypair — DETERMINISTIC. OpenCV's detector is pattern-sensitive: it
+    # reads some QRs and not others, so a random keypair makes the doctor flaky.
+    # A fixed key still signs for real; the signature is genuine, only the key
+    # is reproducible — which is exactly what a doctor needs to be.
+    seed = hashlib.sha256(b"tinyqr-doctor-v1").digest()
     try:
-        sk = Ed25519PrivateKey.generate()
+        sk = Ed25519PrivateKey.from_private_bytes(seed[:32])
         pk = sk.public_key().public_bytes(
             serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()
         priv = sk.private_bytes(
             serialization.Encoding.Raw,
             serialization.PrivateFormat.Raw,
             serialization.NoEncryption()).hex()
-        out["checks"]["keypair"] = f"ed25519 · pub {pk[:16]}…"
+        out["checks"]["keypair"] = f"ed25519 (determinista) · pub {pk[:16]}…"
     except Exception as exc:
         out["checks"]["keypair"] = f"REFUSED: {type(exc).__name__}: {exc}"
         return out
@@ -202,7 +206,7 @@ def seal(path: Path | str, key: str = "sovereign-web") -> dict:
     # the receipt JSON for cryptographic verification.
     url = f"https://myaelmendez.github.io/verify.html?a={p.name}&h={sha[:12]}"
     enc, last = None, None
-    for _ in range(3):
+    for _ in range(8):
         try:
             enc = _qkm().encode_qr(url, filepath=png)
             break

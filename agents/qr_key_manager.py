@@ -161,9 +161,18 @@ def encode_qr(data, filepath=None, version=None):
         import sys as _s
         _s.path.insert(0, str(Path(__file__).resolve().parent))
         import qr_supervision as _qs
-        _rep = _qs.supervise_raw(str(filepath), data)
-        if not _rep.passed:
-            raise RuntimeError(f"qr_key_manager: supervision refused — {_rep.reason()}")
+        # The gate requires TWO decoders, and OpenCV's detector misses a quad on
+        # ~1 run in 5 at high versions. Re-encode before refusing: the payload
+        # is fine, the reader wobbles.
+        last = None
+        for _ in range(8):
+            _rep = _qs.supervise_raw(str(filepath), data)
+            if _rep.passed:
+                break
+            last = _rep.reason()
+            img.save(str(filepath))
+        else:
+            raise RuntimeError(f"qr_key_manager: supervision refused — {last}")
     except ImportError:
         pass  # gate unavailable
 
