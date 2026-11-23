@@ -164,6 +164,57 @@ def cmd_drift(_a) -> int:
     return 0
 
 
+def cmd_opportunity(_a) -> int:
+    """The atlas as an instrument: what the estate has not addressed, ranked by weight.
+
+    Reads estate.json (generated from the repository) and the live status of every
+    addressed surface. Nothing here is typed.
+    """
+    from collections import Counter
+    est = ROOT / "github-pages" / "estate.json"
+    if not est.exists():
+        print(json.dumps({"schema": "tinyorigin.opportunity.v1",
+                          "error": "estate.json missing"}))
+        return 1
+    e = json.loads(est.read_text(encoding="utf-8"))
+    s = e.get("surfaces", [])
+    at = [x for x in s if x.get("atlas")]
+    un = [x for x in s if not x.get("atlas")]
+    total_b = sum(x.get("bytes", 0) for x in s)
+    un_b = sum(x.get("bytes", 0) for x in un)
+    cnt = Counter(x.get("bytes", 0) for x in un)
+    dupes = [{"bytes": b, "copies": n, "waste": b * (n - 1)}
+             for b, n in cnt.items() if n > 1 and b > 0]
+    dupes.sort(key=lambda d: -d["waste"])
+    dead = []
+    for x in at:
+        url = x.get("url")
+        if not url:
+            continue
+        st = http_status(url)
+        if st.get("status") != 200:
+            dead.append({"id": x.get("id"), "coord": x.get("coord"),
+                         "status": st.get("status")})
+    out = {"schema": "tinyorigin.opportunity.v1",
+           "generated": e.get("generated"),
+           "surfaces": len(s), "addressed": len(at), "unaddressed": len(un),
+           "bytes_total": total_b, "bytes_unaddressed": un_b,
+           "unaddressed_share": round(un_b / total_b, 4) if total_b else 0,
+           "vertical_unaddressed": sum(1 for x in un if x.get("vertical")),
+           "films_unaddressed": sum(1 for x in un if x.get("film")),
+           "duplicate_groups": len(dupes),
+           "duplicate_waste_bytes": sum(d["waste"] for d in dupes),
+           "top_duplicates": dupes[:5],
+           "top_unaddressed": [{"bytes": x.get("bytes"), "url": x.get("url")}
+                               for x in sorted(un, key=lambda y: -y.get("bytes", 0))[:5]],
+           "dead_addresses": dead}
+    print(json.dumps(out, indent=1, ensure_ascii=False))
+    receipt("opportunity", {k: v for k, v in out.items()
+                            if k not in ("schema", "top_unaddressed",
+                                         "top_duplicates", "dead_addresses")})
+    return 0
+
+
 def cmd_receipt(a) -> int:
     if not LEDGER.exists():
         print("no ledger.")
@@ -185,6 +236,7 @@ def main(argv=None) -> int:
     v.add_argument("--full", action="store_true")
     v.set_defaults(fn=cmd_verify)
     sub.add_parser("drift").set_defaults(fn=cmd_drift)
+    sub.add_parser("opportunity").set_defaults(fn=cmd_opportunity)
     rc = sub.add_parser("receipt")
     rc.add_argument("n", nargs="?", type=int, default=10)
     rc.set_defaults(fn=cmd_receipt)
