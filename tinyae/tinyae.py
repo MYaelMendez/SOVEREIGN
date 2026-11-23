@@ -72,6 +72,8 @@ FAMILY = [
     ("tinyae",       "protocol", "la familia measure-and-refuse, un solo prefijo"),
     ("tinySVG",      "geometry", "el viewBox no es la pantalla: escala y solapes"),
     ("tinyXML",      "document", "el documento es el contrato: canon, XXE, firma"),
+    ("tinyFANIN",    "conductor","N receipts -> ONE truth: el bucle que sostiene todo"),
+    ("tinyaudio",    "audio",    "el canal: la perdida se mide, no se asume"),
 ]
 
 DOMAINS = {
@@ -80,7 +82,8 @@ DOMAINS = {
     "bus": "#69d2ff", "actors": "#ff9f5a", "time": "#9bf6ff",
     "memory": "#c8b6ff", "lab": "#7CFC00", "plugin": "#8d99ae",
     "film": "#ffd700", "voice": "#ff8fab", "protocol": "#D4AF37",
-    "geometry": "#7bdff2", "document": "#f1c40f",
+    "geometry": "#7bdff2", "document": "#f1c40f", "conductor": "#D4AF37",
+    "audio": "#ff7b54",
 }
 
 
@@ -256,11 +259,10 @@ def doctor() -> dict:
                         f"(fresh window {FRESH_SECONDS / 60:.0f} min)")
 
     fam, green, not_green = reg.get("families"), reg.get("green"), reg.get("not_green")
-    checks = (
-        (CONSTELLATION, (str(len(FAMILY)),)),
-        (HQ, (f"{green} ok", f"{not_green} refused")),
-        (REPORT, (f"<b>{fam}</b>", f"<b>{green}</b>", f"<b>{not_green}</b>")),
-    )
+    # both derived surfaces share one template, so they carry the same markers
+    markers = (f"<b>{fam}</b> instruments", f"<b>{green}</b> green",
+               f"<b>{not_green}</b> not green")
+    checks = ((CONSTELLATION, (str(len(FAMILY)),)), (HQ, markers), (REPORT, markers))
     for surface, needles in checks:
         if not surface.exists():
             findings.append(f"{surface.name} missing — run `tinyae.py surfaces`")

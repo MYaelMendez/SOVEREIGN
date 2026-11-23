@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinyaudio"
+version = "0.1.0"
+description = "El instrumento soberano del canal de audio: prueba los codecs reales, mide la perdida (SNR) de una transcodificacion y gradua el determinismo medido."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = ["ffmpeg"]
+authors = [{ name = "Yæl Méndez", email = "yael@llm.store" }]
+keywords = ["audio", "ffmpeg", "snr", "lossy", "receipts", "opensourceware"]
+
+[tool.setuptools]
+py-modules = ["tinyaudio"]
