@@ -6,7 +6,7 @@ never PASS. Served on 127.0.0.1:8092 for the OS surface on 8091.
 """
 from __future__ import annotations
 
-import hashlib, importlib.util, json, os, urllib.request
+import hashlib, importlib.util, json, os, sys, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -31,6 +31,37 @@ def probe(url: str, timeout=1.5):
             return r.status
     except Exception:
         return None
+
+
+def qr_layer() -> dict:
+    """æQR system + tinyQR instrument, measured live. No fabricated badge."""
+    out = {}
+    try:
+        sp = importlib.util.spec_from_file_location('tinyqr', str(ROOT / 'tinyqr/tinyqr.py'))
+        tq = importlib.util.module_from_spec(sp); sp.loader.exec_module(tq)
+        d = tq.doctor(); led = tq.ledger_verify()
+        out['tinyqr'] = {'state': 'VERIFIED' if d.get('ok') else 'UNVERIFIED',
+                         'checks': d.get('checks', {}), 'ledger_ok': led.get('chain_ok'),
+                         'ledger_records': led.get('records')}
+    except Exception as e:
+        out['tinyqr'] = {'state': 'UNKNOWN', 'reason': str(e)[:120]}
+    try:
+        sys_path = str(ROOT / 'aeqr')
+        if sys_path not in sys.path: sys.path.insert(0, sys_path)
+        from ae.envelope import encode, decode
+        p = {'k': 'neuromitosis', 'r': 'v1'}
+        env = encode('capability', p)
+        body = env.split(':')[-1]
+        rt = decode(env)
+        rt_type, rt_payload = rt if isinstance(rt, tuple) and len(rt) == 2 else (None, rt)
+        ok = (len(env) == len(body) + 16 and rt_type == 'capability' and rt_payload == p)
+        out['aeqr'] = {'state': 'VERIFIED' if ok else 'UNKNOWN',
+                       'envelope_len': len(env), 'body_len': len(body),
+                       'invariant': len(env) == len(body) + 16,
+                       'roundtrip': rt_payload == p, 'decoded_type': rt_type}
+    except Exception as e:
+        out['aeqr'] = {'state': 'UNKNOWN', 'reason': str(e)[:120]}
+    return out
 
 
 def status() -> dict:
@@ -90,6 +121,7 @@ def status() -> dict:
             'fetch(/api/spatial/init) — 404 on static Pages',
             '675B/671B model fusion — catalog text, not local, not fused',
         ],
+        'qr_layer': qr_layer(),
         'boundary': 'Evidence != Authority · no act granted by a surface · no physical motion (nu=0)',
     }
 

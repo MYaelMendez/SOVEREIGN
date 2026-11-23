@@ -90,7 +90,7 @@ def main():
     targs = TrainingArguments(
         output_dir=str(ROOT / 'trainer-out'), num_train_epochs=a.epochs,
         per_device_train_batch_size=1, gradient_accumulation_steps=4,
-        learning_rate=2e-4, lr_scheduler_type='cosine', warmup_ratio=0.05,
+        learning_rate=2e-4, lr_scheduler_type='cosine', warmup_steps=1,
         logging_steps=5, save_strategy='no', bf16=True, report_to='none',
         gradient_checkpointing=True, optim='paged_adamw_8bit', seed=0,
         remove_unused_columns=False)
