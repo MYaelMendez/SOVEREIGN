@@ -1,0 +1,23 @@
+{
+  "schema": "ae/plan-narrator-train/1",
+  "base": "C:/æ/models/Qwen3-1.7B-train",
+  "init_adapter_sha256": "none — fresh LoRA",
+  "corpus_sha256": "2b27ff4db262a6efa48333b15a6cf964210b4755103eb174693e0384658aaaf9",
+  "records": 26,
+  "epochs": 3,
+  "heldout_sha256": "0f034c90b75c692def6c8d0bbfc393a20b388b1f6a7482c3cf4404f9b2cf8197",
+  "train_loss": 9.116862842014857,
+  "train_runtime_s": 287.36,
+  "adapter_dir": "C:\\æ\\neuromitosis\\plan-narrator\\qwen-adapter",
+  "adapter_files": {
+    "adapter_config.json": "b7ca38e2aa1399c432675d8f1e61192296136965925bc40e386729b2b55e1086",
+    "adapter_model.safetensors": "c9afd551fa8fe040becff7ddd4cbdcf2558f8ea3c92512874d63275352316d8a",
+    "tokenizer.json": "19385ff944ec68b68b06ed544cdd2baf2a792fc62f42e4e9025171970550f609",
+    "tokenizer_config.json": "1f18fb516a5b9ec1286b09ef8df6cbe736ad8298c77d99953d85f182572b273e"
+  },
+  "device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "torch": "2.6.0+cu124",
+  "claim": "a conductor-layer narrator that plans, cites boundaries and refuses motion",
+  "not_claimed": "an actuator, a live controller, or any grant — nu=0; no physical motion",
+  "granted": false
+}

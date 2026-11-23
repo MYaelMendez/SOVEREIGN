@@ -26,6 +26,7 @@ def main():
     ap.add_argument('--init', default=str(DISCIPLINE))
     ap.add_argument('--out', default=str(OUT))
     ap.add_argument('--receipt', default=str(PN / 'narrator.receipt.json'))
+    ap.add_argument('--base', default=str(BASE))
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
 
@@ -44,14 +45,20 @@ def main():
     import torch
     from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,
                               Trainer, TrainingArguments)
-    from peft import PeftModel
+    from peft import LoraConfig, PeftModel, TaskType, get_peft_model
 
     bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4',
                              bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
-    tok = AutoTokenizer.from_pretrained(str(BASE))
+    tok = AutoTokenizer.from_pretrained(a.base)
     if tok.pad_token is None: tok.pad_token = tok.eos_token
-    model = AutoModelForCausalLM.from_pretrained(str(BASE), quantization_config=bnb, device_map={'': 0})
-    model = PeftModel.from_pretrained(model, a.init, is_trainable=True)
+    model = AutoModelForCausalLM.from_pretrained(a.base, quantization_config=bnb, device_map={'': 0})
+    if a.init and a.init.lower() not in ('none', ''):
+        model = PeftModel.from_pretrained(model, a.init, is_trainable=True)
+    else:
+        lcfg = LoraConfig(task_type=TaskType.CAUSAL_LM, r=8, lora_alpha=16, lora_dropout=0.05,
+                          target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj',
+                                          'gate_proj', 'up_proj', 'down_proj'], bias='none')
+        model = get_peft_model(model, lcfg)
     model.print_trainable_parameters()
     model.config.use_cache = False
 
@@ -79,8 +86,9 @@ def main():
     out_dir = Path(a.out); out_dir.mkdir(exist_ok=True, parents=True)
     model.save_pretrained(str(out_dir)); tok.save_pretrained(str(out_dir))
     files = {p.name: sha(p) for p in out_dir.iterdir() if p.is_file() and p.suffix in ('.safetensors', '.json')}
-    rec = {'schema': 'ae/plan-narrator-train/1', 'base': 'unsloth/gemma-3-4b-it',
-           'init_adapter_sha256': sha(Path(a.init) / 'adapter_model.safetensors'),
+    rec = {'schema': 'ae/plan-narrator-train/1', 'base': a.base,
+           'init_adapter_sha256': (sha(Path(a.init) / 'adapter_model.safetensors')
+                               if a.init and a.init.lower() not in ('none', '') else 'none — fresh LoRA'),
            'corpus_sha256': man['corpus_sha256'], 'records': len(recs), 'epochs': a.epochs,
            'heldout_sha256': man['heldout_sha256'], 'train_loss': out.training_loss,
            'train_runtime_s': secs, 'adapter_dir': str(out_dir), 'adapter_files': files,

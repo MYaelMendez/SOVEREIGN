@@ -129,6 +129,7 @@ neuromitosis/lora-adapter/
 neuromitosis/plan-narrator/adapter/
 neuromitosis/plan-narrator/adapter-v2/
 neuromitosis/plan-narrator/adapter-v3/
+neuromitosis/plan-narrator/qwen-adapter/
 
 # converted GGUF LoRA adapters — local only
 neuromitosis/plan-narrator/*.gguf

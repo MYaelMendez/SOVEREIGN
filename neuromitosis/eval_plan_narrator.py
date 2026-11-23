@@ -21,6 +21,7 @@ def main():
     ap.add_argument('--adapter', default='none')
     ap.add_argument('--out', default='')
     ap.add_argument('--case', type=int, default=0, help='1-based case index; 0 = all')
+    ap.add_argument('--base', default=str(BASE))
     a = ap.parse_args()
     data = json.loads(EVAL.read_text(encoding='utf-8'))
     cases = data['cases'] if not a.case else [data['cases'][a.case - 1]]
@@ -32,9 +33,9 @@ def main():
     bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4',
                              bnb_4bit_compute_dtype=torch.bfloat16,
                              bnb_4bit_use_double_quant=True)
-    tok = AutoTokenizer.from_pretrained(str(BASE))
+    tok = AutoTokenizer.from_pretrained(a.base)
     if tok.pad_token is None: tok.pad_token = tok.eos_token
-    model = AutoModelForCausalLM.from_pretrained(str(BASE), quantization_config=bnb, device_map={'': 0})
+    model = AutoModelForCausalLM.from_pretrained(a.base, quantization_config=bnb, device_map={'': 0})
     label = 'BASE'
     if a.adapter != 'none':
         model = PeftModel.from_pretrained(model, a.adapter)
@@ -58,7 +59,7 @@ def main():
                         'response': text[:600]})
 
     report = {'schema': 'ae/plan-narrator-eval-result/1', 'model': label,
-              'adapter': a.adapter, 'heldout_sha256': json.loads(EVAL.read_text(encoding='utf-8')) and
+              'adapter': a.adapter, 'base_model': a.base, 'heldout_sha256': json.loads(EVAL.read_text(encoding='utf-8')) and
               __import__('hashlib').sha256(EVAL.read_bytes()).hexdigest(),
               'score': sum(r['pass'] for r in results), 'total': len(results),
               'seconds': round(time.time() - t0, 1), 'results': results}

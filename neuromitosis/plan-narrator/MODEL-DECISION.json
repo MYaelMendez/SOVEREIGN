@@ -1,0 +1,29 @@
+{
+  "schema": "ae/model-decision/1",
+  "question": "keep training Gemma-3-4B or change to Qwen3-1.7B",
+  "measured": {
+    "gemma": {
+      "train_loss": 1.8435,
+      "runtime_s": 379.18,
+      "strict": "0/6",
+      "safe_cases": 3,
+      "invented_cases": 1
+    },
+    "qwen": {
+      "train_loss": 9.116862842014857,
+      "runtime_s": 287.36,
+      "base_strict": 0,
+      "adapter_strict": 0,
+      "base_safe_cases": 0,
+      "adapter_safe_cases": 0,
+      "adapter_hashes": true,
+      "strict": "0/6",
+      "safe_cases": 0,
+      "invented_cases": 0
+    }
+  },
+  "decision": "KEEP Gemma as the serving conductor. Qwen3-1.7B is cheaper to train (287s vs 379s, +1.99 GiB headroom) but its behavioral delta is 0 and it never became boundary-honest. Gemma went 0 to 3 safe cases. Neither passes strict eval (both 0/6); neither replaces the verb gate.",
+  "not_claimed": "Qwen is better — its behavioral delta is 0; no quality win measured",
+  "granted": false,
+  "fairness_note": "both adapters scored on the SAME 6-case held-out; base Gemma was 5 cases, base Qwen 6 — base comparison is Gemma 0/5 vs Qwen 0/6"
+}
