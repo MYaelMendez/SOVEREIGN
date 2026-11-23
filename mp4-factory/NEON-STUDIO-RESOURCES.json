@@ -1,0 +1,68 @@
+{
+  "schema": "ae/neon-studio-resources/1",
+  "body": {
+    "model": "C:\\Users\\yaelm\\AppData\\Local\\hermes\\cache\\scratch\\asimov-twin\\1.0.0\\model\\asimov_1_25dof.xml",
+    "sha256": "5d11a9002024d30572f7c34e4f12eb1c6c630f11c90862d6d8da4ff01f9aae1c",
+    "nq": 32,
+    "nu": 0,
+    "ngeom": 50,
+    "meshes": 26,
+    "meshes_sha256": "2a76bd9e02d3db771ddf46e625d4fbc6fbcf4c1801b1d80193e5c99328436981",
+    "controllable": false,
+    "note": "nu=0: authored stand pose + real trace qpos; no commanded act"
+  },
+  "trace": {
+    "path": "C:\\æ\\tinymujoco\\traces\\805b855be6c457ba.json",
+    "sha256": "805b855be6c457ba750383f87fa82865eccdbf4d01d9f1cbaa51df977de82838",
+    "policy": "Menlo/asimov1-locomotion-0818",
+    "policy_sha256": "47f70691ecd5afda2933b2e6430d2375004c943552284172a2d7b28b84188a0c",
+    "frames": 192,
+    "nq": 30,
+    "joints": 23,
+    "authority": "HUMAN://ROOT"
+  },
+  "verbs": {
+    "count": 14,
+    "by_class": {
+      "media": 4,
+      "motion": 6,
+      "read": 4
+    },
+    "table": {
+      "balance": "motion",
+      "capture_clip": "media",
+      "check": "read",
+      "damp": "motion",
+      "get_state": "read",
+      "photo": "media",
+      "play_pcm": "media",
+      "record_audio": "media",
+      "set_joints": "motion",
+      "set_velocity": "motion",
+      "stand": "motion",
+      "state": "read",
+      "status": "read",
+      "trajectory": "motion"
+    },
+    "source_sha256": "299aedf9f48eb78a0ef185e31e4d6e09a303712d81eb3f004f6dee694c92e365"
+  },
+  "gate": {
+    "policy_sha256": null,
+    "bands": [
+      "PUBLIC",
+      "PUBLISHED",
+      "OPERATOR",
+      "CUSTODY"
+    ],
+    "evaluate_observe_public": "ACCEPT",
+    "evaluate_act_custody": "REFUSE"
+  },
+  "renderer": {
+    "mujoco": "4.0.1",
+    "width": 576,
+    "height": 1024,
+    "depth": "enable_depth_rendering()"
+  },
+  "claim": "measured resources for the next governed Asimov verb film",
+  "not_claimed": "physical motion — nu=0 plant; every verb is a governed stage"
+}

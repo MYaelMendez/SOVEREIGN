@@ -135,3 +135,6 @@ neuromitosis/plan-narrator/qwen-adapter/
 neuromitosis/plan-narrator/*.gguf
 
 neuromitosis/plan-narrator/adapter-v3-text/
+
+# decoded frame dumps
+mp4-factory/*/
