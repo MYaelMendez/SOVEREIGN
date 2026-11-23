@@ -54,6 +54,15 @@ select,input{background:#0a0a0a;border:1px solid var(--line);color:var(--cyan);p
   </div>
 
   <div class="panel">
+    <h2>LIVE CONDUCTOR · Gemma-3-4B + v3 LoRA → verb gate</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <input id="planPrompt" value="Return only one line: action: move_camera" style="flex:1;min-width:260px">
+      <button class="gold" onclick="runPlan()">propose plan</button>
+    </div>
+    <div id="planOut" style="font-size:10px;line-height:1.7;color:var(--dim)">no plan proposed — no act granted</div>
+  </div>
+
+  <div class="panel">
     <h2>IDENTITY / CUSTODY · æQR system + tinyQR instrument</h2>
     <div id="qrState" style="font-size:10px;line-height:1.7;color:var(--dim)">not measured — no badge claimed</div>
   </div>
@@ -106,6 +115,18 @@ async function load(){
  }catch(e){
   $('#boot').innerHTML+='<br><span class="warn">> KERNEL LINK FAILED: '+e.message+' — no status claimed</span>';
  }
+}
+async function runPlan(){
+ const el=document.getElementById('planOut'); el.innerHTML='proposing…';
+ try{
+  const r=await fetch('http://127.0.0.1:8093/plan',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:document.getElementById('planPrompt').value})});
+  const d=await r.json(); const gt=d.gate||{};
+  el.innerHTML='model: <code>'+((d.plan||'').slice(0,160).replace(/</g,'&lt;'))+'</code><br>'+
+   'gate <span class="'+(gt.verdict==='REFUSE'?'unknown':'verified')+'">'+(gt.verdict||'UNKNOWN')+'</span> · '+
+   'invented: '+(gt.invented_verbs||[]).join(', ')+' · '+d.seconds+'s · '+d.completion_tokens+' tok<br>'+
+   '<b>granted:false</b> · a plan is a proposal, not an act';
+ }catch(e){el.innerHTML='<span class="unknown">CONDUCTOR UNREACHABLE: '+e.message+'</span> — no plan claimed';}
 }
 const MJ='http://127.0.0.1:8170';
 const rlog=(s)=>{const l=document.getElementById('robotLog');l.textContent+=s+'\n';l.scrollTop=l.scrollHeight};
