@@ -122,16 +122,70 @@ def load_public(path: pathlib.Path | None = None) -> bytes:
 # ── the signed card ───────────────────────────────────────────────────────────
 
 def _canonical(verb: str, task_id: str | None, subject: str,
-               expires_at: int, nonce: str) -> bytes:
+               expires_at: int, nonce: str, action_sha256: str | None = None) -> bytes:
     """The exact bytes a signature commits to.
 
     Canonicalised so signer and verifier cannot disagree about whitespace or key
     order — the classic way a signature scheme silently fails to verify.
+
+    `action_sha256` is included ONLY when present, so cards minted before action
+    binding keep byte-identical canonical forms and remain valid.
     """
-    return json.dumps({
+    payload = {
         "verb": verb, "task_id": task_id or "", "subject": subject,
         "expires_at": expires_at, "nonce": nonce,
-    }, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    }
+    if action_sha256:
+        payload["action_sha256"] = action_sha256
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def action_hash(action: dict) -> str:
+    """Canonical sha256 of the exact action an operator wants to perform."""
+    return hashlib.sha256(
+        json.dumps(action, sort_keys=True, separators=(',', ':'),
+                   ensure_ascii=False).encode('utf-8')).hexdigest()
+
+
+def sign_card_for_action(action: dict, *, ttl: int = 3600,
+                         subject: str | None = None,
+                         key_path: pathlib.Path | None = None) -> dict:
+    """Mint a card bound to ONE exact action hash (verb is analytic only)."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    verb = str(action.get('verb', ''))
+    ahash = action_hash(action)
+    subject = subject or os.environ.get("AGENT_ID") or os.environ.get("USERNAME") or "operator"
+    expires_at = int(time.time()) + int(ttl)
+    nonce = secrets.token_hex(8)
+    priv = Ed25519PrivateKey.from_private_bytes(load_private(key_path))
+    sig = priv.sign(_canonical(verb, None, subject, expires_at, nonce, ahash))
+    return {'verb': verb, 'task_id': None, 'subject': subject,
+            'expires_at': expires_at, 'nonce': nonce, 'action_sha256': ahash,
+            'single_use': True,
+            'sig': base64.urlsafe_b64encode(sig).decode('ascii').rstrip('='),
+            'by': hashlib.sha256(bytes.fromhex(
+                priv.public_key().public_bytes(
+                    encoding=__import__("cryptography.hazmat.primitives.serialization",
+                                        fromlist=["serialization"]).Encoding.Raw,
+                    format=__import__("cryptography.hazmat.primitives.serialization",
+                                      fromlist=["serialization"]).PublicFormat.Raw).hex()
+            )).hexdigest()[:16]}
+
+
+def verify_card_for_action(payload: dict, action: dict, *,
+                           public_key: bytes | None = None) -> dict:
+    """Verify signature AND that the card was minted for THIS exact action."""
+    expected = action_hash(action)
+    claimed = payload.get('action_sha256')
+    if not claimed:
+        return {'ok': False, 'reason': 'card has no action binding'}
+    if claimed != expected:
+        return {'ok': False, 'reason': 'action hash mismatch — card is for another action',
+                'expected': expected[:16], 'got': str(claimed)[:16]}
+    v = verify_card(payload, public_key=public_key)
+    if not v['ok']:
+        return v
+    return {**v, 'action_sha256': claimed, 'bound': True}
 
 
 def sign_card(verb: str, task_id: str | None = None, *, ttl: int = 3600,
@@ -215,7 +269,7 @@ def verify_card(payload: dict, *, public_key: bytes | None = None,
 
     msg = _canonical(payload.get("verb", ""), payload.get("task_id"),
                      payload.get("subject", ""), int(payload.get("expires_at", 0)),
-                     payload.get("nonce", ""))
+                     payload.get("nonce", ""), payload.get("action_sha256"))
     try:
         Ed25519PublicKey.from_public_bytes(pub).verify(sig, msg)
     except InvalidSignature:
