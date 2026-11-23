@@ -28,6 +28,10 @@ td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);word-break:brea
 code{color:var(--gold)}
 .foot{margin-top:14px;color:var(--dim);font-size:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
 .badge{display:inline-block;border:1px solid var(--line);padding:3px 8px;border-radius:3px;font-size:10px;color:var(--cyan);margin-right:6px}
+button{background:transparent;border:1px solid var(--cyan);color:var(--cyan);padding:5px 9px;border-radius:3px;cursor:pointer;font:inherit;font-size:10px}
+button:hover{background:rgba(0,255,215,.1)}
+button.gold{border-color:var(--gold);color:var(--gold)}
+select,input{background:#0a0a0a;border:1px solid var(--line);color:var(--cyan);padding:4px;font:inherit;font-size:10px}
 </style>
 </head>
 <body><div class="wrap">
@@ -47,6 +51,19 @@ code{color:var(--gold)}
       <tr><td>Asimov-1 twin</td><td>body</td><td class="verified">nu=0</td><td><code>24daef4d…</code> · trace replay, no motion claim</td></tr>
       <tr><td>tinyACTOR</td><td>act boundary</td><td class="verified">OPERATED</td><td><code>cd13569f85b0…</code> · grants:false</td></tr>
     </tbody></table>
+  </div>
+
+  <div class="panel">
+    <h2>ROBOT AGENT CONNECT · tinyMUJOCO real instrument</h2>
+    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <button id="connect" onclick="connectRobot()" class="gold">connect robot</button>
+      <button onclick="robotProbe()">refresh doctor</button>
+      <label style="font-size:10px;color:var(--dim)">model <select id="robotModel" style="max-width:280px"></select></label>
+      <label style="font-size:10px;color:var(--dim)">steps <input id="robotSteps" type="number" value="12" style="width:55px"></label>
+      <button onclick="robotRollout()">rollout (trace)</button>
+    </div>
+    <div id="robotState" style="font-size:10px;line-height:1.7;color:var(--dim)">not connected — no state claimed</div>
+    <div id="robotLog" style="font-size:10px;line-height:1.6;margin-top:8px;white-space:pre-wrap;color:var(--cyan)"></div>
   </div>
 
   <div class="panel">
@@ -78,6 +95,48 @@ async function load(){
  }catch(e){
   $('#boot').innerHTML+='<br><span class="warn">> KERNEL LINK FAILED: '+e.message+' — no status claimed</span>';
  }
+}
+const MJ='http://127.0.0.1:8170';
+const rlog=(s)=>{const l=document.getElementById('robotLog');l.textContent+=s+'\n';l.scrollTop=l.scrollHeight};
+async function mj(p,timeout=8000){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),timeout);
+  try{const r=await fetch(MJ+p,{signal:c.signal});return await r.json()}
+  finally{clearTimeout(t)}
+}
+async function robotProbe(){
+  try{
+    const d=await mj('/doctor'); const c=d.checks||{};
+    document.getElementById('robotState').innerHTML=
+      'instrument <span class="'+(d.ok?'verified':'unknown')+'">'+(d.ok?'CONNECTED':'UNHEALTHY')+'</span> · '+
+      'mujoco <b>'+(c.mujoco||'—')+'</b> · numpy <b>'+(c.numpy||'—')+'</b> · '+
+      'smoke <b>'+(c.smoke||'—')+'</b>'+(d.reason?' · <span class="unknown">'+d.reason+'</span>':'');
+    const m=await mj('/models');
+    const all=Object.values(m.groups||{}).flat().filter(x=>x.loadable!==false);
+    const sel=document.getElementById('robotModel');sel.innerHTML='';
+    all.forEach(x=>{const o=document.createElement('option');o.value=x.path;o.textContent=x.name;sel.appendChild(o)});
+    rlog('doctor ok='+d.ok+' · loadable models='+all.length);
+    return d.ok;
+  }catch(e){
+    document.getElementById('robotState').innerHTML='<span class="unknown">CONNECT FAILED: '+e.message+'</span> — no state claimed';
+    rlog('error '+e);return false;
+  }
+}
+async function connectRobot(){
+  rlog('\n> connect tinyMUJOCO agent platform');
+  const ok=await robotProbe();
+  rlog('connect '+(ok?'READY':'REFUSED')+' · nu=0 plants · no physical act');
+}
+async function robotRollout(){
+  const model=document.getElementById('robotModel').value;
+  const steps=document.getElementById('robotSteps').value;
+  if(!model){rlog('REFUSED: no loadable model selected');return}
+  rlog('\n> rollout model='+model.split('/').pop()+' steps='+steps);
+  try{
+    const d=await mj('/rollout?model='+encodeURIComponent(model)+'&seed=0&steps='+steps+'&ctrl_scale=0.3',20000);
+    rlog('ok '+d.ok+(d.refused?' REFUSED':'')+' trace '+(d.trace_sha256||'').slice(0,24));
+    if(d.physics)rlog('physics nq='+d.physics.nq+' nu='+d.physics.nu+' · no motion claimed');
+    if(d.reason)rlog('reason '+d.reason);
+  }catch(e){rlog('error '+e)}
 }
 load();
 </script>
