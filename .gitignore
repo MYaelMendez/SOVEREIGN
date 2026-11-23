@@ -123,5 +123,7 @@ fleet-waves-demo/
 # Built wasm dist
 **/wasm/dist/
 
-# trainable base weights — local only, never in git
+# trainable base weights + LoRA adapters — local only, never in git
 models/
+neuromitosis/lora-adapter/
+neuromitosis/plan-narrator/adapter/

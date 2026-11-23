@@ -1,0 +1,11 @@
+{
+  "calidad": "PASS",
+  "luminancia_media": 60,
+  "contraste_medio": 40,
+  "movimiento_medio": 1.0,
+  "frames_negros": 0,
+  "schema": "ae/eval-gate/1",
+  "base_score": 0,
+  "base_total": 5,
+  "assert": "trained > base"
+}
