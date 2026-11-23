@@ -92,12 +92,18 @@ def verify(card: dict, action: dict) -> dict:
     pub_hex = b['binding']['public_key']
     try:
         ph = pub_hex.strip()
-        # An Ed25519 public key is exactly 32 bytes = 64 hex chars here;
-        # anything else that is not valid hex is treated as a file path.
-        try:
-            pub = bytes.fromhex(ph) if len(ph) == 64 else Path(ph).read_bytes()
-        except ValueError:
-            pub = Path(ph).read_bytes()
+        # Inline 64-char Ed25519 hex, or a PATH to a file containing hex text.
+        p = Path(ph)
+        if len(ph) == 64 and not p.exists():
+            pub = bytes.fromhex(ph)
+        elif p.exists():
+            txt = p.read_text(encoding='ascii', errors='replace').strip()
+            try:
+                pub = bytes.fromhex(txt)          # the custody .pub is hex text
+            except ValueError:
+                pub = p.read_bytes()              # raw 32-byte key file
+        else:
+            return {**out, 'reason': f'public key not found: {ph}'}
     except Exception as e:
         return {**out, 'reason': f'public key unreadable: {e}'}
     r = cs.verify_card_for_action(card, action, public_key=pub)

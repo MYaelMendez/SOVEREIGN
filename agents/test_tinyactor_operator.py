@@ -64,3 +64,23 @@ def test_hex_public_key_is_not_treated_as_a_path(monkeypatch, tmp_path):
     r = op.verify(card, action)
     assert r['valid'] is True, r.get('reason')
     assert r['granted'] is False
+
+
+def test_pub_path_containing_hex_text_verifies(monkeypatch, tmp_path):
+    """Custody .pub stores hex text; reading it as raw bytes broke verification."""
+    cs = op.card_signing()
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives import serialization as ser
+    pub_hex = Ed25519PrivateKey.from_private_bytes(cs.load_private()).public_key().public_bytes(
+        ser.Encoding.Raw, ser.PublicFormat.Raw).hex()
+    kf = tmp_path / 'card.key.pub'
+    kf.write_text(pub_hex + '\n', encoding='ascii')
+    b = tmp_path / 'binding.json'
+    b.write_text(json.dumps({'operator': 'yæl', 'public_key': str(kf),
+        'actor': 'asimov', 'bound_by': 'yæl', 'bound_at': '2026-11-23T00:00:00Z'}))
+    monkeypatch.setattr(op, 'BINDING', b)
+    action = {'verb': 'set_velocity', 'args': {'v': 0.5}, 'scene': 'A'}
+    card = cs.sign_card_for_action(action, ttl=60)
+    r = op.verify(card, action)
+    assert r['valid'] is True, r.get('reason')
+    assert r['granted'] is False
