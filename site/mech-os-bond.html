@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>æææ:/// neuromitosis · bonded chassis</title>
+<style>
+:root{--void:#050505;--gold:#D4AF37;--cyan:#00ffd7;--green:#00ff9d;--red:#ff6b6b;--dim:rgba(255,255,255,.45);--line:rgba(212,175,55,.25)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:#eafaf7;font-family:'JetBrains Mono',ui-monospace,monospace;padding:20px;min-height:100vh}
+.wrap{max-width:1080px;margin:0 auto}
+h1{color:var(--gold);font-size:20px;letter-spacing:2px}
+.sub{color:var(--dim);font-size:10px;margin:6px 0 14px}
+.badge{display:inline-block;border:1px solid var(--line);padding:3px 8px;border-radius:3px;font-size:10px;color:var(--cyan);margin-right:6px}
+.badge.ok{color:var(--green);border-color:#00ff9d55}.badge.bad{color:var(--red);border-color:#ff6b6b55}
+.panel{border:1px solid var(--line);border-radius:5px;padding:12px;margin:12px 0;background:rgba(0,0,0,.4)}
+.panel h2{font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:9px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th{color:var(--gold);text-align:left;font-weight:400;opacity:.75;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);word-break:break-all}
+.OK{color:var(--green)}.BAD{color:var(--red)}.MEASURED{color:var(--cyan)}.CLAIM{color:var(--dim)}
+code{color:var(--gold)}
+.foot{margin-top:14px;color:var(--dim);font-size:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
+</style>
+</head>
+<body><div class="wrap">
+  <h1>æææ:/// NEUROMITOSIS · bonded chassis</h1>
+  <div class="sub">ethical chassis from mech-os · every status below is PROBED, not printed · human + robot + DAO · no self-grant</div>
+  <div>
+    <span class="badge" id="b-tiny">tinymujoco: probing…</span>
+    <span class="badge" id="b-boy">ae-boy: probing…</span>
+    <span class="badge" id="b-proxy">proxy: probing…</span>
+    <span class="badge" id="b-gh">github api: probing…</span>
+  </div>
+
+  <div class="panel">
+    <h2>ROOT_ENDPOINT · real state</h2>
+    <table><thead><tr><th>MODULE</th><th>ENDPOINT</th><th>HTTP</th><th>STATUS</th></tr></thead>
+    <tbody id="endpoints">
+      <tr><td>tinymujoco</td><td>127.0.0.1:8170/doctor</td><td>probing</td><td>probing</td></tr>
+      <tr><td>ae-boy console</td><td>127.0.0.1:8091/ae-boy.html</td><td>probing</td><td>probing</td></tr>
+      <tr><td>ae-boy proxy</td><td>127.0.0.1:8166/health</td><td>probing</td><td>probing</td></tr>
+      <tr><td>truth surface</td><td>api.github.com/contents/neuromitosis.html</td><td>probing</td><td>probing</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="panel">
+    <h2>MODEL_COMBINATOR · adopted, not imagined</h2>
+    <table><thead><tr><th>MODEL</th><th>DIMENSION</th><th>STATE</th><th>RECEIPT / BOUNDARY</th></tr></thead><tbody>
+      <tr><td>Gemma-3-4B-it Q4_K_M</td><td>#COGNITION</td><td class="MEASURED">INFERENCE LIVE</td><td><code>04a43a22…</code> · serves æ boy on port 8088</td></tr>
+      <tr><td>Gemma-3-4B-it safetensors</td><td>#TRAIN</td><td class="CLAIM">QLoRA IN PROGRESS</td><td>corpus <code>6f0a56ff…</code> · 44 hash-bound records · 0 credentials</td></tr>
+      <tr><td>Asimov-1 twin</td><td>#SPATIAL</td><td class="MEASURED">nu=0</td><td>trace film <code>24daef4d…</code> · 216 frames · NOT live control</td></tr>
+      <tr><td>tinyACTOR</td><td>#AGENTIC</td><td class="MEASURED">OPERATED</td><td>take <code>cd13569f85b0…</code> · grants:false · no physical motion</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="panel">
+    <h2>CLAIMS THE CHASSIS CARRIES BUT WE DO NOT</h2>
+    <table><thead><tr><th>PRINTED ON mech-os.html</th><th>OUR VERDICT</th></tr></thead><tbody>
+      <tr><td class="CLAIM">"ENCRYPTION: AES-4096 [ACTIVE]"</td><td class="BAD">STATIC TEXT · no crypto verified · no gate</td></tr>
+      <tr><td class="CLAIM">"ACCESS GRANTED" / "UPTIME: 99.999%"</td><td class="BAD">THEATER · no auth call, no measurement</td></tr>
+      <tr><td class="CLAIM">fetch('/api/spatial/init')</td><td class="BAD">404 on static Pages · dead wiring</td></tr>
+      <tr><td class="CLAIM">"MODEL FUSION" 675B / 671B MoE</td><td class="BAD">CATALOG TEXT · not local, not fused, not ours</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="foot">Chassis borrowed from <code>mech-os.html</code> (f3c02a8); theater removed, endpoints probed at load. Local surface <code>C:/æ/site/mech-os-bond.html</code> · served on 127.0.0.1:8091. Evidence ≠ Authority · no act granted by a surface.</div>
+</div>
+<script>
+const probes=[
+ ['tiny','http://127.0.0.1:8170/doctor',0],
+ ['boy','http://127.0.0.1:8091/ae-boy.html',1],
+ ['proxy','http://127.0.0.1:8166/health',2],
+ ['gh','https://api.github.com/repos/MYaelMendez/MYaelMendez.github.io/contents/neuromitosis.html?ref=gh-pages',3]
+];
+const rows=document.querySelectorAll('#endpoints tr');
+async function probe([id,url,row]){
+ const b=document.getElementById('b-'+id);
+ try{
+  const r=await fetch(url,{mode:'cors'});
+  const ok=r.status>=200&&r.status<300;
+  b.textContent=id+': '+r.status;b.className='badge '+(ok?'ok':'bad');
+  rows[row].children[2].textContent=r.status;
+  rows[row].children[3].innerHTML='<span class="'+(ok?'OK">MEASURED':'BAD">DOWN')+'</span>';
+ }catch(e){
+  b.textContent=id+': unreachable';b.className='badge bad';
+  rows[row].children[2].textContent='—';
+  rows[row].children[3].innerHTML='<span class="BAD">UNREACHABLE</span>';
+ }
+}
+probes.forEach(probe);
+</script>
+</body></html>
