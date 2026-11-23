@@ -215,6 +215,77 @@ def cmd_opportunity(_a) -> int:
     return 0
 
 
+def cmd_gems(_a) -> int:
+    """Mine the atlas for gems: unaddressed surfaces that rank high on SEVERAL independent
+    signals at once. No single magic score — each signal is computed and ranked, and a gem
+    is a surface near the top of more than one ranking (a consensus you can audit).
+
+    Signals, all measured from the files:
+      inbound   other surfaces that reference this one's url
+      evidence  sha256 strings and PASS/RECEIPT/gate words inside it (receipts, gates)
+      code      bytes of text it actually contains (a proxy for authored effort)
+    """
+    import re
+    est = ROOT / "github-pages" / "estate.json"
+    if not est.exists():
+        print(json.dumps({"schema": "tinyorigin.gems.v1", "error": "estate.json missing"}))
+        return 1
+    e = json.loads(est.read_text(encoding="utf-8"))
+    s = e.get("surfaces", [])
+    base = ROOT / "github-pages"
+    texts = {}
+    for x in s:
+        p = base / (x.get("url") or "").lstrip("/")
+        if p.is_file():
+            try:
+                texts[x.get("id")] = p.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                texts[x.get("id")] = ""
+    rec = re.compile(r"\b[0-9a-f]{64}\b")
+    gate = re.compile(r"(?i)\b(PASS|RECEIPT|GATE)\b")
+    un = [x for x in s if not x.get("atlas")]
+    for x in un:
+        t = texts.get(x.get("id"), "")
+        x["_in"] = 0
+        x["_sha"] = len(rec.findall(t))
+        x["_gate"] = len(gate.findall(t))
+        x["_chars"] = len(t)
+    for x in un:
+        needle = (x.get("url") or "").lstrip("/")
+        if len(needle) < 6:          # a short path is a substring of half the estate
+            continue
+        x["_in"] = sum(1 for k, t in texts.items()
+                       if k != x.get("id") and needle in t)
+    # one entry per path: several surfaces share an id across directories
+    seen, uniq = set(), []
+    for x in un:
+        u = x.get("url") or x.get("id")
+        if u in seen:
+            continue
+        seen.add(u)
+        uniq.append(x)
+    un = uniq
+    top = lambda key, n=10: [
+        {"id": x.get("id"), "url": x.get("url"), "bytes": x.get("bytes"),
+         "inbound": x["_in"], "sha": x["_sha"], "gate": x["_gate"]}
+        for x in sorted(un, key=lambda y: -y[key])[:n]]
+    ranks = {"demand": top("_in"), "evidence": top("_sha"),
+             "gate": top("_gate"), "size": top("_chars")}
+    tally = {}
+    for name, rows in ranks.items():
+        for r in rows:
+            t = tally.setdefault(r["url"], {"id": r["id"], "url": r["url"],
+                                            "bytes": r["bytes"], "signals": []})
+            t["signals"].append(name)
+    consensus = sorted(tally.values(), key=lambda t: (-len(t["signals"]), -t["bytes"]))[:12]
+    out = {"schema": "tinyorigin.gems.v1", "generated": e.get("generated"),
+           "unaddressed": len(un), "rankings": ranks, "consensus": consensus}
+    print(json.dumps(out, indent=1, ensure_ascii=False))
+    receipt("gems", {"unaddressed": len(un),
+                     "consensus": [c["id"] for c in consensus]})
+    return 0
+
+
 def cmd_receipt(a) -> int:
     if not LEDGER.exists():
         print("no ledger.")
@@ -237,6 +308,7 @@ def main(argv=None) -> int:
     v.set_defaults(fn=cmd_verify)
     sub.add_parser("drift").set_defaults(fn=cmd_drift)
     sub.add_parser("opportunity").set_defaults(fn=cmd_opportunity)
+    sub.add_parser("gems").set_defaults(fn=cmd_gems)
     rc = sub.add_parser("receipt")
     rc.add_argument("n", nargs="?", type=int, default=10)
     rc.set_defaults(fn=cmd_receipt)
