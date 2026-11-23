@@ -171,12 +171,40 @@ def execute(verb, extra=None):
 
 
 def sim(verb):
-    """Plan against the simulation transport. Never touches hardware."""
+    """Drive the TWIN, never hardware.
+
+    `executed` reports the rollout truthfully; `hardware:false` and `grants:false`
+    are invariant. This is a different fact from `exec` (real body, bound grant).
+    No actuated Asimov model exists on this host (nu=0), so the rollout is on the
+    published open-loop plant and is labelled as such.
+    """
     out = plan(verb, transport='sim')
-    out['sim'] = {'engine': 'MuJoCo', 'model': 'asimov_1_25dof_actuated.xml',
-                  'status': 'transport not yet implemented — plan only',
-                  'requires': 'no robot'}
-    out['address'] = f'{SCHEME}sim {verb}'
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            'ae_tinymujoco_instrument', 'C:/æ/tinymujoco/tinymujoco.py')
+        inst = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(inst)
+        roll = inst.rollout(
+            Path('C:/Users/yaelm/AppData/Local/hermes/cache/scratch/asimov-twin/1.0.0/model/asimov_1_25dof.xml'),
+            seed=0, steps=60)
+        executed = bool(roll.get('ok'))
+        trace = roll.get('trace_sha256', '')
+        nu = roll.get('nu', 0)
+    except Exception as exc:
+        executed, trace, nu = False, '', None
+        roll = {'reason': f'{type(exc).__name__}: {exc}'}
+    out['sim'] = {'engine': 'MuJoCo',
+                  'model': 'asimov_1_25dof.xml (published twin, open-loop)',
+                  'status': 'twin rollout' if executed else 'twin rollout unavailable',
+                  'requires': 'no robot',
+                  'trace_sha256': trace, 'nu': nu,
+                  'detail': roll.get('reason')}
+    out.update({'executed': executed, 'hardware': False, 'grants': False,
+                'granted': False, 'address': f'{SCHEME}sim {verb}',
+                'note': 'executed on the TWIN; no hardware contact, no authority granted'})
+    out['receipt'] = receipt('ASIMOV://SIM', {'verb': verb, 'executed': executed,
+                                             'hardware': False, 'trace_sha256': trace})
     return out
 
 
@@ -202,7 +230,8 @@ def dispatch(raw):
     if route == 'state':
         return execute('state')
     if route == 'plan':
-        return plan(args[0] if args else None)
+        return plan(args[0] if args else None,
+                    transport=args[1] if len(args) > 1 else 'auto')
     if route in ('exec', 'execute', 'call'):
         return execute(args[0] if args else None)
     if route == 'sim':
