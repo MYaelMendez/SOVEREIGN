@@ -1,0 +1,207 @@
+{
+  "schema": "ae/github-hygiene/1",
+  "derived_at": "2026-11-23T00:00:00+00:00",
+  "source": "GitHub REST /user, /users/MYaelMendez/repos, GraphQL pinnedItems — read only",
+  "account": {
+    "login": "MYaelMendez",
+    "name": "YAEL",
+    "public_repos": 359,
+    "followers": 50,
+    "following": 740,
+    "bio": "I THINK SYSTEMS.\r\n#internetofagents https://portal.nousresearch.com/r/yael \r\n#startabusiness https://partnersps.doola.com/hhsoqhb23250",
+    "blog": "MOBILITY.FOUNDATION",
+    "location": "SPI, TX"
+  },
+  "measured": {
+    "repos": 359,
+    "forks": 326,
+    "originals": 33,
+    "fork_ratio": 0.908,
+    "stars_total": 77,
+    "repos_with_stars": 70,
+    "no_description": 26,
+    "originals_no_description": [
+      "MYaelMendez",
+      "ae-cockpit",
+      "llm.store",
+      "kling-skills",
+      "MYaelMendez.github.io",
+      "privatecli",
+      "-L",
+      "teologia"
+    ],
+    "no_license": 51,
+    "originals_no_license": [
+      "MYaelMendez",
+      "ae-studio",
+      "schoolofhermes",
+      "aeaedotcom",
+      "local_agent",
+      "kling-skills",
+      "Neurowatch-Agentic-School",
+      "startabusiness",
+      "MYaelMendez.github.io",
+      "privatecli",
+      "SOVEREIGN",
+      "SOV-REIGN",
+      "teologia",
+      "commanprompt"
+    ],
+    "no_topics": 359,
+    "no_homepage": 186,
+    "empty_repos": [
+      "FEDIVERSE-ATPROTO--macos-command-line"
+    ],
+    "stale_365": 223,
+    "stale_730": 46,
+    "default_branches": {
+      "main": 253,
+      "master": 94,
+      "trunk": 2,
+      "gh-pages": 2,
+      "develop": 4,
+      "next": 1,
+      "devel": 1,
+      "hotfix": 1,
+      "rpi-6.12.y": 1
+    },
+    "languages": {
+      "none": 315,
+      "Python": 21,
+      "HTML": 5,
+      "JavaScript": 5,
+      "CSS": 1,
+      "C++": 1,
+      "TypeScript": 4,
+      "Ruby": 1,
+      "Rust": 2,
+      "Java": 1,
+      "C": 1,
+      "Jupyter Notebook": 1,
+      "HCL": 1
+    },
+    "pinned_count": 1,
+    "pinned": [
+      {
+        "name": "hermes",
+        "description": "The agent that grows with you",
+        "stargazerCount": 1,
+        "isFork": true,
+        "primaryLanguage": {
+          "name": "Python"
+        }
+      }
+    ],
+    "pinned_forks": [
+      "hermes"
+    ],
+    "repo_profile_has_readme": null
+  },
+  "signature": {
+    "thesis": "One sovereign laptop, many agents, receipts for everything.",
+    "bio_candidate": "I think systems. One sovereign laptop (teknium · RTX 3050), many agents, receipts for everything. #opensourceware #internetofagents — myaelmendez.github.io",
+    "pin_six": [
+      {
+        "repo": "MYaelMendez.github.io",
+        "axis": "truth surface",
+        "why": "the verified estate — derived inventories, receipts, films"
+      },
+      {
+        "repo": "vaeult",
+        "axis": "custody",
+        "why": "where the secret lives — scrypt → AES-256-GCM, never in a surface"
+      },
+      {
+        "repo": "gpu-mcp",
+        "axis": "compute",
+        "why": "sovereign RTX over MCP — the CUDA_MCP² leaf"
+      },
+      {
+        "repo": "tinycuda",
+        "axis": "one-file GPU",
+        "why": "a deterministic rasteriser in one file — capability compressed"
+      },
+      {
+        "repo": "vidaeo",
+        "axis": "video",
+        "why": "AEE cycle: SPEC → TEST → receipt — the film as instrument"
+      },
+      {
+        "repo": "hermes-ae",
+        "axis": "robot receipts",
+        "why": "one receipted tool for robot studio, physics and motion"
+      }
+    ],
+    "topics": [
+      "opensourceware",
+      "internetofagents",
+      "sovereign-compute",
+      "agentic-video",
+      "tiny-family",
+      "receipts",
+      "cuda",
+      "robotics",
+      "fork-archive",
+      "hypothesis"
+    ],
+    "profile_readme_outline": [
+      "00 · THESIS — one human, many agents, the conductor in between",
+      "01 · SIX AXES — truth / custody / compute / one-file GPU / video / robots",
+      "02 · RECEIPTS — hash chains, gates, refusals; what is measured vs claimed",
+      "03 · THE TINY FAMILY — capability compressed onto one laptop",
+      "04 · FORKS ARE AN ARCHIVE — each fork a hypothesis, never surplus to prune",
+      "05 · CONTACT — X @yaelmendez · yael@llm.store · myaelmendez.github.io"
+    ]
+  },
+  "hygiene_queue": [
+    {
+      "action": "add topics",
+      "scope": "all 359 repos",
+      "authorization": "required",
+      "reason": "0 topics means no machine-readable taxonomy for the signature"
+    },
+    {
+      "action": "add descriptions",
+      "scope": "originals only",
+      "authorization": "required",
+      "reason": "unlabelled originals are invisible in search and profile"
+    },
+    {
+      "action": "add license",
+      "scope": "originals without license",
+      "authorization": "required",
+      "reason": "#opensourceware needs an explicit license on every original"
+    },
+    {
+      "action": "write profile README",
+      "scope": "MYaelMendez/MYaelMendez",
+      "authorization": "required",
+      "reason": "repo has only cloud/, no README.md"
+    },
+    {
+      "action": "replace pinned fork",
+      "scope": "profile pinnedItems",
+      "authorization": "required",
+      "reason": "the only pin is a fork; six originals define the signature"
+    },
+    {
+      "action": "archive stale",
+      "scope": "stale >730d",
+      "authorization": "required",
+      "reason": "archive is reversible; deletion is NOT proposed"
+    },
+    {
+      "action": "delete empty repo",
+      "scope": "FEDIVERSE-ATPROTO--macos-command-line",
+      "authorization": "required",
+      "reason": "0 bytes; propose, never execute without explicit approval"
+    }
+  ],
+  "not_proposed": [
+    "bulk fork deletion",
+    "force-push",
+    "history rewrite",
+    "permission changes",
+    "profile bio/blog edits — those change public identity; operator decides"
+  ]
+}
