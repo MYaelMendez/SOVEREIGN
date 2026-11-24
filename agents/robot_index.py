@@ -3,23 +3,25 @@
 
 The rule this encodes: whatever we build for ONE robot, we provide for ALL.
 So the index is not a list of robots; it is the STANDARD INTERFACE every robot
-is expected to implement, with a measured verdict per robot.
+is expected to implement, with a MEASURED verdict per robot.
 
     robot://<robot>/<verb>     the address
     status                     present? transports? live? ledger tail?
     verbs                      the verb table, hashed (the policy IS the verbs)
-    plan <command>             a plan, never an act (address ≠ permission)
+    plan <command>             a plan, never an act (address != permission)
     sim <command>              the simulation trace, receipted
     exec <command>             hardware — requires approval, stays dry-run
     receipt                    the ledger, hash-chained
     ledger                     the ledger tail, verifiable
 
-Generated from robot://doctor + the assets on disk. Never hand-edited.
+`provides_measured` is DERIVED from each dialect's own verb classes — never
+hand-typed — and the human-readable `provides` must agree with it. Evidence
+(module bytes, verb table, ledger tail) is read from disk; a missing file is
+null, never a guess. Generated from `rp.doctor()` + `rp.fleet_anchor()`.
 """
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import pathlib
 import sys
@@ -47,8 +49,8 @@ CATEGORIES = {
 # Bodies that exist as meshes but have no dialect and no policy.
 MESH_ONLY = ["kira", "Xbot", "Soldier"]
 
-# Which dialect verb satisfies each standard verb. Declared, not inferred:
-# the dialects name things differently, and a guessed mapping is a false claim.
+# Human-readable display text, kept for the surface. It is NOT the measurement:
+# `provides_measured` is derived below, and the two must agree or the build fails.
 PROVIDES = {
     "asimov": {
         "status": "status / state / get_state",
@@ -102,56 +104,132 @@ PROVIDES = {
     },
 }
 
+# Which verb classes satisfy each standard verb. DERIVED, never typed per robot:
+# a standard verb is provided iff the dialect's own table has a verb of a class
+# that can satisfy it. Render verbs can be planned without hardware; motion
+# verbs are what plan/exec/sim need. `verbs` is satisfied by the table existing.
+CLASS_SATISFIES = {
+    "status": ("read", "render"),
+    "verbs": (),            # any verb at all — the table itself is the proof
+    "plan": ("motion", "render"),
+    "sim": ("motion",),
+    "exec": ("motion",),
+    "receipt": ("read", "render"),
+    "ledger": ("read", "render"),
+}
 
-def _verb_table(mod) -> list[str]:
+
+def provides_measured(classes: dict) -> dict:
+    """Derive the standard-interface verdict from the dialect's own classes."""
+    out = {}
+    for v in STANDARD_INTERFACE:
+        out[v] = bool(classes) if v == "verbs" \
+            else bool(set(classes) & set(CLASS_SATISFIES[v]))
+    return out
+
+
+def assert_provides_agree(name: str, provides: dict, measured: dict) -> None:
+    """A declared `provides` that disagrees with the measurement fails loudly."""
+    bad = [v for v in STANDARD_INTERFACE
+           if bool(provides.get(v)) != bool(measured.get(v))]
+    if bad:
+        detail = "; ".join(f"{v} declared={provides.get(v)!r} measured={measured.get(v)}"
+                           for v in bad)
+        raise AssertionError(f"{name}: provides disagrees with provides_measured ({detail})")
+
+
+# Dialects on disk, keyed by DIALECT (the module stem), NOT by robot: one dialect
+# may serve several bodies — meshbot serves Soldier, Xbot and kira, sharing one
+# ledger. A registered dialect missing from either map is a named gap, not a
+# silent null.
+DIALECT_MODULE = {
+    "asimov": "asimov_protocol.py",
+    "reachy": "reachy_protocol.py",
+    "microduck": "microduck_protocol.py",
+    "meshbot": "meshbot_protocol.py",
+}
+LEDGER_FILE = {
+    "asimov": "asimov-protocol.jsonl",
+    "reachy": "reachy-protocol.jsonl",
+    "microduck": "microduck-protocol.jsonl",
+    "meshbot": "meshbot-protocol.jsonl",
+}
+
+
+def _dialect_of(name: str) -> str:
+    module = (rp.ROBOTS.get(name) or {}).get("module") or ""
+    return module[:-len("_protocol")] if module.endswith("_protocol") else name
+
+
+def _require_dialect_registry(dialects) -> None:
+    """Every registered dialect must declare its module and ledger file."""
+    missing = sorted(d for d in dialects
+                     if d not in DIALECT_MODULE or d not in LEDGER_FILE)
+    if missing:
+        raise AssertionError(
+            f"DIALECT_MODULE/LEDGER_FILE incomplete for registered dialect(s): {missing}")
+
+
+def _ledger_in_estate(name: str) -> bool:
+    """Can a reader of the published site check this ledger tail?
+
+    Measured in the generator: if the ledger lives outside github-pages its hash
+    cannot be re-derived from anything on the surface, and the page must say so.
+    """
     try:
-        return sorted(rp._verb_table(mod))
+        p = rp.resolve_ledger({}, name)
     except Exception:
-        return []
+        return False
+    return bool(p.is_file()) and 'github-pages' in str(p).replace('\\', '/')
 
 
-# Digits on disk for each dialect. The PROVIDES mapping stays declared (the
-# dialects expose no machine-readable "I implement X" flag), but the claim
-# now carries MEASURABLE evidence: the module exists and how big it is.
-DIALECT_MODULE = {"asimov":"asimov_protocol.py","reachy":"reachy_protocol.py",
-                  "microduck":"microduck_protocol.py"}
-LEDGER_FILE = {"asimov":"asimov-protocol.jsonl","reachy":"reachy-protocol.jsonl",
-               "microduck":"microduck-protocol.jsonl"}
-
-def dialect_evidence(name:str) -> dict:
-    mod=HERE/DIALECT_MODULE[name] if name in DIALECT_MODULE else None
-    ledger=ROOT/"logs"/LEDGER_FILE[name] if name in LEDGER_FILE else None
-    src=mod.read_text(encoding="utf-8",errors="replace") if mod and mod.is_file() else ""
-    return {"module":str(mod.relative_to(ROOT)).replace("\\","/") if mod and mod.is_file() else None,
-            "module_bytes":mod.stat().st_size if mod and mod.is_file() else 0,
-            "verb_table_present":("VERBS" in src and "def verbs" in src),
-            "ledger_file":str(ledger.relative_to(ROOT)).replace("\\","/") if ledger and ledger.is_file() else None,
-            "ledger_bytes":ledger.stat().st_size if ledger and ledger.is_file() else 0}
+def dialect_evidence(name: str, table: dict | None = None) -> dict:
+    """Evidence measured from disk, plus the dialect's own policy hash."""
+    meta = rp.ROBOTS.get(name) or {}
+    ev = rp.dialect_evidence(name, meta)
+    if table is None:
+        try:
+            mod = rp._load(meta.get("module"))
+            table = rp._table_from_verbs(rp._dialect_verbs(mod, meta, name))
+        except Exception:
+            table = {}
+    ev["policy_sha256"] = rp._policy_sha(table) if table else None
+    return ev
 
 
 def build() -> dict:
-    doc = rp.dispatch("robot://doctor")
+    # rp.doctor(), not rp.dispatch("robot://doctor"): a generator must not append
+    # to the very chain it measures. doctor() probes; it does not record.
+    doc = rp.doctor()
+    anchor = rp.fleet_anchor()
     robots = doc.get("robots", {})
+
+    dialects = {_dialect_of(n) for n in robots} | {_dialect_of(b) for b in MESH_ONLY}
+    _require_dialect_registry(sorted(dialects))
+
     out_robots = {}
     for name, meta in robots.items():
+        reg = rp.ROBOTS.get(name, {})
         try:
-            mod = rp._load(meta["module"])
-            verbs = _verb_table(mod)
+            mod = rp._load(reg.get("module") or meta.get("module"))
+            table = rp._table_from_verbs(rp._dialect_verbs(mod, reg, name))
         except Exception:
-            mod, verbs = None, []
-        classes = meta.get("classes") or {}
-        covered = [v for v in STANDARD_INTERFACE
-                   if v == "status" or (v in verbs or v in classes
-                                        or (v == "receipt" and bool(meta.get("ledger")))
-                                        or (v == "ledger" and bool(meta.get("ledger"))))]
-        provides = PROVIDES.get(name, {})
+            mod, table = None, {}
+        classes = {c: sum(1 for v in table.values() if v == c)
+                   for c in sorted(set(table.values()))}
+        provides = {v: PROVIDES.get(name, {}).get(v) for v in STANDARD_INTERFACE}
+        measured = provides_measured(classes)
+        assert_provides_agree(name, provides, measured)
+
         rule = None
-        mod = None
-        try:
-            mod = rp._load((rp.ROBOTS.get(name) or meta).get("module"))
-            rule = (mod.status() or {}).get("rule")
-        except Exception:
-            pass
+        if mod is not None:
+            try:
+                fn = getattr(mod, "status_for", None)
+                st = fn(reg.get("body") or name) if fn else mod.status()
+                rule = (st or {}).get("rule")
+            except Exception:
+                pass
+
         out_robots[name] = {
             "scheme": meta.get("scheme"),
             "sdk": meta.get("sdk"),
@@ -162,11 +240,14 @@ def build() -> dict:
             "transports": meta.get("transports"),
             "ledger_receipts": (meta.get("ledger") or {}).get("receipts"),
             "policy_sha256": meta.get("policy_sha256"),
-            "provides": {v: provides.get(v) for v in STANDARD_INTERFACE},
+            "provides": provides,
+            "provides_measured": measured,
             "rule": rule,
-            "evidence": dialect_evidence(name),
-            "evidence_kind": "module+verb-table+ledger measured; PROVIDES verb mapping declared",
-            "coverage": round(100 * sum(1 for v in STANDARD_INTERFACE if provides.get(v))
+            "evidence": {**dialect_evidence(name, table),
+                         "ledger_in_estate": _ledger_in_estate(name)},
+            "evidence_kind": "measured — verb classes, module bytes and ledger tail "
+                             "read from disk; provides_measured derived from those classes",
+            "coverage": round(100 * sum(1 for v in STANDARD_INTERFACE if measured[v])
                               / len(STANDARD_INTERFACE)),
         }
 
@@ -179,12 +260,17 @@ def build() -> dict:
                 "verbs": 0, "verb_classes": {}, "transports": [],
                 "ledger_receipts": 0, "policy_sha256": None,
                 "provides": {v: None for v in STANDARD_INTERFACE},
+                "provides_measured": {v: False for v in STANDARD_INTERFACE},
                 "coverage": 0, "reason": "mesh only — no dialect, no policy",
+                "evidence": {"module": None, "module_bytes": 0,
+                             "verb_table_present": False, "ledger_file": None,
+                             "ledger_bytes": 0, "ledger_tail": None,
+                             "policy_sha256": None},
             }
 
     roster = sorted(out_robots)
     return {
-        "schema": "robot-index/1",
+        "schema": "robot-index/2",
         "authority": rp.AUTHORITY,
         "generated": rp.datetime.now(rp.timezone.utc).isoformat(timespec="seconds"),
         "standard_interface": STANDARD_INTERFACE,
@@ -194,10 +280,11 @@ def build() -> dict:
         "robots": out_robots,
         "unregistered_dialects": doc.get("unregistered_dialects"),
         "meshes": meshes,
-        "coverage_kind": "declared — PROVIDES maps each standard verb to a dialect "
-                        "verb by hand; the dialects expose no machine-readable "
-                        "'I implement X' flag, so this is a claim to verify, not a "
-                        "measurement",
+        "ledger": anchor,
+        "coverage_kind": "measured — provides_measured is derived from each dialect's "
+                         "own verb classes (read/render satisfy status/verbs/receipt/ledger; "
+                         "motion satisfies plan/exec/sim); module bytes and ledger tails "
+                         "are read from disk, and the human `provides` must agree",
         "rule": "whatever is built for one robot is provided for all; a missing "
                 "verb is a named refusal, never a crash",
     }
@@ -226,7 +313,8 @@ def main() -> int:
     out.write_text(json.dumps(doc, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"wrote {out}  ({doc['count']} robots)")
     for name, r in sorted(doc["robots"].items()):
-        mark = " ".join("✓" if r["provides"].get(v) else "·" for v in STANDARD_INTERFACE)
+        mark = " ".join("✓" if r["provides_measured"].get(v) else "·"
+                        for v in STANDARD_INTERFACE)
         print(f"  {name:12s} {r['coverage']:3d}%  {mark}  {r['verbs'] or 0:3d} verbs")
     return 0
 
