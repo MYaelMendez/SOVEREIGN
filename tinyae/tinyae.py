@@ -75,6 +75,7 @@ FAMILY = [
     ("tinyFANIN",    "conductor","N receipts -> ONE truth: el bucle que sostiene todo"),
     ("tinyaudio",    "audio",    "el canal: la perdida se mide, no se asume"),
     ("tinyEMOJI",    "registry", "el registro emoji: QR verificados por dos decoders"),
+    ("tinySURFACE",  "surface",  "badge + canonical + recibo: las 75 superficies"),
 ]
 
 DOMAINS = {
@@ -84,7 +85,7 @@ DOMAINS = {
     "memory": "#c8b6ff", "lab": "#7CFC00", "plugin": "#8d99ae",
     "film": "#ffd700", "voice": "#ff8fab", "protocol": "#D4AF37",
     "geometry": "#7bdff2", "document": "#f1c40f", "conductor": "#D4AF37",
-    "audio": "#ff7b54", "registry": "#c084fc",
+    "audio": "#ff7b54", "registry": "#c084fc", "surface": "#7CFC00",
 }
 
 
