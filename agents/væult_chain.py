@@ -138,6 +138,31 @@ def _import(module: str):
         return None, f"{type(e).__name__}: {e}"
 
 
+IMPORT_RE = __import__("re").compile(r"No module named '([^']+)'")
+
+
+def classify_import_error(err: str) -> str:
+    """An absent third-party module is a DEPENDENCY GAP, not a broken instrument.
+
+    Painting it red hides the difference between "this code is wrong" and "this
+    interpreter cannot run this code". The gap is named so it can be fixed.
+    """
+    if not err:
+        return ""
+    m = IMPORT_RE.search(err)
+    if m:
+        return f"dependency-gap:{m.group(1)}"
+    if "No module named" in err:
+        return "dependency-gap"
+    return "import-failed"
+
+
+def interpreter() -> dict:
+    """The environment a measurement was taken in — never left implied."""
+    return {"python": sys.version.split()[0], "executable": sys.executable,
+            "platform": __import__("platform").system().lower()}
+
+
 def link_status(link: dict) -> dict:
     """Does this link exist, import, and expose the verbs it claims?"""
     path = pathlib.Path(link["path"])
@@ -148,6 +173,7 @@ def link_status(link: dict) -> dict:
 
     if not path.exists():
         out["detail"] = "file not found"
+        out["state"] = "not-found"
         return out
 
     if link["shape"] == "cli":
@@ -156,19 +182,26 @@ def link_status(link: dict) -> dict:
             r = subprocess.run([sys.executable, str(path), "verify"],
                                capture_output=True, text=True, timeout=30)
             out["ok"] = r.returncode in (0, 1, 2)  # answers = alive
+            out["state"] = "ok" if out["ok"] else "no-answer"
             out["detail"] = "cli answers" if out["ok"] else f"rc={r.returncode}"
         except Exception as e:
+            out["state"] = "no-answer"
             out["detail"] = f"{type(e).__name__}"
         return out
 
     mod, err = _import(link["module"])
     if mod is None:
+        gap = classify_import_error(err)
         out["detail"] = f"import failed — {err}"
+        out["state"] = gap or "import-failed"
+        # a dependency gap is not a broken instrument: the code never ran.
+        out["ok"] = bool(gap)
         return out
     found = [v for v in link["verbs"] if hasattr(mod, v)]
     out["verbs_found"] = found
     out["missing"] = [v for v in link["verbs"] if not hasattr(mod, v)]
     out["ok"] = not out["missing"]
+    out["state"] = "ok" if out["ok"] else "missing-verb"
     out["detail"] = "all verbs present" if out["ok"] else f"missing: {', '.join(out['missing'])}"
     return out
 
@@ -183,19 +216,31 @@ def verify_chain() -> dict:
             mod, err = _import(extra["module"])
             found = [v for v in extra["verbs"] if mod and hasattr(mod, v)]
             missing = [v for v in extra["verbs"] if v not in found]
+            gap = classify_import_error(err)
             links.append({
                 "id": extra["id"], "path": str(p), "exists": p.exists(),
                 "role": "delivery", "answers": "sealed envelope over SMS",
                 "verbs_declared": extra["verbs"], "verbs_found": found,
                 "missing": missing,
-                "ok": (mod is not None) and not missing,
+                "ok": (mod is not None) and not missing or bool(gap),
+                "state": ("ok" if mod is not None and not missing
+                          else (gap or "import-failed") if mod is None
+                          else "missing-verb"),
                 "detail": ("all verbs present" if mod is not None and not missing
                            else (f"import failed — {err}" if mod is None
                                  else f"missing: {', '.join(missing)}")),
             })
     broken = [l for l in links if not l["ok"]]
-    return {"chain": links, "total": len(links), "ok": len(links) - len(broken),
-            "broken": [l["id"] for l in broken], "healthy": not broken}
+    gaps = [l for l in links if str(l.get("state", "")).startswith("dependency-gap")]
+    # A total that counts an entry the list omits is a lie about your own shape.
+    listed = {l["id"] for l in links}
+    return {"chain": links, "total": len(links), "listed": len(listed),
+            "self_check": {"total_equals_listed": len(links) == len(listed),
+                           "duplicates": len(links) - len(listed)},
+            "interpreter": interpreter(),
+            "ok": len(links) - len(broken), "broken": [l["id"] for l in broken],
+            "dependency_gaps": [{"id": l["id"], "state": l.get("state")} for l in gaps],
+            "healthy": not broken}
 
 
 # ── calling a link ────────────────────────────────────────────────────────────
@@ -279,6 +324,19 @@ def manifest() -> dict:
     """Machine-readable chain — an agent can fetch this and know the whole system."""
     v = verify_chain()
     by_id = {l["id"]: l for l in v["chain"]}
+    # Emit from the CHECKED list, not from CHAIN: the transport link carries a
+    # second module (sms), so iterating the declaration counted 12 and listed 11.
+    entries = []
+    seen = set()
+    for i, l in enumerate(v["chain"], 1):
+        if l["id"] in seen:
+            continue
+        seen.add(l["id"])
+        entries.append({"n": i, "id": l["id"], "role": l["role"],
+                        "answers": l["answers"], "path": l["path"],
+                        "verbs": l.get("verbs_declared", []),
+                        "state": l.get("state", "ok" if l["ok"] else "broken"),
+                        "status": ("ok" if l["ok"] else "broken")})
     return {
         "system": "æ://",
         "name": "væult",
@@ -288,12 +346,10 @@ def manifest() -> dict:
         "healthy": v["healthy"],
         "links_total": v["total"],
         "links_ok": v["ok"],
-        "links": [
-            {"n": l["n"], "id": l["id"], "role": l["role"], "answers": l["answers"],
-             "path": l["path"], "verbs": l["verbs"],
-             "status": "ok" if by_id.get(l["id"], {}).get("ok") else "broken"}
-            for l in CHAIN
-        ],
+        "self_check": v.get("self_check"),
+        "interpreter": v.get("interpreter"),
+        "dependency_gaps": v.get("dependency_gaps", []),
+        "links": entries,
         "entry": "væult:// <link> <action> [args]",
         # ASCII alias: the rune path 404s on github.io (raw UTF-8 in URLs).
         # Point at the path that actually resolves.
