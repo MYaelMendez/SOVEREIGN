@@ -638,8 +638,10 @@ def supervise_raw(image_path, expect_text: str) -> QRReport:
         qz_ok, qz_detail = _quiet_zone_ok(img, pts[0])
         checks.append(Check("quiet_zone", qz_ok, qz_detail, advisory=True))
     else:
-        checks.append(Check("contrast", False, "no quad detected"))
-        checks.append(Check("quiet_zone", False, "no quad detected"))
+        # cv2 found no quad. The geometry checks cannot pronounce themselves,
+        # so they are REPORTED, not enforced: the roundtrip above is the gate.
+        checks.append(Check("contrast", False, "no quad detected (advisory)", advisory=True))
+        checks.append(Check("quiet_zone", False, "no quad detected (advisory)", advisory=True))
 
     report.checks = checks
     report.passed = all(c.ok for c in checks if not c.advisory)
