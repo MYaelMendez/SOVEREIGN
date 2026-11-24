@@ -68,8 +68,8 @@ def build():
     r.enable_depth_rendering()
     cam = mujoco.MjvCamera()
     cam.type = mujoco.mjtCamera.mjCAMERA_FREE
-    cam.azimuth, cam.elevation, cam.distance = 180.0, -5.0, 2.6
-    cam.lookat = np.array([0.0, 0.0, 0.50])
+    cam.azimuth, cam.elevation, cam.distance = 90.0, -5.0, 2.6
+    cam.lookat = np.array([0.54, 0.0, 0.50])
     return mujoco, m, d, r, cam
 
 
@@ -81,10 +81,14 @@ def frame(idx, ctx):
     action, band = stage_for(cls)
     verdict = nre.evaluate(action, band)
     tf = ((idx // PER_VERB) * 13 + (idx % PER_VERB) * 3) % len(TRACE['qpos'])
+    # The trace carries a 7-DoF free root (x,y,z + quaternion) followed by joints.
+    # Apply ALL of it: replaying only the joints froze the root and made feet float.
+    root = TRACE['qpos'][tf][:7]
+    d.qpos[0:7] = np.asarray(root, dtype=np.float64)
     for j, name in enumerate(TRACE['joint_names']):
         jid = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, name)
         if jid >= 0:
-            d.qpos[int(m.jnt_qposadr[jid])] = TRACE['qpos'][tf][j]
+            d.qpos[int(m.jnt_qposadr[jid])] = TRACE['qpos'][tf][7 + j]
     for g in range(m.ngeom):
         nm = mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_GEOM, g) or ''
         if nm.startswith('neon_'):
@@ -94,6 +98,7 @@ def frame(idx, ctx):
                 col = nh.BANDS[b][1].lstrip('#')
                 rgb = tuple(int(col[k:k+2], 16)/255 for k in (0, 2, 4))
                 m.geom_rgba[g] = (*rgb, 1.0 if nh.BANDS[b][0] == band else 0.25)
+    # FIXED camera: the root travels 0 -> 1.08 m; following it would hide the motion.
     mujoco.mj_forward(m, d)
     r.disable_segmentation_rendering()
     r.update_scene(d, camera=cam)
@@ -111,11 +116,11 @@ def frame(idx, ctx):
     if raw.ndim == 2:
         raw = np.repeat(raw[..., None], 3, axis=2)
     ids = seg[:,:,0]
-    void = np.zeros_like(raw) + np.array([0.02,0.02,0.03], dtype=np.float32)
+    void = np.zeros_like(raw) + np.array([0.10,0.09,0.11], dtype=np.float32)
     tube_ids = set(g for g in range(m.ngeom)
                    if (mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_GEOM, g) or '').startswith('neon_'))
     raw = np.where(np.isin(ids, list(tube_ids))[...,None],
-                   np.clip(raw * 0.9, 0, 1), void)
+                   np.clip(raw * 1.6 + 0.18, 0, 1), void)
     raw[np.isin(ids, list(robot_ids))] = np.array([0.95, 0.72, 0.22], dtype=np.float32)
     rgb = Image.fromarray((np.clip(raw,0,1)*255).astype(np.uint8)).convert('RGB')
     bright = rgb.point(lambda v: v if v > 120 else 0)
