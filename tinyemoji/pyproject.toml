@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tinyEMOJI"
+version = "0.1.0"
+description = "El instrumento soberano del registro emoji: verifica que cada simbolo tiene su QR y que el QR decodifica a su anchor, cruzando dos decoders."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = ["qrcode", "pillow", "pyzbar", "opencv-python"]
+authors = [{ name = "Yæl Méndez", email = "yael@llm.store" }]
+
+[tool.setuptools]
+py-modules = ["tinyemoji"]
