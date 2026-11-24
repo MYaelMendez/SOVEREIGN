@@ -54,6 +54,11 @@ select,input{background:#0a0a0a;border:1px solid var(--line);color:var(--cyan);p
   </div>
 
   <div class="panel">
+    <h2>GPU · tinyGPU live measurement</h2>
+    <div id="gpuState" style="font-size:10px;line-height:1.7;color:var(--dim)">not measured — no number claimed</div>
+  </div>
+
+  <div class="panel">
     <h2>LIVE CONDUCTOR · Gemma-3-4B + v3 LoRA → verb gate</h2>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
       <input id="planPrompt" value="Return only one line: action: move_camera" style="flex:1;min-width:260px">
@@ -107,6 +112,12 @@ async function load(){
   $('#modules').innerHTML=d.modules.map(m=>'<div class="card"><div class="k">'+m.id+' · '+m.label+'</div><div class="v '+color(m.state)+'">'+m.state+'</div><div class="d">'+m.detail+'<br>'+m.endpoint+'</div></div>').join('');
   $('#endpoints').innerHTML=d.endpoints.map(e=>'<tr><td>'+e.name+'</td><td><code>'+e.url+'</code></td><td>'+(e.http||'—')+'</td><td class="'+color(String(e.http||'UNREACHABLE'))+'">'+(e.http?'MEASURED':'UNREACHABLE')+'</td></tr>').join('');
   $('#rejected').innerHTML=d.rejected_claims.map(c=>'<tr><td>'+c.split(' — ')[0]+'</td><td class="unknown">'+c.split(' — ')[1]+'</td></tr>').join('');
+  const gp=d.tinygpu||{};
+  $('#gpuState').innerHTML='tinyGPU <span class="'+color(gp.state||'UNKNOWN')+'">'+(gp.state||'UNKNOWN')+'</span> · '+
+    (gp.device||'no device')+' · VRAM '+(gp.vram_gb||'—')+' GB<br>'+
+    'matmul ms min/median/max: '+(gp.matmul_ms_min||'—')+' / '+(gp.matmul_ms_median||'—')+' / '+(gp.matmul_ms_max||'—')+
+    ' · GFLOPS '+(gp.gflops_min||'—')+' / '+(gp.gflops_median||'—')+' / '+(gp.gflops_max||'—')+
+    ' ('+(gp.samples||0)+' runs)<br><span style="color:var(--dim)">'+gp.note+' · source '+(gp.source_sha256||'—').slice(0,12)+'</span>';
   const q=d.qr_layer||{}, tq=q.tinyqr||{}, aq=q.aeqr||{};
   $('#qrState').innerHTML='tinyQR <span class="'+color(tq.state||'UNKNOWN')+'">'+(tq.state||'UNKNOWN')+'</span> · ledger '+(tq.ledger_ok?'VALID '+(tq.ledger_records||0)+' records':'not verified')+'<br>'+
     'æQR envelope <span class="'+color(aq.state||'UNKNOWN')+'">'+(aq.state||'UNKNOWN')+'</span> · invariant '+(aq.invariant?'OK':'FAIL')+' · roundtrip '+(aq.roundtrip?'OK':'FAIL')+' · decoded type '+(aq.decoded_type||'—')+'<br>'+

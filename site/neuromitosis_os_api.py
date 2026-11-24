@@ -6,7 +6,7 @@ never PASS. Served on 127.0.0.1:8092 for the OS surface on 8091.
 """
 from __future__ import annotations
 
-import hashlib, importlib.util, json, os, sys, urllib.request
+import hashlib, importlib.util, json, os, subprocess, sys, time, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -64,8 +64,42 @@ def qr_layer() -> dict:
     return out
 
 
+def tinygpu_layer() -> dict:
+    """Run tinyGPU's own doctor from its own directory — never quote its README."""
+    tool = ROOT / 'tinygpu/tinygpu.py'
+    try:
+        env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
+        r = subprocess.run([sys.executable, str(tool), 'doctor'], cwd=str(tool.parent),
+                           env=env, capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            return {'state': 'UNKNOWN', 'reason': (r.stderr or '')[ :150]}
+        first = json.loads(r.stdout)
+        c = first.get('checks', {})
+        cuda = c.get('cuda', {})
+        samples = []
+        for _ in range(5):
+            rr = subprocess.run([sys.executable, str(tool), 'doctor'], cwd=str(tool.parent),
+                                env=env, capture_output=True, text=True, timeout=60)
+            if rr.returncode == 0:
+                mm = json.loads(rr.stdout).get('checks', {}).get('matmul', {})
+                samples.append({'ms': mm.get('ms'), 'gflops': mm.get('gflops')})
+        ms = sorted(s['ms'] for s in samples if isinstance(s['ms'], (int, float)))
+        gf = sorted(s['gflops'] for s in samples if isinstance(s['gflops'], (int, float)))
+        if not ms:
+            return {'state': 'UNKNOWN', 'reason': 'no matmul samples'}
+        return {'state': 'VERIFIED' if first.get('ok') else 'UNVERIFIED',
+                'device': cuda.get('device'), 'vram_gb': cuda.get('vram_gb'),
+                'samples': len(ms), 'matmul_ms_min': ms[0],
+                'matmul_ms_median': ms[len(ms)//2], 'matmul_ms_max': ms[-1],
+                'gflops_min': gf[0], 'gflops_median': gf[len(gf)//2], 'gflops_max': gf[-1],
+                'source': 'tinygpu/tinygpu.py doctor x5', 'source_sha256': sha(tool),
+                'note': 'DISTRIBUTION: self-report varies run to run; no single value claimed'}
+    except Exception as e:
+        return {'state': 'UNKNOWN', 'reason': str(e)[:150]}
+
+
 def status() -> dict:
-    corpus = NM / 'corpus.jsonl'
+    corpus = NM / 'corpus.jsonl' 
     manifest = jload(NM / 'corpus.manifest.json') or {}
     receipt = jload(NM / 'receipt.json') if (NM / 'receipt.json').exists() else jload(NM / 'neuromitosis.receipt.json')
     adapter = NM / 'lora-adapter'
@@ -122,6 +156,7 @@ def status() -> dict:
             '675B/671B model fusion — catalog text, not local, not fused',
         ],
         'qr_layer': qr_layer(),
+        'tinygpu': tinygpu_layer(),
         'boundary': 'Evidence != Authority · no act granted by a surface · no physical motion (nu=0)',
     }
 

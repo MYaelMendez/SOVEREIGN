@@ -1,0 +1,27 @@
+{
+  "schema": "ae/neuromitosis-train/1",
+  "base": "unsloth/gemma-3-4b-it",
+  "base_dir": "C:\\æ\\models\\gemma-3-4b-it-train",
+  "corpus_sha256": "6f0a56ff551f3b63db4eab2eb4d5724d79648213238dcbb86d19db08db735088",
+  "records": 44,
+  "epochs": 2,
+  "max_length": 384,
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "quant": "nf4-4bit-double",
+  "trainable_parameters": null,
+  "train_loss": 4.928900100968101,
+  "train_runtime_s": 2678.39,
+  "adapter_dir": "C:\\æ\\neuromitosis\\lora-adapter",
+  "adapter_files": {
+    "adapter_config.json": "178010efd396a6de9e6af4a9c52af89444f2bc587bd111181bcdc04d5a8a048c",
+    "adapter_model.safetensors": "94ab9ab97e2feff435a7496dbc307f3ed248a4c44ff4909170f7db6121eeaf7b",
+    "tokenizer.json": "b9a16545ec4b2ad35d228a0a3d5a31ffc042b9b8e3f4751ad7063ba945a247b4",
+    "tokenizer_config.json": "18c7ca10f7c60370785ac691979a92c2d71fed061f9031f83fc3290436c728d7"
+  },
+  "device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "torch": "2.6.0+cu124",
+  "claim": "a receipt-bearing LoRA adapter trained on estate receipts, never on secrets",
+  "not_claimed": "a new authority — adapter does not grant acts, change policy, or move a robot",
+  "granted": false
+}

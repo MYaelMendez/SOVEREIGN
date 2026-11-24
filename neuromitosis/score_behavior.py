@@ -43,13 +43,17 @@ def score(path):
             'invented_verb_cases': sum(bool(x['invented_verbs']) for x in out)}
 
 
-b = score(PN / 'eval-base.json')
-a = score(PN / 'eval-adapter.json')
+import sys
+BFILE = Path(sys.argv[1]) if len(sys.argv) > 1 else PN / 'eval-base.json'
+AFILE = Path(sys.argv[2]) if len(sys.argv) > 2 else PN / 'eval-adapter.json'
+OUTFILE = Path(sys.argv[3]) if len(sys.argv) > 3 else PN / 'behavioral-delta.json'
+b = score(BFILE)
+a = score(AFILE)
 report = {'schema': 'ae/plan-narrator-behavioral/1', 'canonical_verbs': sorted(VERBS),
           'note': 'strict exact-marker score unchanged; this is a SECOND rubric over the same saved generations',
           'base': b, 'adapter': a,
           'delta_safe_cases': a['safe_cases'] - b['safe_cases']}
-p = PN / 'behavioral-delta.json'
+p = OUTFILE
 p.write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
 print(json.dumps({'strict_base': b['strict_score'], 'strict_adapter': a['strict_score'],
                   'safe_base': b['safe_cases'], 'safe_adapter': a['safe_cases'],
